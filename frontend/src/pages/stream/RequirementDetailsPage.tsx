@@ -12,6 +12,15 @@ import PersonIcon from "@mui/icons-material/Person";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import FileOpenIcon from "@mui/icons-material/FileOpen";
+import Checkbox from "@mui/material/Checkbox";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
+import EmailIcon from "@mui/icons-material/EmailOutlined";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import SettingsIcon from "@mui/icons-material/Settings";
+import FolderIcon from "@mui/icons-material/FolderOutlined";
+import GroupIcon from "@mui/icons-material/GroupOutlined";
 import RoleLayout from "../../components/layout/RoleLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { api, clearanceService, organizationService } from "../../services";
@@ -162,7 +171,7 @@ export default function RequirementDetailsPage() {
                         value={tabValue}
                         onChange={(_, v) => setTabValue(v)}
                         textColor="inherit"
-                        TabIndicatorProps={{ sx: { bgcolor: "#1a73e8", height: 3 } }}
+                        TabIndicatorProps={{ sx: { bgcolor: "#000", height: 3 } }}
                         sx={{
                             px: { xs: 2, md: 0 },
                             "& .MuiTab-root": {
@@ -173,12 +182,12 @@ export default function RequirementDetailsPage() {
                                 color: "#5f6368"
                             },
                             "& .Mui-selected": {
-                                color: "#1a73e8 !important"
+                                color: "#000 !important"
                             }
                         }}
                     >
                         <Tab label="Instructions" />
-                        {isOfficer && <Tab label="Student work" />}
+                        {isOfficer && <Tab label="Member submission" />}
                     </Tabs>
                 </Box>
 
@@ -326,179 +335,265 @@ export default function RequirementDetailsPage() {
                     )}
 
                     {isOfficer && tabValue === 1 && (
-                        <Box sx={{ display: "flex", height: "calc(100vh - 200px)", border: "1px solid #E2E8F0", borderRadius: 3, overflow: "hidden" }}>
-                            {/* Left Sidebar: Student List */}
-                            <Box sx={{ width: 300, borderRight: "1px solid #E2E8F0", overflowY: "auto", bgcolor: "#F8FAFC" }}>
-                                {loadingSubmissions ? (
-                                    <Box display="flex" justifyContent="center" p={4}><CircularProgress size={24} /></Box>
-                                ) : submissions.length === 0 ? (
-                                    <Box sx={{ p: 3, textAlign: "center" }}>
-                                        <Typography variant="body2" color="text.secondary">No submissions yet.</Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", borderTop: "1px solid #e0e0e0" }}>
+                            {/* Top Action Bar */}
+                            <Box sx={{ display: "flex", alignItems: "center", borderBottom: "1px solid #e0e0e0", height: 56 }}>
+                                {/* Left Section (300px width) */}
+                                <Box sx={{ width: 300, borderRight: "1px solid #e0e0e0", height: "100%", display: "flex", alignItems: "center", px: 2, gap: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Button disabled variant="contained" sx={{ textTransform: 'none', borderRadius: '4px 0 0 4px', bgcolor: '#f1f3f4', color: '#3c4043', boxShadow: 'none', px: 2, '&.Mui-disabled': { bgcolor: '#f1f3f4', color: 'rgba(0,0,0,0.38)' } }}>
+                                            Return
+                                        </Button>
+                                        <Button disabled variant="contained" sx={{ minWidth: 0, padding: '6px 4px', borderRadius: '0 4px 4px 0', bgcolor: '#f1f3f4', boxShadow: 'none', borderLeft: '1px solid rgba(0,0,0,0.1)', '&.Mui-disabled': { bgcolor: '#f1f3f4' } }}>
+                                            <ArrowDropDownIcon fontSize="small" />
+                                        </Button>
                                     </Box>
-                                ) : (
-                                    <List disablePadding>
-                                        {submissions.map((sub) => (
-                                            <React.Fragment key={sub._id}>
-                                                <ListItem
-                                                    button
-                                                    onClick={() => setSelectedSub(sub)}
-                                                    selected={selectedSub?._id === sub._id}
-                                                    sx={{
-                                                        py: 2,
-                                                        borderLeft: selectedSub?._id === sub._id ? "4px solid #1a73e8" : "4px solid transparent"
-                                                    }}
-                                                >
-                                                    <ListItemAvatar>
-                                                        <Avatar sx={{ bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B" }}>
-                                                            <PersonIcon />
-                                                        </Avatar>
-                                                    </ListItemAvatar>
-                                                    <ListItemText
-                                                        primary={sub.userId?.fullName || "Student"}
-                                                        secondary={
-                                                            <Chip
-                                                                label={sub.status.toUpperCase()}
-                                                                size="small"
-                                                                sx={{
-                                                                    height: 16,
-                                                                    fontSize: 9,
-                                                                    mt: 0.5,
-                                                                    bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
-                                                                    color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
-                                                                }}
-                                                            />
-                                                        }
-                                                        primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
-                                                    />
-                                                </ListItem>
-                                                <Divider />
-                                            </React.Fragment>
-                                        ))}
-                                    </List>
-                                )}
+                                    <IconButton size="small" disabled sx={{ ml: 1 }}>
+                                        <EmailIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+
+                                {/* Right Section */}
+                                <Box sx={{ flex: 1, px: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: '#f1f3f4', borderRadius: 1, px: 1.5, py: 0.5, cursor: 'pointer' }}>
+                                        <Typography variant="body2" sx={{ color: '#3c4043', fontWeight: 500 }}>{requirement.points || 100}</Typography>
+                                        <ArrowDropDownIcon fontSize="small" sx={{ ml: 0.5, color: '#5f6368' }} />
+                                    </Box>
+                                    <IconButton size="small">
+                                        <SettingsIcon sx={{ color: '#5f6368' }} />
+                                    </IconButton>
+                                </Box>
                             </Box>
 
-                            {/* Right Panel: Submission Details */}
-                            <Box sx={{ flex: 1, p: 4, overflowY: "auto", bgcolor: "#fff" }}>
-                                {selectedSub ? (
-                                    <Box>
-                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
-                                            <Box>
-                                                <Typography variant="h6" fontWeight={700} color="#3c4043">
-                                                    {selectedSub.userId?.fullName}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Student ID: {selectedSub.userId?.studentId || "N/A"}
-                                                </Typography>
+                            {/* Main Content Area */}
+                            <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+                                {/* Left Sidebar: Student List */}
+                                <Box sx={{ width: 300, borderRight: "1px solid #e0e0e0", overflowY: "auto", bgcolor: "#fff", display: "flex", flexDirection: "column" }}>
+                                    <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
+                                        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                                            <Checkbox size="small" color="primary" defaultChecked />
+                                            <GroupIcon sx={{ color: '#5f6368', fontSize: 20 }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 500, color: '#3c4043' }}>All members</Typography>
+                                        </Box>
+                                        <Select 
+                                            size="small" 
+                                            fullWidth 
+                                            defaultValue="status"
+                                            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, bgcolor: '#f1f3f4', borderRadius: 1, typography: 'body2' }}
+                                        >
+                                            <MenuItem value="status">Sort by status</MenuItem>
+                                        </Select>
+                                    </Box>
+                                    {/* Submissions List */}
+                                    <Box sx={{ flex: 1, overflowY: "auto" }}>
+                                        {loadingSubmissions ? (
+                                            <Box display="flex" justifyContent="center" p={4}><CircularProgress size={24} /></Box>
+                                        ) : submissions.length === 0 ? (
+                                            <Box sx={{ p: 3, textAlign: "center" }}>
+                                                <Typography variant="body2" color="text.secondary">No submissions yet.</Typography>
                                             </Box>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Submitted {new Date(selectedSub.submittedAt).toLocaleString()}
-                                            </Typography>
-                                        </Box>
-
-                                        {subError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{subError}</Alert>}
-
-                                        <Box sx={{ mb: 4 }}>
-                                            <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Student Notes</Typography>
-                                            <Paper variant="outlined" sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: 2 }}>
-                                                <Typography variant="body2" color="#3c4043">
-                                                    {selectedSub.studentNotes || "No notes provided."}
-                                                </Typography>
-                                            </Paper>
-                                        </Box>
-
-                                        <Box sx={{ mb: 4 }}>
-                                            <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Attachments</Typography>
-                                            <Box display="flex" flexWrap="wrap" gap={1.5}>
-                                                {selectedSub.files.map((file: any, idx: number) => (
-                                                    <Paper
-                                                        key={idx}
-                                                        variant="outlined"
-                                                        sx={{
-                                                            p: 1.5,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            gap: 1.5,
-                                                            cursor: "pointer",
-                                                            borderRadius: 2,
-                                                            "&:hover": { bgcolor: "#F1F5F9" }
-                                                        }}
-                                                        onClick={() => downloadFile(file.filename, file.originalName)}
-                                                    >
-                                                        <FileOpenIcon color="primary" fontSize="small" />
-                                                        <Typography variant="body2" fontWeight={500} color="#3c4043">{file.originalName}</Typography>
-                                                    </Paper>
+                                        ) : (
+                                            <List disablePadding>
+                                                {submissions.map((sub) => (
+                                                    <React.Fragment key={sub._id}>
+                                                        <ListItem
+                                                            button
+                                                            onClick={() => setSelectedSub(sub)}
+                                                            selected={selectedSub?._id === sub._id}
+                                                            sx={{
+                                                                py: 2,
+                                                                borderLeft: selectedSub?._id === sub._id ? "4px solid #1a73e8" : "4px solid transparent"
+                                                            }}
+                                                        >
+                                                            <ListItemAvatar>
+                                                                <Avatar sx={{ bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B" }}>
+                                                                    <PersonIcon />
+                                                                </Avatar>
+                                                            </ListItemAvatar>
+                                                            <ListItemText
+                                                                primary={sub.userId?.fullName || "Student"}
+                                                                secondary={
+                                                                    <Chip
+                                                                        label={sub.status.toUpperCase()}
+                                                                        size="small"
+                                                                        sx={{
+                                                                            height: 16,
+                                                                            fontSize: 9,
+                                                                            mt: 0.5,
+                                                                            bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
+                                                                            color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
+                                                                        }}
+                                                                    />
+                                                                }
+                                                                primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
+                                                            />
+                                                        </ListItem>
+                                                        <Divider />
+                                                    </React.Fragment>
                                                 ))}
-                                            </Box>
-                                        </Box>
-
-                                        <Divider sx={{ my: 4 }} />
-
-                                        <Box>
-                                            <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Review Action</Typography>
-                                            <TextField
-                                                fullWidth
-                                                multiline
-                                                rows={3}
-                                                placeholder="Add remarks or feedback for the student..."
-                                                value={subRemarks}
-                                                onChange={(e) => setSubRemarks(e.target.value)}
-                                                sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                                            />
-
-                                            <Box display="flex" gap={2}>
-                                                <Button
-                                                    fullWidth
-                                                    startIcon={subActionState !== "loading" && subActionState !== "success" ? <CheckIcon /> : undefined}
-                                                    onClick={() => handleReview("approved")}
-                                                    disabled={subActionState !== "idle" || selectedSub.status === 'approved'}
-                                                    sx={{
-                                                        borderRadius: "8px",
-                                                        textTransform: "none",
-                                                        py: 1,
-                                                        fontWeight: 600,
-                                                        backgroundColor: subActionState === 'success' ? '#10b981' : '#1a73e8',
-                                                        color: '#FFFFFF',
-                                                        '&:hover': { backgroundColor: subActionState === 'success' ? '#10b981' : '#1557b0' },
-                                                        '&.Mui-disabled': { backgroundColor: subActionState === 'success' ? '#10b981' : '#E2E8F0', color: subActionState === 'success' ? '#FFFFFF' : '#94A3B8' }
-                                                    }}
-                                                >
-                                                    {subActionState === 'loading' && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }}/>}
-                                                    {subActionState === 'idle' ? "Approve" : subActionState === 'loading' ? 'Approving...' : 'Approved!'}
-                                                </Button>
-                                                <Button
-                                                    fullWidth
-                                                    startIcon={subActionState !== "loading" && subActionState !== "success" ? <ClearIcon /> : undefined}
-                                                    onClick={() => handleReview("rejected")}
-                                                    disabled={subActionState !== "idle" || selectedSub.status === 'approved' || !subRemarks.trim()}
-                                                    sx={{
-                                                        borderRadius: "8px",
-                                                        textTransform: "none",
-                                                        py: 1,
-                                                        fontWeight: 600,
-                                                        border: '1.5px solid #EF4444',
-                                                        color: '#EF4444',
-                                                        backgroundColor: 'transparent',
-                                                        '&:hover': { backgroundColor: '#FEF2F2', borderColor: '#DC2626' },
-                                                        '&.Mui-disabled': { borderColor: subActionState === 'success' ? '#EF4444' : '#E2E8F0', color: subActionState === 'success' ? '#EF4444' : '#94A3B8' }
-                                                    }}
-                                                >
-                                                    Reject
-                                                </Button>
-                                            </Box>
-                                        </Box>
-                                        {selectedSub.status === 'approved' && (
-                                            <Typography variant="caption" color="success.main" display="block" sx={{ mt: 2, textAlign: "center", fontWeight: 600 }}>
-                                                This submission has been approved.
-                                            </Typography>
+                                            </List>
                                         )}
                                     </Box>
-                                ) : (
-                                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" sx={{ height: "100%", opacity: 0.5 }}>
-                                        <PersonIcon sx={{ fontSize: 64, mb: 1, color: "#94A3B8" }} />
-                                        <Typography color="#64748B">Select a student submission to review</Typography>
-                                    </Box>
-                                )}
+                                </Box>
+
+                                {/* Right Panel: Submission Details / Overview */}
+                                <Box sx={{ flex: 1, overflowY: "auto", bgcolor: "#fff", p: selectedSub ? 4 : 0 }}>
+                                    {selectedSub ? (
+                                        <Box>
+                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight={700} color="#3c4043">
+                                                        {selectedSub.userId?.fullName}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Student ID: {selectedSub.userId?.studentId || "N/A"}
+                                                    </Typography>
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Submitted {new Date(selectedSub.submittedAt).toLocaleString()}
+                                                </Typography>
+                                            </Box>
+
+                                            {subError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{subError}</Alert>}
+
+                                            <Box sx={{ mb: 4 }}>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Student Notes</Typography>
+                                                <Paper variant="outlined" sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: 2 }}>
+                                                    <Typography variant="body2" color="#3c4043">
+                                                        {selectedSub.studentNotes || "No notes provided."}
+                                                    </Typography>
+                                                </Paper>
+                                            </Box>
+
+                                            <Box sx={{ mb: 4 }}>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Attachments</Typography>
+                                                <Box display="flex" flexWrap="wrap" gap={1.5}>
+                                                    {selectedSub.files.map((file: any, idx: number) => (
+                                                        <Paper
+                                                            key={idx}
+                                                            variant="outlined"
+                                                            sx={{
+                                                                p: 1.5,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: 1.5,
+                                                                cursor: "pointer",
+                                                                borderRadius: 2,
+                                                                "&:hover": { bgcolor: "#F1F5F9" }
+                                                            }}
+                                                            onClick={() => downloadFile(file.filename, file.originalName)}
+                                                        >
+                                                            <FileOpenIcon color="primary" fontSize="small" />
+                                                            <Typography variant="body2" fontWeight={500} color="#3c4043">{file.originalName}</Typography>
+                                                        </Paper>
+                                                    ))}
+                                                </Box>
+                                            </Box>
+
+                                            <Divider sx={{ my: 4 }} />
+
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Review Action</Typography>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    placeholder="Add remarks or feedback for the student..."
+                                                    value={subRemarks}
+                                                    onChange={(e) => setSubRemarks(e.target.value)}
+                                                    sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                                                />
+
+                                                <Box display="flex" gap={2}>
+                                                    <Button
+                                                        fullWidth
+                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? <CheckIcon /> : undefined}
+                                                        onClick={() => handleReview("approved")}
+                                                        disabled={subActionState !== "idle" || selectedSub.status === 'approved'}
+                                                        sx={{
+                                                            borderRadius: "8px",
+                                                            textTransform: "none",
+                                                            py: 1,
+                                                            fontWeight: 600,
+                                                            backgroundColor: subActionState === 'success' ? '#10b981' : '#1a73e8',
+                                                            color: '#FFFFFF',
+                                                            '&:hover': { backgroundColor: subActionState === 'success' ? '#10b981' : '#1557b0' },
+                                                            '&.Mui-disabled': { backgroundColor: subActionState === 'success' ? '#10b981' : '#E2E8F0', color: subActionState === 'success' ? '#FFFFFF' : '#94A3B8' }
+                                                        }}
+                                                    >
+                                                        {subActionState === 'loading' && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }}/>}
+                                                        {subActionState === 'idle' ? "Approve" : subActionState === 'loading' ? 'Approving...' : 'Approved!'}
+                                                    </Button>
+                                                    <Button
+                                                        fullWidth
+                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? <ClearIcon /> : undefined}
+                                                        onClick={() => handleReview("rejected")}
+                                                        disabled={subActionState !== "idle" || selectedSub.status === 'approved' || !subRemarks.trim()}
+                                                        sx={{
+                                                            borderRadius: "8px",
+                                                            textTransform: "none",
+                                                            py: 1,
+                                                            fontWeight: 600,
+                                                            border: '1.5px solid #EF4444',
+                                                            color: '#EF4444',
+                                                            backgroundColor: 'transparent',
+                                                            '&:hover': { backgroundColor: '#FEF2F2', borderColor: '#DC2626' },
+                                                            '&.Mui-disabled': { borderColor: subActionState === 'success' ? '#EF4444' : '#E2E8F0', color: subActionState === 'success' ? '#EF4444' : '#94A3B8' }
+                                                        }}
+                                                    >
+                                                        Reject
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                            {selectedSub.status === 'approved' && (
+                                                <Typography variant="caption" color="success.main" display="block" sx={{ mt: 2, textAlign: "center", fontWeight: 600 }}>
+                                                    This submission has been approved.
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{ p: 4, pt: 5 }}>
+                                            <Typography variant="h5" sx={{ color: "#3c4043", mb: 4, fontWeight: 400 }}>{requirement.title}</Typography>
+                                            
+                                            <Box display="flex" gap={4} mb={4}>
+                                                <Box>
+                                                    <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1 }}>
+                                                        {submissions.filter(s => s.status === 'pending' || s.status === 'approved' || s.status === 'resubmission_required').length}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">Handed in</Typography>
+                                                </Box>
+                                                <Box sx={{ borderLeft: "1px solid #e0e0e0", pl: 4 }}>
+                                                    <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1 }}>
+                                                        {membership?.totalMembers || submissions.length || 0}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">Assigned</Typography>
+                                                </Box>
+                                            </Box>
+
+                                            <Box display="flex" alignItems="center" gap={1} mb={4}>
+                                                <Switch defaultChecked color="primary" size="small" />
+                                                <Typography variant="body2" color="text.secondary">Accepting submissions</Typography>
+                                            </Box>
+
+                                            <Box display="flex" alignItems="center" gap={2} mb={8}>
+                                                <Typography variant="body2" sx={{ color: '#3c4043' }}>All</Typography>
+                                                <ArrowDropDownIcon fontSize="small" sx={{ color: '#5f6368', mr: 2 }} />
+                                                <IconButton size="small"><FolderIcon sx={{ color: '#5f6368' }} /></IconButton>
+                                            </Box>
+
+                                            {submissions.length === 0 && (
+                                                <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={4}>
+                                                    <Box sx={{ width: 140, mb: 2 }}>
+                                                        <img src="https://ssl.gstatic.com/classroom/empty_states_m1/img_people_zero.svg" width="100%" alt="Empty" />
+                                                    </Box>
+                                                    <Typography variant="body2" color="text.secondary" align="center">
+                                                        This hasn't been assigned to any members
+                                                    </Typography>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    )}
+                                </Box>
                             </Box>
                         </Box>
                     )}

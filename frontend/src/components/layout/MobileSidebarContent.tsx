@@ -132,14 +132,14 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         px: 2,
                                         height: 40,
                                         borderRadius: "10px",
-                                        color: isActive ? "#0284c7" : "#0F172A",
-                                        backgroundColor: isActive ? "#e0f2fe" : "transparent",
+                                        color: isActive ? "#0891b2" : "#0F172A",
+                                        backgroundColor: isActive ? "#ecfeff" : "transparent",
                                         "&:hover": {
-                                            backgroundColor: isActive ? "#bae6fd" : "#F1F5F9",
+                                            backgroundColor: isActive ? "#cffafe" : "#F1F5F9",
                                         },
                                     }}
                                 >
-                                    <Icon color={isActive ? "#0284c7" : "#0F172A"} />
+                                    <Icon color={isActive ? "#0891b2" : "#0F172A"} />
                                     <Box ml={1.5}>{item.label}</Box>
                                 </Button>
                             );
@@ -186,12 +186,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                 px: 2,
                                                                 height: 40,
                                                                 borderRadius: "10px",
-                                                                color: location.pathname === '/officer/to-review' ? "#0284c7" : "#0F172A",
-                                                                backgroundColor: location.pathname === '/officer/to-review' ? "#e0f2fe" : "transparent",
-                                                                "&:hover": { backgroundColor: location.pathname === '/officer/to-review' ? "#bae6fd" : "#F1F5F9" },
+                                                                color: location.pathname === '/officer/to-review' ? "#0891b2" : "#0F172A",
+                                                                backgroundColor: location.pathname === '/officer/to-review' ? "#ecfeff" : "transparent",
+                                                                "&:hover": { backgroundColor: location.pathname === '/officer/to-review' ? "#cffafe" : "#F1F5F9" },
                                                             }}
                                                         >
-                                                            <FolderIcon color={location.pathname === '/officer/to-review' ? "#0284c7" : "#0F172A"} />
+                                                            <FolderIcon color={location.pathname === '/officer/to-review' ? "#0891b2" : "#0F172A"} />
                                                             <Box ml={1.5}>To review</Box>
                                                         </Button>
 
@@ -209,9 +209,9 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         px: 2,
                                                                         height: 40,
                                                                         borderRadius: "10px",
-                                                                        color: isOrgActive ? "#0284c7" : "#0F172A",
-                                                                        backgroundColor: isOrgActive ? "#e0f2fe" : "transparent",
-                                                                        "&:hover": { backgroundColor: isOrgActive ? "#bae6fd" : "#F1F5F9" },
+                                                                        color: isOrgActive ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: isOrgActive ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: isOrgActive ? "#cffafe" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: org.color || '#e2e8f0', color: '#1e293b' }}>
@@ -265,12 +265,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         px: 2,
                                                                         height: 40,
                                                                         borderRadius: "10px",
-                                                                        color: isTodoActive ? "#0284c7" : "#0F172A",
-                                                                        backgroundColor: isTodoActive ? "#e0f2fe" : "transparent",
-                                                                        "&:hover": { backgroundColor: isTodoActive ? "#bae6fd" : "#F1F5F9" },
+                                                                        color: isTodoActive ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: isTodoActive ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: isTodoActive ? "#cffafe" : "#F1F5F9" },
                                                                     }}
                                                                 >
-                                                                    {React.createElement(todoNav.icon, { color: isTodoActive ? "#0284c7" : "#0F172A" })}
+                                                                    {React.createElement(todoNav.icon, { color: isTodoActive ? "#0891b2" : "#0F172A" })}
                                                                     <Box ml={1.5}>To-Do</Box>
                                                                 </Button>
                                                             );
@@ -290,9 +290,9 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         px: 2,
                                                                         height: 40,
                                                                         borderRadius: "10px",
-                                                                        color: isOrgActive ? "#0284c7" : "#0F172A",
-                                                                        backgroundColor: isOrgActive ? "#e0f2fe" : "transparent",
-                                                                        "&:hover": { backgroundColor: isOrgActive ? "#bae6fd" : "#F1F5F9" },
+                                                                        color: isOrgActive ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: isOrgActive ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: isOrgActive ? "#cffafe" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: org.color || '#e2e8f0', color: '#1e293b' }}>

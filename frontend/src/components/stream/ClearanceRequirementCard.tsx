@@ -315,13 +315,13 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     
     // Determine the large leading Avatar Icon and Color
     const getAvatarConfig = () => {
-        if (type === 'announcement' || isAnnouncement) return { icon: <AnnouncementIcon />, color: "#3B82F6" };
-        if (type === 'form') return { icon: <FactCheckIcon />, color: "#8B5CF6" };
-        if (type === 'poll') return { icon: <HelpOutlineIcon />, color: "#14B8A6" };
-        if (type === 'material') return { icon: <BookIcon />, color: "#64748B" };
+        if (type === 'announcement' || isAnnouncement) return { icon: <AnnouncementIcon />, color: "#5f6368" };
+        if (type === 'form') return { icon: <FactCheckIcon />, color: "#5f6368" };
+        if (type === 'poll') return { icon: <HelpOutlineIcon />, color: "#5f6368" };
+        if (type === 'material') return { icon: <BookIcon />, color: "#5f6368" };
         
         // Default requirement logic
-        return { icon: <AssignmentIcon />, color: status === 'approved' ? '#10B981' : '#5f6368' };
+        return { icon: <AssignmentIcon />, color: "#5f6368" };
     };
     
     const avatarConfig = getAvatarConfig();
@@ -345,8 +345,8 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     }
                 }}
             >
-                <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <Box display="flex" gap={2} alignItems="center">
+                <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Box display="flex" gap={3} alignItems="center">
                         <Avatar 
                             src={author?.profilePicture} 
                             sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
@@ -367,7 +367,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     </IconButton>
                 </Box>
                 
-                <Box sx={{ px: 2, pb: 2 }}>
+                <Box sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
                     <Typography
                         variant="body2"
                         sx={{
