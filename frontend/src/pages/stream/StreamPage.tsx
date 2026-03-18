@@ -28,6 +28,9 @@ import Snackbar from "@mui/material/Snackbar";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import EditIcon from "@mui/icons-material/Edit";
+import Dialog from "@mui/material/Dialog";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 import RoleLayout from "../../components/layout/RoleLayout";
 import ClearanceRequirementCard from "../../components/stream/ClearanceRequirementCard";
@@ -72,6 +75,7 @@ const StreamPage: React.FC = () => {
     const [isCreatePollModalOpen, setIsCreatePollModalOpen] = useState(false);
     const [isCreateMaterialModalOpen, setIsCreateMaterialModalOpen] = useState(false);
     const [isCustomiseModalOpen, setIsCustomiseModalOpen] = useState(false);
+    const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
     const [tabValue, setTabValue] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [createMenuAnchorEl, setCreateMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -424,11 +428,15 @@ const StreamPage: React.FC = () => {
                                             <MenuItem onClick={handleMenuClose} sx={{ fontSize: '0.875rem', py: 1.5 }}>Turn off</MenuItem>
                                         </Menu>
                                     </Box>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <Typography variant="h5" sx={{ fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif", color: '#0F172A', fontWeight: 400, letterSpacing: 1 }}>
+                                    <Box display="flex" alignItems="center" gap={1} sx={{ mt: 0.5 }}>
+                                        <Typography 
+                                            variant="h5" 
+                                            sx={{ fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif", color: '#0F172A', fontWeight: 600, letterSpacing: 0.5, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                                            onClick={() => setIsCodeModalOpen(true)}
+                                        >
                                             {org.joinCode}
                                         </Typography>
-                                        <IconButton size="small" sx={{ color: '#1967d2' }}>
+                                        <IconButton size="small" sx={{ color: '#1a73e8' }} onClick={() => setIsCodeModalOpen(true)}>
                                             <FullscreenIcon fontSize="small" />
                                         </IconButton>
                                     </Box>
@@ -679,6 +687,58 @@ const StreamPage: React.FC = () => {
                     onClose={() => setSnackbarMessage("")}
                     message={snackbarMessage}
                 />
+
+                {/* Fullscreen Org Code Modal */}
+                <Dialog
+                    open={isCodeModalOpen}
+                    onClose={() => setIsCodeModalOpen(false)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            bgcolor: "#eef2f6",
+                            borderRadius: '16px',
+                            minHeight: { xs: 300, md: 400 },
+                            position: 'relative'
+                        }
+                    }}
+                >
+                    <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography sx={{ fontSize: '1.25rem', color: '#1F2937', fontWeight: 400 }}>Class code</Typography>
+                        <IconButton onClick={() => setIsCodeModalOpen(false)} sx={{ color: '#4B5563' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
+                        <Typography
+                            sx={{
+                                fontSize: { xs: '4rem', sm: '6rem', md: '9rem' },
+                                fontWeight: 400,
+                                color: '#374151',
+                                letterSpacing: '-0.02em',
+                                lineHeight: 1,
+                                userSelect: 'all'
+                            }}
+                        >
+                            {org?.joinCode}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ p: 3, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Button
+                            startIcon={<ContentCopyIcon />}
+                            onClick={handleCopyInviteLink}
+                            sx={{ 
+                                color: '#1a73e8', 
+                                textTransform: 'none', 
+                                fontWeight: 500, 
+                                fontSize: '0.9rem',
+                                '&:hover': { bgcolor: 'rgba(26, 115, 232, 0.04)' }
+                            }}
+                        >
+                            Copy invitation link
+                        </Button>
+                    </Box>
+                </Dialog>
             </Container>
         </RoleLayout>
     );
