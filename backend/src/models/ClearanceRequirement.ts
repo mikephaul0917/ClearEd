@@ -10,6 +10,7 @@ export interface IClearanceRequirement extends Document {
     description: string;
     instructions?: string; // Detailed instructions for the student
     topic?: string; // Optional grouping topic
+    options?: string[]; // Multiple choice options
     attachments: {
         name: string;
         url: string;
@@ -52,6 +53,7 @@ const ClearanceRequirementSchema = new Schema<IClearanceRequirement>({
         trim: true,
         maxlength: 100
     },
+    options: [{ type: String }],
     attachments: [{
         name: { type: String, required: true },
         url: { type: String, required: true },

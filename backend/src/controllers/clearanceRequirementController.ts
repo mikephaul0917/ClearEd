@@ -14,7 +14,7 @@ import { AppError, catchAsync } from "../utils/errors";
  */
 export const createRequirement = async (req: Request, res: Response) => {
     try {
-        const { title, description, instructions, topic, officeId, organizationId, isMandatory, isAnnouncement, type, requiredFiles, assignedTo, order } = req.body;
+        const { title, description, instructions, topic, officeId, organizationId, isMandatory, isAnnouncement, type, requiredFiles, assignedTo, order, options } = req.body;
         const creatorId = (req as any).user?.id;
         const institutionId = (req as any).user?.institutionId;
         const userRole = (req as any).user?.role;
@@ -49,6 +49,16 @@ export const createRequirement = async (req: Request, res: Response) => {
             }
         }
 
+        // Parse options if sent as stringified JSON
+        let parsedOptions = options;
+        if (typeof options === 'string') {
+            try {
+                parsedOptions = JSON.parse(options);
+            } catch (e) {
+                parsedOptions = [];
+            }
+        }
+
         // 3. Create Requirement
         const newRequirement = await ClearanceRequirement.create({
             title,
@@ -62,6 +72,7 @@ export const createRequirement = async (req: Request, res: Response) => {
             isMandatory: isMandatory !== undefined ? isMandatory : true,
             isAnnouncement: isAnnouncement !== undefined ? isAnnouncement : false,
             type: type || 'requirement',
+            options: parsedOptions,
             requiredFiles: requiredFiles || [],
             assignedTo: assignedTo || [],
             order: order || 0,

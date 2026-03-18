@@ -62,6 +62,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [options, setOptions] = useState<string[]>(["Option 1"]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [attachments, setAttachments] = useState<Array<{ type: string, file?: File, url?: string, name: string }>>([]);
     const [status, setStatus] = useState("Pending");
@@ -77,6 +78,11 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                 setTopic(editData.topic || "No topic");
                 setDueDate(editData.dueDate || "");
                 setStatus(editData.status || "Pending");
+                if (editData.options && editData.options.length > 0) {
+                    setOptions(editData.options);
+                } else {
+                    setOptions(["Option 1"]);
+                }
 
                 if (editData.assignedTo && editData.assignedTo.length > 0) {
                     setSelectedIds(editData.assignedTo.map((a: any) => a._id || a));
@@ -151,6 +157,13 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                 formData.append('assignedTo', JSON.stringify(selectedIds));
             }
 
+            if (pollType === "Multiple choice") {
+                const validOptions = options.filter(opt => opt.trim() !== "");
+                if (validOptions.length > 0) {
+                    formData.append('options', JSON.stringify(validOptions));
+                }
+            }
+
             const urlAttachments = attachments.filter(a => !a.file).map(a => ({ name: a.name, url: a.url, type: a.type }));
             if (urlAttachments.length > 0) {
                 formData.append('attachments', JSON.stringify(urlAttachments));
@@ -187,6 +200,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
         setStudentsCanEdit(false);
         setError(null);
         setAttachments([]);
+        setOptions(["Option 1"]);
         onClose();
     };
 
@@ -298,6 +312,45 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                                     }}
                                 />
                             </Box>
+
+                            {/* Options Area (Only for Multiple choice) */}
+                            {pollType === "Multiple choice" && (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+                                    {options.map((opt, idx) => (
+                                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ width: 22, height: 22, borderRadius: '50%', border: '2px solid #bdc1c6', flexShrink: 0 }} />
+                                            <TextField
+                                                fullWidth
+                                                variant="filled"
+                                                placeholder={`Option ${idx + 1}`}
+                                                value={opt}
+                                                onChange={(e) => {
+                                                    const newOpts = [...options];
+                                                    newOpts[idx] = e.target.value;
+                                                    setOptions(newOpts);
+                                                }}
+                                                InputProps={{
+                                                    disableUnderline: true,
+                                                    sx: { bgcolor: '#f1f3f4', borderRadius: '4px', borderBottom: '1px solid #5f6368', '&.Mui-focused': { borderBottom: '2px solid #1a73e8', bgcolor: '#f1f3f4' } },
+                                                    endAdornment: options.length > 1 && (
+                                                        <IconButton size="small" onClick={() => setOptions(options.filter((_, i) => i !== idx))} sx={{ color: '#5f6368' }}>
+                                                            <CloseIcon fontSize="small" />
+                                                        </IconButton>
+                                                    )
+                                                }}
+                                            />
+                                        </Box>
+                                    ))}
+                                    <Button
+                                        startIcon={<AddIcon />}
+                                        onClick={() => setOptions([...options, `Option ${options.length + 1}`])}
+                                        sx={{ alignSelf: 'flex-start', color: '#1a73e8', textTransform: 'none', fontWeight: 500, mt: 0.5, pt: 1, pb: 1, pl: 1, pr: 2, borderRadius: '4px', '&:hover': { bgcolor: '#f8f9fa' } }}
+                                        disableRipple
+                                    >
+                                        Add option
+                                    </Button>
+                                </Box>
+                            )}
 
                             {/* Bottom Row: Formatting */}
                             <Box sx={{ display: 'flex', gap: 0.5, borderTop: '1px solid #f1f3f4', pt: 1, mt: 1 }}>
