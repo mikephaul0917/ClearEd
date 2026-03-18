@@ -1,0 +1,41 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.windsurf
+
+# Env
+.env
+
+# Custom debug output
+*_output*.txt
+*_plain.txt
+*_errors*.log
+*_errors.txt
+*_out*.txt
+tsc_cmd.txt
+app_errors.log
+build_error.txt
+error.log
+register_errors.log
+ts_error.txt

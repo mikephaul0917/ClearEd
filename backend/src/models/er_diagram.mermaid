@@ -1,0 +1,310 @@
+erDiagram
+    Announcement {
+        string title
+        string content
+        maintenance_or_policy_or_security_or_general_or_urgent type
+        low_or_medium_or_high_or_critical priority
+        all_or_institutions_or_students_or_admins_or_super_admin targetAudience
+        ObjectId targetInstitutions
+        boolean isActive
+        Date scheduledAt
+        Date expiresAt
+        ObjectId createdBy
+        Date createdAt
+        Date updatedAt
+        number viewCount
+        number dismissCount
+        boolean requiresAcknowledgment
+        string attachments
+        string tags
+    }
+    Announcement }o--|| User : "createdBy"
+    Announcement }o--|{ Institution : "targetInstitutions"
+    AnnouncementAcknowledgment {
+        ObjectId announcement
+        ObjectId user
+        ObjectId institution
+        Date acknowledgedAt
+        string ipAddress
+        string userAgent
+    }
+    AnnouncementAcknowledgment }o--|| Announcement : "announcement"
+    AnnouncementAcknowledgment }o--|| User : "user"
+    AnnouncementAcknowledgment }o--|| Institution : "institution"
+    AuditLog {
+        ObjectId _id
+        ObjectId userId
+        ObjectId institutionId
+        string action
+        auth_or_user_management_or_organization_management_or_clearance_workflow_or_institution_management_or_system category
+        string resource
+        ObjectId resourceId
+        any details
+        low_or_medium_or_high_or_critical severity
+        string ipAddress
+        string userAgent
+        Date timestamp
+        Date createdAt
+        Date updatedAt
+    }
+    AuditLog }o--|| User : "userId"
+    AuditLog }o--|| Institution : "institutionId"
+    ClearanceOffice {
+        string name
+        ObjectId institutionId
+        number sequence
+        boolean isActive
+        Date createdAt
+        Date updatedAt
+    }
+    ClearanceOffice }o--|| Institution : "institutionId"
+    ClearanceRequest {
+        ObjectId userId
+        ObjectId organizationId
+        ObjectId institutionId
+        ObjectId termId
+        pending_or_in_progress_or_completed_or_rejected status
+        Date finalApprovalDate
+        ObjectId createdBy
+        Date submittedAt
+        Date createdAt
+        Date updatedAt
+    }
+    ClearanceRequest }o--|| User : "userId"
+    ClearanceRequest }o--|| Organization : "organizationId"
+    ClearanceRequest }o--|| Institution : "institutionId"
+    ClearanceRequest }o--|| Term : "termId"
+    ClearanceRequest }o--|| User : "createdBy"
+    ClearanceRequirement {
+        string title
+        string description
+        string instructions
+        string topic
+        string name
+        string url
+        string type
+    }
+    ClearanceRequirement }o--|| ClearanceOffice : "officeId"
+    ClearanceRequirement }o--|| Organization : "organizationId"
+    ClearanceRequirement }o--|| Institution : "institutionId"
+    ClearanceRequirement }o--|| User : "createdBy"
+    ClearanceRequirement }o--|{ User : "assignedTo"
+    ClearanceReview {
+        ObjectId submissionId
+        ObjectId reviewerId
+        approved_or_rejected decision
+        officer_or_dean level
+        string remarks
+        ObjectId institutionId
+        Date createdAt
+        Date updatedAt
+    }
+    ClearanceReview }o--|| ClearanceSubmission : "submissionId"
+    ClearanceReview }o--|| User : "reviewerId"
+    ClearanceReview }o--|| Institution : "institutionId"
+    ClearanceSubmission {
+        string filename
+        string originalName
+        string mimeType
+        number size
+        Date uploadedAt
+    }
+    ClearanceSubmission }o--|| User : "userId"
+    ClearanceSubmission }o--|| ClearanceRequirement : "clearanceRequirementId"
+    ClearanceSubmission }o--|| ClearanceRequest : "clearanceRequestId"
+    ClearanceSubmission }o--|| Organization : "organizationId"
+    ClearanceSubmission }o--|| Institution : "institutionId"
+    ClearanceSubmission }o--|| User : "reviewedBy"
+    Comment {
+        ObjectId requirementId
+        ObjectId userId
+        string content
+        Date createdAt
+        Date updatedAt
+    }
+    Comment }o--|| ClearanceRequirement : "requirementId"
+    Comment }o--|| User : "userId"
+    DeanAssignment {
+        ObjectId deanId
+        string course
+        string yearLevel
+        ObjectId institutionId
+        Date createdAt
+        Date updatedAt
+    }
+    DeanAssignment }o--|| User : "deanId"
+    DeanAssignment }o--|| Institution : "institutionId"
+    Institution {
+        ObjectId _id
+        string name
+        string domain
+        string department
+        string region
+        string division
+        string address
+        string contactNumber
+        string email
+        string administratorName
+        string administratorPosition
+        pending_or_approved_or_rejected_or_suspended status
+        boolean allowStudentRegistration
+        boolean requireEmailVerification
+        number maxUsers
+    }
+    Institution }o--|| User : "approvedBy"
+    InstitutionRequest {
+        string institutionName
+        string academicDomain
+        string physicalAddress
+        string contactNumber
+        string administratorName
+        string administratorPosition
+        string administratorEmail
+        PENDING_VERIFICATION_or_PENDING_APPROVAL_or_APPROVED_or_REJECTED_or_RETURNED_FOR_CLARIFICATION status
+        string verificationToken
+        Date verificationTokenExpires
+        Date verifiedAt
+        Date reviewedAt
+        ObjectId reviewedBy
+        string rejectionReason
+        string clarificationRequest
+        Date createdAt
+        Date updatedAt
+        string ipAddress
+        string userAgent
+        string notes
+    }
+    InstitutionRequest }o--|| User : "reviewedBy"
+    Notification {
+        ObjectId userId
+        ObjectId institutionId
+        string title
+        string message
+        info_or_success_or_warning_or_error type
+        clearance_or_submission_or_approval_or_system category
+        ObjectId relatedEntityId
+        ClearanceSubmission_or_ClearanceItem relatedEntityType
+        boolean isRead
+        string actionUrl
+        ObjectId createdBy
+        Date readAt
+    }
+    Notification }o--|| User : "userId"
+    Notification }o--|| Institution : "institutionId"
+    Notification }o--|| User : "createdBy"
+    Organization {
+        string name
+        string description
+        string joinCode
+        string code
+        string signatoryName
+        boolean isActive
+        number order
+        boolean isFinal
+        active_or_archived status
+        ObjectId institutionId
+        ObjectId termId
+        ObjectId createdBy
+        string themeColor
+        string headerImage
+        Date createdAt
+        Date updatedAt
+    }
+    Organization }o--|| Institution : "institutionId"
+    Organization }o--|| Term : "termId"
+    Organization }o--|| User : "createdBy"
+    OrganizationMember {
+        ObjectId organizationId
+        ObjectId userId
+        ObjectId institutionId
+        member_or_officer role
+        active_or_left_or_removed status
+        Date joinedAt
+        Date statusChangedAt
+        Date createdAt
+        Date updatedAt
+    }
+    OrganizationMember }o--|| Organization : "organizationId"
+    OrganizationMember }o--|| User : "userId"
+    OrganizationMember }o--|| Institution : "institutionId"
+    Poll {
+        string question
+        string instructions
+        string options
+        number allowedVotesPerUser
+        string topic
+        string name
+        string url
+        string type
+    }
+    Poll }o--|| Organization : "organizationId"
+    Poll }o--|| Institution : "institutionId"
+    Poll }o--|| User : "createdBy"
+    Poll }o--|| Poll : "pollId"
+    Poll }o--|| User : "userId"
+    Poll }o--|{ User : "assignedTo"
+    Quote {
+        string text
+        string author
+        boolean isActive
+        login_or_register_or_both page
+    }
+    StudentProfile {
+        ObjectId userId
+        string familyName
+        string firstName
+        string middleName
+        string studentNumber
+        string course
+        string year
+        string semester
+        string academicYear
+        ObjectId institutionId
+        boolean reqValidId
+        boolean reqAdviserForm
+        boolean reqOrgForm
+    }
+    StudentProfile }o--|| User : "userId"
+    StudentProfile }o--|| Institution : "institutionId"
+    Term {
+        string name
+        string academicYear
+        string semester
+        ObjectId institutionId
+        boolean isActive
+        Date startDate
+        Date endDate
+        Date createdAt
+        Date updatedAt
+    }
+    Term }o--|| Institution : "institutionId"
+    User {
+        ObjectId _id
+        string username
+        string email
+        string password
+        string fullName
+        student_or_officer_or_dean_or_admin_or_super_admin role
+        ObjectId institutionId
+        active_or_locked_or_invited status
+        boolean enabled
+        number failedLoginAttempts
+        Date lockUntil
+        Date lastLoginAt
+        local_or_google authProvider
+        boolean emailVerified
+        ObjectId invitedBy
+        Date invitedAt
+        Date lockedAt
+        string lockReason
+        ObjectId lockedBy
+        string accessKey
+        boolean isActive
+        ObjectId organizationId
+        Date createdAt
+        Date updatedAt
+    }
+    User }o--|| Institution : "institutionId"
+    User }o--|| User : "invitedBy"
+    User }o--|| User : "lockedBy"
+    User }o--|| Organization : "organizationId"

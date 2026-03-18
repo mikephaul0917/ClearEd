@@ -1,0 +1,484 @@
+import { Request, Response } from "express";
+import bcrypt from "bcrypt";
+import User from "../../models/User";
+import Institution from "../../models/Institution";
+import Organization from "../../models/Organization";
+import ClearanceRequirement from "../../models/ClearanceRequirement";
+import Term from "../../models/Term";
+import ClearanceRequest from "../../models/ClearanceRequest";
+import ClearanceSubmission from "../../models/ClearanceSubmission";
+import OrganizationMember from "../../models/OrganizationMember";
+import { logAudit } from "../../utils/auditLogger";
+
+/**
+ * User Management for Institution Admins
+ */
+
+export const listUsers = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
+
+    const users = await User.find({ institutionId }, { password: 0 });
+    res.json(users);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+    const user = await User.findOne({ _id: id, institutionId }, { password: 0 });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    console.log('[DEBUG] createUser request body:', req.body);
+    console.log('[DEBUG] createUser req.user:', (req as any).user);
+
+    const { email, password, fullName, role, organizationId } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    if (!email || !password || !fullName || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) return res.status(400).json({ message: "Email already used" });
+
+    // Note: Password hashing is handled by User model pre-save hook
+    const user = await User.create({
+      email: email.toLowerCase(),
+      password,
+      fullName,
+      role,
+      institutionId,
+      organizationId,
+      status: 'active',
+      enabled: true
+    });
+
+    // Handle OrganizationMember synchronization for officers
+    if (role === 'officer' && organizationId) {
+      await OrganizationMember.findOneAndUpdate(
+        { userId: user._id, organizationId, institutionId },
+        { role: 'officer', status: 'active', joinedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    }
+
+    res.status(201).json({
+      message: "User created",
+      user: { id: user._id, email: user.email, role: user.role, fullName: user.fullName }
+    });
+  } catch (error: any) {
+    console.error('[CreateUser Error]:', error);
+
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(400).json({ message: `Validation Error: ${messages.join(', ')}` });
+    }
+
+    // Handle duplicate key errors (Mongo error code 11000)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ message: `Conflict: ${field} already exists.` });
+    }
+
+    res.status(500).json({ message: `Server Error: ${error.message}` });
+  }
+};
+
+export const updateStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { enabled, status } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    const user = await User.findOne({ _id: id, institutionId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const oldStatus = user.status;
+    const oldEnabled = user.enabled;
+
+    if (enabled !== undefined) user.enabled = !!enabled;
+    if (status) user.status = status;
+    await user.save();
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'USER_STATUS_UPDATED',
+      category: 'user_management',
+      resource: 'User',
+      resourceId: user._id as any,
+      details: {
+        targetUserId: user._id,
+        oldStatus, newStatus: user.status,
+        oldEnabled, newEnabled: user.enabled
+      },
+      severity: 'medium',
+      req
+    });
+
+    res.json({ message: "Status updated", enabled: user.enabled, status: user.status });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateRole = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { role, organizationId } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+    const adminRole = (req as any).user?.role;
+
+    // 1. Validate role input
+    const validRoles = ["student", "officer", "dean", "admin"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role specified." });
+    }
+
+    // 2. Prevent non-super_admins from assigning super_admin
+    if (role === 'super_admin' && adminRole !== 'super_admin') {
+      return res.status(403).json({ message: "You don't have permission to assign the Super Admin role." });
+    }
+
+    const user = await User.findOne({ _id: id, institutionId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const oldRole = user.role;
+    user.role = role;
+    if (organizationId !== undefined) (user as any).organizationId = organizationId || null;
+    await user.save();
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'USER_ROLE_UPDATED',
+      category: 'user_management',
+      resource: 'User',
+      resourceId: user._id as any,
+      details: {
+        targetUserId: user._id,
+        oldRole, newRole: user.role
+      },
+      severity: 'high',
+      req
+    });
+
+    // Officer Role Synchronization Logic:
+    // 1. If becoming an officer, add/update OrganizationMember
+    if (role === 'officer' && organizationId) {
+      await OrganizationMember.findOneAndUpdate(
+        { userId: user._id, organizationId, institutionId },
+        { role: 'officer', status: 'active', joinedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    }
+    // 2. If changing FROM officer to something else, remove/deactivate officer status
+    else if (oldRole === 'officer') {
+      // We deactivate their officer status in all organizations for this institution
+      // or just the one they were in. To be safe, we mark them as 'left' or 'removed'
+      // from their officer roles.
+      await OrganizationMember.updateMany(
+        { userId: user._id, institutionId, role: 'officer' },
+        { status: 'removed', role: 'member', statusChangedAt: new Date() }
+      );
+    }
+
+    res.json({ message: "Role updated", role: user.role });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { fullName, username } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    const user = await User.findOne({ _id: id, institutionId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (fullName !== undefined) user.fullName = fullName;
+    if (username !== undefined) user.username = username;
+
+    await user.save();
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'USER_PROFILE_UPDATED',
+      category: 'user_management',
+      resource: 'User',
+      resourceId: user._id as any,
+      details: {
+        targetUserId: user._id,
+        updatedFields: { fullName, username }
+      },
+      severity: 'medium',
+      req
+    });
+
+    res.json({ message: "Profile updated", user: { fullName: user.fullName, username: user.username } });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Organization Management
+ */
+
+export const createOrganization = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    const { name, code, description, type, approvalOrder } = req.body;
+
+    const org = await Organization.create({
+      name,
+      code: code || name.toUpperCase().replace(/\s+/g, '_'),
+      description,
+      type: type || 'office',
+      institutionId,
+      approvalOrder: approvalOrder || 0,
+      isActive: true
+    });
+
+    res.status(201).json({ message: "Organization created", organization: org });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const listOrganizations = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    const orgs = await Organization.find({ institutionId, isDeleted: false }).sort({ approvalOrder: 1 });
+    res.json(orgs);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Clearance Requirement (formerly Item) Management
+ */
+
+export const createRequirement = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId, title, description, requiredFiles, isMandatory } = req.body;
+
+    const reqDoc = await ClearanceRequirement.create({
+      organizationId,
+      institutionId,
+      title,
+      description,
+      requiredFiles: requiredFiles || [],
+      isMandatory: isMandatory !== false,
+      isActive: true
+    } as any);
+
+    res.status(201).json({ message: "Requirement created", requirement: reqDoc });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const listRequirements = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId } = req.query;
+
+    const query: any = { institutionId };
+    if (organizationId) query.organizationId = organizationId;
+
+    const reqs = await ClearanceRequirement.find(query).populate('organizationId', 'name');
+    res.json(reqs);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateRequirement = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title, description, requiredFiles, isMandatory, isActive } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    const reqDoc = await ClearanceRequirement.findOne({ _id: id, institutionId });
+    if (!reqDoc) return res.status(404).json({ message: "Requirement not found" });
+
+    if (title !== undefined) reqDoc.title = title;
+    if (description !== undefined) reqDoc.description = description;
+    if (requiredFiles !== undefined) (reqDoc as any).requiredFiles = requiredFiles;
+    if (isMandatory !== undefined) (reqDoc as any).isMandatory = !!isMandatory;
+    if (isActive !== undefined) reqDoc.isActive = !!isActive;
+
+    await reqDoc.save();
+    res.json({ message: "Requirement updated" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteRequirement = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+
+    const reqDoc = await ClearanceRequirement.findOneAndDelete({ _id: id, institutionId });
+    if (!reqDoc) return res.status(404).json({ message: "Requirement not found" });
+
+    res.json({ message: "Requirement deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Term Management
+ */
+
+export const createTerm = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    const { name, academicYear, semester, isActive } = req.body;
+
+    // Ensure only one active term per institution
+    if (isActive) {
+      await Term.updateMany({ institutionId }, { isActive: false });
+    }
+
+    const term = await Term.create({
+      name,
+      academicYear,
+      semester,
+      institutionId,
+      isActive: !!isActive
+    });
+
+    res.status(201).json({ message: "Term created", term });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const activateTerm = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+
+    // Deactivate all terms for this institution
+    await Term.updateMany({ institutionId }, { isActive: false });
+
+    // Activate the selected term
+    const term = await Term.findOneAndUpdate(
+      { _id: id, institutionId },
+      { isActive: true },
+      { new: true }
+    );
+
+    if (!term) return res.status(404).json({ message: "Term not found" });
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'TERM_ACTIVATED',
+      category: 'system',
+      resource: 'Term',
+      resourceId: term._id as any,
+      details: { termId: id, academicYear: term.academicYear, semester: term.semester },
+      severity: 'high',
+      req
+    });
+
+    res.json({ message: "Term activated successfully", term });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteTerm = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+
+    const term = await Term.findOneAndDelete({ _id: id, institutionId });
+    if (!term) return res.status(404).json({ message: "Term not found" });
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'TERM_DELETED',
+      category: 'system',
+      resource: 'Term',
+      resourceId: term._id as any,
+      details: { academicYear: term.academicYear, semester: term.semester },
+      severity: 'medium',
+      req
+    });
+
+    res.json({ message: "Term deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Statistics and Analytics
+ */
+
+export const getClearanceStats = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+
+    const totalRequests = await ClearanceRequest.countDocuments({ institutionId });
+    const completedRequests = await ClearanceRequest.countDocuments({ institutionId, status: 'completed' });
+    const pendingRequests = await ClearanceRequest.countDocuments({ institutionId, status: 'pending' });
+
+    const orgs = await Organization.find({ institutionId, isDeleted: false });
+    const orgStats = await Promise.all(orgs.map(async (org) => {
+      const submissions = await ClearanceSubmission.countDocuments({ organizationId: org._id, status: 'approved' });
+      return { name: org.name, approvedSubmissions: submissions };
+    }));
+
+    res.json({
+      summary: {
+        total: totalRequests,
+        completed: completedRequests,
+        pending: pendingRequests,
+        completionRate: totalRequests > 0 ? ((completedRequests / totalRequests) * 100).toFixed(1) : '0'
+      },
+      organizations: orgStats
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getInstitution = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
+
+    const institution = await Institution.findById(institutionId);
+    if (!institution) return res.status(404).json({ message: "Institution not found" });
+
+    res.json(institution);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
