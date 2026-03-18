@@ -146,15 +146,7 @@ const StreamPage: React.FC = () => {
     }, [fetchData]);
 
     const handleAction = (id: string) => {
-        const req = requirements.find(r => r._id === id);
-        if (req) {
-            setSelectedReq(req);
-            if (isOfficer) {
-                setIsReviewModalOpen(true);
-            } else {
-                setIsSubmissionModalOpen(true);
-            }
-        }
+        navigate(`/organization/${orgId}/requirement/${id}`);
     };
 
     const handleDeleteRequirement = async (id: string) => {

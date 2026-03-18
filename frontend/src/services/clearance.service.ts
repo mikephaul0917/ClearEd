@@ -6,6 +6,11 @@ export const clearanceService = {
         return response.data;
     },
 
+    getRequirementById: async (id: string) => {
+        const response = await api.get(`/clearance-items/requirements/${id}`);
+        return response.data;
+    },
+
     getSignatorySubmissions: async (requirementId: string) => {
         const response = await api.get(`/signatory/submissions/${requirementId}`);
         return response.data;

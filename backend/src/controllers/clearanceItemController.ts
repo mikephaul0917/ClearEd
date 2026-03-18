@@ -306,3 +306,57 @@ export const downloadFile = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: "Download failed" });
   }
 };
+
+/**
+ * Get a single clearance requirement and the current user's submission
+ */
+export const getClearanceRequirementById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user.id;
+    const institutionId = (req as any).user.institutionId;
+
+    const requirement = await ClearanceRequirement.findOne({
+      _id: new mongoose.Types.ObjectId(id),
+      institutionId: new mongoose.Types.ObjectId(institutionId as string)
+    }).populate('createdBy', 'fullName profilePicture');
+
+    if (!requirement) {
+      return res.status(404).json({ success: false, message: "Requirement not found" });
+    }
+
+    let submissionData = null;
+    const submission = await ClearanceSubmission.findOne({
+      userId: new mongoose.Types.ObjectId(userId as string),
+      clearanceRequirementId: requirement._id,
+      institutionId: new mongoose.Types.ObjectId(institutionId as string)
+    });
+
+    if (submission) {
+      submissionData = {
+        id: submission._id,
+        status: submission.status,
+        submittedAt: submission.submittedAt,
+        files: submission.files,
+        studentNotes: submission.studentNotes,
+        rejectionReason: submission.rejectionReason,
+        reviewedAt: submission.reviewedAt
+      };
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...requirement.toObject(),
+        submission: submissionData
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching clearance requirement:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch requirement"
+    });
+  }
+};

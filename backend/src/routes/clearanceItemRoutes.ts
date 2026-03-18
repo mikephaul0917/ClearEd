@@ -5,7 +5,8 @@ import {
   submitRequirement,
   getOfficerSubmissions,
   downloadFile,
-  getRequirementSubmissions
+  getRequirementSubmissions,
+  getClearanceRequirementById
 } from "../controllers/clearanceItemController";
 import { handleFileUpload } from "../middleware/uploadMiddlewareFixed";
 
@@ -13,6 +14,7 @@ const router = Router();
 
 // Student routes
 router.get("/requirements", auth, getClearanceRequirements);
+router.get("/requirements/:id", auth, getClearanceRequirementById);
 router.post("/submit", auth, handleFileUpload, submitRequirement);
 router.get("/download/:filename", auth, downloadFile);
 
