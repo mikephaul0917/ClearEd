@@ -16,10 +16,7 @@ import Checkbox from "@mui/material/Checkbox";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
-import EmailIcon from "@mui/icons-material/EmailOutlined";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import SettingsIcon from "@mui/icons-material/Settings";
-import FolderIcon from "@mui/icons-material/FolderOutlined";
 import GroupIcon from "@mui/icons-material/GroupOutlined";
 import RoleLayout from "../../components/layout/RoleLayout";
 import { useAuth } from "../../hooks/useAuth";
@@ -34,7 +31,7 @@ export default function RequirementDetailsPage() {
     const [tabValue, setTabValue] = useState(0);
     const [requirement, setRequirement] = useState<any>(null);
     const [membership, setMembership] = useState<any>(null);
-    
+
     // Comments state
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
@@ -207,7 +204,7 @@ export default function RequirementDetailsPage() {
                                             <MoreVertIcon />
                                         </IconButton>
                                     </Box>
-                                    
+
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
                                         <Typography variant="body2" sx={{ color: "#5f6368", fontWeight: 500, fontSize: "0.875rem" }}>
                                             {requirement.createdBy?.fullName || "Author"}
@@ -314,13 +311,13 @@ export default function RequirementDetailsPage() {
                                                 }
                                             }}
                                         />
-                                        <IconButton 
-                                            size="small" 
+                                        <IconButton
+                                            size="small"
                                             onClick={handleAddComment}
                                             disabled={!newComment.trim() || isSubmittingComment}
-                                            sx={{ 
-                                                position: "absolute", 
-                                                right: 4, 
+                                            sx={{
+                                                position: "absolute",
+                                                right: 4,
                                                 top: '50%',
                                                 transform: 'translateY(-50%)',
                                                 color: newComment.trim() ? "#1a73e8" : "#ccc"
@@ -348,20 +345,9 @@ export default function RequirementDetailsPage() {
                                             <ArrowDropDownIcon fontSize="small" />
                                         </Button>
                                     </Box>
-                                    <IconButton size="small" disabled sx={{ ml: 1 }}>
-                                        <EmailIcon fontSize="small" />
-                                    </IconButton>
                                 </Box>
-
                                 {/* Right Section */}
                                 <Box sx={{ flex: 1, px: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: '#f1f3f4', borderRadius: 1, px: 1.5, py: 0.5, cursor: 'pointer' }}>
-                                        <Typography variant="body2" sx={{ color: '#3c4043', fontWeight: 500 }}>{requirement.points || 100}</Typography>
-                                        <ArrowDropDownIcon fontSize="small" sx={{ ml: 0.5, color: '#5f6368' }} />
-                                    </Box>
-                                    <IconButton size="small">
-                                        <SettingsIcon sx={{ color: '#5f6368' }} />
-                                    </IconButton>
                                 </Box>
                             </Box>
 
@@ -375,13 +361,15 @@ export default function RequirementDetailsPage() {
                                             <GroupIcon sx={{ color: '#5f6368', fontSize: 20 }} />
                                             <Typography variant="body2" sx={{ fontWeight: 500, color: '#3c4043' }}>All members</Typography>
                                         </Box>
-                                        <Select 
-                                            size="small" 
-                                            fullWidth 
+                                        <Select
+                                            size="small"
+                                            fullWidth
                                             defaultValue="status"
                                             sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, bgcolor: '#f1f3f4', borderRadius: 1, typography: 'body2' }}
                                         >
                                             <MenuItem value="status">Sort by status</MenuItem>
+                                            <MenuItem value="surname">Sort by surname</MenuItem>
+                                            <MenuItem value="firstName">Sort by first name</MenuItem>
                                         </Select>
                                     </Box>
                                     {/* Submissions List */}
@@ -521,7 +509,7 @@ export default function RequirementDetailsPage() {
                                                             '&.Mui-disabled': { backgroundColor: subActionState === 'success' ? '#10b981' : '#E2E8F0', color: subActionState === 'success' ? '#FFFFFF' : '#94A3B8' }
                                                         }}
                                                     >
-                                                        {subActionState === 'loading' && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }}/>}
+                                                        {subActionState === 'loading' && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />}
                                                         {subActionState === 'idle' ? "Approve" : subActionState === 'loading' ? 'Approving...' : 'Approved!'}
                                                     </Button>
                                                     <Button
@@ -554,7 +542,7 @@ export default function RequirementDetailsPage() {
                                     ) : (
                                         <Box sx={{ p: 4, pt: 5 }}>
                                             <Typography variant="h5" sx={{ color: "#3c4043", mb: 4, fontWeight: 400 }}>{requirement.title}</Typography>
-                                            
+
                                             <Box display="flex" gap={4} mb={4}>
                                                 <Box>
                                                     <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1 }}>
@@ -575,17 +563,31 @@ export default function RequirementDetailsPage() {
                                                 <Typography variant="body2" color="text.secondary">Accepting submissions</Typography>
                                             </Box>
 
-                                            <Box display="flex" alignItems="center" gap={2} mb={8}>
-                                                <Typography variant="body2" sx={{ color: '#3c4043' }}>All</Typography>
-                                                <ArrowDropDownIcon fontSize="small" sx={{ color: '#5f6368', mr: 2 }} />
-                                                <IconButton size="small"><FolderIcon sx={{ color: '#5f6368' }} /></IconButton>
+                                            <Box mb={8}>
+                                                <Select
+                                                    size="small"
+                                                    defaultValue="all"
+                                                    sx={{ 
+                                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, 
+                                                        typography: 'body2',
+                                                        color: '#3c4043',
+                                                        fontWeight: 500,
+                                                        '.MuiSelect-select': { pl: 0, py: 0.5 }
+                                                    }}
+                                                    IconComponent={(props) => <ArrowDropDownIcon {...props} sx={{ color: '#5f6368', ml: 0.5 }} />}
+                                                >
+                                                    <MenuItem value="all">All</MenuItem>
+                                                    <MenuItem value="handed_in" disabled>Handed in</MenuItem>
+                                                    <MenuItem value="assigned" disabled>Assigned</MenuItem>
+                                                    <MenuItem value="marked" disabled>Marked</MenuItem>
+                                                </Select>
                                             </Box>
 
                                             {submissions.length === 0 && (
                                                 <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={4}>
-                                                    <Box sx={{ width: 140, mb: 2 }}>
-                                                        <img src="https://ssl.gstatic.com/classroom/empty_states_m1/img_people_zero.svg" width="100%" alt="Empty" />
-                                                    </Box>
+                                                    <Typography variant="h6" color="text.secondary">
+                                                        Empty
+                                                    </Typography>
                                                     <Typography variant="body2" color="text.secondary" align="center">
                                                         This hasn't been assigned to any members
                                                     </Typography>
