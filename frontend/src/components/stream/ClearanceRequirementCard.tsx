@@ -668,7 +668,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     dangerouslySetInnerHTML={{ __html: description }}
                                 />
 
-                                {instructions && (
+                                {instructions && instructions !== description && (
                                     <Box sx={{ mb: 3 }}>
                                         <Typography
                                             variant="body2"

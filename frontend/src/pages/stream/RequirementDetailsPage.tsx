@@ -17,6 +17,7 @@ import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FormatClearIcon from "@mui/icons-material/FormatClear";
 import PersonIcon from "@mui/icons-material/Person";
+import BookIcon from "@mui/icons-material/Book";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import FileOpenIcon from "@mui/icons-material/FileOpen";
@@ -284,37 +285,39 @@ const RequirementDetailsPage: React.FC = () => {
     return (
         <RoleLayout>
             <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                    <Tabs
-                        value={tabValue}
-                        onChange={(_, v) => setTabValue(v)}
-                        textColor="inherit"
-                        TabIndicatorProps={{ sx: { bgcolor: "#000", height: 3 } }}
-                        sx={{
-                            px: { xs: 2, md: 0 },
-                            "& .MuiTab-root": {
-                                textTransform: "none",
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
-                                minWidth: 100,
-                                color: "#5f6368"
-                            },
-                            "& .Mui-selected": {
-                                color: "#000 !important"
-                            }
-                        }}
-                    >
-                        <Tab label={['poll', 'form'].includes(requirement?.type) ? "Question" : "Instructions"} />
-                        {isOfficer && <Tab label={['poll', 'form'].includes(requirement?.type) ? "Students' answers" : "Member submission"} />}
-                    </Tabs>
-                </Box>
+                {requirement?.type !== 'material' && (
+                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                        <Tabs
+                            value={tabValue}
+                            onChange={(_, v) => setTabValue(v)}
+                            textColor="inherit"
+                            TabIndicatorProps={{ sx: { bgcolor: "#000", height: 3 } }}
+                            sx={{
+                                px: { xs: 2, md: 0 },
+                                "& .MuiTab-root": {
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    minWidth: 100,
+                                    color: "#5f6368"
+                                },
+                                "& .Mui-selected": {
+                                    color: "#000 !important"
+                                }
+                            }}
+                        >
+                            <Tab label={requirement?.type === 'poll' ? "Question" : "Instructions"} />
+                            {isOfficer && <Tab label={requirement?.type === 'poll' ? "Students' answers" : "Member submission"} />}
+                        </Tabs>
+                    </Box>
+                )}
 
                 <Box sx={{ py: 4, px: { xs: 2, md: 0 } }}>
                     {tabValue === 0 && (
                         <Container maxWidth="md" sx={{ px: 0 }}>
                             <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
                                 <Avatar sx={{ bgcolor: "#5f6368", width: 44, height: 44, mt: 0.5 }}>
-                                    {['poll', 'form'].includes(requirement?.type) ? <LiveHelpIcon /> : <AssignmentIcon />}
+                                    {requirement?.type === 'poll' ? <LiveHelpIcon /> : requirement?.type === 'material' ? <BookIcon /> : <AssignmentIcon />}
                                 </Avatar>
                                 <Box sx={{ flex: 1 }}>
                                     <Box display="flex" justifyContent="space-between" alignItems="flex-start">
@@ -356,9 +359,11 @@ const RequirementDetailsPage: React.FC = () => {
                                         </Typography>
                                     </Box>
 
-                                    <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
-                                        {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
-                                    </Typography>
+                                    {requirement?.type !== 'material' && (
+                                        <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                            {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Box>
 
@@ -377,7 +382,7 @@ const RequirementDetailsPage: React.FC = () => {
                                 dangerouslySetInnerHTML={{ __html: requirement.description }}
                             />
 
-                            {requirement.instructions && (
+                            {requirement.instructions && requirement.instructions !== requirement.description && (
                                 <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
                                     <Typography
                                         variant="body1"
@@ -444,7 +449,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                         {file.name}
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                                                        {getFileLabel(file)}
+                                                        {file.url?.includes('docs.google.com/forms') ? "Google Forms" : getFileLabel(file)}
                                                     </Typography>
                                                 </Box>
 
@@ -462,6 +467,14 @@ const RequirementDetailsPage: React.FC = () => {
                                                 }}>
                                                     {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
                                                      file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                     file.url?.includes('docs.google.com/forms') ? (
+                                                         <Box sx={{ width: '100%', height: '100%', bgcolor: '#f0ebf8', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+                                                             <Box sx={{ bgcolor: '#fff', width: '100%', height: '100%', borderRadius: '4px', borderTop: '6px solid #673ab7', boxShadow: '0 1px 3px rgba(0,0,0,0.12)', p: 0.5 }}>
+                                                                <Box sx={{ width: '60%', height: 4, bgcolor: '#dadce0', mb: 1, borderRadius: 1 }} />
+                                                                <Box sx={{ width: '40%', height: 4, bgcolor: '#dadce0', borderRadius: 1 }} />
+                                                             </Box>
+                                                         </Box>
+                                                     ) :
                                                      file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
                                                      (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
                                                      <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
@@ -476,14 +489,14 @@ const RequirementDetailsPage: React.FC = () => {
 
                             {/* Comments Section */}
                             <Box sx={{ ml: { xs: 0, sm: 8.5 } }}>
-                                <Box display="flex" alignItems="center" gap={1} mb={3}>
-                                    <PersonIcon sx={{ color: "#5f6368", fontSize: 20 }} />
+                                <Box display="flex" alignItems="center" gap={1} mb={comments.length > 0 ? 3 : 2}>
+                                    <GroupIcon sx={{ color: "#5f6368", fontSize: 20 }} />
                                     <Typography sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
                                         Class comments
                                     </Typography>
                                 </Box>
 
-                                <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: 4 }}>
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: comments.length > 0 ? 4 : 0 }}>
                                     {comments.map((comment: any) => (
                                         <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
                                             <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
