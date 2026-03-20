@@ -4,9 +4,10 @@ import {
     Box, Typography, Avatar, Divider, Tabs, Tab, Container,
     CircularProgress, IconButton, TextField, Button, Paper,
     List, ListItem, ListItemAvatar, ListItemText, Chip, Alert,
-    InputBase, ClickAwayListener
+    InputBase, ClickAwayListener, RadioGroup, Radio, FormControlLabel
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import LiveHelpIcon from "@mui/icons-material/LiveHelp";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SendIcon from "@mui/icons-material/Send";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
@@ -303,8 +304,8 @@ const RequirementDetailsPage: React.FC = () => {
                             }
                         }}
                     >
-                        <Tab label="Instructions" />
-                        {isOfficer && <Tab label="Member submission" />}
+                        <Tab label={['poll', 'form'].includes(requirement?.type) ? "Question" : "Instructions"} />
+                        {isOfficer && <Tab label={['poll', 'form'].includes(requirement?.type) ? "Students' answers" : "Member submission"} />}
                     </Tabs>
                 </Box>
 
@@ -313,7 +314,7 @@ const RequirementDetailsPage: React.FC = () => {
                         <Container maxWidth="md" sx={{ px: 0 }}>
                             <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
                                 <Avatar sx={{ bgcolor: "#5f6368", width: 44, height: 44, mt: 0.5 }}>
-                                    <AssignmentIcon />
+                                    {['poll', 'form'].includes(requirement?.type) ? <LiveHelpIcon /> : <AssignmentIcon />}
                                 </Avatar>
                                 <Box sx={{ flex: 1 }}>
                                     <Box display="flex" justifyContent="space-between" alignItems="flex-start">
@@ -384,6 +385,23 @@ const RequirementDetailsPage: React.FC = () => {
                                         sx={{ whiteSpace: "pre-wrap", fontFamily: "'Roboto', 'Inter', sans-serif", lineHeight: 1.6 }}
                                         dangerouslySetInnerHTML={{ __html: requirement.instructions }}
                                     />
+                                </Box>
+                            )}
+
+                            {requirement?.type === 'poll' && requirement.options && requirement.options.length > 0 && (
+                                <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
+                                    <RadioGroup>
+                                        {requirement.options.map((opt: string, idx: number) => (
+                                            <FormControlLabel 
+                                                key={idx} 
+                                                value={opt} 
+                                                control={<Radio color="primary" sx={{ '&.Mui-checked': { color: '#1a73e8' }, color: '#5f6368' }} />} 
+                                                label={<Typography variant="body2" sx={{ color: "#3c4043", ml: 1, my: 0.5 }}>{opt}</Typography>} 
+                                                disabled 
+                                                sx={{ mb: 1, '.MuiFormControlLabel-label.Mui-disabled': { color: '#3c4043' }, '.MuiRadio-root.Mui-disabled': { color: '#bdc1c6' } }}
+                                            />
+                                        ))}
+                                    </RadioGroup>
                                 </Box>
                             )}
 

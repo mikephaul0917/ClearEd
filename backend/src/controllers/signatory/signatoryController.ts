@@ -204,7 +204,7 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
   try {
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
-    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments } = req.body;
+    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments, options } = req.body;
 
     const membership = await OrganizationMember.findOne({
       userId,
@@ -238,6 +238,16 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
       }));
     }
 
+    // Parse options if sent as stringified JSON
+    let parsedOptions: string[] = [];
+    if (options) {
+      try {
+        parsedOptions = typeof options === 'string' ? JSON.parse(options) : options;
+      } catch (e) {
+        console.error("Failed to parse options", e);
+      }
+    }
+
     const requirement = await ClearanceRequirement.create({
       title,
       description,
@@ -247,6 +257,7 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
       isMandatory: isMandatory === "true" || isMandatory === true,
       isAnnouncement: isAnnouncement === "true" || isAnnouncement === true,
       type: type || 'requirement',
+      options: parsedOptions,
       organizationId,
       institutionId,
       createdBy: userId,
@@ -264,7 +275,7 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
     const { id } = req.params;
-    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, attachments: rawUrlAttachments } = req.body;
+    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, attachments: rawUrlAttachments, options } = req.body;
 
     const requirement = await ClearanceRequirement.findOne({ _id: id, institutionId });
     if (!requirement) return res.status(404).json({ message: "Requirement not found" });
@@ -288,6 +299,14 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     if (isMandatory !== undefined) requirement.isMandatory = isMandatory === "true" || isMandatory === true;
     if (isAnnouncement !== undefined) requirement.isAnnouncement = isAnnouncement === "true" || isAnnouncement === true;
     if (isActive !== undefined) requirement.isActive = isActive === "true" || isActive === true;
+
+    if (options !== undefined) {
+      try {
+        requirement.options = typeof options === 'string' ? JSON.parse(options) : options;
+      } catch (e) {
+        console.error("Failed to parse options for update", e);
+      }
+    }
 
     // Handle attachments update
     if (rawUrlAttachments !== undefined || (req.files && Array.isArray(req.files) && req.files.length > 0)) {
