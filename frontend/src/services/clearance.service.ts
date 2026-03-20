@@ -106,6 +106,16 @@ export const clearanceService = {
         return response.data;
     },
 
+    getPrivateComments: async (requirementId: string, studentId: string) => {
+        const response = await api.get(`/comments/${requirementId}?isPrivate=true&studentId=${studentId}`);
+        return response.data;
+    },
+
+    createPrivateComment: async (requirementId: string, studentId: string, content: string) => {
+        const response = await api.post(`/comments/${requirementId}`, { content, isPrivate: true, studentId });
+        return response.data;
+    },
+
     deleteComment: async (commentId: string) => {
         const response = await api.delete(`/comments/${commentId}`);
         return response.data;

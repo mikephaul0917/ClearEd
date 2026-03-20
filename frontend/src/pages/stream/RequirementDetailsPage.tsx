@@ -94,6 +94,12 @@ const RequirementDetailsPage: React.FC = () => {
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [isCommentFocused, setIsCommentFocused] = useState(false);
 
+    // Private Comments state
+    const [privateComments, setPrivateComments] = useState<any[]>([]);
+    const [newPrivateComment, setNewPrivateComment] = useState("");
+    const [isSubmittingPrivateComment, setIsSubmittingPrivateComment] = useState(false);
+    const [isPrivateCommentFocused, setIsPrivateCommentFocused] = useState(false);
+
     // Menu state
     const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -213,6 +219,25 @@ const RequirementDetailsPage: React.FC = () => {
         fetchComments();
     }, [orgId, reqId]);
 
+    // For students (member role), fetch their private comments once membership is loaded
+    useEffect(() => {
+        if (!orgId || !reqId || !user || !membership) return;
+        if (!isOfficer) {
+            fetchPrivateComments((user as any)._id || (user as any).id);
+        }
+    }, [orgId, reqId, user, membership, isOfficer]);
+
+    // For officers, fetch private comments when a submission is selected
+    useEffect(() => {
+        if (isOfficer) {
+            if (selectedSub && selectedSub.userId) {
+                fetchPrivateComments(selectedSub.userId._id || selectedSub.userId.id);
+            } else {
+                setPrivateComments([]);
+            }
+        }
+    }, [selectedSub, isOfficer]);
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -256,6 +281,15 @@ const RequirementDetailsPage: React.FC = () => {
         }
     };
 
+    const fetchPrivateComments = async (studentId: string) => {
+        try {
+            const data = await clearanceService.getPrivateComments(reqId as string, studentId);
+            setPrivateComments(data);
+        } catch (error) {
+            console.error("Failed to fetch private comments", error);
+        }
+    };
+
     const fetchOfficerSubmissions = async () => {
         setLoadingSubmissions(true);
         try {
@@ -279,6 +313,20 @@ const RequirementDetailsPage: React.FC = () => {
             console.error("Failed to add comment", error);
         } finally {
             setIsSubmittingComment(false);
+        }
+    };
+
+    const handleAddPrivateComment = async (studentId: string) => {
+        if (!newPrivateComment.trim()) return;
+        setIsSubmittingPrivateComment(true);
+        try {
+            const added = await clearanceService.createPrivateComment(reqId as string, studentId, newPrivateComment);
+            setPrivateComments(prev => [...prev, added.comment]);
+            setNewPrivateComment("");
+        } catch (error) {
+            console.error("Failed to add private comment", error);
+        } finally {
+            setIsSubmittingPrivateComment(false);
         }
     };
 
@@ -718,7 +766,7 @@ const RequirementDetailsPage: React.FC = () => {
                                             
                                             {/* Action Buttons */}
                                             {requirement?.submission?.status === "approved" ? (
-                                                <Button fullWidth disabled variant="contained" sx={{ bgcolor: "#10B981 !important", color: "white !important", borderRadius: 1, py: 1, textTransform: "none", fontWeight: 500 }}>
+                                                <Button fullWidth disabled variant="contained" sx={{ textTransform: "none", fontWeight: 500, fontSize: '0.875rem', py: 1, borderRadius: 1, boxShadow: 'none', '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                     Approved
                                                 </Button>
                                             ) : requirement?.submission?.status === "pending" ? (
@@ -734,7 +782,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                         </Button>
                                                     </label>
                                                     
-                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#1a73e8", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#1557b0", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
+                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#000", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                         {isSubmittingWork ? <CircularProgress size={24} color="inherit" /> : requirement?.submission?.status === "rejected" || requirement?.submission?.status === "resubmission_required" ? "Resubmit" : "Mark as done"}
                                                     </Button>
                                                 </Box>
@@ -754,15 +802,106 @@ const RequirementDetailsPage: React.FC = () => {
                                                 Private comments
                                             </Typography>
                                         </Box>
-                                        <Box sx={{ px: 2.5, pb: 2.5 }}>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1, px: 2, border: "1px solid #dadce0", borderRadius: 6, cursor: "text" }}>
-                                                <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368" }}>
-                                                    {(user as any)?.firstName?.charAt(0) || "U"}
-                                                </Avatar>
-                                                <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
-                                                    Add comment to {requirement?.createdBy?.fullName || "Officer"}
-                                                </Typography>
-                                            </Box>
+                                        
+                                        <Box sx={{ px: 2.5, pb: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
+                                            {/* Render Private Comments List */}
+                                            {privateComments.map((comment: any) => (
+                                                <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
+                                                    <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
+                                                        {comment.userId?.firstName?.charAt(0) || comment.userId?.fullName?.charAt(0) || "U"}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
+                                                                {comment.userId?.fullName}
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
+                                                                {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
+                                                            {comment.content}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            ))}
+
+                                            {/* Input Area */}
+                                            <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
+                                                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
+                                                    <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                        {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || "U"}
+                                                    </Avatar>
+                                                    <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
+                                                        <Box 
+                                                            sx={{ 
+                                                                flex: 1, 
+                                                                border: `1px solid ${isPrivateCommentFocused ? '#1a73e8' : '#dadce0'}`, 
+                                                                borderRadius: "24px", 
+                                                                bgcolor: "#fff",
+                                                                px: 2,
+                                                                py: isPrivateCommentFocused ? 1.5 : 0.5,
+                                                                minHeight: isPrivateCommentFocused ? 80 : 40,
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                transition: 'all 0.2s',
+                                                                boxShadow: isPrivateCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none',
+                                                                cursor: isPrivateCommentFocused ? 'text' : 'pointer'
+                                                            }}
+                                                            onClick={() => !isPrivateCommentFocused && setIsPrivateCommentFocused(true)}
+                                                        >
+                                                            <InputBase
+                                                                fullWidth
+                                                                multiline={isPrivateCommentFocused}
+                                                                minRows={isPrivateCommentFocused ? 2 : 1}
+                                                                placeholder={`Add private comment to ${requirement?.createdBy?.fullName || "Officer"}...`}
+                                                                value={newPrivateComment}
+                                                                onChange={(e) => setNewPrivateComment(e.target.value)}
+                                                                onFocus={() => setIsPrivateCommentFocused(true)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                                        e.preventDefault();
+                                                                        handleAddPrivateComment((user as any)._id || (user as any).id);
+                                                                        setIsPrivateCommentFocused(false);
+                                                                    }
+                                                                }}
+                                                                sx={{ 
+                                                                    typography: 'body2',
+                                                                    '& .MuiInputBase-input': { 
+                                                                        py: 0.5,
+                                                                        fontSize: '0.875rem' 
+                                                                    } 
+                                                                }}
+                                                            />
+                                                            {isPrivateCommentFocused && (
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
+                                                                    <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
+                                                                    <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
+                                                                    <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                                                    <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                                                    <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                        
+                                                        <IconButton
+                                                            onClick={() => {
+                                                                handleAddPrivateComment((user as any)._id || (user as any).id);
+                                                                setIsPrivateCommentFocused(false);
+                                                            }}
+                                                            disabled={!newPrivateComment.trim() || isSubmittingPrivateComment}
+                                                            sx={{
+                                                                color: newPrivateComment.trim() ? "#1a73e8" : "#ccc",
+                                                                p: 0.5,
+                                                                mb: 0.5,
+                                                                display: (isPrivateCommentFocused || newPrivateComment.trim() !== "") ? 'inline-flex' : 'none'
+                                                            }}
+                                                        >
+                                                            {isSubmittingPrivateComment ? <CircularProgress size={20} /> : <SendOutlinedIcon fontSize="small" />}
+                                                        </IconButton>
+                                                    </Box>
+                                                </Box>
+                                            </ClickAwayListener>
                                         </Box>
                                     </Paper>
                                 </Box>
@@ -999,13 +1138,18 @@ const RequirementDetailsPage: React.FC = () => {
                                                             textTransform: "none",
                                                             py: 1,
                                                             fontWeight: 600,
-                                                            backgroundColor: subActionState === 'success' ? '#10b981' : '#1a73e8',
-                                                            color: '#FFFFFF',
-                                                            '&:hover': { backgroundColor: subActionState === 'success' ? '#10b981' : '#1557b0' },
-                                                            '&.Mui-disabled': { backgroundColor: subActionState === 'success' ? '#10b981' : '#E2E8F0', color: subActionState === 'success' ? '#FFFFFF' : '#94A3B8' }
+                                                            backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#000',
+                                                            color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#fff',
+                                                            border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
+                                                            '&:hover': { backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#f8f9fa' : '#333' },
+                                                            '&.Mui-disabled': { 
+                                                                backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#E2E8F0', 
+                                                                color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#94A3B8',
+                                                                border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
+                                                            }
                                                         }}
                                                     >
-                                                        {subActionState === 'loading' ? 'Approving...' : subActionState === 'success' ? 'Approved!' : 'Approve'}
+                                                        {subActionState === 'loading' ? 'Approving...' : subActionState === 'success' || selectedSub.status === 'approved' ? 'Approved' : 'Approve'}
                                                     </Button>
                                                     <Button
                                                         fullWidth
@@ -1033,6 +1177,119 @@ const RequirementDetailsPage: React.FC = () => {
                                                     This submission has been approved.
                                                 </Typography>
                                             )}
+
+                                            <Divider sx={{ my: 4 }} />
+
+                                            {/* Private Comments for Officer */}
+                                            <Box>
+                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                                                    <PersonIcon sx={{ color: "#5f6368", fontSize: 20 }} />
+                                                    <Typography variant="subtitle2" fontWeight={600} color="#3c4043">
+                                                        Private comments
+                                                    </Typography>
+                                                </Box>
+                                                
+                                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                    {/* Render Private Comments List */}
+                                                    {privateComments.map((comment: any) => (
+                                                        <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
+                                                            <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
+                                                                {comment.userId?.firstName?.charAt(0) || comment.userId?.fullName?.charAt(0) || "U"}
+                                                            </Avatar>
+                                                            <Box>
+                                                                <Box display="flex" alignItems="center" gap={1}>
+                                                                    <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
+                                                                        {comment.userId?.fullName}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
+                                                                        {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </Typography>
+                                                                </Box>
+                                                                <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
+                                                                    {comment.content}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    ))}
+
+                                                    {/* Input Area */}
+                                                    <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
+                                                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
+                                                            <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                                {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || "U"}
+                                                            </Avatar>
+                                                            <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
+                                                                <Box 
+                                                                    sx={{ 
+                                                                        flex: 1, 
+                                                                        border: `1px solid ${isPrivateCommentFocused ? '#1a73e8' : '#dadce0'}`, 
+                                                                        borderRadius: "24px", 
+                                                                        bgcolor: "#fff",
+                                                                        px: 2,
+                                                                        py: isPrivateCommentFocused ? 1.5 : 0.5,
+                                                                        minHeight: isPrivateCommentFocused ? 80 : 40,
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        transition: 'all 0.2s',
+                                                                        boxShadow: isPrivateCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none',
+                                                                        cursor: isPrivateCommentFocused ? 'text' : 'pointer'
+                                                                    }}
+                                                                    onClick={() => !isPrivateCommentFocused && setIsPrivateCommentFocused(true)}
+                                                                >
+                                                                    <InputBase
+                                                                        fullWidth
+                                                                        multiline={isPrivateCommentFocused}
+                                                                        minRows={isPrivateCommentFocused ? 2 : 1}
+                                                                        placeholder={`Add private comment to ${selectedSub.userId?.firstName || selectedSub.userId?.fullName || "student"}...`}
+                                                                        value={newPrivateComment}
+                                                                        onChange={(e) => setNewPrivateComment(e.target.value)}
+                                                                        onFocus={() => setIsPrivateCommentFocused(true)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                                e.preventDefault();
+                                                                                handleAddPrivateComment(selectedSub.userId._id || selectedSub.userId.id);
+                                                                                setIsPrivateCommentFocused(false);
+                                                                            }
+                                                                        }}
+                                                                        sx={{ 
+                                                                            typography: 'body2',
+                                                                            '& .MuiInputBase-input': { 
+                                                                                py: 0.5,
+                                                                                fontSize: '0.875rem' 
+                                                                            } 
+                                                                        }}
+                                                                    />
+                                                                    {isPrivateCommentFocused && (
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
+                                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
+                                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
+                                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                                
+                                                                <IconButton
+                                                                    onClick={() => {
+                                                                        handleAddPrivateComment(selectedSub.userId._id || selectedSub.userId.id);
+                                                                        setIsPrivateCommentFocused(false);
+                                                                    }}
+                                                                    disabled={!newPrivateComment.trim() || isSubmittingPrivateComment}
+                                                                    sx={{
+                                                                        color: newPrivateComment.trim() ? "#1a73e8" : "#ccc",
+                                                                        p: 0.5,
+                                                                        mb: 0.5,
+                                                                        display: (isPrivateCommentFocused || newPrivateComment.trim() !== "") ? 'inline-flex' : 'none'
+                                                                    }}
+                                                                >
+                                                                    {isSubmittingPrivateComment ? <CircularProgress size={20} /> : <SendOutlinedIcon fontSize="small" />}
+                                                                </IconButton>
+                                                            </Box>
+                                                        </Box>
+                                                    </ClickAwayListener>
+                                                </Box>
+                                            </Box>
                                         </Box>
                                     ) : (
                                         <Box sx={{ p: 4, pt: 5 }}>

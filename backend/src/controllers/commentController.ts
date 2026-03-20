@@ -12,7 +12,21 @@ export const getComments = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    const comments = await Comment.find({ requirementId })
+    const { isPrivate, studentId } = req.query;
+
+    const query: any = { requirementId };
+
+    if (isPrivate === 'true') {
+      if (!studentId) {
+        return res.status(400).json({ message: "studentId is required for private comments" });
+      }
+      query.isPrivate = true;
+      query.studentId = studentId;
+    } else {
+      query.isPrivate = { $ne: true };
+    }
+
+    const comments = await Comment.find(query)
       .populate("userId", "firstName lastName fullName profilePicture")
       .sort({ createdAt: 1 });
 
@@ -31,7 +45,7 @@ export const createComment = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
     const { requirementId } = req.params;
-    const { content } = req.body;
+    const { content, isPrivate, studentId } = req.body;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -46,9 +60,15 @@ export const createComment = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    if (isPrivate && !studentId) {
+      return res.status(400).json({ message: "studentId is required for private comments" });
+    }
+
     const newComment = await Comment.create({
       requirementId,
       userId,
+      isPrivate: isPrivate || false,
+      studentId: isPrivate ? studentId : undefined,
       content: content.trim()
     });
 
