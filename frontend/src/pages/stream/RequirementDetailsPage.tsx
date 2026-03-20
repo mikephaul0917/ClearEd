@@ -3,11 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
     Box, Typography, Avatar, Divider, Tabs, Tab, Container,
     CircularProgress, IconButton, TextField, Button, Paper,
-    List, ListItem, ListItemAvatar, ListItemText, Chip, Alert
+    List, ListItem, ListItemAvatar, ListItemText, Chip, Alert,
+    InputBase, ClickAwayListener
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SendIcon from "@mui/icons-material/Send";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import FormatClearIcon from "@mui/icons-material/FormatClear";
 import PersonIcon from "@mui/icons-material/Person";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -18,11 +25,48 @@ import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import GroupIcon from "@mui/icons-material/GroupOutlined";
+import LinkIcon from "@mui/icons-material/Link";
+import AttachmentIcon from "@mui/icons-material/Attachment";
+import Menu from "@mui/material/Menu";
+import Snackbar from "@mui/material/Snackbar";
+import CloseIcon from "@mui/icons-material/Close";
+
 import RoleLayout from "../../components/layout/RoleLayout";
+import CreateRequirementModal from "../../components/stream/CreateRequirementModal";
+import CreateFormModal from "../../components/stream/CreateFormModal";
+import CreatePollModal from "../../components/stream/CreatePollModal";
+import CreateMaterialModal from "../../components/stream/CreateMaterialModal";
 import { useAuth } from "../../hooks/useAuth";
 import { api, clearanceService, organizationService } from "../../services";
 
-export default function RequirementDetailsPage() {
+const getFileLabel = (file: any) => {
+    if (file.type === 'Drive') return 'Google Drive';
+    if (file.type === 'YouTube') return 'YouTube video';
+    if (file.type === 'Link') return 'Link';
+    
+    const name = (file.name || '').toLowerCase();
+    if (name.endsWith('.pdf')) return 'PDF';
+    if (name.endsWith('.doc') || name.endsWith('.docx')) return 'Microsoft Word';
+    if (name.endsWith('.xls') || name.endsWith('.xlsx')) return 'Microsoft Excel';
+    if (name.endsWith('.ppt') || name.endsWith('.pptx')) return 'Microsoft PowerPoint';
+    if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return 'Image';
+    if (name.match(/\.(mp4|webm|avi|mov)$/)) return 'Video';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'Archive';
+    
+    return 'File';
+};
+
+const getAbsoluteUrl = (url: string) => {
+    if (!url) return '';
+    const normalizedUrl = url.replace(/\\/g, '/');
+    if (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://')) return normalizedUrl;
+    // @ts-ignore
+    let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    baseUrl = baseUrl.replace(/\/api$/, '');
+    return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
+};
+
+const RequirementDetailsPage: React.FC = () => {
     const { orgId, reqId } = useParams<{ orgId: string; reqId: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -31,11 +75,59 @@ export default function RequirementDetailsPage() {
     const [tabValue, setTabValue] = useState(0);
     const [requirement, setRequirement] = useState<any>(null);
     const [membership, setMembership] = useState<any>(null);
+    const [organization, setOrganization] = useState<any>(null);
+    const [students, setStudents] = useState<any[]>([]);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isEditFormModalOpen, setIsEditFormModalOpen] = useState(false);
+    const [isEditPollModalOpen, setIsEditPollModalOpen] = useState(false);
+    const [isEditMaterialModalOpen, setIsEditMaterialModalOpen] = useState(false);
 
     // Comments state
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [isCommentFocused, setIsCommentFocused] = useState(false);
+
+    // Menu state
+    const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+    const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setMenuAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setMenuAnchorEl(null);
+    };
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setSnackbarOpen(true);
+        handleMenuClose();
+    };
+
+    const handleEditClick = () => {
+        handleMenuClose();
+        if (requirement?.type === 'form') {
+            setIsEditFormModalOpen(true);
+        } else if (requirement?.type === 'poll') {
+            setIsEditPollModalOpen(true);
+        } else if (requirement?.type === 'material') {
+            setIsEditMaterialModalOpen(true);
+        } else {
+            setIsEditModalOpen(true);
+        }
+    };
+
+    const handleDeleteClick = async () => {
+        handleMenuClose();
+        if (!window.confirm("Are you sure you want to delete this?")) return;
+        try {
+            await clearanceService.deleteRequirement(reqId as string);
+            navigate(`/organization/${orgId}`);
+        } catch (error) {
+            console.error("Failed to delete item:", error);
+            alert("Failed to delete item");
+        }
+    };
 
     // Submissions state (Officer only)
     const [submissions, setSubmissions] = useState<any[]>([]);
@@ -44,6 +136,22 @@ export default function RequirementDetailsPage() {
     const [subRemarks, setSubRemarks] = useState("");
     const [subActionState, setSubActionState] = useState<'idle' | 'loading' | 'success'>('idle');
     const [subError, setSubError] = useState<string | null>(null);
+
+    const handleFileClick = (file: any) => {
+        if (file.type === 'YouTube' || file.type === 'Link' || file.type === 'Drive') {
+            window.open(file.url, "_blank");
+            return;
+        }
+        
+        const absoluteUrl = getAbsoluteUrl(file.url);
+        const link = document.createElement('a');
+        link.href = absoluteUrl;
+        link.download = file.name || 'download';
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const isOfficer = membership?.role === 'officer' || user?.role === 'admin' || user?.role === 'super_admin';
 
@@ -58,8 +166,20 @@ export default function RequirementDetailsPage() {
         try {
             // Check membership
             const data = await organizationService.getOrganization(orgId as string);
+            setOrganization(data.organization);
             setMembership(data.membership);
             const isUserOfficer = data.membership?.role === 'officer' || user?.role === 'admin' || user?.role === 'super_admin';
+
+            if (isUserOfficer) {
+                try {
+                    const membersData = await organizationService.getMembers(orgId as string);
+                    const memberList = membersData.data || membersData.members || [];
+                    const studentsOnly = memberList.filter((m: any) => m.role === "member");
+                    setStudents(studentsOnly);
+                } catch (err) {
+                    console.error("Failed to fetch members for AssignTo:", err);
+                }
+            }
 
             // Get requirement
             const reqData = await clearanceService.getRequirementById(reqId as string);
@@ -192,17 +312,37 @@ export default function RequirementDetailsPage() {
                     {tabValue === 0 && (
                         <Container maxWidth="md" sx={{ px: 0 }}>
                             <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
-                                <Avatar sx={{ bgcolor: "#1a73e8", width: 44, height: 44, mt: 0.5 }}>
+                                <Avatar sx={{ bgcolor: "#5f6368", width: 44, height: 44, mt: 0.5 }}>
                                     <AssignmentIcon />
                                 </Avatar>
                                 <Box sx={{ flex: 1 }}>
                                     <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                        <Typography variant="h4" sx={{ fontWeight: 400, color: "#1a73e8", mb: 1, fontSize: "1.75rem", letterSpacing: 0 }}>
+                                        <Typography variant="h4" sx={{ fontWeight: 400, color: "#000", mb: 1, fontSize: "1.75rem", letterSpacing: 0 }}>
                                             {requirement.title}
                                         </Typography>
-                                        <IconButton size="small" sx={{ color: "#5f6368" }}>
+                                        <IconButton 
+                                            size="small" 
+                                            sx={{ color: "#5f6368", bgcolor: menuAnchorEl ? "rgba(0, 0, 0, 0.08)" : "transparent" }}
+                                            onClick={handleMenuClick}
+                                        >
                                             <MoreVertIcon />
                                         </IconButton>
+                                        <Menu
+                                            anchorEl={menuAnchorEl}
+                                            open={Boolean(menuAnchorEl)}
+                                            onClose={handleMenuClose}
+                                            PaperProps={{
+                                                elevation: 2,
+                                                sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
+                                            }}
+                                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                        >
+                                            {isOfficer && <MenuItem onClick={handleEditClick}>Edit</MenuItem>}
+                                            {isOfficer && <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>}
+                                            <MenuItem onClick={handleCopyLink}>Copy link</MenuItem>
+                                        </Menu>
+                                        <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} message="Link copied" />
                                     </Box>
 
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
@@ -247,6 +387,73 @@ export default function RequirementDetailsPage() {
                                 </Box>
                             )}
 
+                            {requirement.attachments && requirement.attachments.length > 0 && (
+                                <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
+                                    <Box display="flex" flexWrap="wrap" gap={2}>
+                                        {requirement.attachments.map((file: any, idx: number) => (
+                                            <Box
+                                                key={idx}
+                                                onClick={() => handleFileClick(file)}
+                                                sx={{
+                                                    width: { xs: "100%", sm: "calc(50% - 8px)" },
+                                                    minWidth: { xs: 0, sm: 260 },
+                                                    display: "flex",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid #dadce0",
+                                                    overflow: "hidden",
+                                                    cursor: "pointer",
+                                                    bgcolor: "#fff",
+                                                    transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+                                                    "&:hover": { bgcolor: "#f1f3f4" }
+                                                }}
+                                            >
+                                                {/* Text Container (Left Column) */}
+                                                <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
+                                                    <Typography 
+                                                        variant="body2" 
+                                                        className="att-title"
+                                                        sx={{ 
+                                                            color: "#3c4043", 
+                                                            fontWeight: 500, 
+                                                            fontSize: "0.875rem",
+                                                            textOverflow: "ellipsis", 
+                                                            overflow: "hidden", 
+                                                            whiteSpace: "nowrap",
+                                                            lineHeight: 1.2,
+                                                            "&:hover": { textDecoration: "underline" }
+                                                        }}
+                                                    >
+                                                        {file.name}
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                        {getFileLabel(file)}
+                                                    </Typography>
+                                                </Box>
+
+                                                {/* Icon Container (Right Column) */}
+                                                <Box sx={{ 
+                                                    width: 72, 
+                                                    height: 72, 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    bgcolor: '#f8f9fa',
+                                                    flexShrink: 0,
+                                                    borderLeft: '1px solid #dadce0',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
+                                                     file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                     file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                                     (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                                     <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
                             <Divider sx={{ mb: 4, borderColor: "#dadce0" }} />
 
                             {/* Comments Section */}
@@ -261,7 +468,7 @@ export default function RequirementDetailsPage() {
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: 4 }}>
                                     {comments.map((comment: any) => (
                                         <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                            <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#1a73e8", fontSize: "1rem" }}>
+                                            <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
                                                 {comment.userId?.fullName?.charAt(0) || "U"}
                                             </Avatar>
                                             <Box>
@@ -281,54 +488,140 @@ export default function RequirementDetailsPage() {
                                     ))}
                                 </Box>
 
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                    <Avatar src={(user as any)?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#9c27b0", fontSize: "1rem" }}>
-                                        {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || user?.username?.charAt(0) || "U"}
-                                    </Avatar>
-                                    <Box sx={{ flex: 1, position: "relative" }}>
-                                        <TextField
-                                            fullWidth
-                                            placeholder="Add class comment..."
-                                            variant="outlined"
-                                            size="small"
-                                            value={newComment}
-                                            onChange={(e) => setNewComment(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleAddComment();
-                                                }
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    borderRadius: "24px",
+                                <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
+                                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                                        <Avatar src={(user as any)?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                                            {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || user?.username?.charAt(0) || "U"}
+                                        </Avatar>
+                                        
+                                        <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
+                                            <Box 
+                                                sx={{ 
+                                                    flex: 1, 
+                                                    border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`, 
+                                                    borderRadius: "24px", 
                                                     bgcolor: "#fff",
-                                                    borderColor: "#dadce0",
-                                                    "& fieldset": { borderColor: "#dadce0" },
-                                                    "&:hover fieldset": { borderColor: "#cce0ff" },
-                                                    "&.Mui-focused fieldset": { borderColor: "#1a73e8" },
-                                                    pr: 5
-                                                }
-                                            }}
-                                        />
-                                        <IconButton
-                                            size="small"
-                                            onClick={handleAddComment}
-                                            disabled={!newComment.trim() || isSubmittingComment}
-                                            sx={{
-                                                position: "absolute",
-                                                right: 4,
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                color: newComment.trim() ? "#1a73e8" : "#ccc"
-                                            }}
-                                        >
-                                            {isSubmittingComment ? <CircularProgress size={20} /> : <SendIcon fontSize="small" />}
-                                        </IconButton>
+                                                    px: 2,
+                                                    py: isCommentFocused ? 1.5 : 0.5,
+                                                    minHeight: isCommentFocused ? 80 : 40,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    transition: 'all 0.2s',
+                                                    boxShadow: isCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none'
+                                                }}
+                                                onClick={() => !isCommentFocused && setIsCommentFocused(true)}
+                                            >
+                                                <InputBase
+                                                    fullWidth
+                                                    multiline={isCommentFocused}
+                                                    minRows={isCommentFocused ? 2 : 1}
+                                                    placeholder="Add class comment..."
+                                                    value={newComment}
+                                                    onChange={(e) => setNewComment(e.target.value)}
+                                                    onFocus={() => setIsCommentFocused(true)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            handleAddComment();
+                                                            setIsCommentFocused(false);
+                                                        }
+                                                    }}
+                                                    sx={{ 
+                                                        typography: 'body2',
+                                                        '& .MuiInputBase-input': { 
+                                                            py: 0.5,
+                                                            fontSize: '0.875rem' 
+                                                        } 
+                                                    }}
+                                                />
+                                                {isCommentFocused && (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
+                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
+                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
+                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            
+                                            <IconButton
+                                                onClick={() => {
+                                                    handleAddComment();
+                                                    setIsCommentFocused(false);
+                                                }}
+                                                disabled={!newComment.trim() || isSubmittingComment}
+                                                sx={{
+                                                    color: newComment.trim() ? "#1a73e8" : "#ccc",
+                                                    p: 1,
+                                                    mb: 0.5,
+                                                    display: (isCommentFocused || newComment.trim() !== "") ? 'inline-flex' : 'none'
+                                                }}
+                                            >
+                                                {isSubmittingComment ? <CircularProgress size={20} /> : <SendOutlinedIcon />}
+                                            </IconButton>
+                                        </Box>
                                     </Box>
-                                </Box>
+                                </ClickAwayListener>
                             </Box>
                         </Container>
+                    )}
+
+                    {isOfficer && (
+                        <>
+                            <CreateRequirementModal
+                                open={isEditModalOpen}
+                                onClose={() => setIsEditModalOpen(false)}
+                                organizationId={orgId as string}
+                                organizationName={organization?.name || ""}
+                                students={students}
+                                onCreated={() => {
+                                    setIsEditModalOpen(false);
+                                    fetchData();
+                                }}
+                                isEdit={true}
+                                editData={requirement}
+                            />
+                            <CreateFormModal
+                                open={isEditFormModalOpen}
+                                onClose={() => setIsEditFormModalOpen(false)}
+                                organizationId={orgId as string}
+                                organizationName={organization?.name || ""}
+                                students={students}
+                                onCreated={() => {
+                                    setIsEditFormModalOpen(false);
+                                    fetchData();
+                                }}
+                                isEdit={true}
+                                editData={requirement}
+                            />
+                            <CreatePollModal
+                                open={isEditPollModalOpen}
+                                onClose={() => setIsEditPollModalOpen(false)}
+                                organizationId={orgId as string}
+                                organizationName={organization?.name || ""}
+                                students={students}
+                                onCreated={() => {
+                                    setIsEditPollModalOpen(false);
+                                    fetchData();
+                                }}
+                                isEdit={true}
+                                editData={requirement}
+                            />
+                            <CreateMaterialModal
+                                open={isEditMaterialModalOpen}
+                                onClose={() => setIsEditMaterialModalOpen(false)}
+                                organizationId={orgId as string}
+                                organizationName={organization?.name || ""}
+                                students={students}
+                                onCreated={() => {
+                                    setIsEditMaterialModalOpen(false);
+                                    fetchData();
+                                }}
+                                isEdit={true}
+                                editData={requirement}
+                            />
+                        </>
                     )}
 
                     {isOfficer && tabValue === 1 && (
@@ -509,8 +802,7 @@ export default function RequirementDetailsPage() {
                                                             '&.Mui-disabled': { backgroundColor: subActionState === 'success' ? '#10b981' : '#E2E8F0', color: subActionState === 'success' ? '#FFFFFF' : '#94A3B8' }
                                                         }}
                                                     >
-                                                        {subActionState === 'loading' && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />}
-                                                        {subActionState === 'idle' ? "Approve" : subActionState === 'loading' ? 'Approving...' : 'Approved!'}
+                                                        {subActionState === 'loading' ? 'Approving...' : subActionState === 'success' ? 'Approved!' : 'Approve'}
                                                     </Button>
                                                     <Button
                                                         fullWidth
@@ -601,6 +893,9 @@ export default function RequirementDetailsPage() {
                     )}
                 </Box>
             </Container>
+
         </RoleLayout>
     );
-}
+};
+
+export default RequirementDetailsPage;

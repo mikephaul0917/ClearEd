@@ -264,7 +264,7 @@ const StreamPage: React.FC = () => {
 
     return (
         <RoleLayout>
-            <Container maxWidth="md">
+            <Container maxWidth="lg">
                 {/* Organization Banner */}
                 <Paper
                     elevation={0}
@@ -472,6 +472,7 @@ const StreamPage: React.FC = () => {
                                         title={req.title}
                                         description={req.description}
                                         instructions={req.instructions}
+                                        attachments={req.attachments}
                                         status={req.status}
                                         isMandatory={req.isMandatory}
                                         isAnnouncement={req.isAnnouncement}
@@ -557,6 +558,7 @@ const StreamPage: React.FC = () => {
                                     title={req.title}
                                     description={req.description}
                                     instructions={req.instructions}
+                                    attachments={req.attachments}
                                     status={req.status}
                                     isMandatory={req.isMandatory}
                                     isAnnouncement={req.isAnnouncement}

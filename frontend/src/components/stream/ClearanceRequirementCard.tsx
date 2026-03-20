@@ -11,6 +11,10 @@ import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import CloseIcon from "@mui/icons-material/Close";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AttachmentIcon from "@mui/icons-material/Attachment";
@@ -25,8 +29,16 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import LinkIcon from "@mui/icons-material/Link";
 import SendIcon from "@mui/icons-material/Send";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import FormatClearIcon from "@mui/icons-material/FormatClear";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import InputBase from "@mui/material/InputBase";
 import { useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { clearanceService } from "../../services";
@@ -71,6 +83,33 @@ export interface ClearanceRequirementCardProps {
     onDelete?: (id: string) => void;
 }
 
+const getFileLabel = (file: any) => {
+    if (file.type === 'Drive') return 'Google Drive';
+    if (file.type === 'YouTube') return 'YouTube video';
+    if (file.type === 'Link') return 'Link';
+    
+    const name = (file.name || '').toLowerCase();
+    if (name.endsWith('.pdf')) return 'PDF';
+    if (name.endsWith('.doc') || name.endsWith('.docx')) return 'Microsoft Word';
+    if (name.endsWith('.xls') || name.endsWith('.xlsx')) return 'Microsoft Excel';
+    if (name.endsWith('.ppt') || name.endsWith('.pptx')) return 'Microsoft PowerPoint';
+    if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return 'Image';
+    if (name.match(/\.(mp4|webm|avi|mov)$/)) return 'Video';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'Archive';
+    
+    return 'File';
+};
+
+const getAbsoluteUrl = (url: string) => {
+    if (!url) return '';
+    const normalizedUrl = url.replace(/\\/g, '/');
+    if (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://')) return normalizedUrl;
+    // @ts-ignore
+    let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    baseUrl = baseUrl.replace(/\/api$/, '');
+    return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
+};
+
 const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     id,
     title,
@@ -101,6 +140,23 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [loadingComments, setLoadingComments] = useState(false);
+    const [isCommentFocused, setIsCommentFocused] = useState(false);
+    
+    const handleFileClick = (file: any) => {
+        if (file.type === 'YouTube' || file.type === 'Link' || file.type === 'Drive') {
+            window.open(file.url, "_blank");
+            return;
+        }
+        
+        const absoluteUrl = getAbsoluteUrl(file.url);
+        const link = document.createElement('a');
+        link.href = absoluteUrl;
+        link.download = file.name || 'download';
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const currentUserStr = localStorage.getItem("user");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
@@ -170,8 +226,8 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                 onClose={handleMenuClose}
                 onClick={(e) => e.stopPropagation()}
                 PaperProps={{
-                    elevation: 3,
-                    sx: { minWidth: 150, borderRadius: 2, mt: 0.5 }
+                    elevation: 2,
+                    sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
                 }}
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
@@ -220,7 +276,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
                             {comments.map((comment: any) => (
                                 <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                    <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#1a73e8", fontSize: "1rem" }}>
+                                    <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
                                         {comment.userId?.fullName?.charAt(0) || "U"}
                                     </Avatar>
                                     <Box>
@@ -240,46 +296,81 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                             ))}
                         </Box>
                     )}
-                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
-                        <Avatar src={currentUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#1a73e8", fontSize: "1rem" }}>
-                            {currentUser?.firstName?.charAt(0) || currentUser?.fullName?.charAt(0) || "U"}
-                        </Avatar>
-                        <Box sx={{ flex: 1, position: "relative" }}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                maxRows={4}
-                                placeholder="Add class comment..."
-                                variant="outlined"
-                                size="small"
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: "20px",
+                    <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
+                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
+                            <Avatar src={currentUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                                {currentUser?.firstName?.charAt(0) || currentUser?.fullName?.charAt(0) || "U"}
+                            </Avatar>
+                            
+                            <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
+                                <Box 
+                                    sx={{ 
+                                        flex: 1, 
+                                        border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`, 
+                                        borderRadius: "24px", 
                                         bgcolor: "#f1f3f4",
-                                        "& fieldset": { borderColor: "transparent" },
-                                        "&:hover fieldset": { borderColor: "transparent" },
-                                        "&.Mui-focused fieldset": { borderColor: "transparent" },
-                                        pr: 5
-                                    }
-                                }}
-                            />
-                            <IconButton 
-                                size="small" 
-                                onClick={handleAddComment}
-                                disabled={!newComment.trim() || isSubmittingComment}
-                                sx={{ 
-                                    position: "absolute", 
-                                    right: 4, 
-                                    bottom: 4,
-                                    color: newComment.trim() ? "#1a73e8" : "#ccc"
-                                }}
-                            >
-                                {isSubmittingComment ? <CircularProgress size={20} /> : <SendIcon fontSize="small" />}
-                            </IconButton>
+                                        px: 2,
+                                        py: isCommentFocused ? 1.5 : 0.5,
+                                        minHeight: isCommentFocused ? 80 : 40,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        transition: 'all 0.2s',
+                                        boxShadow: isCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none'
+                                    }}
+                                    onClick={() => !isCommentFocused && setIsCommentFocused(true)}
+                                >
+                                    <InputBase
+                                        fullWidth
+                                        multiline={isCommentFocused}
+                                        minRows={isCommentFocused ? 2 : 1}
+                                        placeholder="Add class comment..."
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onFocus={() => setIsCommentFocused(true)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleAddComment();
+                                                setIsCommentFocused(false);
+                                            }
+                                        }}
+                                        sx={{ 
+                                            typography: 'body2',
+                                            '& .MuiInputBase-input': { 
+                                                py: 0.5,
+                                                fontSize: '0.875rem' 
+                                            } 
+                                        }}
+                                    />
+                                    {isCommentFocused && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
+                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
+                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
+                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
+                                        </Box>
+                                    )}
+                                </Box>
+                                
+                                <IconButton
+                                    onClick={() => {
+                                        handleAddComment();
+                                        setIsCommentFocused(false);
+                                    }}
+                                    disabled={!newComment.trim() || isSubmittingComment}
+                                    sx={{
+                                        color: newComment.trim() ? "#1a73e8" : "#ccc",
+                                        p: 1,
+                                        mb: 0.5,
+                                        display: (isCommentFocused || newComment.trim() !== "") ? 'inline-flex' : 'none'
+                                    }}
+                                >
+                                    {isSubmittingComment ? <CircularProgress size={20} /> : <SendOutlinedIcon />}
+                                </IconButton>
+                            </Box>
                         </Box>
-                    </Box>
+                    </ClickAwayListener>
                 </Box>
             </Collapse>
         </Box>
@@ -330,365 +421,384 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     // ANNOUNCEMENT SPECIFIC GOOGLE CLASSROOM LAYOUT
     if (type === 'announcement' || isAnnouncement) {
         return (
-            <Paper
-                elevation={0}
-                sx={{
-                    bgcolor: "#f1f3f4",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(0,0,0,0.1)",
-                    mb: 2,
-                    p: 0,
-                    overflow: "hidden",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
-                    }
-                }}
-            >
-                <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <Box display="flex" gap={3} alignItems="center">
-                        <Avatar 
-                            src={author?.profilePicture} 
-                            sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
-                        >
-                            {author?.fullName?.charAt(0) || "U"}
-                        </Avatar>
-                        <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem", fontFamily: "'Google Sans', 'Inter', sans-serif" }}>
-                                {author ? author.fullName : "User"}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
-                                {createdAt ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Time"}
-                            </Typography>
+            <>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        bgcolor: "#f1f3f4",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(0,0,0,0.1)",
+                        mb: 2,
+                        p: 0,
+                        overflow: "hidden",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
+                        }
+                    }}
+                >
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <Box display="flex" gap={3} alignItems="center">
+                            <Avatar 
+                                src={author?.profilePicture} 
+                                sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
+                            >
+                                {author?.fullName?.charAt(0) || "U"}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem", fontFamily: "'Google Sans', 'Inter', sans-serif" }}>
+                                    {author ? author.fullName : "User"}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
+                                    {createdAt ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Time"}
+                                </Typography>
+                            </Box>
                         </Box>
+                        <IconButton size="small" sx={{ color: "#5f6368", bgcolor: menuAnchorEl && openMenu ? "rgba(0, 0, 0, 0.08)" : "transparent" }} onClick={handleMenuClick}>
+                            <MoreVertIcon fontSize="small" />
+                        </IconButton>
                     </Box>
-                    <IconButton size="small" sx={{ color: "#5f6368" }} onClick={handleMenuClick}>
-                        <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                </Box>
-                
-                <Box sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            whiteSpace: "pre-wrap",
-                            fontFamily: "'Roboto', 'Inter', sans-serif",
-                            fontSize: "0.875rem",
-                            color: "#3c4043",
-                            lineHeight: 1.5
-                        }}
-                        dangerouslySetInnerHTML={{ __html: description }}
-                    />
                     
-                    {attachments.length > 0 && (
-                        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
-                            {attachments.map((file, idx) => (
-                                <Box
-                                    key={idx}
-                                    sx={{
-                                        width: { xs: "100%", sm: "calc(50% - 8px)", md: "calc(33.333% - 11px)" },
-                                        display: "flex",
-                                        borderRadius: "8px",
-                                        border: "1px solid #dadce0",
-                                        overflow: "hidden",
-                                        cursor: "pointer",
-                                        bgcolor: "#fff",
-                                        transition: "box-shadow 0.2s ease, background-color 0.2s ease",
-                                        "&:hover": { bgcolor: "#f1f3f4" }
-                                    }}
-                                >
-                                    {/* Icon Container (Left Column) */}
-                                    <Box sx={{ 
-                                        width: 80, 
-                                        height: 60, 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center', 
-                                        borderRight: '1px solid #dadce0',
-                                        bgcolor: '#fff'
-                                    }}>
-                                        {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
-                                         file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
-                                         file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
-                                         <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />}
-                                    </Box>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                whiteSpace: "pre-wrap",
+                                fontFamily: "'Roboto', 'Inter', sans-serif",
+                                fontSize: "0.875rem",
+                                color: "#3c4043",
+                                lineHeight: 1.5
+                            }}
+                            dangerouslySetInnerHTML={{ __html: description }}
+                        />
+                        
+                        {attachments.length > 0 && (
+                            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
+                                {attachments.map((file, idx) => (
+                                    <Box
+                                        key={idx}
+                                        sx={{
+                                            width: { xs: "100%", sm: "calc(50% - 8px)" },
+                                            minWidth: { xs: 0, sm: 260 },
+                                            display: "flex",
+                                            borderRadius: "8px",
+                                            border: "1px solid #dadce0",
+                                            overflow: "hidden",
+                                            cursor: "pointer",
+                                            bgcolor: "#fff",
+                                            transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+                                            "&:hover": { bgcolor: "#f1f3f4" }
+                                        }}
+                                        onClick={() => handleFileClick(file)}
+                                    >
+                                        {/* Text Container (Left Column) */}
+                                        <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
+                                            <Typography 
+                                                variant="body2" 
+                                                className="att-title"
+                                                sx={{ 
+                                                    color: "#3c4043", 
+                                                    fontWeight: 500, 
+                                                    fontSize: "0.875rem",
+                                                    textOverflow: "ellipsis", 
+                                                    overflow: "hidden", 
+                                                    whiteSpace: "nowrap",
+                                                    lineHeight: 1.2,
+                                                    "&:hover": { textDecoration: "underline" }
+                                                }}
+                                            >
+                                                {file.name}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                {getFileLabel(file)}
+                                            </Typography>
+                                        </Box>
 
-                                    {/* Text Container (Right Column) */}
-                                    <Box sx={{ p: '8px 12px', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center' }}>
-                                        <Typography 
-                                            variant="body2" 
-                                            sx={{ 
-                                                color: "#3c4043", 
-                                                fontWeight: 500, 
-                                                fontSize: "0.875rem",
-                                                textOverflow: "ellipsis", 
-                                                overflow: "hidden", 
-                                                whiteSpace: "nowrap",
-                                                lineHeight: 1.2
-                                            }}
-                                        >
-                                            {file.name}
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", textTransform: "uppercase", mt: 0.5 }}>
-                                            {file.type === 'Link' ? 'LINK' : file.type === 'Drive' ? 'GOOGLE DRIVE' : file.type === 'YouTube' ? 'YOUTUBE' : 'FILE'}
-                                        </Typography>
+                                        {/* Icon Container (Right Column) */}
+                                        <Box sx={{ 
+                                            width: 72, 
+                                            height: 72, 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            bgcolor: '#f8f9fa',
+                                            flexShrink: 0,
+                                            borderLeft: '1px solid #dadce0',
+                                            overflow: 'hidden'
+                                        }}>
+                                            {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
+                                             file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                             file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                             (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                             <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                        </Box>
                                     </Box>
-                                </Box>
-                            ))}
-                        </Box>
-                    )}
-                </Box>
-                {renderCommentsSection()}
-                {renderSharedMenus()}
-            </Paper>
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
+                    {renderCommentsSection()}
+                    {renderSharedMenus()}
+                </Paper>
+                </>
         );
     }
 
     return (
-        <Paper
-            elevation={0}
-            sx={{
-                bgcolor: expanded ? "#f8f9fa" : "#fff",
-                borderRadius: "8px",
-                border: "1px solid #dadce0",
-                mb: 2,
-                overflow: "hidden",
-                transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-                "&:hover": {
-                    boxShadow: expanded ? "none" : "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
-                }
-            }}
-        >
-            {/* Summary/Header Row */}
-            <Box
+        <>
+            <Paper
+                elevation={0}
                 sx={{
-                    px: { xs: 2, sm: 3 },
-                    py: { xs: 1.5, sm: 2 },
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                    bgcolor: expanded ? "#f1f3f4" : "transparent",
-                    border: expanded ? "2px solid #1a73e8" : "2px solid transparent",
-                    borderRadius: expanded ? "8px" : "0",
-                    transition: "border 0.15s ease",
-                    boxSizing: 'border-box'
+                    bgcolor: expanded ? "#f8f9fa" : "#fff",
+                    borderRadius: "8px",
+                    border: "1px solid #dadce0",
+                    mb: 2,
+                    overflow: "hidden",
+                    transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+                    "&:hover": {
+                        boxShadow: expanded ? "none" : "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
+                    }
                 }}
-                onClick={() => setExpanded(!expanded)}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 3, flex: 1 }}>
-                    <Avatar sx={{ bgcolor: avatarConfig.color, width: 40, height: 40 }}>
-                        {avatarConfig.icon}
-                    </Avatar>
+                {/* Summary/Header Row */}
+                <Box
+                    sx={{
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 1.5, sm: 2 },
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: "pointer",
+                        bgcolor: expanded ? "#f1f3f4" : "transparent",
+                        border: expanded ? "2px solid #1a73e8" : "2px solid transparent",
+                        borderRadius: expanded ? "8px" : "0",
+                        transition: "border 0.15s ease",
+                        boxSizing: 'border-box'
+                    }}
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3, flex: 1 }}>
+                        <Avatar sx={{ bgcolor: avatarConfig.color, width: 40, height: 40 }}>
+                            {avatarConfig.icon}
+                        </Avatar>
 
-                    <Typography
-                        variant="subtitle1"
-                        sx={{
-                            fontWeight: 500,
-                            lineHeight: 1.3,
-                            fontFamily: "'Google Sans', 'Roboto', 'Inter', sans-serif",
-                            fontSize: "1rem",
-                            color: "#3c4043"
-                        }}
-                    >
-                        {title}
-                    </Typography>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{
+                                fontWeight: 500,
+                                lineHeight: 1.3,
+                                fontFamily: "'Google Sans', 'Roboto', 'Inter', sans-serif",
+                                fontSize: "1rem",
+                                color: "#3c4043"
+                            }}
+                        >
+                            {title}
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: "#5f6368",
+                                fontFamily: "'Roboto', 'Inter', sans-serif",
+                                fontSize: "0.875rem",
+                                display: { xs: 'none', sm: 'block' }
+                            }}
+                        >
+                            {createdAt ? `Posted ${new Date(createdAt).toLocaleDateString() === new Date().toLocaleDateString() ? 'Today' : new Date(createdAt).toLocaleDateString()}` : "Posted Yesterday"}
+                        </Typography>
+                        <IconButton
+                            size="small"
+                            onClick={handleMenuClick}
+                            sx={{ color: "#5f6368", mr: -1, bgcolor: menuAnchorEl && openMenu ? "rgba(0, 0, 0, 0.08)" : "transparent" }}
+                        >
+                            <MoreVertIcon />
+                        </IconButton>
+                    </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
-                    <Typography
-                        variant="caption"
-                        sx={{
-                            color: "#5f6368",
-                            fontFamily: "'Roboto', 'Inter', sans-serif",
-                            fontSize: "0.875rem",
-                            display: { xs: 'none', sm: 'block' }
-                        }}
-                    >
-                        {createdAt ? `Posted ${new Date(createdAt).toLocaleDateString() === new Date().toLocaleDateString() ? 'Today' : new Date(createdAt).toLocaleDateString()}` : "Posted Yesterday"}
-                    </Typography>
-                    <IconButton
-                        size="small"
-                        onClick={handleMenuClick}
-                        sx={{ color: "#5f6368", mr: -1 }}
-                    >
-                        <MoreVertIcon />
-                    </IconButton>
-                </Box>
-            </Box>
+                {/* Expandable Content */}
+                <Collapse in={expanded}>
+                    <Box sx={{ p: 0 }}>
+                        {/* Top Row: Details & Stats */}
+                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, p: { xs: 2, sm: 3 }, pt: 3, gap: 4 }}>
+                            {/* Left Side: Instructions */}
+                            <Box sx={{ flex: 1 }}>
+                                {type !== 'material' && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: "#3c4043",
+                                                fontFamily: "'Roboto', 'Inter', sans-serif",
+                                                fontWeight: 500,
+                                                fontSize: "0.875rem",
+                                            }}
+                                        >
+                                            {points ? (points === 'Ungraded' ? 'Ungraded' : `${points} points`) : "100 points"}
+                                        </Typography>
+                                        
+                                        <Typography variant="caption" sx={{ color: '#5f6368', fontWeight: 500 }}>•</Typography>
+                                        
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: "#3c4043",
+                                                fontFamily: "'Roboto', 'Inter', sans-serif",
+                                                fontWeight: 500,
+                                                fontSize: "0.875rem",
+                                            }}
+                                        >
+                                            {dueDate ? `Due ${new Date(dueDate).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : "No due date"}
+                                        </Typography>
+                                    </Box>
+                                )}
 
-            {/* Expandable Content */}
-            <Collapse in={expanded}>
-                <Box sx={{ p: 0 }}>
-                    {/* Top Row: Details & Stats */}
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, p: { xs: 2, sm: 3 }, pt: 3, gap: 4 }}>
-                        {/* Left Side: Instructions */}
-                        <Box sx={{ flex: 1 }}>
-                            {type !== 'material' && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            color: "#3c4043",
-                                            fontFamily: "'Roboto', 'Inter', sans-serif",
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                        }}
-                                    >
-                                        {points ? (points === 'Ungraded' ? 'Ungraded' : `${points} points`) : "100 points"}
-                                    </Typography>
-                                    
-                                    <Typography variant="caption" sx={{ color: '#5f6368', fontWeight: 500 }}>•</Typography>
-                                    
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            color: "#3c4043",
-                                            fontFamily: "'Roboto', 'Inter', sans-serif",
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                        }}
-                                    >
-                                        {dueDate ? `Due ${new Date(dueDate).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : "No due date"}
-                                    </Typography>
-                                </Box>
-                            )}
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        mb: 3,
+                                        whiteSpace: "pre-wrap",
+                                        fontFamily: "'Roboto', 'Inter', sans-serif",
+                                        fontSize: "0.875rem",
+                                        color: "#3c4043",
+                                        lineHeight: 1.6
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: description }}
+                                />
 
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    mb: 3,
-                                    whiteSpace: "pre-wrap",
-                                    fontFamily: "'Roboto', 'Inter', sans-serif",
-                                    fontSize: "0.875rem",
-                                    color: "#3c4043",
-                                    lineHeight: 1.6
-                                }}
-                                dangerouslySetInnerHTML={{ __html: description }}
-                            />
+                                {instructions && (
+                                    <Box sx={{ mb: 3 }}>
+                                        <Typography
+                                            variant="body2"
+                                            color="#3c4043"
+                                            sx={{ whiteSpace: "pre-wrap", fontFamily: "'Roboto', 'Inter', sans-serif", lineHeight: 1.6 }}
+                                            dangerouslySetInnerHTML={{ __html: instructions }}
+                                        />
+                                    </Box>
+                                )}
 
-                            {instructions && (
-                                <Box sx={{ mb: 3 }}>
-                                    <Typography
-                                        variant="body2"
-                                        color="#3c4043"
-                                        sx={{ whiteSpace: "pre-wrap", fontFamily: "'Roboto', 'Inter', sans-serif", lineHeight: 1.6 }}
-                                        dangerouslySetInnerHTML={{ __html: instructions }}
-                                    />
-                                </Box>
-                            )}
+                                {attachments.length > 0 && (
+                                    <Box sx={{ mb: 3 }}>
+                                        <Box display="flex" flexWrap="wrap" gap={2}>
+                                            {attachments.map((file, idx) => (
+                                                <Box
+                                                    key={idx}
+                                                    sx={{
+                                                        width: { xs: "100%", sm: "calc(50% - 8px)" },
+                                                        minWidth: { xs: 0, sm: 260 },
+                                                        display: "flex",
+                                                        borderRadius: "8px",
+                                                        border: "1px solid #dadce0",
+                                                        overflow: "hidden",
+                                                        cursor: "pointer",
+                                                        bgcolor: "#fff",
+                                                        transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+                                                        "&:hover": { bgcolor: "#f1f3f4" }
+                                                    }}
+                                                    onClick={() => handleFileClick(file)}
+                                                >
+                                                    {/* Text Container (Left Column) */}
+                                                    <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
+                                                        <Typography 
+                                                            variant="body2" 
+                                                            className="att-title"
+                                                            sx={{ 
+                                                                color: "#3c4043", 
+                                                                fontWeight: 500, 
+                                                                fontSize: "0.875rem",
+                                                                textOverflow: "ellipsis", 
+                                                                overflow: "hidden", 
+                                                                whiteSpace: "nowrap",
+                                                                lineHeight: 1.2,
+                                                                "&:hover": { textDecoration: "underline" }
+                                                            }}
+                                                        >
+                                                            {file.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                            {getFileLabel(file)}
+                                                        </Typography>
+                                                    </Box>
 
-                            {attachments.length > 0 && (
-                                <Box sx={{ mb: 3 }}>
-                                    <Box display="flex" flexWrap="wrap" gap={2}>
-                                        {attachments.map((file, idx) => (
-                                            <Box
-                                                key={idx}
-                                                sx={{
-                                                    width: { xs: "100%", sm: "calc(50% - 8px)", md: "calc(33.333% - 11px)" },
-                                                    display: "flex",
-                                                    borderRadius: "8px",
-                                                    border: "1px solid #dadce0",
-                                                    overflow: "hidden",
-                                                    cursor: "pointer",
-                                                    bgcolor: "#fff",
-                                                    transition: "box-shadow 0.2s ease, background-color 0.2s ease",
-                                                    "&:hover": { bgcolor: "#f1f3f4" }
-                                                }}
-                                            >
-                                                {/* Icon Container (Left Column) */}
-                                                <Box sx={{ 
-                                                    width: 80, 
-                                                    height: 60, 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center', 
-                                                    borderRight: '1px solid #dadce0',
-                                                    bgcolor: '#fff'
-                                                }}>
-                                                    {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
-                                                     file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
-                                                     file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
-                                                     <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />}
+                                                    {/* Icon Container (Right Column) */}
+                                                    <Box sx={{ 
+                                                        width: 72, 
+                                                        height: 72, 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        justifyContent: 'center', 
+                                                        bgcolor: '#f8f9fa',
+                                                        flexShrink: 0,
+                                                        borderLeft: '1px solid #dadce0',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
+                                                         file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                         file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                                         (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                                         <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                    </Box>
                                                 </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
+                            </Box>
 
-                                                {/* Text Container (Right Column) */}
-                                                <Box sx={{ p: '8px 12px', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center' }}>
-                                                    <Typography 
-                                                        variant="body2" 
-                                                        sx={{ 
-                                                            color: "#3c4043", 
-                                                            fontWeight: 500, 
-                                                            fontSize: "0.875rem",
-                                                            textOverflow: "ellipsis", 
-                                                            overflow: "hidden", 
-                                                            whiteSpace: "nowrap",
-                                                            lineHeight: 1.2
-                                                        }}
-                                                    >
-                                                        {file.name}
-                                                    </Typography>
-                                                    <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", textTransform: "uppercase", mt: 0.5 }}>
-                                                        {file.type === 'Link' ? 'LINK' : file.type === 'Drive' ? 'GOOGLE DRIVE' : file.type === 'YouTube' ? 'YOUTUBE' : 'FILE'}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        ))}
+                            {/* Right Side: Stats Block */}
+                            {type !== 'announcement' && !isAnnouncement && type !== 'material' && (
+                                <Box sx={{ display: 'flex', gap: 4, pl: { md: 4 }, pr: 2, pt: 0, height: 'fit-content' }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
+                                            {stats?.pending || 0}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                            Handed in
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
+                                            {(stats?.pending || 0) + (stats?.approved || 0) + (stats?.rejected || 0) || 0}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                            Assigned
+                                        </Typography>
                                     </Box>
                                 </Box>
                             )}
                         </Box>
 
-                        {/* Right Side: Stats Block */}
-                        {type !== 'announcement' && !isAnnouncement && type !== 'material' && (
-                            <Box sx={{ display: 'flex', gap: 4, pl: { md: 4 }, pr: 2, pt: 0, height: 'fit-content' }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
-                                    <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
-                                        {stats?.pending || 0}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
-                                        Handed in
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
-                                    <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
-                                        {(stats?.pending || 0) + (stats?.approved || 0) + (stats?.rejected || 0) || 0}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
-                                        Assigned
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        )}
-                    </Box>
+                        <Divider sx={{ borderColor: '#e0e0e0' }} />
 
-                    <Divider sx={{ borderColor: '#e0e0e0' }} />
-
-                    {/* Bottom Row: View Instructions Action */}
-                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
-                        <Button
-                            variant="text"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (onAction) onAction(id);
-                            }}
-                            sx={{
-                                color: "#1a73e8",
-                                textTransform: "none",
-                                fontWeight: 500,
-                                fontSize: "0.875rem",
-                                minWidth: 'auto',
-                                p: 0,
-                                '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
-                            }}
-                        >
-                            View instructions
-                        </Button>
+                        {/* Bottom Row: View Instructions Action */}
+                        <Box sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+                            <Button
+                                variant="text"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onAction) onAction(id);
+                                }}
+                                sx={{
+                                    color: "#1a73e8",
+                                    textTransform: "none",
+                                    fontWeight: 500,
+                                    fontSize: "0.875rem",
+                                    minWidth: 'auto',
+                                    p: 0,
+                                    '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
+                                }}
+                            >
+                                View instructions
+                            </Button>
+                        </Box>
                     </Box>
-                </Box>
-            </Collapse>
-            {renderSharedMenus()}
-        </Paper>
+                </Collapse>
+                {renderSharedMenus()}
+            </Paper>
+
+        </>
     );
 };
 
