@@ -16,11 +16,15 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FormatClearIcon from "@mui/icons-material/FormatClear";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import PersonIcon from "@mui/icons-material/Person";
 import BookIcon from "@mui/icons-material/Book";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import FileOpenIcon from "@mui/icons-material/FileOpen";
+import AddIcon from "@mui/icons-material/Add";
 import Checkbox from "@mui/material/Checkbox";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -138,6 +142,52 @@ const RequirementDetailsPage: React.FC = () => {
     const [subRemarks, setSubRemarks] = useState("");
     const [subActionState, setSubActionState] = useState<'idle' | 'loading' | 'success'>('idle');
     const [subError, setSubError] = useState<string | null>(null);
+
+    // Student specific submission state
+    const [studentFiles, setStudentFiles] = useState<File[]>([]);
+    const [studentNotesText, setStudentNotesText] = useState("");
+    const [isSubmittingWork, setIsSubmittingWork] = useState(false);
+    const [studentSubError, setStudentSubError] = useState<string | null>(null);
+
+    const handleStudentFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setStudentFiles([...studentFiles, ...Array.from(e.target.files)]);
+        }
+    };
+
+    const removeStudentFile = (index: number) => {
+        setStudentFiles(studentFiles.filter((_, i) => i !== index));
+    };
+
+    const handleStudentSubmit = async () => {
+        const existingFiles = requirement?.submission?.files || [];
+        if (studentFiles.length === 0 && existingFiles.length === 0) {
+            setStudentSubError("Please upload at least one file.");
+            return;
+        }
+
+        setIsSubmittingWork(true);
+        setStudentSubError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append("clearanceRequirementId", reqId as string);
+            formData.append("organizationId", orgId as string);
+            formData.append("studentNotes", studentNotesText);
+            studentFiles.forEach(file => {
+                formData.append("files", file);
+            });
+
+            await clearanceService.submitRequirement(formData);
+            await fetchData();
+            setStudentFiles([]);
+            setStudentNotesText("");
+        } catch (err: any) {
+            setStudentSubError(err.response?.data?.message || "Failed to submit work. Please try again.");
+        } finally {
+            setIsSubmittingWork(false);
+        }
+    };
 
     const handleFileClick = (file: any) => {
         if (file.type === 'YouTube' || file.type === 'Link' || file.type === 'Drive') {
@@ -285,7 +335,7 @@ const RequirementDetailsPage: React.FC = () => {
     return (
         <RoleLayout>
             <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
-                {requirement?.type !== 'material' && (
+                {requirement?.type !== 'material' && isOfficer && (
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                         <Tabs
                             value={tabValue}
@@ -314,7 +364,8 @@ const RequirementDetailsPage: React.FC = () => {
 
                 <Box sx={{ py: 4, px: { xs: 2, md: 0 } }}>
                     {tabValue === 0 && (
-                        <Container maxWidth="md" sx={{ px: 0 }}>
+                        <Container maxWidth="lg" sx={{ px: 0, display: "flex", gap: { xs: 3, md: 4 }, flexDirection: { xs: "column", md: "row" }, alignItems: 'flex-start' }}>
+                            <Box sx={{ flex: 1, minWidth: 0, order: { xs: 2, md: 1 } }}>
                             <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
                                 <Avatar sx={{ bgcolor: "#5f6368", width: 44, height: 44, mt: 0.5 }}>
                                     {requirement?.type === 'poll' ? <LiveHelpIcon /> : requirement?.type === 'material' ? <BookIcon /> : <AssignmentIcon />}
@@ -595,6 +646,127 @@ const RequirementDetailsPage: React.FC = () => {
                                     </Box>
                                 </ClickAwayListener>
                             </Box>
+                        </Box>
+                            
+                            {/* Right Column: Student Submission Card */}
+                            {!isOfficer && requirement?.type !== 'material' && (
+                                <Box sx={{ width: { xs: "100%", md: 320 }, flexShrink: 0, order: { xs: 1, md: 2 } }}>
+                                    <Paper elevation={0} sx={{ border: "1px solid #dadce0", borderRadius: 2, mb: 3, overflow: "hidden" }}>
+                                        <Box sx={{ p: 2.5, pb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                            <Typography variant="h6" sx={{ fontSize: "1.25rem", color: "#3c4043", fontWeight: 400 }}>
+                                                Your submission
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ 
+                                                color: requirement?.submission?.status === "approved" ? "#10B981" : 
+                                                       requirement?.submission?.status === "pending" ? "#F59E0B" : 
+                                                       requirement?.submission?.status === "rejected" ? "#EF4444" : "#1a73e8", 
+                                                fontWeight: 500 
+                                            }}>
+                                                {requirement?.submission?.status === "approved" ? "Approved" : 
+                                                 requirement?.submission?.status === "pending" ? "Turned in" : 
+                                                 requirement?.submission?.status === "rejected" ? "Returned" : "Missing"}
+                                            </Typography>
+                                        </Box>
+                                        
+                                        <Box sx={{ px: 2.5, pb: 2.5 }}>
+                                            {/* File List */}
+                                            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
+                                                {((requirement?.submission?.files || []).length > 0 || studentFiles.length > 0) ? (
+                                                    <>
+                                                        {(requirement?.submission?.files || []).map((file: any, idx: number) => (
+                                                            <Box
+                                                                key={`ext-${idx}`}
+                                                                sx={{ p: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #dadce0", borderRadius: 1.5, cursor: "pointer", "&:hover": { bgcolor: "#f8f9fa" } }}
+                                                                onClick={() => {
+                                                                    window.open(`${api.defaults.baseURL}/clearance-items/download/${file.filename}`, "_blank");
+                                                                }}
+                                                            >
+                                                                <Box display="flex" alignItems="center" gap={1.5} sx={{ overflow: "hidden" }}>
+                                                                    <Box sx={{ width: 32, height: 32, bgcolor: "#f1f3f4", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                                        <InsertDriveFileIcon sx={{ color: "#1a73e8", fontSize: 20 }} />
+                                                                    </Box>
+                                                                    <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                                                        <Typography variant="body2" sx={{ fontWeight: 500, color: "#3c4043", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                                            {file.originalName}
+                                                                        </Typography>
+                                                                        <Typography variant="caption" sx={{ color: "#5f6368" }}>File</Typography>
+                                                                    </Box>
+                                                                </Box>
+                                                            </Box>
+                                                        ))}
+                                                        {studentFiles.map((file, idx) => (
+                                                            <Box
+                                                                key={`new-${idx}`}
+                                                                sx={{ p: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #dadce0", borderRadius: 1.5 }}
+                                                            >
+                                                                <Box display="flex" alignItems="center" gap={1.5} sx={{ overflow: "hidden" }}>
+                                                                    <Box sx={{ width: 32, height: 32, bgcolor: "#f1f3f4", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                                        <InsertDriveFileIcon sx={{ color: "#1a73e8", fontSize: 20 }} />
+                                                                    </Box>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 500, color: "#3c4043", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                                        {file.name}
+                                                                    </Typography>
+                                                                </Box>
+                                                                <IconButton size="small" onClick={() => removeStudentFile(idx)} sx={{ color: "#5f6368" }}>
+                                                                    <CloseIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Box>
+                                                        ))}
+                                                    </>
+                                                ) : null}
+                                            </Box>
+                                            
+                                            {/* Action Buttons */}
+                                            {requirement?.submission?.status === "approved" ? (
+                                                <Button fullWidth disabled variant="contained" sx={{ bgcolor: "#10B981 !important", color: "white !important", borderRadius: 1, py: 1, textTransform: "none", fontWeight: 500 }}>
+                                                    Approved
+                                                </Button>
+                                            ) : requirement?.submission?.status === "pending" ? (
+                                                <Button fullWidth variant="outlined" disabled={isSubmittingWork} sx={{ textTransform: "none", fontSize: '0.875rem', borderRadius: 1, py: 1, borderColor: "#dadce0", color: "#1a73e8", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)" } }}>
+                                                    Unsubmit
+                                                </Button>
+                                            ) : (
+                                                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                                                    <input type="file" id="file-upload" multiple style={{ display: "none" }} onChange={handleStudentFileChange} />
+                                                    <label htmlFor="file-upload" style={{ width: '100%' }}>
+                                                        <Button component="span" fullWidth variant="outlined" startIcon={<AddIcon />} sx={{ textTransform: 'none', borderRadius: 1, py: 1, fontSize: '0.875rem', borderColor: "#dadce0", color: "#1a73e8", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)", borderColor: "#dadce0" } }}>
+                                                            Add or create
+                                                        </Button>
+                                                    </label>
+                                                    
+                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#1a73e8", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#1557b0", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
+                                                        {isSubmittingWork ? <CircularProgress size={24} color="inherit" /> : requirement?.submission?.status === "rejected" || requirement?.submission?.status === "resubmission_required" ? "Resubmit" : "Mark as done"}
+                                                    </Button>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </Paper>
+                                    
+                                    {studentSubError && (
+                                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{studentSubError}</Alert>
+                                    )}
+                                    
+                                    {/* Private Comments Card */}
+                                    <Paper elevation={0} sx={{ border: "1px solid #dadce0", borderRadius: 2, overflow: "hidden" }}>
+                                        <Box sx={{ px: 2.5, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
+                                            <PersonIcon sx={{ color: "#5f6368", fontSize: 20 }} />
+                                            <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500 }}>
+                                                Private comments
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ px: 2.5, pb: 2.5 }}>
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1, px: 2, border: "1px solid #dadce0", borderRadius: 6, cursor: "text" }}>
+                                                <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368" }}>
+                                                    {(user as any)?.firstName?.charAt(0) || "U"}
+                                                </Avatar>
+                                                <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                                    Add comment to {requirement?.createdBy?.fullName || "Officer"}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Paper>
+                                </Box>
+                            )}
                         </Container>
                     )}
 

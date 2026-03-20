@@ -20,6 +20,7 @@ import HomePage from "./pages/public/HomePage";
 import StreamPage from "./pages/stream/StreamPage";
 import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
 import TodoPage from "./pages/todo/TodoPage";
+import ToReviewPage from "./pages/officer/ToReviewPage";
 import Header from "./components/layout/Header";
 import GlobalAnnouncements from "./components/GlobalAnnouncements";
 import Box from "@mui/material/Box";
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/officer/review" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
           <Route path="/officer/remarks" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
           <Route path="/officer/settings" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
+          <Route path="/officer/to-review" element={<ProtectedRoute allowedRoles={['officer']}><ToReviewPage /></ProtectedRoute>} />
 
           {/* Dean routes - all handled by DeanPage component with internal routing */}
           <Route path="/dean" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />

@@ -194,7 +194,25 @@ export const getSignatoryRequirements = async (req: Request, res: Response) => {
     }).populate("organizationId", "name")
       .sort({ createdAt: -1 });
 
-    res.json({ requirements });
+    const stats = await ClearanceSubmission.aggregate([
+      { $match: { organizationId: { $in: organizationIds } } },
+      { $group: { _id: { requirementId: "$clearanceRequirementId", status: "$status" }, count: { $sum: 1 } } }
+    ]);
+
+    const requirementsWithStats = requirements.map(reqObj => {
+      const reqIdStr = (reqObj._id as any).toString();
+      const reqStats = stats.filter(s => s._id.requirementId && s._id.requirementId.toString() === reqIdStr);
+      return {
+        ...reqObj.toObject(),
+        stats: {
+          pending: reqStats.find(s => s._id.status === 'pending')?.count || 0,
+          approved: reqStats.find(s => s._id.status === 'approved')?.count || 0,
+          rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0
+        }
+      };
+    });
+
+    res.json({ requirements: requirementsWithStats });
   } catch (err: any) {
     res.status(500).json({ message: err.message || "Failed to list requirements" });
   }

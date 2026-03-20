@@ -5,7 +5,7 @@ import ClearanceRequirement from "../models/ClearanceRequirement";
 export const getComments = async (req: Request, res: Response) => {
   try {
     const { requirementId } = req.params;
-    
+
     // Check if the requirement exists (it might be an announcement)
     const requirement = await ClearanceRequirement.findById(requirementId);
     if (!requirement) {
