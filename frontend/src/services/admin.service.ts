@@ -125,6 +125,30 @@ export const adminService = {
         return response.data;
     },
 
+    // Dean Assignments
+    getDeanAssignments: async (userId: string) => {
+        const response = await api.get(`/admin/users/${userId}/dean-assignments`);
+        return response.data;
+    },
+    addDeanAssignment: async (userId: string, data: { course: string; yearLevel?: string }) => {
+        const response = await api.post(`/admin/users/${userId}/dean-assignments`, data);
+        return response.data;
+    },
+    removeDeanAssignment: async (userId: string, assignmentId: string) => {
+        const response = await api.delete(`/admin/users/${userId}/dean-assignments/${assignmentId}`);
+        return response.data;
+    },
+    
+    // Student Profile (Course and Year Assignment)
+    getStudentProfile: async (userId: string) => {
+        const response = await api.get(`/admin/users/${userId}/student-profile`);
+        return response.data;
+    },
+    updateStudentProfile: async (userId: string, data: { isStudent: boolean; course?: string; yearLevel?: string }) => {
+        const response = await api.put(`/admin/users/${userId}/student-profile`, data);
+        return response.data;
+    },
+
 
     // Quote Management
     getQuotes: async () => {

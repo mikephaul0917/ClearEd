@@ -1,19 +1,16 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import ClearanceRequest from "../../models/ClearanceRequest";
 import ClearanceSubmission from "../../models/ClearanceSubmission";
-import ClearanceReview from "../../models/ClearanceReview";
 import DeanAssignment from "../../models/DeanAssignment";
 import StudentProfile from "../../models/StudentProfile";
+import OrganizationMember from "../../models/OrganizationMember";
 import User from "../../models/User";
 import Term from "../../models/Term";
 import AuditLog from "../../models/AuditLog";
+import FinalClearance from "../../models/FinalClearance";
+import ClearanceRequirement from "../../models/ClearanceRequirement";
 
-/**
- * List submissions ready for Dean review
- * Filters by Dean's assigned courses and year levels
- */
-export const listDeanPending = async (req: Request, res: Response) => {
+export const getFinalReadySubmissions = async (req: Request, res: Response) => {
   try {
     const deanId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
@@ -22,32 +19,22 @@ export const listDeanPending = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // 1. Get Dean's Assignments
     const assignments = await DeanAssignment.find({ deanId, institutionId });
-    if (assignments.length === 0) {
-      return res.json({ rows: [] });
-    }
+    if (assignments.length === 0) return res.json({ rows: [] });
 
-    // 2. Get Active Term
     const term = await Term.findOne({ institutionId, isActive: true });
     if (!term) return res.json({ rows: [] });
 
-    // 3. Find Submissions that are approved by an officer but need Dean review
-    // or submissions for requirements that explicitly need Dean approval
-    const submissions = await ClearanceSubmission.find({
+    const pendingFinals = await FinalClearance.find({
       institutionId,
-      status: "approved", // Already approved by officer
-      // We look for those that haven't been reviewed by a dean yet
-    }).populate("userId", "fullName email")
-      .populate("clearanceRequirementId", "title description")
-      .populate("organizationId", "name")
-      .sort({ reviewedAt: 1 });
+      termId: term._id,
+      status: "pending"
+    }).populate("userId", "fullName email");
 
-    // 4. Filter by Dean's Jurisdiction
-    const filteredRows = [];
-    for (const sub of submissions) {
+    const rows = [];
+    for (const final of pendingFinals) {
       const studentProfile = await StudentProfile.findOne({
-        userId: sub.userId,
+        userId: final.userId,
         institutionId
       });
 
@@ -60,66 +47,137 @@ export const listDeanPending = async (req: Request, res: Response) => {
       });
 
       if (hasJurisdiction) {
-        // Check if already reviewed by a dean
-        const existingReview = await ClearanceReview.findOne({
-          submissionId: sub._id,
-          level: "dean"
+        // Calculate reqCompleted vs reqTotal
+        const memberships = await OrganizationMember.find({ userId: final.userId, status: "active" }).populate("organizationId", "name code");
+        const numTotal = memberships.length;
+        
+        const requests = await ClearanceRequest.find({ userId: final.userId, termId: term._id, institutionId });
+        const numCompleted = requests.filter(r => r.status === 'officer_cleared' || r.status === 'completed').length;
+
+        const orgs = memberships.map(m => {
+          const req = requests.find(r => r.organizationId.toString() === (m.organizationId as any)._id.toString());
+          return {
+            name: (m.organizationId as any).name,
+            status: req ? req.status : "pending",
+            signatureUrl: req ? req.signatureUrl : null,
+          };
         });
 
-        if (!existingReview) {
-          filteredRows.push({
-            id: sub._id,
-            studentName: (sub.userId as any).fullName,
-            course: studentProfile.course,
-            year: studentProfile.year,
-            requirement: (sub.clearanceRequirementId as any).title,
-            organization: (sub.organizationId as any).name,
-            officerApprovedAt: sub.reviewedAt,
-            files: sub.files
-          });
-        }
+        rows.push({
+          id: final._id,
+          name: (final.userId as any).fullName,
+          studentId: final.userId._id, // User ID needed for approval payload
+          studentNumber: studentProfile.studentNumber || (final.userId as any).username,
+          course: studentProfile.course,
+          year: studentProfile.year,
+          dateSubmitted: final.submittedAt.toISOString().slice(0, 10),
+          reqCompleted: numCompleted,
+          reqTotal: numTotal,
+          organizations: orgs
+        });
       }
     }
 
-    res.json({ rows: filteredRows });
+    res.json({ rows });
   } catch (err: any) {
-    console.error('List dean pending error:', err);
-    res.status(500).json({ message: err.message || "Failed to list submissions for dean review" });
+    console.error("error in getFinalReadySubmissions", err);
+    res.status(500).json({ message: "Failed to list final ready submissions" });
   }
 };
 
-/**
- * Dean Final Approval for an entire Clearance Request
- */
+export const listOrganizationPending = async (req: Request, res: Response) => {
+  try {
+    const deanId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+
+    if (!deanId || !institutionId) return res.status(401).json({ message: "Unauthorized" });
+
+    const assignments = await DeanAssignment.find({ deanId, institutionId });
+    if (assignments.length === 0) return res.json({ rows: [] });
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.json({ rows: [] });
+
+    // Let's just return ClearanceRequests that are pending/in_progress but belong to students in dean's jurisdiction
+    const pendingReqs = await ClearanceRequest.find({
+      institutionId,
+      termId: term._id,
+      status: { $in: ["pending", "in_progress", "rejected"] }
+    }).populate("userId", "fullName email");
+
+    const rows = [];
+    const processedStudentIds = new Set<string>();
+
+    for (const req of pendingReqs) {
+       const uId = req.userId._id.toString();
+       if (processedStudentIds.has(uId)) continue;
+       
+       const studentProfile = await StudentProfile.findOne({ userId: req.userId, institutionId });
+       if (!studentProfile) continue;
+
+       const hasJurisdiction = assignments.some(a => {
+        const courseMatch = a.course === "All" || a.course === studentProfile.course;
+        const yearMatch = a.yearLevel === "All" || a.yearLevel === studentProfile.year;
+        return courseMatch && yearMatch;
+       });
+
+       if (hasJurisdiction) {
+         processedStudentIds.add(uId);
+
+         const memberships = await OrganizationMember.find({ userId: req.userId, status: "active" }).populate("organizationId", "name code");
+         const numTotal = memberships.length;
+         const allRequests = await ClearanceRequest.find({ userId: req.userId, termId: term._id });
+         const numCompleted = allRequests.filter(r => r.status === 'officer_cleared' || r.status === 'completed').length;
+
+         const orgs = memberships.map((m: any) => {
+           const r = allRequests.find((reqst: any) => reqst.organizationId.toString() === m.organizationId._id.toString());
+           return {
+             name: m.organizationId.name,
+             status: r ? r.status : "pending",
+             signatureUrl: r ? r.signatureUrl : null,
+           };
+         });
+
+         rows.push({
+           id: req._id,
+           name: (req.userId as any).fullName,
+           studentId: req.userId._id,
+           course: studentProfile.course,
+           year: studentProfile.year,
+           dateSubmitted: (req.submittedAt || req.createdAt).toISOString().slice(0, 10),
+           status: "Pending",
+           reqCompleted: numCompleted,
+           reqTotal: numTotal,
+           organizations: orgs
+         });
+       }
+    }
+
+    res.json({ rows });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch organization pending" });
+  }
+}
+
 export const approveFinalClearance = async (req: Request, res: Response) => {
   try {
     const deanId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
-    const { requestId } = req.params;
+    const { studentId } = req.body;
 
     if (!deanId || !institutionId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // 1. Find the request
-    const clearanceRequest = await ClearanceRequest.findOne({
-      _id: requestId,
-      institutionId
-    });
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active academic term found" });
 
-    if (!clearanceRequest) {
-      return res.status(404).json({ message: "Clearance request not found" });
-    }
-
-    // 2. Check Jurisdiction
     const studentProfile = await StudentProfile.findOne({
-      userId: clearanceRequest.userId,
+      userId: studentId,
       institutionId
     });
 
-    if (!studentProfile) {
-      return res.status(404).json({ message: "Student profile not found" });
-    }
+    if (!studentProfile) return res.status(404).json({ message: "Student profile not found" });
 
     const assignments = await DeanAssignment.find({ deanId, institutionId });
     const hasJurisdiction = assignments.some(a => {
@@ -128,45 +186,48 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
       return courseMatch && yearMatch;
     });
 
-    if (!hasJurisdiction) {
-      return res.status(403).json({ message: "You do not have jurisdiction over this student's course/year level" });
-    }
+    if (!hasJurisdiction) return res.status(403).json({ message: "No jurisdiction" });
 
-    // 3. Verify the request is officer_cleared, and all submissions are approved
-    if (clearanceRequest.status !== "officer_cleared") {
-        return res.status(400).json({ message: "Cannot grant final approval. The organization officer has not marked this student as cleared." });
-    }
-
-    const pendingSubmissions = await ClearanceSubmission.countDocuments({
-      clearanceRequestId: requestId,
-      status: { $ne: "approved" }
+    // Approve FinalClearance
+    const finalClearance = await FinalClearance.findOne({
+      userId: studentId,
+      institutionId,
+      termId: term._id,
+      status: "pending"
     });
 
-    if (pendingSubmissions > 0) {
-      return res.status(400).json({ message: "Cannot grant final approval. Some requirements are still pending or rejected." });
+    if (!finalClearance) {
+      return res.status(404).json({ message: "Final clearance pending submission not found" });
     }
 
-    // 4. Update request status
-    clearanceRequest.status = "completed";
-    clearanceRequest.finalApprovalDate = new Date();
-    await clearanceRequest.save();
+    finalClearance.status = "approved";
+    finalClearance.reviewedAt = new Date();
+    await finalClearance.save();
 
-    // 5. Log Audit
+    // Also update all ClearanceRequests to "completed"
+    await ClearanceRequest.updateMany({
+      userId: studentId,
+      institutionId,
+      termId: term._id,
+      status: "officer_cleared"
+    }, {
+      $set: { status: "completed", finalApprovalDate: new Date() }
+    });
+
     await AuditLog.create({
       userId: deanId,
       institutionId,
       action: 'clearance_final_approval_dean',
-      resource: 'ClearanceRequest',
-      resourceId: clearanceRequest._id,
-      details: { studentId: clearanceRequest.userId },
+      resource: 'FinalClearance',
+      resourceId: finalClearance._id,
+      details: { studentId },
       severity: 'high',
       category: 'clearance_workflow'
     });
 
-    res.json({ message: "Final clearance approval granted" });
+    res.json({ message: "Final clearance approved successfully!" });
 
   } catch (err: any) {
-    console.error('Dean final approval error:', err);
-    res.status(500).json({ message: err.message || "Failed to process final approval" });
+    res.status(500).json({ message: "Failed to process final approval", error: err.message });
   }
 };

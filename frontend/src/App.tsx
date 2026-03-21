@@ -75,15 +75,15 @@ export default function App() {
           <Route path="/admin/quotes" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
           <Route path="/admin/records" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
 
-          {/* Student routes - all handled by StudentPage component with internal routing */}
-          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/settings" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/slip" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/todo" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/requirements" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/progress" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/certificate" element={<ProtectedRoute allowedRoles={['student']}><StudentPage /></ProtectedRoute>} />
+          {/* Student routes - all handled by StudentPage component with internal routing (now tracking Officers as well!) */}
+          <Route path="/student" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/settings" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/slip" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/todo" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/requirements" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/progress" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/certificate" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
 
           {/* Officer/Signatory routes - all handled by OfficerPage component with internal routing */}
           <Route path="/officer" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />

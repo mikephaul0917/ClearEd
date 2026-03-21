@@ -8,6 +8,8 @@ import Term from "../../models/Term";
 import ClearanceRequest from "../../models/ClearanceRequest";
 import ClearanceSubmission from "../../models/ClearanceSubmission";
 import OrganizationMember from "../../models/OrganizationMember";
+import StudentProfile from "../../models/StudentProfile";
+import DeanAssignment from "../../models/DeanAssignment";
 import { logAudit } from "../../utils/auditLogger";
 
 /**
@@ -195,6 +197,12 @@ export const updateRole = async (req: Request, res: Response) => {
         { status: 'removed', role: 'member', statusChangedAt: new Date() }
       );
     }
+    
+    // Dean Role Synchronization Logic:
+    // If changing FROM dean to something else, remove all their course assignments
+    if (oldRole === 'dean' && role !== 'dean') {
+      await DeanAssignment.deleteMany({ deanId: user._id, institutionId });
+    }
 
     res.json({ message: "Role updated", role: user.role });
   } catch (error: any) {
@@ -232,6 +240,116 @@ export const updateProfile = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "Profile updated", user: { fullName: user.fullName, username: user.username } });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Student Profile Management
+ */
+
+export const getStudentProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+
+    const profile = await StudentProfile.findOne({ userId: id, institutionId });
+    // It's perfectly fine if profile is null (e.g. they are an officer but not a student)
+    res.json(profile);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateStudentProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isStudent, course, yearLevel } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    if (isStudent === false) {
+      await StudentProfile.findOneAndDelete({ userId: id, institutionId });
+      return res.json({ message: "Student profile removed" });
+    }
+
+    if (!course || !yearLevel) {
+      return res.status(400).json({ message: "Course and Year Level are required." });
+    }
+
+    // Ensure they have an active term for defaults
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    
+    const profile = await StudentProfile.findOneAndUpdate(
+      { userId: id, institutionId },
+      {
+        course,
+        year: yearLevel,
+        academicYear: activeTerm?.academicYear || "2024-2025",
+        semester: activeTerm?.semester || "1st Semester"
+      },
+      { new: true, upsert: true }
+    );
+
+    res.json({ message: "Student profile updated", profile });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Dean Assignment Management
+ */
+
+export const getDeanAssignments = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+    
+    const assignments = await DeanAssignment.find({ deanId: id, institutionId }).sort({ course: 1, yearLevel: 1 });
+    res.json(assignments);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addDeanAssignment = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { course, yearLevel } = req.body;
+    const institutionId = (req as any).user?.institutionId;
+
+    if (!course) {
+      return res.status(400).json({ message: "Course is required." });
+    }
+
+    const assignment = await DeanAssignment.create({
+      deanId: id,
+      institutionId,
+      course,
+      yearLevel: yearLevel || "All"
+    });
+
+    res.status(201).json({ message: "Dean assignment added", assignment });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "This course and year level are already assigned to this Dean." });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeDeanAssignment = async (req: Request, res: Response) => {
+  try {
+    const { id, assignmentId } = req.params;
+    const institutionId = (req as any).user?.institutionId;
+
+    const assignment = await DeanAssignment.findOneAndDelete({ _id: assignmentId, deanId: id, institutionId });
+    if (!assignment) {
+      return res.status(404).json({ message: "Assignment not found." });
+    }
+
+    res.json({ message: "Assignment removed" });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

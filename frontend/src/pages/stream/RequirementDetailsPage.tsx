@@ -1298,13 +1298,13 @@ const RequirementDetailsPage: React.FC = () => {
                                             <Box display="flex" gap={4} mb={4}>
                                                 <Box>
                                                     <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1 }}>
-                                                        {submissions.filter(s => s.status === 'pending' || s.status === 'approved' || s.status === 'resubmission_required').length}
+                                                        {submissions.filter(s => s.status === 'approved').length}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">Handed in</Typography>
                                                 </Box>
                                                 <Box sx={{ borderLeft: "1px solid #e0e0e0", pl: 4 }}>
                                                     <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1 }}>
-                                                        {membership?.totalMembers || submissions.length || 0}
+                                                        {(membership?.totalMembers || submissions.length || 0) - submissions.filter(s => s.status === 'approved').length}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">Assigned</Typography>
                                                 </Box>

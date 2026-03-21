@@ -142,6 +142,12 @@ export const getOrganizationRequirements = async (req: Request, res: Response) =
                 { $group: { _id: { requirementId: "$clearanceRequirementId", status: "$status" }, count: { $sum: 1 } } }
             ]);
 
+            const totalMembers = await OrganizationMember.countDocuments({
+                organizationId,
+                role: "member",
+                status: "active"
+            });
+
             const requirementsWithStats = requirements.map(reqObj => {
                 const reqIdStr = (reqObj._id as any).toString();
                 const reqStats = stats.filter(s => s._id.requirementId && s._id.requirementId.toString() === reqIdStr);
@@ -150,7 +156,8 @@ export const getOrganizationRequirements = async (req: Request, res: Response) =
                     stats: {
                         pending: reqStats.find(s => s._id.status === 'pending')?.count || 0,
                         approved: reqStats.find(s => s._id.status === 'approved')?.count || 0,
-                        rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0
+                        rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0,
+                        totalMembers
                     }
                 };
             });

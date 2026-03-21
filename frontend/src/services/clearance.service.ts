@@ -82,6 +82,11 @@ export const clearanceService = {
         return response.data;
     },
 
+    submitToDean: async () => {
+        const response = await api.post('/clearance/submit-to-dean', {});
+        return response.data;
+    },
+
     // Poll API Endpoints
     createPoll: async (formData: FormData) => {
         const response = await api.post('/polls', formData, {

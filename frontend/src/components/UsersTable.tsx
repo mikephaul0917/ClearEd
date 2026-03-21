@@ -7,7 +7,7 @@ import {
   Select, MenuItem, Chip, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, Alert, Grid, IconButton, Tooltip, LinearProgress,
   Pagination, Avatar, SelectChangeEvent, useTheme, useMediaQuery, Skeleton,
-  TextField, InputAdornment
+  TextField, InputAdornment, Switch, FormControlLabel
 } from "@mui/material";
 import {
   Visibility, Lock, LockOpen, Email, Business, Person,
@@ -81,6 +81,14 @@ export default function UsersTable({
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [createPassword, setCreatePassword] = useState("");
+  const [deanAssignments, setDeanAssignments] = useState<any[]>([]);
+  const [newCourse, setNewCourse] = useState("");
+  const [newYearLevel, setNewYearLevel] = useState("All");
+  
+  const [isStudentMode, setIsStudentMode] = useState(false);
+  const [studentCourse, setStudentCourse] = useState("");
+  const [studentYear, setStudentYear] = useState("First Year");
+
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
@@ -120,10 +128,44 @@ export default function UsersTable({
 
   useEffect(() => {
     if (manageUser) {
-      setRole(manageUser.role || (manageUser.isAdmin ? "admin" : "student"));
+      const r = manageUser.role || (manageUser.isAdmin ? "admin" : "student");
+      setRole(r);
       setSelectedOrgId(manageUser.organizationId || "");
+
+      if (manageUser._id && (r === 'student' || r === 'officer')) {
+        adminService.getStudentProfile(manageUser._id).then(profile => {
+          if (profile) {
+            setIsStudentMode(true);
+            setStudentCourse(profile.course || "");
+            setStudentYear(profile.year || "First Year");
+          } else {
+            setIsStudentMode(r === 'student');
+            setStudentCourse("");
+            setStudentYear("First Year");
+          }
+        }).catch(console.error);
+      } else {
+        setIsStudentMode(r === 'student');
+        setStudentCourse("");
+        setStudentYear("First Year");
+      }
+    } else {
+      setDeanAssignments([]);
+      setNewCourse("");
+      setNewYearLevel("All");
+      setIsStudentMode(false);
+      setStudentCourse("");
+      setStudentYear("First Year");
     }
   }, [manageUser]);
+
+  useEffect(() => {
+    if (manageUser?._id && role === 'dean') {
+      adminService.getDeanAssignments(manageUser._id)
+        .then(setDeanAssignments)
+        .catch(console.error);
+    }
+  }, [manageUser, role]);
 
   const filtered = useMemo(() => {
     return rows.filter(r => {
@@ -546,7 +588,7 @@ export default function UsersTable({
               </Select>
             </FormControl>
 
-            {(role === 'officer' || role === 'dean') && (
+            {(role === 'officer') && (
               <FormControl fullWidth>
                 <InputLabel>Assign to Organization</InputLabel>
                 <Select
@@ -561,6 +603,142 @@ export default function UsersTable({
                   ))}
                 </Select>
               </FormControl>
+            )}
+
+            {manageUser?._id && role === 'dean' && (
+              <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', mt: 1 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', mb: 2 }}>Assigned Courses</Typography>
+                
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+                  {deanAssignments.map(da => (
+                    <Chip 
+                      key={da._id} 
+                      label={`${da.course} - Year: ${da.yearLevel}`} 
+                      onDelete={async () => {
+                        try {
+                          await adminService.removeDeanAssignment(manageUser._id, da._id);
+                          setDeanAssignments(prev => prev.filter(p => p._id !== da._id));
+                        } catch(e) { console.error(e); }
+                      }}
+                      sx={{ borderRadius: '8px', bgcolor: '#FFF', border: '1px solid #E2E8F0', fontWeight: 600 }}
+                    />
+                  ))}
+                  {deanAssignments.length === 0 && (
+                    <Typography sx={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic' }}>No courses assigned yet.</Typography>
+                  )}
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField 
+                    size="small" 
+                    placeholder="Course (e.g. BSCS)" 
+                    value={newCourse}
+                    onChange={e => setNewCourse(e.target.value)}
+                    sx={{ flex: 2, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                  <FormControl size="small" sx={{ flex: 1 }}>
+                    <Select 
+                      value={newYearLevel} 
+                      onChange={e => setNewYearLevel(e.target.value as string)}
+                      sx={{ borderRadius: '8px', bgcolor: '#FFF' }}
+                    >
+                      <MenuItem value="All">All Years</MenuItem>
+                      <MenuItem value="1">1st Year</MenuItem>
+                      <MenuItem value="2">2nd Year</MenuItem>
+                      <MenuItem value="3">3rd Year</MenuItem>
+                      <MenuItem value="4">4th Year</MenuItem>
+                      <MenuItem value="5">5th Year</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button 
+                    variant="contained" 
+                    disableElevation
+                    disabled={!newCourse.trim()}
+                    onClick={async () => {
+                      try {
+                        const newAssignment = await adminService.addDeanAssignment(manageUser._id, { course: newCourse.trim().toUpperCase(), yearLevel: newYearLevel });
+                        setDeanAssignments(prev => [...prev, newAssignment.assignment]);
+                        setNewCourse("");
+                        setNewYearLevel("All");
+                      } catch(error: any) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.message || error.message });
+                      }
+                    }}
+                    sx={{ borderRadius: '8px', bgcolor: COLORS.black, textTransform: 'none', px: 2, '&:hover': { bgcolor: '#222' } }}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              </Box>
+            )}
+            
+            {(!manageUser?._id && role === 'dean') && (
+              <Alert severity="info" sx={{ borderRadius: '12px', mt: 1 }}>
+                You can assign specific courses and year levels to this Dean after creating their account.
+              </Alert>
+            )}
+
+            {manageUser?._id && (role === 'student' || role === 'officer') && (
+              <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', mt: 1 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase' }}>
+                     Student Profile
+                  </Typography>
+                  {role === 'officer' && (
+                    <FormControlLabel 
+                      control={<Switch size="small" checked={isStudentMode} onChange={e => setIsStudentMode(e.target.checked)} />} 
+                      label={<Typography fontSize={13} fontWeight={600}>Also a Student</Typography>} 
+                      sx={{ m: 0 }}
+                    />
+                  )}
+                </Box>
+                
+                {isStudentMode ? (
+                  <Box display="flex" gap={1.5}>
+                    <TextField 
+                      size="small" label="Course (e.g. BSCS)" 
+                      value={studentCourse} onChange={e => setStudentCourse(e.target.value)} 
+                      sx={{ flex: 2, bgcolor: '#FFF', '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} 
+                    />
+                    <FormControl size="small" sx={{ flex: 1.5, bgcolor: '#FFF' }}>
+                      <InputLabel>Year Level</InputLabel>
+                      <Select value={studentYear} label="Year Level" onChange={e => setStudentYear(e.target.value as string)} sx={{ borderRadius: '8px' }}>
+                        <MenuItem value="First Year">1st Year</MenuItem>
+                        <MenuItem value="Second Year">2nd Year</MenuItem>
+                        <MenuItem value="Third Year">3rd Year</MenuItem>
+                        <MenuItem value="Fourth Year">4th Year</MenuItem>
+                        <MenuItem value="Fifth Year">5th Year</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                ) : (
+                  <Typography fontSize={13} color="#64748B" fontStyle="italic">This officer is not tracking any student clearance.</Typography>
+                )}
+
+                <Box mt={2} display="flex" justifyContent="flex-end">
+                  <Button 
+                    size="small" variant="contained" disableElevation
+                    disabled={isStudentMode && (!studentCourse.trim() || !studentYear)}
+                    onClick={async () => {
+                      try {
+                        await adminService.updateStudentProfile(manageUser._id, { isStudent: isStudentMode, course: studentCourse.trim(), yearLevel: studentYear });
+                        Swal.fire({ icon: 'success', title: 'Profile Updated', timer: 1500, showConfirmButton: false });
+                      } catch(e: any) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Update failed' });
+                      }
+                    }}
+                    sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, bgcolor: COLORS.black, '&:hover': { bgcolor: '#222' } }}
+                  >
+                    Save Profile
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {(!manageUser?._id && (role === 'student' || role === 'officer')) && (
+              <Alert severity="info" sx={{ borderRadius: '12px', mt: 1 }}>
+                You can assign the specific course for this user after creating their account.
+              </Alert>
             )}
 
             {manageUser?._id && (

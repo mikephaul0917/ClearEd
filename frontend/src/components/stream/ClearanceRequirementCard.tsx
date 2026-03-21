@@ -75,6 +75,7 @@ export interface ClearanceRequirementCardProps {
         pending: number;
         approved: number;
         rejected: number;
+        totalMembers?: number;
     };
     dueDate?: string;
     points?: string;
@@ -752,7 +753,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                 <Box sx={{ display: 'flex', gap: 4, pl: { md: 4 }, pr: 2, pt: 0, height: 'fit-content' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
                                         <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
-                                            {stats?.pending || 0}
+                                            {stats?.approved || 0}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
                                             Handed in
@@ -760,7 +761,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
                                         <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
-                                            {(stats?.pending || 0) + (stats?.approved || 0) + (stats?.rejected || 0) || 0}
+                                            {(stats?.totalMembers || 0) - (stats?.approved || 0)}
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
                                             Assigned

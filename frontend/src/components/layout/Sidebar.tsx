@@ -492,6 +492,53 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                             );
                                                         })()}
 
+                                                        {role === 'officer' && (
+                                                            <>
+                                                                <Button
+                                                                    onClick={() => handleNavClick('/student/progress')}
+                                                                    sx={{
+                                                                        justifyContent: "flex-start",
+                                                                        textTransform: "none",
+                                                                        fontSize: 14,
+                                                                        fontWeight: 500,
+                                                                        px: 2,
+                                                                        height: 40,
+                                                                        borderRadius: "10px",
+                                                                        color: location.pathname === '/student/progress' ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: location.pathname === '/student/progress' ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: location.pathname === '/student/progress' ? "#cffafe" : "#F1F5F9" },
+                                                                    }}
+                                                                >
+                                                                    <IconBase color={location.pathname === '/student/progress' ? "#0891b2" : "#0F172A"} >
+                                                                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                                                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                                                    </IconBase>
+                                                                    <Box ml={1.5}>My Clearance</Box>
+                                                                </Button>
+                                                                <Button
+                                                                    onClick={() => handleNavClick('/student/certificate')}
+                                                                    sx={{
+                                                                        justifyContent: "flex-start",
+                                                                        textTransform: "none",
+                                                                        fontSize: 14,
+                                                                        fontWeight: 500,
+                                                                        px: 2,
+                                                                        height: 40,
+                                                                        borderRadius: "10px",
+                                                                        color: location.pathname === '/student/certificate' ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: location.pathname === '/student/certificate' ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: location.pathname === '/student/certificate' ? "#cffafe" : "#F1F5F9" },
+                                                                    }}
+                                                                >
+                                                                    <IconBase color={location.pathname === '/student/certificate' ? "#0891b2" : "#0F172A"} >
+                                                                        <circle cx="12" cy="8" r="7" />
+                                                                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                                                                    </IconBase>
+                                                                    <Box ml={1.5}>E-Certificate</Box>
+                                                                </Button>
+                                                            </>
+                                                        )}
+
                                                         {memberOrgs.map(org => {
                                                             const isOrgActive = location.pathname.startsWith(`/organization/${org._id}`);
                                                             return (

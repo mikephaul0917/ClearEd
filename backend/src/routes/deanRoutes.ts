@@ -1,14 +1,12 @@
 import express from "express";
-import { approveFinalClearance, listDeanPending } from "../controllers/dean/deanController";
+import { getFinalReadySubmissions, listOrganizationPending, approveFinalClearance } from "../controllers/dean/deanController";
 import { auth } from "../middleware/authMiddleware";
 import { dean } from "../middleware/roleMiddleware";
 
 const router = express.Router();
 
-// Get submissions ready for dean review (jurisdiction filtered)
-router.get("/pending", auth, dean, listDeanPending);
-
-// Grant final clearance approval for a student's request
-router.post("/approve/:requestId", auth, dean, approveFinalClearance);
+router.get("/final-ready", auth, dean, getFinalReadySubmissions);
+router.get("/organization-pending", auth, dean, listOrganizationPending);
+router.post("/final-approval", auth, dean, approveFinalClearance);
 
 export default router;

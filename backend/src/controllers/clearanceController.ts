@@ -11,6 +11,7 @@ import ClearanceRequirement from "../models/ClearanceRequirement";
 import ClearanceSubmission from "../models/ClearanceSubmission";
 import Term from "../models/Term";
 import Institution from "../models/Institution";
+import FinalClearance from "../models/FinalClearance";
 
 /**
  * Start a new clearance request for a specific organization in the current active term
@@ -193,6 +194,13 @@ export const getMyClearances = async (req: Request, res: Response) => {
     // 3.5 Fetch institution details
     const institution = await Institution.findById(institutionId);
 
+    // 3.8 Fetch any FinalClearance
+    const finalClearance = await FinalClearance.findOne({
+      userId,
+      institutionId,
+      termId: term._id
+    });
+
     // 4. Map organizations to their clearance status
     const data = organizations.map((org: any) => {
       const request = requests.find(r => r.organizationId.toString() === org._id.toString());
@@ -217,6 +225,7 @@ export const getMyClearances = async (req: Request, res: Response) => {
         region: (institution as any)?.region,
         division: (institution as any)?.division
       },
+      finalClearance: finalClearance ? { status: finalClearance.status, submittedAt: finalClearance.submittedAt } : null,
       organizations: data
     });
 
@@ -232,4 +241,78 @@ export const getMyClearances = async (req: Request, res: Response) => {
 export const getCertificate = async (_req: Request, res: Response) => {
   res.setHeader("Content-Type", "application/pdf");
   res.send(Buffer.from("Clearance Certificate - Requirement validation pending implementation"));
+};
+
+/**
+ * Submit all completed clearances to the Dean for final approval
+ */
+export const submitToDean = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+
+    if (!userId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // 1. Get current active term
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active academic term found" });
+
+    // 2. Check if already submitted
+    const existing = await FinalClearance.findOne({
+      userId,
+      institutionId,
+      termId: term._id
+    });
+    if (existing) {
+      return res.status(400).json({ message: "You have already submitted your clearance to the Dean." });
+    }
+
+    // 3. Find all organizations the user is a member of
+    const memberships = await OrganizationMember.find({
+      userId,
+      status: "active"
+    });
+
+    if (memberships.length === 0) {
+       // Might be edge case where student is in no organizations
+       return res.status(400).json({ message: "You belong to no organizations, nothing to submit." });
+    }
+
+    // 4. Verify all required requests have been completed or officer_cleared
+    const requests = await ClearanceRequest.find({
+      userId,
+      institutionId,
+      termId: term._id
+    });
+
+    for (const membership of memberships) {
+      const request = requests.find(r => r.organizationId.toString() === membership.organizationId.toString());
+      if (!request) {
+        return res.status(400).json({ message: "You have not started clearance for all your organizations." });
+      }
+      if (request.status !== "officer_cleared" && request.status !== "completed") {
+        return res.status(400).json({ message: "All organization clearances must be cleared by officers before submitting to Dean." });
+      }
+    }
+
+    // 5. Create Final Clearance
+    const finalClearance = await FinalClearance.create({
+      userId,
+      institutionId,
+      termId: term._id,
+      status: "pending",
+      submittedAt: new Date()
+    });
+
+    res.status(201).json({
+      message: "Successfully submitted to Dean for final approval",
+      finalClearance
+    });
+
+  } catch (error: any) {
+    console.error('Submit to dean error:', error);
+    res.status(500).json({ message: "Failed to submit clearance to Dean", error: error.message });
+  }
 };

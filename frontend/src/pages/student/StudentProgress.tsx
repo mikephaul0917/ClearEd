@@ -38,7 +38,9 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
   const [loading, setLoading] = useState(true);
   const [activeTerm, setActiveTerm] = useState<any>(null);
   const [institutionInfo, setInstitutionInfo] = useState<any>(null);
+  const [finalClearance, setFinalClearance] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [submittingDean, setSubmittingDean] = useState(false);
 
   const isOverview = !organizationId;
 
@@ -50,6 +52,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
         setMyClearances(res.organizations || []);
         setActiveTerm(res.term || null);
         setInstitutionInfo(res.institution || null);
+        setFinalClearance(res.finalClearance || null);
       } else {
         const response = await api.get(`/clearance/timeline/${organizationId}`);
         setItems(response.data.items || []);
@@ -115,6 +118,19 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
         fetchData();
       }
     } catch { }
+  };
+
+  const handleSubmitToDean = async () => {
+    setSubmittingDean(true);
+    try {
+      await clearanceService.submitToDean();
+      alert("Successfully submitted clearance to the Dean!");
+      fetchData(); // Refresh to get the new status
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to submit clearance to Dean.");
+    } finally {
+      setSubmittingDean(false);
+    }
   };
 
   const renderOverview = () => (
@@ -242,14 +258,30 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
         {/* Footer/Stamps Placeholder */}
         <Box sx={{ mt: 8, display: 'flex', justifyContent: 'flex-end' }}>
           <Box sx={{ width: 220, textAlign: 'center' }}>
-            <Box sx={{ borderBottom: "1px solid #000", minHeight: 30 }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, mt: 0.5 }}>Official School Stamp</Typography>
+            <Box sx={{ borderBottom: "1px solid #000", minHeight: 30, display: 'flex', alignItems: 'end', justifyContent: 'center' }}>
+              {finalClearance?.status === 'approved' && (
+                  <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#10B981', mt: -1 }}>Approved by Dean</Typography>
+              )}
+            </Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, mt: 0.5 }}>Dean's Signature</Typography>
           </Box>
         </Box>
       </Paper>
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
-        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/home')}>Back to Dashboard</Button>
+        <Button 
+          variant="contained" 
+          disabled={submittingDean || finalClearance !== null}
+          onClick={handleSubmitToDean} 
+          sx={{ 
+            bgcolor: finalClearance ? '#10B981' : '#1967d2', 
+            color: '#fff', 
+            '&:hover': { bgcolor: finalClearance ? '#059669' : '#1557b0' },
+            '&.Mui-disabled': { bgcolor: finalClearance ? '#10B981' : '#E2E8F0', color: finalClearance ? '#fff' : '#94A3B8' }
+          }}
+        >
+          {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'Dean Approved' : finalClearance ? 'Submitted to Dean' : 'Submit to Dean'}
+        </Button>
         <Button variant="contained" color="inherit" onClick={() => window.print()} sx={{ bgcolor: '#000', color: '#FFF' }}>Print Clearance Slip</Button>
       </Box>
     </Box>

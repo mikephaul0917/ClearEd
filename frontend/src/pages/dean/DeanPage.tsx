@@ -164,7 +164,8 @@ export default function DeanPage() {
         year: r.year || "4th Year",
         dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
         reqCompleted: r.reqCompleted ?? 3,
-        reqTotal: r.reqTotal ?? 3
+        reqTotal: r.reqTotal ?? 3,
+        organizations: r.organizations || []
       }));
       setReadyRows(items);
     } catch {
@@ -184,7 +185,8 @@ export default function DeanPage() {
         dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
         status: r.status || "Pending",
         reqCompleted: r.reqCompleted ?? 2,
-        reqTotal: r.reqTotal ?? 3
+        reqTotal: r.reqTotal ?? 3,
+        organizations: r.organizations || []
       }));
       setOrgRows(items);
     } catch {
@@ -460,31 +462,49 @@ export default function DeanPage() {
                     </TableCell>
                     <TableCell align="center" sx={{ py: 1.5, fontWeight: 500, color: "#475569", fontSize: "0.875rem" }}>{(r.reqCompleted || 0)} / {(r.reqTotal || 0)}</TableCell>
                     <TableCell align="right" sx={{ py: 1.5 }}>
-                      <Button
-                        onClick={() => finalize(r)}
-                        disabled={actionState !== 'idle'}
-                        sx={{
-                          fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          borderRadius: '8px',
-                          backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#0a0a0a',
-                          color: '#FFFFFF',
-                          px: 2,
-                          py: 0.5,
-                          fontSize: '0.8125rem',
-                          display: 'flex', gap: 1, alignItems: 'center',
-                          transition: 'all 0.2s ease',
-                          '&:hover': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#222' },
-                          '&.Mui-disabled': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#E2E8F0', color: actionState === 'success' && actionRowId === r.id ? '#fff' : '#94A3B8' }
-                        }}
-                      >
-                        {actionState === 'loading' && actionRowId === r.id && <CircularProgress size={14} color="inherit" />}
-                        {actionState === 'success' && actionRowId === r.id && <CheckIcon fontSize="small" />}
-                        {actionRowId === r.id ? (
-                          actionState === 'idle' ? 'Approve Final' : actionState === 'loading' ? 'Approving...' : 'Approved!'
-                        ) : 'Approve Final'}
-                      </Button>
+                      <Box display="flex" justifyContent="flex-end" gap={1}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setSelected(r)}
+                          sx={{
+                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                            fontWeight: 600,
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            borderColor: '#E2E8F0',
+                            color: '#64748B',
+                            '&:hover': { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
+                          }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => finalize(r)}
+                          disabled={actionState !== 'idle'}
+                          sx={{
+                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                            fontWeight: 600,
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#0a0a0a',
+                            color: '#FFFFFF',
+                            px: 2,
+                            py: 0.5,
+                            fontSize: '0.8125rem',
+                            display: 'flex', gap: 1, alignItems: 'center',
+                            transition: 'all 0.2s ease',
+                            '&:hover': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#222' },
+                            '&.Mui-disabled': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#E2E8F0', color: actionState === 'success' && actionRowId === r.id ? '#fff' : '#94A3B8' }
+                          }}
+                        >
+                          {actionState === 'loading' && actionRowId === r.id && <CircularProgress size={14} color="inherit" />}
+                          {actionState === 'success' && actionRowId === r.id && <CheckIcon fontSize="small" />}
+                          {actionRowId === r.id ? (
+                            actionState === 'idle' ? 'Approve Final' : actionState === 'loading' ? 'Approving...' : 'Approved!'
+                          ) : 'Approve Final'}
+                        </Button>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -677,61 +697,6 @@ export default function DeanPage() {
             )}
             <TablePagination component="div" count={filteredOrg.length} page={page} onPageChange={(_, newPage) => setPage(newPage)} rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} rowsPerPageOptions={[5, 10, 25]} />
           </Paper>
-          <Dialog open={!!selected && isApprovals} onClose={() => setSelected(null)} fullWidth maxWidth="md">
-            <DialogTitle>View Details</DialogTitle>
-            <DialogContent>
-              {selected && (
-                <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={3}>
-                  <Box>
-                    <Typography sx={{ fontWeight: 700, mb: 1 }}>Student Information</Typography>
-                    <Box display="flex" flexDirection="column" gap={0.5}>
-                      <Typography>Name: {selected.name}</Typography>
-                      <Typography>ID: {selected.studentId}</Typography>
-                      <Typography>Course/Year: {selected.course} – {selected.year}</Typography>
-                      <Typography>Date submitted: {selected.dateSubmitted}</Typography>
-                      <Typography>Requirements: {(selected.reqCompleted || 0)}/{(selected.reqTotal || 0)}</Typography>
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Typography sx={{ fontWeight: 700, mb: 1 }}>Uploaded Requirements</Typography>
-                    <Box display="flex" flexDirection="column" gap={1}>
-                      {["Valid ID", "Adviser form", "Organization form"].map((req, idx) => (
-                        <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" sx={{ border: "1px solid #E5E7EB", borderRadius: 1, p: 1.5 }}>
-                          <Typography>{req}</Typography>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <IconButton size="small">
-                              <Box aria-hidden sx={{ width: 18, height: 18 }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v8M8 9l4-4 4 4" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" /></svg>
-                              </Box>
-                            </IconButton>
-                            <IconButton size="small">
-                              <Box aria-hidden sx={{ width: 18, height: 18 }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v16H4z" stroke="#0F172A" strokeWidth="2" /><path d="M8 8h8v8H8z" stroke="#0F172A" strokeWidth="2" /></svg>
-                              </Box>
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setSelected(null)}
-                sx={{
-                  fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  borderRadius: '999px',
-                  color: '#64748B'
-                }}
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
         </>
       ) : (
         <Box maxWidth={720} mx="auto">
@@ -800,6 +765,77 @@ export default function DeanPage() {
           </Box>
         </Box>
       )}
+
+      <Dialog open={!!selected && (isApprovals || isFinal)} onClose={() => setSelected(null)} fullWidth maxWidth="md">
+        <DialogTitle>View Details</DialogTitle>
+        <DialogContent>
+          {selected && (
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={3}>
+              <Box>
+                <Typography sx={{ fontWeight: 700, mb: 1 }}>Student Information</Typography>
+                <Box display="flex" flexDirection="column" gap={0.5}>
+                  <Typography>Name: {selected.name}</Typography>
+                  <Typography>ID: {selected.studentId}</Typography>
+                  <Typography>Course/Year: {selected.course} – {selected.year}</Typography>
+                  <Typography>Date submitted: {selected.dateSubmitted}</Typography>
+                  <Typography>Requirements: {(selected.reqCompleted || 0)}/{(selected.reqTotal || 0)}</Typography>
+                </Box>
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 700, mb: 1 }}>Organization Clearances</Typography>
+                <Box display="flex" flexDirection="column" gap={1}>
+                  {selected.organizations && selected.organizations.length > 0 ? (
+                    selected.organizations.map((org: any, idx: number) => (
+                      <Box key={idx} display="flex" flexDirection="column" gap={1} sx={{ border: "1px solid #E5E7EB", borderRadius: 1, p: 1.5 }}>
+                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem" }}>{org.name}</Typography>
+                          <Chip size="small" label={org.status === 'completed' || org.status === 'officer_cleared' ? 'Cleared' : org.status} sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700, bgcolor: org.status === 'completed' || org.status === 'officer_cleared' ? '#ECFDF5' : '#F1F5F9', color: org.status === 'completed' || org.status === 'officer_cleared' ? '#10B981' : '#64748B' }} />
+                        </Box>
+                        <Divider sx={{ my: 0.5 }} />
+                        {org.signatureUrl ? (
+                          <Box display="flex" alignItems="center" gap={1.5}>
+                            <Typography sx={{ fontSize: '0.75rem', color: '#64748B' }}>Officer Signature:</Typography>
+                            <img src={org.signatureUrl} alt="Signature" style={{ height: 35, objectFit: 'contain' }} />
+                          </Box>
+                        ) : (
+                          <Typography sx={{ fontSize: '0.75rem', color: '#94A3B8', fontStyle: 'italic' }}>No signature provided yet</Typography>
+                        )}
+                      </Box>
+                    ))
+                  ) : (
+                    ["Valid ID", "Adviser form", "Organization form"].map((req, idx) => (
+                      <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" sx={{ border: "1px solid #E5E7EB", borderRadius: 1, p: 1.5 }}>
+                        <Typography>{req}</Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <IconButton size="small">
+                            <Box aria-hidden sx={{ width: 18, height: 18 }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v8M8 9l4-4 4 4" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" /></svg>
+                            </Box>
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    ))
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setSelected(null)}
+            sx={{
+              fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: '999px',
+              color: '#64748B'
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </RoleLayout>
   );
 }

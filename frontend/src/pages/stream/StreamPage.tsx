@@ -505,14 +505,15 @@ const StreamPage: React.FC = () => {
                                     onClick={handleCreateMenuClick}
                                     sx={{
                                         borderRadius: 20,
-                                        bgcolor: "#1967d2",
+                                        bgcolor: "#5f6368",
+                                        color: "#ffffff",
                                         textTransform: "none",
                                         fontWeight: 600,
                                         fontSize: "0.875rem",
                                         px: 3,
                                         py: 1.2,
                                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                        '&:hover': { bgcolor: '#1557b0', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }
+                                        '&:hover': { bgcolor: '#4b4e52', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }
                                     }}
                                 >
                                     Create

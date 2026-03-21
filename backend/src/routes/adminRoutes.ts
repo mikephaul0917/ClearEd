@@ -1,5 +1,5 @@
 import express from "express";
-import { listUsers, getUser, createUser, updateStatus, updateRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement } from "../controllers/admin/userManagementController";
+import { listUsers, getUser, createUser, updateStatus, updateRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile } from "../controllers/admin/userManagementController";
 import {
     getInstitutionOrganizations,
     getDeletedOrganizations,
@@ -23,6 +23,14 @@ router.post("/users", auth, admin, createUser);
 router.put("/users/:id/role", auth, admin, updateRole);
 router.put("/users/:id/status", auth, admin, updateStatus);
 router.put("/users/:id/profile", auth, admin, updateProfile);
+// Student Profile routes (assigned courses/years)
+router.get("/users/:id/student-profile", auth, admin, getStudentProfile);
+router.put("/users/:id/student-profile", auth, admin, updateStudentProfile);
+
+// Dean Assignment routes
+router.get("/users/:id/dean-assignments", auth, admin, getDeanAssignments);
+router.post("/users/:id/dean-assignments", auth, admin, addDeanAssignment);
+router.delete("/users/:id/dean-assignments/:assignmentId", auth, admin, removeDeanAssignment);
 
 router.get("/organizations", auth, admin, getInstitutionOrganizations);
 router.get("/organizations/deleted", auth, admin, getDeletedOrganizations);
