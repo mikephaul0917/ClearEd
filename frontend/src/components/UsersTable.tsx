@@ -589,7 +589,7 @@ export default function UsersTable({
             onClick={async () => {
               if (manageUser?._id) {
                 try {
-                  await adminService.updateUserRole(manageUser._id, role, selectedOrgId);
+                  await adminService.updateUserRole(manageUser._id, role, selectedOrgId ? selectedOrgId : undefined);
                   await adminService.updateUserProfile(manageUser._id, { fullName: manageUser.fullName, username: manageUser.username });
                   Swal.fire({ icon: 'success', title: 'User Updated', timer: 1500, showConfirmButton: false });
                 } catch (error: any) {
@@ -609,7 +609,7 @@ export default function UsersTable({
                     password: createPassword,
                     isAdmin: role === "admin",
                     role,
-                    organizationId: selectedOrgId
+                    ...(selectedOrgId ? { organizationId: selectedOrgId } : {})
                   });
                   Swal.fire({ icon: 'success', title: 'User Created', timer: 1500, showConfirmButton: false });
                   setCreatePassword("");

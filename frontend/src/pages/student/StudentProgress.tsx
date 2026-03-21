@@ -81,7 +81,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
 
   const stats = useMemo(() => {
     if (isOverview) {
-      const approved = myClearances.filter(c => c.status === "completed").length;
+      const approved = myClearances.filter(c => c.status === "completed" || c.status === "officer_cleared").length;
       const total = myClearances.length;
       return {
         total,
@@ -211,8 +211,12 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
               <Typography sx={{ fontSize: 14, px: 1 }}>{org.name}</Typography>
               <Box sx={{ px: 2, display: 'flex', justifyContent: 'center' }}>
                 <Box sx={{ width: '100%', borderBottom: "1px solid #CCC", minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {org.status === 'completed' ? (
-                    <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#1a365d' }}>Signed Digitally</Typography>
+                  {org.status === 'completed' || org.status === 'officer_cleared' ? (
+                    org.signatureUrl ? (
+                      <img src={org.signatureUrl} alt="Signature" style={{ maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#1a365d' }}>Signed Digitally</Typography>
+                    )
                   ) : (
                     <Typography sx={{ fontSize: 11, color: '#999', letterSpacing: '0.1em' }}>PENDING</Typography>
                   )}
@@ -220,7 +224,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
               </Box>
               <Box sx={{ px: 1, borderBottom: "1px solid #CCC", minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Typography sx={{ fontSize: 13 }}>
-                  {org.submittedAt && org.status === 'completed' ? new Date(org.submittedAt).toLocaleDateString() : "—"}
+                  {org.submittedAt && (org.status === 'completed' || org.status === 'officer_cleared') ? new Date(org.submittedAt).toLocaleDateString() : "—"}
                 </Typography>
               </Box>
             </Box>

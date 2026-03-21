@@ -2,21 +2,14 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import ClearanceRequest from "../models/ClearanceRequest";
 import Organization from "../models/Organization";
+import OrganizationMember from "../models/OrganizationMember";
 import ClearanceRequirement from "../models/ClearanceRequirement";
 import ClearanceSubmission from "../models/ClearanceSubmission";
 import User from "../models/User";
 import AuditLog from "../models/AuditLog";
 import { logAudit } from "../utils/auditLogger";
 import Term from "../models/Term";
-
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-    institutionId: string;
-    email: string;
-  };
-}
+import { AuthRequest } from "../middleware/authMiddleware";
 
 /**
  * Get pending clearance requests for an organization (for administrators/high-level viewing)
@@ -32,8 +25,7 @@ export const getOrganizationClearanceOverview = async (req: AuthRequest, res: Re
 
     // Verify organization exists
     const organization = await Organization.findOne({
-      _id: organizationId,
-      institutionId
+      _id: organizationId
     });
 
     if (!organization) {
@@ -41,13 +33,20 @@ export const getOrganizationClearanceOverview = async (req: AuthRequest, res: Re
     }
 
     // Get active term
-    const term = await Term.findOne({ institutionId, isActive: true });
+    // Fallback securely to the organization's own institutionId if needed, but simply isActive is usually fine for a single-tenant dev setup
+    const term = await Term.findOne({ institutionId: organization.institutionId, isActive: true }) || await Term.findOne({ isActive: true });
+    
     if (!term) return res.status(400).json({ message: "No active term found" });
 
-    // Get all clearance requests for this organization and term
+    // Get all active members for this organization
+    const members = await OrganizationMember.find({
+      organizationId,
+      role: 'member',
+      status: 'active'
+    }).populate("userId", "fullName email");
+
     const requests = await ClearanceRequest.find({
       organizationId,
-      institutionId,
       termId: term._id
     }).populate("userId", "fullName email")
       .sort({ submittedAt: -1 });
@@ -58,28 +57,46 @@ export const getOrganizationClearanceOverview = async (req: AuthRequest, res: Re
       isActive: true
     });
 
-    const requestsWithProgress = await Promise.all(requests.map(async (req) => {
-      const approvedSubmissions = await ClearanceSubmission.countDocuments({
-        clearanceRequestId: req._id,
-        status: "approved"
-      });
+    const requestsWithProgress = await Promise.all(members.map(async (member: any) => {
+      // Skip if referenced user was deleted
+      if (!member.userId || !member.userId._id) return null;
+
+      let status = "not_started";
+      let completedCount = 0;
+      let reqId = null;
+      let submittedAt = null;
+
+      const userReq = requests.find(r => (r.userId as any)?._id?.toString() === member.userId._id.toString());
+      if (userReq) {
+        reqId = userReq._id;
+        status = userReq.status;
+        submittedAt = userReq.submittedAt;
+        const approvedSubmissions = await ClearanceSubmission.countDocuments({
+          clearanceRequestId: userReq._id,
+          status: "approved"
+        });
+        completedCount = approvedSubmissions;
+      }
 
       return {
-        id: req._id,
-        student: req.userId,
-        status: req.status,
+        id: reqId || member._id,
+        student: member.userId,
+        status: status,
         progress: {
           total: requirementsCount,
-          completed: approvedSubmissions
+          completed: completedCount
         },
-        submittedAt: req.submittedAt
+        submittedAt
       };
     }));
+
+    // Filter out nulls from deleted users
+    const validRequests = requestsWithProgress.filter(r => r !== null);
 
     res.json({
       organization: { id: organization._id, name: organization.name },
       term: { id: term._id, name: term.name },
-      requests: requestsWithProgress
+      requests: validRequests
     });
 
   } catch (error: any) {

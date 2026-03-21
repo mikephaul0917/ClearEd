@@ -203,7 +203,8 @@ export const getMyClearances = async (req: Request, res: Response) => {
         signatoryName: org.signatoryName,
         isFinal: org.isFinal,
         status: request ? request.status : "not_started",
-        submittedAt: request ? request.submittedAt : null
+        submittedAt: request ? request.submittedAt : null,
+        signatureUrl: request ? (request as any).signatureUrl : undefined
       };
     });
 

@@ -1,0 +1,63 @@
+[
+  {
+    "_id": "69a3928fddb1602eca0c4922",
+    "organizationId": "69a3928fddb1602eca0c4920",
+    "userId": "69a18f6b1c1e356383dc9f8f",
+    "institutionId": "69a18e496917b308bf0fe8c8",
+    "role": "officer",
+    "status": "active",
+    "joinedAt": "2026-03-01T01:12:47.612Z",
+    "createdAt": "2026-03-01T01:12:47.615Z",
+    "updatedAt": "2026-03-01T01:12:47.615Z",
+    "__v": 0
+  },
+  {
+    "_id": "69a39b739230a5fa343a99fe",
+    "organizationId": "69a3928fddb1602eca0c4920",
+    "userId": "69a391ed1874d635f18076f9",
+    "institutionId": "69a18e496917b308bf0fe8c8",
+    "role": "member",
+    "status": "active",
+    "joinedAt": "2026-03-01T01:50:43.455Z",
+    "createdAt": "2026-03-01T01:50:43.458Z",
+    "updatedAt": "2026-03-01T01:50:43.458Z",
+    "__v": 0
+  },
+  {
+    "_id": "69a3b68d9230a5fa343a9a3f",
+    "organizationId": "69a3b68d9230a5fa343a9a3d",
+    "userId": "69a18f6b1c1e356383dc9f8f",
+    "institutionId": "69a18e496917b308bf0fe8c8",
+    "role": "officer",
+    "status": "active",
+    "joinedAt": "2026-03-01T03:46:21.641Z",
+    "createdAt": "2026-03-01T03:46:21.642Z",
+    "updatedAt": "2026-03-01T03:46:21.642Z",
+    "__v": 0
+  },
+  {
+    "_id": "69a3b6d49230a5fa343a9a67",
+    "organizationId": "69a3b68d9230a5fa343a9a3d",
+    "userId": "69a391ed1874d635f18076f9",
+    "institutionId": "69a18e496917b308bf0fe8c8",
+    "role": "member",
+    "status": "active",
+    "joinedAt": "2026-03-01T15:18:05.002Z",
+    "createdAt": "2026-03-01T03:47:32.435Z",
+    "updatedAt": "2026-03-01T15:18:05.004Z",
+    "__v": 0,
+    "statusChangedAt": "2026-03-01T15:18:05.002Z"
+  },
+  {
+    "_id": "69a3b7699230a5fa343a9aa4",
+    "organizationId": "69a3b68d9230a5fa343a9a3d",
+    "userId": "69a391ed1874d635f18076f7",
+    "institutionId": "69a18e496917b308bf0fe8c8",
+    "role": "officer",
+    "status": "active",
+    "joinedAt": "2026-03-01T06:40:24.970Z",
+    "createdAt": "2026-03-01T03:50:01.010Z",
+    "updatedAt": "2026-03-01T06:40:24.972Z",
+    "__v": 0
+  }
+]

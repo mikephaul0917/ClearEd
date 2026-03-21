@@ -1,0 +1,12 @@
+﻿src/routes/clearanceRoutes.ts(22,61): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthRequest'.
+            Types of property 'user' are incompatible.
+              Type '{ id: string; role: string; institutionId?: string | null | undefined; email: string; } | undefined' is not assignable to type '{ id: string; role: string; institutionId: string; email: string; } | undefined'.
+                Type '{ id: string; role: string; institutionId?: string | null | undefined; email: string; }' is not assignable to type '{ id: string; role: string; institutionId: string; email: string; }'.
+                  Types of property 'institutionId' are incompatible.
+                    Type 'string | null | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.

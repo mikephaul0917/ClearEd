@@ -119,5 +119,15 @@ export const clearanceService = {
     deleteComment: async (commentId: string) => {
         const response = await api.delete(`/comments/${commentId}`);
         return response.data;
+    },
+
+    markAsOfficerCleared: async (organizationId: string, studentId: string, signatureData?: string) => {
+        const response = await api.post(`/signatory/organizations/${organizationId}/clear-student/${studentId}`, { signatureData });
+        return response.data;
+    },
+
+    getOrganizationClearanceOverview: async (organizationId: string) => {
+        const response = await api.get(`/signatory/organizations/${organizationId}/clearance-overview`);
+        return response.data;
     }
 };

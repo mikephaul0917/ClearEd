@@ -389,3 +389,77 @@ export const deleteSignatoryRequirement = async (req: Request, res: Response) =>
     res.status(500).json({ message: err.message || "Failed to delete requirement" });
   }
 };
+
+export const markAsOfficerCleared = async (req: Request, res: Response) => {
+  try {
+    const officerId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId, studentId } = req.params;
+    const { signatureData } = req.body;
+
+    if (!officerId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const membership = await OrganizationMember.findOne({
+      userId: officerId,
+      organizationId,
+      institutionId,
+      role: "officer",
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You do not have permission to mark students as cleared for this organization" });
+    }
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active term found" });
+
+    let clearanceRequest = await ClearanceRequest.findOne({
+      userId: studentId,
+      organizationId,
+      institutionId,
+      termId: term._id
+    });
+
+    if (!clearanceRequest) {
+      // If student hasn't started the clearance process, create it initialized to 'officer_cleared'
+      clearanceRequest = new ClearanceRequest({
+        userId: studentId,
+        organizationId,
+        institutionId,
+        termId: term._id,
+        status: "officer_cleared",
+        signatureUrl: signatureData
+      });
+    } else {
+      if (clearanceRequest.status === "completed") {
+        return res.status(400).json({ message: "Student is already fully cleared" });
+      }
+      clearanceRequest.status = "officer_cleared";
+      if (signatureData) {
+        clearanceRequest.signatureUrl = signatureData;
+      }
+    }
+
+    await clearanceRequest.save();
+
+    await AuditLog.create({
+      userId: officerId,
+      institutionId,
+      action: "officer_marked_cleared",
+      category: "clearance_workflow",
+      resource: "ClearanceRequest",
+      resourceId: clearanceRequest._id as any,
+      details: { studentId },
+      severity: "medium",
+      ipAddress: req.ip || "unknown"
+    });
+
+    res.json({ message: "Student marked as cleared successfully", status: clearanceRequest.status });
+  } catch (err: any) {
+    console.error('Mark as officer cleared error:', err);
+    res.status(500).json({ message: err.message || "Failed to mark student as cleared" });
+  }
+};

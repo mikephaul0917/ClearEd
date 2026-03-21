@@ -43,6 +43,7 @@ import CreateMaterialModal from "../../components/stream/CreateMaterialModal";
 import ReviewSubmissionsModal from "../../components/stream/ReviewSubmissionsModal";
 import CustomiseAppearanceModal from "../../components/stream/CustomiseAppearanceModal";
 import MembersList from "../../components/organization/MembersList";
+import OfficerMarksTab from "../../components/stream/OfficerMarksTab";
 import { useAuth } from "../../hooks/useAuth";
 import { organizationService, clearanceService, api } from "../../services";
 
@@ -384,8 +385,9 @@ const StreamPage: React.FC = () => {
                         }}
                     >
                         <Tab label="Stream" />
-                        <Tab label="Requirements" />
+                        <Tab label="Classwork" />
                         <Tab label="People" />
+                        {isOfficer && <Tab label="Marks" />}
                     </Tabs>
                 </Box>
 
@@ -577,13 +579,17 @@ const StreamPage: React.FC = () => {
                             </Box>
                         )}
                     </Box>
-                ) : (
+                ) : tabValue === 2 ? (
                     <Box sx={{ pb: 8 }}>
                         <MembersList
                             organizationId={orgId || ""}
                             isOfficer={isOfficer}
                             isAdmin={isAdmin}
                         />
+                    </Box>
+                ) : (
+                    <Box sx={{ pb: 8 }}>
+                        {isOfficer && orgId && <OfficerMarksTab organizationId={orgId} />}
                     </Box>
                 )}
 

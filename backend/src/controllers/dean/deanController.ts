@@ -132,7 +132,11 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "You do not have jurisdiction over this student's course/year level" });
     }
 
-    // 3. Verify all submissions for this request are approved
+    // 3. Verify the request is officer_cleared, and all submissions are approved
+    if (clearanceRequest.status !== "officer_cleared") {
+        return res.status(400).json({ message: "Cannot grant final approval. The organization officer has not marked this student as cleared." });
+    }
+
     const pendingSubmissions = await ClearanceSubmission.countDocuments({
       clearanceRequestId: requestId,
       status: { $ne: "approved" }

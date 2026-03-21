@@ -2,9 +2,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useEffect, useMemo, useState } from "react";
-import { api } from '../../services';
+import { api, clearanceService } from '../../services';
 
-type DeptStatus = { name: string; status: "Pending" | "Approved" | "Rejected"; updatedAt?: string; signatureUrl?: string };
+type DeptStatus = {
+  name: string;
+  status: "pending" | "in_progress" | "not_started" | "approved" | "rejected" | "completed" | "officer_cleared" | "Pending" | "Approved" | "Rejected";
+  updatedAt?: string;
+  signatureUrl?: string;
+  submittedAt?: string;
+};
 
 const LEFT_ORGS = [
   "IMC Coordinator",
@@ -34,8 +40,8 @@ export default function StudentClearanceSlip() {
         try { setProfile(JSON.parse(localStorage.getItem("studentProfile") || "{}")); } catch { }
       }
       try {
-        const tl = await api.get("/clearance/timeline");
-        setTimeline(tl.data.items || []);
+        const res = await clearanceService.getMyClearances();
+        setTimeline(res.organizations || []);
       } catch {
         setTimeline([]);
       }
@@ -49,11 +55,11 @@ export default function StudentClearanceSlip() {
 
   const statusText = (label: string) => {
     const it = getItem(label);
-    if (it?.status === "Approved") {
-      const dt = it.updatedAt ? String(it.updatedAt).toString().slice(0, 10) : "";
+    if (it?.status === "completed" || it?.status === "officer_cleared") {
+      const dt = it.submittedAt ? String(new Date(it.submittedAt).toLocaleDateString()) : "";
       return `✔ Completed${dt ? ` (${dt})` : ""}`;
     }
-    if (it?.status === "Rejected") return "❗ Pending";
+    if (it?.status === "rejected") return "❗ Pending";
     return "❗ Pending";
   };
 
@@ -143,26 +149,48 @@ export default function StudentClearanceSlip() {
 
           <Box mt={2} display="grid" gridTemplateColumns="1fr 1fr" columnGap={4}>
             <Box>
-              {LEFT_ORGS.map((label) => (
+              {LEFT_ORGS.map((label) => {
+                const it = getItem(label);
+                return (
                 <Box key={label} display="grid" gridTemplateColumns="1fr 1fr" alignItems="center" sx={{ py: 0.5 }}>
                   <Typography sx={{ fontSize: 14 }}>{label}</Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box sx={{ flex: 1, borderBottom: "1px solid #000", minHeight: 24 }} />
+                    <Box sx={{ flex: 1, borderBottom: "1px solid #000", minHeight: 24, position: "relative" }}>
+                      {it?.signatureUrl && (
+                        <img 
+                          src={it.signatureUrl} 
+                          alt="Signature" 
+                          style={{ position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)", maxHeight: "45px", maxWidth: "100%" }} 
+                        />
+                      )}
+                    </Box>
                     <Typography sx={{ fontSize: 12 }}>{statusText(label)}</Typography>
                   </Box>
                 </Box>
-              ))}
+                );
+              })}
             </Box>
             <Box>
-              {RIGHT_ORGS.map((label) => (
+              {RIGHT_ORGS.map((label) => {
+                const it = getItem(label);
+                return (
                 <Box key={label} display="grid" gridTemplateColumns="1fr 1fr" alignItems="center" sx={{ py: 0.5 }}>
                   <Typography sx={{ fontSize: 14 }}>{label}</Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box sx={{ flex: 1, borderBottom: "1px solid #000", minHeight: 24 }} />
+                    <Box sx={{ flex: 1, borderBottom: "1px solid #000", minHeight: 24, position: "relative" }}>
+                      {it?.signatureUrl && (
+                        <img 
+                          src={it.signatureUrl} 
+                          alt="Signature" 
+                          style={{ position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)", maxHeight: "45px", maxWidth: "100%" }} 
+                        />
+                      )}
+                    </Box>
                     <Typography sx={{ fontSize: 12 }}>{statusText(label)}</Typography>
                   </Box>
                 </Box>
-              ))}
+                );
+              })}
             </Box>
           </Box>
 
