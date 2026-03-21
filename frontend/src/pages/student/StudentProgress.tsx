@@ -20,6 +20,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import PendingIcon from "@mui/icons-material/Pending";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
+import Dialog from "@mui/material/Dialog";
 
 const COLORS = {
   black: '#0a0a0a',
@@ -41,6 +42,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
   const [finalClearance, setFinalClearance] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [submittingDean, setSubmittingDean] = useState(false);
+  const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
 
   const isOverview = !organizationId;
 
@@ -142,7 +144,6 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
         backgroundColor: "#FFF",
         fontFamily: "'Times New Roman', Times, serif",
         color: "#000",
-        minHeight: "1000px",
         position: 'relative'
       }}>
         {/* Header Section */}
@@ -162,7 +163,11 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
             <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
               <Typography sx={{ fontSize: 16, textAlign: "center", fontWeight: 600 }}>
                 {(() => {
-                  if (!profile) return "—";
+                  const storedUser = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null;
+                  const fallbackName = storedUser?.fullName || "Student Name";
+                  
+                  if (!profile) return fallbackName;
+
                   const fName = (profile.firstName || "").trim();
                   const lName = (profile.familyName || "").trim();
                   const mName = (profile.middleName || "").trim();
@@ -174,12 +179,10 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
                   const middle = scrub(mName);
                   
                   if (first || last) {
-                    return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || "—";
+                    return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || fallbackName;
                   }
                   
-                  // Fallback to name in localStorage or username/email
-                  const savedName = localStorage.getItem("username");
-                  return savedName || profile.username || profile.email?.split('@')[0] || "—";
+                  return fallbackName;
                 })()}
               </Typography>
             </Box>
@@ -229,7 +232,12 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
                 <Box sx={{ width: '100%', borderBottom: "1px solid #CCC", minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {org.status === 'completed' || org.status === 'officer_cleared' ? (
                     org.signatureUrl ? (
-                      <img src={org.signatureUrl} alt="Signature" style={{ maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} />
+                      <img 
+                        src={org.signatureUrl} 
+                        alt="Signature" 
+                        onClick={(e) => { e.stopPropagation(); setZoomedSignature(org.signatureUrl); }}
+                        style={{ maxHeight: '35px', maxWidth: '100%', objectFit: 'contain', cursor: 'pointer' }} 
+                      />
                     ) : (
                       <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#1a365d' }}>Signed Digitally</Typography>
                     )
@@ -245,42 +253,62 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
               </Box>
             </Box>
           ))}
-          {/* Fill remaining space with empty lines if necessary to match document feel */}
-          {myClearances.length < 12 && Array.from({ length: 12 - myClearances.length }).map((_, idx) => (
-            <Box key={`empty-${idx}`} sx={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr', py: 1 }}>
-              <Box sx={{ minHeight: 40, borderBottom: "1px solid #EEE" }} />
-              <Box sx={{ px: 2 }}><Box sx={{ borderBottom: "1px solid #EEE", minHeight: 40 }} /></Box>
-              <Box sx={{ borderBottom: "1px solid #EEE", minHeight: 40 }} />
-            </Box>
-          ))}
+          {/* Empty dynamic space logic removed to allow the form to natively shrink/expand */}
         </Box>
 
-        {/* Footer/Stamps Placeholder */}
         <Box sx={{ mt: 8, display: 'flex', justifyContent: 'flex-end' }}>
-          <Box sx={{ width: 220, textAlign: 'center' }}>
-            <Box sx={{ borderBottom: "1px solid #000", minHeight: 30, display: 'flex', alignItems: 'end', justifyContent: 'center' }}>
-              {finalClearance?.status === 'approved' && (
-                  <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#10B981', mt: -1 }}>Approved by Dean</Typography>
-              )}
-            </Box>
+          <Box sx={{ width: 220, textAlign: 'center', position: 'relative' }}>
+            {finalClearance?.signatureUrl ? (
+              <img 
+                src={finalClearance.signatureUrl} 
+                alt="Dean Signature" 
+                onClick={(e) => { e.stopPropagation(); setZoomedSignature(finalClearance.signatureUrl); }}
+                style={{ 
+                  position: 'absolute', 
+                  bottom: '24px', 
+                  left: '50%', 
+                  transform: 'translateX(-50%)', 
+                  maxHeight: '70px', 
+                  maxWidth: '100%',
+                  mixBlendMode: 'multiply',
+                  zIndex: 1,
+                  cursor: 'pointer'
+                }} 
+              />
+            ) : (
+              finalClearance?.status === 'approved' && (
+                <Typography sx={{ position: 'absolute', bottom: '24px', left: 0, right: 0, fontFamily: 'cursive', fontSize: 18, color: '#10B981', zIndex: 1 }}>Approved by Dean</Typography>
+              )
+            )}
+            <Box sx={{ borderBottom: "1px solid #000", minHeight: 30, display: 'flex', alignItems: 'end', justifyContent: 'center', position: 'relative', zIndex: 2 }} />
             <Typography sx={{ fontSize: 13, fontWeight: 700, mt: 0.5 }}>Dean's Signature</Typography>
           </Box>
         </Box>
       </Paper>
 
+      <Dialog open={!!zoomedSignature} onClose={() => setZoomedSignature(null)} maxWidth="md">
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#FFF' }}>
+          <img src={zoomedSignature || ''} alt="Zoomed Signature" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
+          <Button onClick={() => setZoomedSignature(null)} sx={{ mt: 2, color: '#000', borderColor: '#000', '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' } }} variant="outlined">Close</Button>
+        </Box>
+      </Dialog>
+
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
         <Button 
-          variant="contained" 
+          variant="outlined" 
           disabled={submittingDean || finalClearance !== null}
           onClick={handleSubmitToDean} 
           sx={{ 
-            bgcolor: finalClearance ? '#10B981' : '#1967d2', 
-            color: '#fff', 
-            '&:hover': { bgcolor: finalClearance ? '#059669' : '#1557b0' },
-            '&.Mui-disabled': { bgcolor: finalClearance ? '#10B981' : '#E2E8F0', color: finalClearance ? '#fff' : '#94A3B8' }
+            borderRadius: '8px', 
+            color: '#000', 
+            borderColor: '#000', 
+            bgcolor: '#FFF', 
+            fontWeight: 700,
+            '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
+            '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
           }}
         >
-          {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'Dean Approved' : finalClearance ? 'Submitted to Dean' : 'Submit to Dean'}
+          {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'DEAN APPROVED' : finalClearance ? 'SUBMITTED TO DEAN' : 'SUBMIT TO DEAN'}
         </Button>
         <Button variant="contained" color="inherit" onClick={() => window.print()} sx={{ bgcolor: '#000', color: '#FFF' }}>Print Clearance Slip</Button>
       </Box>

@@ -31,6 +31,7 @@ import RoleLayout from "../../components/layout/RoleLayout";
 import CircularProgress from "@mui/material/CircularProgress";
 import CheckIcon from "@mui/icons-material/Check";
 import { EmptyState } from "../../components/layout/EmptyState";
+import SignatureModal from "../../components/stream/SignatureModal";
 
 const COURSES = [
   "BACHELOR OF ARTS IN COMMUNICATION (ABComm)",
@@ -114,7 +115,7 @@ export default function DeanPage() {
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
-  const [notice, setNotice] = useState<any>((location.state as any)?.banner ?? null);
+  const [notice, setNotice] = useState<{ message: string, variant: 'success' | 'error' | 'info' } | null>((location.state as any)?.banner ?? null);
   const [query, setQuery] = useState("");
   const [filterCourse, setFilterCourse] = useState<string>("");
   const [filterYear, setFilterYear] = useState<string>("");
@@ -123,6 +124,9 @@ export default function DeanPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selected, setSelected] = useState<any>(null);
+  
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
+  const [studentToApprove, setStudentToApprove] = useState<any>(null);
   const [actionState, setActionState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [actionRowId, setActionRowId] = useState<string | null>(null);
 
@@ -236,22 +240,25 @@ export default function DeanPage() {
     }
   };
 
-  const finalize = async (row: any) => {
+  const finalize = async (signatureData: string) => {
+    if (!studentToApprove) return;
     try {
-      setActionRowId(row.id);
+      setActionRowId(studentToApprove.id);
       setActionState('loading');
+      setSignatureModalOpen(false);
 
-      const payload = row?.studentId ? { studentId: row.studentId } : {};
+      const payload = studentToApprove?.studentId ? { studentId: studentToApprove.studentId, signatureUrl: signatureData } : {};
       await api.post("/dean/final-approval", payload);
 
       setActionState('success');
 
       setTimeout(() => {
         setNotice({ message: "Final clearance approved", variant: "success" });
-        setReadyRows(prev => prev.filter(r => r.id !== row.id));
-        if (selected?.id === row.id) setSelected(null);
+        setReadyRows(prev => prev.filter(r => r.id !== studentToApprove.id));
+        if (selected?.id === studentToApprove.id) setSelected(null);
         setActionState('idle');
         setActionRowId(null);
+        setStudentToApprove(null);
       }, 800);
 
     } catch (err: any) {
@@ -480,7 +487,7 @@ export default function DeanPage() {
                           View
                         </Button>
                         <Button
-                          onClick={() => finalize(r)}
+                          onClick={() => { setStudentToApprove(r); setSignatureModalOpen(true); }}
                           disabled={actionState !== 'idle'}
                           sx={{
                             fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
@@ -836,6 +843,12 @@ export default function DeanPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <SignatureModal
+        open={signatureModalOpen}
+        onClose={() => setSignatureModalOpen(false)}
+        onConfirm={finalize}
+      />
     </RoleLayout>
   );
 }

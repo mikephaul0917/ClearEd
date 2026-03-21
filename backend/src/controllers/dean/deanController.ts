@@ -163,7 +163,7 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
   try {
     const deanId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
-    const { studentId } = req.body;
+    const { studentId, signatureUrl } = req.body;
 
     if (!deanId || !institutionId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -202,6 +202,9 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
 
     finalClearance.status = "approved";
     finalClearance.reviewedAt = new Date();
+    if (signatureUrl) {
+      finalClearance.signatureUrl = signatureUrl;
+    }
     await finalClearance.save();
 
     // Also update all ClearanceRequests to "completed"

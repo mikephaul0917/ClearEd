@@ -177,8 +177,17 @@ export const getMyClearances = async (req: Request, res: Response) => {
     const term = await Term.findOne({ institutionId, isActive: true });
     if (!term) return res.json({ organizations: [] });
 
-    // 2. Get all active organizations for the institution
+    // 2. Get all organizations the student is an active member of
+    const memberships = await OrganizationMember.find({
+      userId,
+      institutionId,
+      status: 'active'
+    });
+    const joinedOrgIds = memberships.map(m => m.organizationId);
+
+    // 2.5 Get all active organizations for the institution that the student joined
     const organizations = await Organization.find({
+      _id: { $in: joinedOrgIds },
       institutionId,
       isActive: true,
       status: 'active'
@@ -225,7 +234,7 @@ export const getMyClearances = async (req: Request, res: Response) => {
         region: (institution as any)?.region,
         division: (institution as any)?.division
       },
-      finalClearance: finalClearance ? { status: finalClearance.status, submittedAt: finalClearance.submittedAt } : null,
+      finalClearance: finalClearance ? { status: finalClearance.status, submittedAt: finalClearance.submittedAt, signatureUrl: finalClearance.signatureUrl } : null,
       organizations: data
     });
 

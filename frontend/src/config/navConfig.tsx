@@ -103,8 +103,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
         { key: "todo", label: "To-Do", path: "/student/todo", icon: CheckCircleIcon },
         { key: "progress", label: "My Clearance", path: "/student/progress", icon: AssignmentIcon },
-        { key: "requirements", label: "Upload Forms", path: "/student/requirements", icon: FileIcon },
-        { key: "certificate", label: "E-Certificate", path: "/student/certificate", icon: CertificateIcon },
+        { key: "certificate", label: "Clearance Receipt", path: "/student/certificate", icon: CertificateIcon },
         { key: "settings", label: "Settings", path: "/student/settings", icon: SettingsIcon },
     ],
     officer: [
