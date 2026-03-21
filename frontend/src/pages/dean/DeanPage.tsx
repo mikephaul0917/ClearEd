@@ -32,6 +32,25 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckIcon from "@mui/icons-material/Check";
 import { EmptyState } from "../../components/layout/EmptyState";
 import SignatureModal from "../../components/stream/SignatureModal";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import PersonIcon from "@mui/icons-material/Person";
+import SecurityIcon from "@mui/icons-material/Security";
+import { useTheme, useMediaQuery } from "@mui/material";
+
+const COLORS = {
+  black: '#0a0a0a',
+  textSecondary: '#64748B',
+};
+const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const glassCard = {
+  backgroundColor: 'rgba(255,255,255,0.65)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(0,0,0,0.06)',
+  boxShadow: 'none',
+  borderRadius: '12px'
+};
 
 const COURSES = [
   "BACHELOR OF ARTS IN COMMUNICATION (ABComm)",
@@ -118,6 +137,7 @@ export default function DeanPage() {
   const [notice, setNotice] = useState<{ message: string, variant: 'success' | 'error' | 'info' } | null>((location.state as any)?.banner ?? null);
   const [query, setQuery] = useState("");
   const [filterCourse, setFilterCourse] = useState<string>("");
+  const [availableCourses, setAvailableCourses] = useState<string[]>([]);
   const [filterYear, setFilterYear] = useState<string>("");
   const [filterDate, setFilterDate] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -132,6 +152,9 @@ export default function DeanPage() {
 
   const [readyRows, setReadyRows] = useState<any[]>([]);
   const [orgRows, setOrgRows] = useState<any[]>([]);
+
+  const theme = useTheme();
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     try {
@@ -158,6 +181,12 @@ export default function DeanPage() {
   })();
 
   const loadData = async () => {
+    try {
+      const res = await api.get("/dean/courses");
+      setAvailableCourses(res.data.courses || []);
+    } catch {
+      setAvailableCourses(COURSES);
+    }
     try {
       const res = await api.get("/dean/final-ready");
       const items = (res.data.rows || []).map((r: any, idx: number) => ({
@@ -322,115 +351,96 @@ export default function DeanPage() {
       )}
       {isFinal ? (
         <>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: "#0F172A" }}>Dean Dashboard</Typography>
-              <Typography sx={{ color: "#6B7280", fontSize: 13 }}>Final Approval</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: "#000", fontFamily: fontStack, letterSpacing: '-0.02em', mb: 0.5 }}>Final Approval</Typography>
+              <Typography sx={{ color: "#64748B", fontSize: '0.95rem' }}>Manage and approve finalized student clearances</Typography>
             </Box>
-            <IconButton onClick={() => nav("/dean/settings")}>
-              <Box aria-hidden sx={{ width: 24, height: 24 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="#0F172A" strokeWidth="2" />
-                  <path d="M2 12h4M18 12h4M12 2v4M12 18v4" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </Box>
-            </IconButton>
           </Box>
 
-          <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(4, 1fr)" }} gap={2} mb={3}>
+          <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(4, 1fr)" }} gap={3} mb={4}>
             {[
               {
-                label: "Ready for Final Approval", value: readyCount, color: "#2563EB", icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h16M4 17h10" stroke="#2563EB" strokeWidth="2" /></svg>
-                )
+                label: "READY FOR APPROVAL", value: readyCount, dotColor: "#10B981", bgColor: "#F4FDF8"
               },
               {
-                label: "Finalized Today", value: finalizedToday, color: "#16A34A", icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                )
+                label: "FINALIZED TODAY", value: finalizedToday, dotColor: "#A855F7", bgColor: "#FAF5FF"
               },
               {
-                label: "Rejected Today", value: rejectedToday, color: "#DC2626", icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 10M17 7L7 17" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" /></svg>
-                )
+                label: "REJECTED TODAY", value: rejectedToday, dotColor: "#EF4444", bgColor: "#FFF5F5"
               },
               {
-                label: "Pending Organizations", value: orgRows.length, color: "#F59E0B", icon: (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4l3 3" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" /></svg>
-                )
+                label: "PENDING ORGANIZATIONS", value: orgRows.length, dotColor: "#EAB308", bgColor: "#FFFFF0"
               }
             ].map((card) => (
-              <Box key={card.label} sx={{ border: "1px solid #E5E7EB", borderRadius: 1, backgroundColor: "#FFFFFF", p: 3 }}>
-                <Box display="flex" alignItems="center" gap={1.5}>
-                  <Box aria-hidden sx={{ width: 28, height: 28, borderRadius: 9999, backgroundColor: `${card.color}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>{card.icon}</Box>
-                  <Box>
-                    <Typography sx={{ fontWeight: 800, fontSize: 20 }}>{card.value}</Typography>
-                    <Typography sx={{ color: "#6B7280", fontSize: 12 }}>{card.label}</Typography>
-                  </Box>
-                </Box>
+              <Box key={card.label} sx={{ borderRadius: '16px', backgroundColor: card.bgColor, p: 3, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: card.dotColor, mb: 2 }} />
+                <Typography sx={{ color: "#64748B", fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em', mb: 1.5 }}>{card.label}</Typography>
+                <Typography sx={{ fontWeight: 800, fontSize: '2rem', color: '#000', lineHeight: 1 }}>{card.value}</Typography>
               </Box>
             ))}
           </Box>
 
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4 }}>
+            <Box display="flex" alignItems="center" gap={1.5} mb={3}>
+              <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 700, color: '#000', fontSize: '0.95rem' }}>Filter Clearances</Typography>
+                <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>Search name/ID and refine by course, year or date</Typography>
+              </Box>
+            </Box>
+
             <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
               <TextField
-                variant="standard"
-                placeholder="Search by name or ID"
+                variant="outlined"
+                placeholder="Search students..."
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-                sx={{ flex: 1, minWidth: 240 }}
+                sx={{ flex: 1, minWidth: 240, '& .MuiOutlinedInput-root': { borderRadius: '999px', bgcolor: '#FFF', height: 44 } }}
                 InputProps={{
-                  disableUnderline: true,
                   startAdornment: (
                     <InputAdornment position="start">
                       <Box aria-hidden sx={{ width: 16, height: 16 }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="#64748B" strokeWidth="2" /><path d="M20 20l-3.5-3.5" stroke="#64748B" strokeWidth="2" strokeLinecap="round" /></svg>
                       </Box>
                     </InputAdornment>
-                  ),
-                  sx: { bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' } }
+                  )
                 }}
               />
               <Select
-                variant="standard"
+                variant="outlined"
                 displayEmpty
                 value={filterCourse}
                 onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
-                disableUnderline
-                sx={{ minWidth: 200, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 200, bgcolor: '#FFF', borderRadius: '999px', height: 44, fontSize: '0.875rem' }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Courses</em></MenuItem>
-                {COURSES.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.875rem' }}>{getCourseLabel(c)}</MenuItem>))}
+                {availableCourses.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.875rem' }}>{getCourseLabel(c)}</MenuItem>))}
               </Select>
               <Select
-                variant="standard"
+                variant="outlined"
                 displayEmpty
                 value={filterYear}
                 onChange={(e) => { setFilterYear(e.target.value as string); setPage(0); }}
-                disableUnderline
-                sx={{ minWidth: 160, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 160, bgcolor: '#FFF', borderRadius: '999px', height: 44, fontSize: '0.875rem' }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Year Levels</em></MenuItem>
                 {YEAR_LEVELS.map(y => (<MenuItem key={y} value={y} sx={{ fontSize: '0.875rem' }}>{y}</MenuItem>))}
               </Select>
               <TextField
-                variant="standard"
+                variant="outlined"
                 type="date"
                 value={filterDate}
                 onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
-                sx={{ minWidth: 160 }}
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' } }
-                }}
+                sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: '999px', bgcolor: '#FFF', height: 44 } }}
               />
               <Select
-                variant="standard"
+                variant="outlined"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
-                disableUnderline
-                sx={{ minWidth: 140, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 140, bgcolor: '#FFF', borderRadius: '999px', height: 44, fontSize: '0.875rem' }}
               >
                 <MenuItem value="newest" sx={{ fontSize: '0.875rem' }}>Newest First</MenuItem>
                 <MenuItem value="oldest" sx={{ fontSize: '0.875rem' }}>Oldest First</MenuItem>
@@ -439,7 +449,7 @@ export default function DeanPage() {
                 <Button
                   variant="text"
                   onClick={() => { setQuery(""); setFilterCourse(""); setFilterYear(""); setFilterDate(""); setPage(0); }}
-                  sx={{ textTransform: 'none', color: '#64748B', fontWeight: 600, '&:hover': { bgcolor: '#F1F5F9', color: '#0F172A' } }}
+                  sx={{ textTransform: 'none', color: '#64748B', fontWeight: 600, borderRadius: '999px', px: 2, height: 44 }}
                 >
                   Clear filters
                 </Button>
@@ -447,69 +457,81 @@ export default function DeanPage() {
             </Box>
           </Box>
 
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>Students Ready for Final Approval</Typography>
+          <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4 }}>
+            <Box display="flex" alignItems="center" gap={1.5} mb={3}>
+              <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 700, color: '#000', fontSize: '0.95rem' }}>Clearances Overview</Typography>
+                <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>Manage and execute actions on final clearances</Typography>
+              </Box>
+            </Box>
+
             <Table size="small">
-              <TableHead sx={{ bgcolor: "#F8FAFC" }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 1.5 }}>Student</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 1.5 }}>Course / Year</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600, color: "#475569", py: 1.5 }}>Status</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600, color: "#475569", py: 1.5 }}>Progress</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, color: "#475569", py: 1.5 }}>Action</TableCell>
+              <TableHead>
+                <TableRow sx={{ borderBottom: '1px solid #E2E8F0' }}>
+                  <TableCell sx={{ fontWeight: 800, color: "#94A3B8", fontSize: '0.7rem', letterSpacing: '0.05em', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
+                  <TableCell sx={{ fontWeight: 800, color: "#94A3B8", fontSize: '0.7rem', letterSpacing: '0.05em', py: 2, borderBottom: 'none' }}>COURSE / YEAR</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 800, color: "#94A3B8", fontSize: '0.7rem', letterSpacing: '0.05em', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 800, color: "#94A3B8", fontSize: '0.7rem', letterSpacing: '0.05em', py: 2, borderBottom: 'none' }}>PROGRESS</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800, color: "#94A3B8", fontSize: '0.7rem', letterSpacing: '0.05em', py: 2, borderBottom: 'none' }}>ACTIONS</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {paginatedReady.map((r) => (
-                  <TableRow key={r.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                    <TableCell sx={{ py: 1.5, fontWeight: 600, color: "#0F172A" }}>{r.name}</TableCell>
-                    <TableCell sx={{ py: 1.5, color: "#64748B", fontSize: "0.875rem" }}>{r.course} – {r.year}</TableCell>
-                    <TableCell align="center" sx={{ py: 1.5 }}>
-                      <Chip label="Ready" size="small" sx={{ bgcolor: "#ECFDF5", color: "#10B981", fontWeight: 700, fontSize: "0.75rem", height: 24 }} />
+                  <TableRow key={r.id} hover sx={{ '& td': { borderBottom: '1px solid #F1F5F9' }, '&:last-child td': { borderBottom: 0 } }}>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        <Box sx={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 700, fontSize: '0.8rem' }}>
+                          {r.name.charAt(0).toUpperCase()}
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontWeight: 700, color: "#000", fontSize: '0.85rem' }}>{r.name}</Typography>
+                          <Typography sx={{ color: "#64748B", fontSize: '0.75rem' }}>{r.studentId}</Typography>
+                        </Box>
+                      </Box>
                     </TableCell>
-                    <TableCell align="center" sx={{ py: 1.5, fontWeight: 500, color: "#475569", fontSize: "0.875rem" }}>{(r.reqCompleted || 0)} / {(r.reqTotal || 0)}</TableCell>
-                    <TableCell align="right" sx={{ py: 1.5 }}>
+                    <TableCell sx={{ py: 2, color: "#64748B", fontSize: "0.85rem", fontWeight: 500 }}>{r.course} – {r.year}</TableCell>
+                    <TableCell align="center" sx={{ py: 2 }}>
+                      <Chip label="READY" size="small" sx={{ bgcolor: "#ECFDF5", color: "#10B981", fontWeight: 800, fontSize: "0.65rem", height: 22, letterSpacing: '0.05em' }} />
+                    </TableCell>
+                    <TableCell align="center" sx={{ py: 2, fontWeight: 600, color: "#475569", fontSize: "0.85rem" }}>{(r.reqCompleted || 0)} / {(r.reqTotal || 0)}</TableCell>
+                    <TableCell align="right" sx={{ py: 2 }}>
                       <Box display="flex" justifyContent="flex-end" gap={1}>
-                        <Button
-                          variant="outlined"
+                        <IconButton
                           size="small"
                           onClick={() => setSelected(r)}
-                          sx={{
-                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            borderRadius: '8px',
-                            borderColor: '#E2E8F0',
-                            color: '#64748B',
-                            '&:hover': { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }
-                          }}
+                          sx={{ color: '#64748B', '&:hover': { color: '#000', bgcolor: '#F1F5F9' } }}
                         >
-                          View
-                        </Button>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </IconButton>
                         <Button
+                          disableElevation
+                          variant="contained"
                           onClick={() => { setStudentToApprove(r); setSignatureModalOpen(true); }}
                           disabled={actionState !== 'idle'}
                           sx={{
                             fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             textTransform: 'none',
-                            borderRadius: '8px',
-                            backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#0a0a0a',
+                            borderRadius: '999px',
+                            backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#000',
                             color: '#FFFFFF',
                             px: 2,
                             py: 0.5,
-                            fontSize: '0.8125rem',
+                            fontSize: '0.75rem',
                             display: 'flex', gap: 1, alignItems: 'center',
                             transition: 'all 0.2s ease',
                             '&:hover': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#222' },
                             '&.Mui-disabled': { backgroundColor: actionState === 'success' && actionRowId === r.id ? '#10b981' : '#E2E8F0', color: actionState === 'success' && actionRowId === r.id ? '#fff' : '#94A3B8' }
                           }}
                         >
-                          {actionState === 'loading' && actionRowId === r.id && <CircularProgress size={14} color="inherit" />}
-                          {actionState === 'success' && actionRowId === r.id && <CheckIcon fontSize="small" />}
+                          {actionState === 'loading' && actionRowId === r.id && <CircularProgress size={12} color="inherit" />}
+                          {actionState === 'success' && actionRowId === r.id && <CheckIcon sx={{ fontSize: 16 }} />}
                           {actionRowId === r.id ? (
-                            actionState === 'idle' ? 'Approve Final' : actionState === 'loading' ? 'Approving...' : 'Approved!'
-                          ) : 'Approve Final'}
+                            actionState === 'idle' ? 'Approve' : actionState === 'loading' ? 'Approving...' : 'Approved!'
+                          ) : 'Approve'}
                         </Button>
                       </Box>
                     </TableCell>
@@ -524,8 +546,10 @@ export default function DeanPage() {
                 description={query || filterCourse || filterYear || filterDate ? "Try adjusting your filters to find what you're looking for." : "There are currently no students ready for final approval."}
               />
             )}
-            <TablePagination component="div" count={filteredReady.length} page={page} onPageChange={(_, newPage) => setPage(newPage)} rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} rowsPerPageOptions={[5, 10, 25]} />
-          </Paper>
+            <Box mt={2} display="flex" justifyContent="flex-end">
+              <TablePagination component="div" count={filteredReady.length} page={page} onPageChange={(_, newPage) => setPage(newPage)} rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} rowsPerPageOptions={[5, 10, 25]} sx={{ borderBottom: 'none', '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { fontSize: '0.8rem', color: '#64748B' } }} />
+            </Box>
+          </Box>
         </>
       ) : isApprovals ? (
         <>
@@ -706,71 +730,146 @@ export default function DeanPage() {
           </Paper>
         </>
       ) : (
-        <Box maxWidth={720} mx="auto">
-          <Box mb={3} display="flex" alignItems="center" gap={1.5}>
-            <Box aria-hidden sx={{ width: 40, height: 40, borderRadius: 1, backgroundColor: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 6a6 6 0 100 12 6 6 0 000-12z" stroke="#111827" strokeWidth="2" />
-                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#111827" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+          <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', py: isSmallMobile ? 2 : 4, fontFamily: fontStack }}>
+            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
+              <Typography variant={isSmallMobile ? "h5" : "h3"} sx={{ fontWeight: 800, color: '#000000', fontSize: isSmallMobile ? '1.25rem' : '1.875rem' }}>
+                Settings
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#6B7280', fontSize: isSmallMobile ? '0.875rem' : '1rem' }}>
+                Manage your administrative account settings
+              </Typography>
+              <style>{`
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover,
+                input:-webkit-autofill:focus {
+                  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
+                  -webkit-text-fill-color: #000000 !important;
+                  transition: background-color 5000s ease-in-out 0s;
+                }
+              `}</style>
             </Box>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: "#111827" }}>Account Settings</Typography>
+
+            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Profile Card */}
+              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
+                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
+                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <PersonIcon sx={{ color: '#374151' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Profile Information</Typography>
+                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Update your personal details</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box component="form" autoComplete="off" display="flex" flexDirection="column" gap={3}>
+                    <input type="text" name="email" style={{ display: 'none' }} tabIndex={-1} />
+                    <input type="password" name="password" style={{ display: 'none' }} tabIndex={-1} />
+                    
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
+                      <TextField
+                        fullWidth
+                        name="first-name"
+                        autoComplete="given-name"
+                        value={draftFirst}
+                        onChange={(e) => setDraftFirst(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Last Name</Typography>
+                      <TextField
+                        fullWidth
+                        name="last-name"
+                        autoComplete="family-name"
+                        value={draftLast}
+                        onChange={(e) => setDraftLast(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
+                      <TextField fullWidth name="real-email" autoComplete="email" value={email} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }} />
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                      type="submit"
+                      sx={{
+                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                        '&:hover': { backgroundColor: '#111' }
+                      }}
+                    >
+                      Save Changes
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* Security Card */}
+              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
+                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
+                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SecurityIcon sx={{ color: '#374151' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Security</Typography>
+                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Change your password</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box display="flex" flexDirection="column" gap={3}>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Current Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Enter current password"
+                        value={currentPass}
+                        onChange={(e) => setCurrentPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>New Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Enter new password"
+                        value={newPass}
+                        onChange={(e) => setNewPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Confirm New Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Confirm new password"
+                        value={confirmPass}
+                        onChange={(e) => setConfirmPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={updatePassword}
+                      sx={{
+                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                        '&:hover': { backgroundColor: '#111' }
+                      }}
+                    >
+                      Update Password
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </Box>
-          <Box display="flex" flexDirection="column" gap={3}>
-            <Box sx={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 1, boxShadow: "0 8px 24px rgba(0,0,0,0.06)", p: 4 }}>
-              <Box display="flex" alignItems="center" gap={1.5} mb={3}>
-                <Box aria-hidden sx={{ width: 32, height: 32, borderRadius: 1, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="8" r="4" stroke="#111827" strokeWidth="2" />
-                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="#111827" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: "#111827" }}>Profile</Typography>
-              </Box>
-              <Box display="flex" flexDirection="column" gap={3}>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>First Name</FormLabel>
-                  <TextField placeholder="First name" value={draftFirst} onChange={(e) => setDraftFirst(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Last Name</FormLabel>
-                  <TextField placeholder="Last name" value={draftLast} onChange={(e) => setDraftLast(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Email</FormLabel>
-                  <TextField placeholder="Email" value={email} disabled fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, backgroundColor: '#F3F4F6' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                  <Typography sx={{ fontSize: 12, color: "#6B7280", mt: 0.75, fontStyle: "italic" }}>Email cannot be changed</Typography>
-                </FormControl>
-              </Box>
-              <Button variant="contained" color="primary" onClick={updateProfile} fullWidth sx={{ mt: 3, borderRadius: 1, height: 52, backgroundColor: "#000", '&:hover': { backgroundColor: "#111" } }}>update your profile</Button>
-            </Box>
-            <Box sx={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 1, boxShadow: "0 8px 24px rgba(0,0,0,0.06)", p: 4 }}>
-              <Box display="flex" alignItems="center" gap={1.5} mb={3}>
-                <Box aria-hidden sx={{ width: 32, height: 32, borderRadius: 1, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 3l2 2 3-3 3 3-3 3 2 2-2 2 2 2-2 2 3 3-3 3-3-3-2 2-2-2-2 2-3-3 3-3-2-2 2-2-2-2 2-2-2-2 3-3 3 3 2-2z" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: "#111827" }}>Security</Typography>
-              </Box>
-              <Box display="flex" flexDirection="column" gap={3}>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Current Password</FormLabel>
-                  <TextField type="password" placeholder="Enter current password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>New Password</FormLabel>
-                  <TextField type="password" placeholder="Enter new password" value={newPass} onChange={(e) => setNewPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Confirm New Password</FormLabel>
-                  <TextField type="password" placeholder="Confirm new password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-                </FormControl>
-              </Box>
-              <Button variant="contained" color="primary" onClick={updatePassword} fullWidth sx={{ mt: 3, borderRadius: 1, height: 52, backgroundColor: "#000", '&:hover': { backgroundColor: "#111" } }}>Update Password</Button>
-            </Box>
-          </Box>
-        </Box>
       )}
 
       <Dialog open={!!selected && (isApprovals || isFinal)} onClose={() => setSelected(null)} fullWidth maxWidth="md">

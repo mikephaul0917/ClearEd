@@ -11,6 +11,8 @@ import Divider from "@mui/material/Divider";
 import InputAdornment from "@mui/material/InputAdornment";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -39,6 +41,8 @@ import PendingIcon from "@mui/icons-material/PendingActions";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import PersonIcon from "@mui/icons-material/Person";
+import SecurityIcon from "@mui/icons-material/Security";
 
 type PendingRow = {
   id: string;
@@ -424,32 +428,146 @@ export default function OfficerPage() {
       ) : active === "todo" ? (
         <TodoPage />
       ) : (
-        <Box maxWidth={720} mx="auto">
-          <Box mb={3} display="flex" alignItems="center" gap={1.5}>
-            <Box aria-hidden sx={{ width: 40, height: 40, borderRadius: 1, backgroundColor: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 6a6 6 0 100 12 6 6 0 000-12z" stroke="#111827" strokeWidth="2" />
-                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#111827" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+          <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', py: isSmallMobile ? 2 : 4, fontFamily: fontStack }}>
+            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
+              <Typography variant={isSmallMobile ? "h5" : "h3"} sx={{ fontWeight: 800, color: '#000000', fontSize: isSmallMobile ? '1.25rem' : '1.875rem' }}>
+                Settings
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#6B7280', fontSize: isSmallMobile ? '0.875rem' : '1rem' }}>
+                Manage your administrative account settings
+              </Typography>
+              <style>{`
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover,
+                input:-webkit-autofill:focus {
+                  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
+                  -webkit-text-fill-color: #000000 !important;
+                  transition: background-color 5000s ease-in-out 0s;
+                }
+              `}</style>
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#111827" }}>Security Settings</Typography>
+
+            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Profile Card */}
+              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
+                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
+                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <PersonIcon sx={{ color: '#374151' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Profile Information</Typography>
+                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Update your personal details</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box component="form" autoComplete="off" display="flex" flexDirection="column" gap={3}>
+                    <input type="text" name="email" style={{ display: 'none' }} tabIndex={-1} />
+                    <input type="password" name="password" style={{ display: 'none' }} tabIndex={-1} />
+                    
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
+                      <TextField
+                        fullWidth
+                        name="first-name"
+                        autoComplete="given-name"
+                        value={draftFirst}
+                        onChange={(e) => setDraftFirst(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Last Name</Typography>
+                      <TextField
+                        fullWidth
+                        name="last-name"
+                        autoComplete="family-name"
+                        value={draftLast}
+                        onChange={(e) => setDraftLast(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
+                      <TextField fullWidth name="real-email" autoComplete="email" value={email} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }} />
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                      type="submit"
+                      sx={{
+                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                        '&:hover': { backgroundColor: '#111' }
+                      }}
+                    >
+                      Save Changes
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* Security Card */}
+              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
+                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
+                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SecurityIcon sx={{ color: '#374151' }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Security</Typography>
+                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Change your password</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box display="flex" flexDirection="column" gap={3}>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Current Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Enter current password"
+                        value={currentPass}
+                        onChange={(e) => setCurrentPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>New Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Enter new password"
+                        value={newPass}
+                        onChange={(e) => setNewPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Confirm New Password</Typography>
+                      <TextField
+                        type="password"
+                        fullWidth
+                        placeholder="Confirm new password"
+                        value={confirmPass}
+                        onChange={(e) => setConfirmPass(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
+                      />
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={updatePassword}
+                      sx={{
+                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                        '&:hover': { backgroundColor: '#111' }
+                      }}
+                    >
+                      Update Password
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </Box>
-          <Box display="flex" flexDirection="column" gap={3}>
-            <FormControl>
-              <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Current Password</FormLabel>
-              <TextField type="password" placeholder="Enter current password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-            </FormControl>
-            <FormControl>
-              <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>New Password</FormLabel>
-              <TextField type="password" placeholder="Enter new password" value={newPass} onChange={(e) => setNewPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-            </FormControl>
-            <FormControl>
-              <FormLabel sx={{ fontSize: 13, color: "#374151", mb: 0.5 }}>Confirm New Password</FormLabel>
-              <TextField type="password" placeholder="Confirm new password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }} />
-            </FormControl>
-          </Box>
-          <Button variant="contained" color="primary" onClick={updatePassword} fullWidth sx={{ mt: 3, borderRadius: 2, height: 52, backgroundColor: "#000", '&:hover': { backgroundColor: "#111" } }}>Update Password</Button>
-        </Box>
       )}
     </RoleLayout>
   );

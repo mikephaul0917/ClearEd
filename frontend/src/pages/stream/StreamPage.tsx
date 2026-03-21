@@ -21,6 +21,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline"; // Inquiry / Clar
 import BookIcon from "@mui/icons-material/Book"; // Guidelines / Documents
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestore"; // Reuse Requirement
 import ArchiveIcon from "@mui/icons-material/Archive";
+import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import Chip from "@mui/material/Chip";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -193,6 +194,19 @@ const StreamPage: React.FC = () => {
         }
     };
 
+    const handleUnarchive = async () => {
+        if (!orgId || !window.confirm("Are you sure you want to unarchive this organization? It will become active again.")) return;
+
+        try {
+            await api.put(`/admin/organizations/${orgId}/restore`);
+            alert("Organization unarchived successfully.");
+            fetchData();
+        } catch (error) {
+            console.error("Failed to unarchive organization:", error);
+            alert("Failed to unarchive organization.");
+        }
+    };
+
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -326,6 +340,15 @@ const StreamPage: React.FC = () => {
                                 <Tooltip title="Archive Organization">
                                     <IconButton onClick={handleArchive} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
                                         <ArchiveIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        )}
+                        {isAdmin && org.status === 'archived' && (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Tooltip title="Unarchive Organization">
+                                    <IconButton onClick={handleUnarchive} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+                                        <UnarchiveIcon />
                                     </IconButton>
                                 </Tooltip>
                             </Box>

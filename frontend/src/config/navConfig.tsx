@@ -109,12 +109,10 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     officer: [
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
         { key: "todo", label: "To-Do", path: "/officer/todo", icon: CheckCircleIcon },
-        { key: "review", label: "Sign Off", path: "/officer/review", icon: RateReviewIcon },
         { key: "settings", label: "Settings", path: "/officer/settings", icon: SettingsIcon },
     ],
     dean: [
         { key: "dashboard", label: "Final Approvals", path: "/dean", icon: CheckCircleIcon },
-        { key: "approvals", label: "Org Overview", path: "/dean/approvals", icon: BusinessIcon },
         { key: "settings", label: "Settings", path: "/dean/settings", icon: SettingsIcon },
     ],
 };

@@ -164,16 +164,22 @@ const Sidebar: React.FC<SidebarProps> = ({
         }).catch(err => console.error("Failed to fetch officer orgs for Nav", err));
     }, []);
 
-    const activeIndex = navItems.findIndex(item => {
-        // Direct match or sub-path match
-        const isMatch = location.pathname === item.path || (item.path !== '/' && item.path !== '/home' && location.pathname.startsWith(item.path));
+    let activeIndex = -1;
+    let maxLen = -1;
+
+    navItems.forEach((item, index) => {
+        const isMatch = location.pathname === item.path || 
+            (item.path !== '/' && item.path !== '/home' && location.pathname.startsWith(item.path + '/'));
 
         // Prevent matching Home/dashboard for officer sub-routes which handle their own active styling
         if (item.key === 'dashboard' && (location.pathname.startsWith('/officer/to-review') || location.pathname.startsWith('/organization/'))) {
-            return false;
+            return;
         }
 
-        return isMatch;
+        if (isMatch && item.path.length > maxLen) {
+            maxLen = item.path.length;
+            activeIndex = index;
+        }
     });
 
     const handleDrawerToggle = () => {

@@ -234,3 +234,15 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to process final approval", error: err.message });
   }
 };
+
+export const getAssignedCourses = async (req: Request, res: Response) => {
+  try {
+    const institutionId = (req as any).user?.institutionId;
+    if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
+
+    const courses = await DeanAssignment.distinct("course", { institutionId, course: { $ne: "All" } });
+    res.json({ courses: courses.filter(Boolean) });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch assigned courses" });
+  }
+};
