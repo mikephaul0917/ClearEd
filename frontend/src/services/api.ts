@@ -9,13 +9,30 @@ export const api = axios.create({
     },
 });
 
-// Request Interceptor: Attach JWT from localStorage
+// Request Interceptor: Attach JWT and optionally handle SuperAdmin contextual institution scoping
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Automatic parameter proxying for SuperAdmin isolation pages
+        const targetInstitutionId = sessionStorage.getItem('targetInstitutionId');
+        if (targetInstitutionId) {
+            if (config.method === 'get' || config.method === 'delete') {
+                config.params = { ...config.params, institutionId: targetInstitutionId };
+            } else if (config.method === 'post' || config.method === 'put' || config.method === 'patch') {
+                if (config.data instanceof FormData) {
+                    config.data.append('institutionId', targetInstitutionId);
+                } else if (config.data) {
+                    config.data = { ...config.data, institutionId: targetInstitutionId };
+                } else {
+                    config.data = { institutionId: targetInstitutionId };
+                }
+            }
+        }
+
         return config;
     },
     (error) => (Promise as any).reject(error)

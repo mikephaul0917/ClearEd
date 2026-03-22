@@ -21,6 +21,7 @@ import StreamPage from "./pages/stream/StreamPage";
 import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
 import TodoPage from "./pages/todo/TodoPage";
 import ToReviewPage from "./pages/officer/ToReviewPage";
+import InstitutionUsersPage from "./pages/superadmin/InstitutionUsersPage";
 import Header from "./components/layout/Header";
 import GlobalAnnouncements from "./components/GlobalAnnouncements";
 import Box from "@mui/material/Box";
@@ -78,6 +79,7 @@ export default function App() {
           {/* Student routes - all handled by StudentPage component with internal routing (now tracking Officers as well!) */}
           <Route path="/student" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
           <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          <Route path="/student/leaderboard" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
           <Route path="/student/settings" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
           <Route path="/student/slip" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
           <Route path="/student/todo" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
@@ -105,6 +107,7 @@ export default function App() {
           <Route path="/super-admin/settings" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/super-admin/institution-requests" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/super-admin/institution-monitoring" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
+          <Route path="/super-admin/institution-monitoring/:institutionId" element={<ProtectedRoute allowedRoles={['super_admin']}><InstitutionUsersPage /></ProtectedRoute>} />
           <Route path="/super-admin/system-analytics" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/super-admin/announcements" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

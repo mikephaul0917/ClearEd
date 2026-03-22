@@ -50,7 +50,7 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
       deanCount,
       superAdminCount
     ] = await Promise.all([
-      User.countDocuments({ status: { $ne: 'deleted' } }),
+      User.countDocuments({ role: { $ne: 'super_admin' }, status: { $ne: 'deleted' } }),
       User.countDocuments({ role: 'student', status: { $ne: 'deleted' } }),
       User.countDocuments({ role: 'officer', status: { $ne: 'deleted' } }),
       User.countDocuments({ role: 'admin', status: { $ne: 'deleted' } }),

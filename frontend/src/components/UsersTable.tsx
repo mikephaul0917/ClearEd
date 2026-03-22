@@ -62,10 +62,12 @@ const maskName = (name: string) => {
 
 export default function UsersTable({
   refreshTrigger = 0,
-  onLoadingChange
+  onLoadingChange,
+  institutionId
 }: {
   refreshTrigger?: number;
   onLoadingChange?: (loading: boolean) => void;
+  institutionId?: string;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));

@@ -145,7 +145,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                 </Button>
                             );
 
-                            if (item.key === 'todo') {
+                            if (item.key === 'todo' || item.key === 'leaderboard') {
                                 return null;
                             }
 
@@ -230,7 +230,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         )}
 
                                         {/* "As a student" Section */}
-                                        {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo')) && (
+                                        {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard')) && (
                                             <Box mt={1} mb={0.5}>
                                                 {officerOrgs.length === 0 && <Divider sx={{ my: 1 }} />}
                                                 <Box 
@@ -252,11 +252,38 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                 
                                                 <Collapse in={isStudentOpen}>
                                                     <Box display="flex" flexDirection="column" gap={0.5} pl={0}>
+                                                        {navItems.find(i => i.key === 'leaderboard') && (() => {
+                                                            const leaderboardNav = navItems.find(i => i.key === 'leaderboard')!;
+                                                            const isLeaderboardActive = location.pathname === leaderboardNav.path;
+                                                            return (
+                                                                <Button
+                                                                    key={leaderboardNav.key}
+                                                                    onClick={() => handleNavClick(leaderboardNav.path)}
+                                                                    sx={{
+                                                                        justifyContent: "flex-start",
+                                                                        textTransform: "none",
+                                                                        fontSize: 14,
+                                                                        fontWeight: 500,
+                                                                        px: 2,
+                                                                        height: 40,
+                                                                        borderRadius: "10px",
+                                                                        color: isLeaderboardActive ? "#0891b2" : "#0F172A",
+                                                                        backgroundColor: isLeaderboardActive ? "#ecfeff" : "transparent",
+                                                                        "&:hover": { backgroundColor: isLeaderboardActive ? "#cffafe" : "#F1F5F9" },
+                                                                    }}
+                                                                >
+                                                                    {React.createElement(leaderboardNav.icon, { color: isLeaderboardActive ? "#0891b2" : "#0F172A" })}
+                                                                    <Box ml={1.5}>Leaderboard</Box>
+                                                                </Button>
+                                                            );
+                                                        })()}
+
                                                         {navItems.find(i => i.key === 'todo') && (() => {
                                                             const todoNav = navItems.find(i => i.key === 'todo')!;
                                                             const isTodoActive = location.pathname === todoNav.path;
                                                             return (
                                                                 <Button
+                                                                    key={todoNav.key}
                                                                     onClick={() => handleNavClick(todoNav.path)}
                                                                     sx={{
                                                                         justifyContent: "flex-start",

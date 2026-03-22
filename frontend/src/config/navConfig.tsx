@@ -73,6 +73,10 @@ export const CertificateIcon: React.FC<IconProps> = ({ color }) => (
     <IconBase color={color} > <circle cx="12" cy="8" r="7" /> <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /> </IconBase>
 );
 
+export const TrophyIcon: React.FC<IconProps> = ({ color }) => (
+    <IconBase color={color} > <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /> <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /> <path d="M4 22h16" /> <path d="M10 14.66V17c0 .55-.47.98-1 1.15V22h6v-3.85c-.53-.17-1-.6-1-1.15v-2.34" /> <path d="M8 4l14 0" /> <path d="M16 4v5C16 11.21 14.21 13 12 13s-4-1.79-4-4V4z" /> </IconBase>
+);
+
 /* ---------------- Configuration ---------------- */
 
 export interface NavItem {
@@ -101,6 +105,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     ],
     student: [
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
+        { key: "leaderboard", label: "Leaderboard", path: "/student/leaderboard", icon: TrophyIcon },
         { key: "todo", label: "To-Do", path: "/student/todo", icon: CheckCircleIcon },
         { key: "progress", label: "My Clearance", path: "/student/progress", icon: AssignmentIcon },
         { key: "certificate", label: "Clearance Receipt", path: "/student/certificate", icon: CertificateIcon },
@@ -108,6 +113,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     ],
     officer: [
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
+        { key: "leaderboard", label: "Leaderboard", path: "/student/leaderboard", icon: TrophyIcon },
         { key: "todo", label: "To-Do", path: "/officer/todo", icon: CheckCircleIcon },
         { key: "settings", label: "Settings", path: "/officer/settings", icon: SettingsIcon },
     ],

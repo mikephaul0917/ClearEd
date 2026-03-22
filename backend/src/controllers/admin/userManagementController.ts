@@ -12,13 +12,23 @@ import StudentProfile from "../../models/StudentProfile";
 import DeanAssignment from "../../models/DeanAssignment";
 import { logAudit } from "../../utils/auditLogger";
 
+
+const resolveInstitutionId = (req: Request) => {
+  const user = (req as any).user;
+  if (!user) return null;
+  if (user.role === 'super_admin') {
+    return req.query.institutionId || req.body.institutionId || user.institutionId;
+  }
+  return user.institutionId;
+};
+
 /**
  * User Management for Institution Admins
  */
 
 export const listUsers = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
 
     const users = await User.find({ institutionId }, { password: 0 });
@@ -31,7 +41,7 @@ export const listUsers = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const user = await User.findOne({ _id: id, institutionId }, { password: 0 });
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
@@ -46,7 +56,7 @@ export const createUser = async (req: Request, res: Response) => {
     console.log('[DEBUG] createUser req.user:', (req as any).user);
 
     const { email, password, fullName, role, organizationId } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!email || !password || !fullName || !role) {
       return res.status(400).json({ message: "All fields are required" });
@@ -103,7 +113,7 @@ export const updateStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { enabled, status } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const user = await User.findOne({ _id: id, institutionId });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -141,7 +151,7 @@ export const updateRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { role, organizationId } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const adminRole = (req as any).user?.role;
 
     // 1. Validate role input
@@ -214,7 +224,7 @@ export const updateProfile = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { fullName, username } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const user = await User.findOne({ _id: id, institutionId });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -252,7 +262,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const getStudentProfile = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const profile = await StudentProfile.findOne({ userId: id, institutionId });
     // It's perfectly fine if profile is null (e.g. they are an officer but not a student)
@@ -266,7 +276,7 @@ export const updateStudentProfile = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { isStudent, course, yearLevel } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (isStudent === false) {
       await StudentProfile.findOneAndDelete({ userId: id, institutionId });
@@ -304,7 +314,7 @@ export const updateStudentProfile = async (req: Request, res: Response) => {
 export const getDeanAssignments = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     
     const assignments = await DeanAssignment.find({ deanId: id, institutionId }).sort({ course: 1, yearLevel: 1 });
     res.json(assignments);
@@ -317,7 +327,7 @@ export const addDeanAssignment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { course, yearLevel } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!course) {
       return res.status(400).json({ message: "Course is required." });
@@ -342,7 +352,7 @@ export const addDeanAssignment = async (req: Request, res: Response) => {
 export const removeDeanAssignment = async (req: Request, res: Response) => {
   try {
     const { id, assignmentId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const assignment = await DeanAssignment.findOneAndDelete({ _id: assignmentId, deanId: id, institutionId });
     if (!assignment) {
@@ -361,7 +371,7 @@ export const removeDeanAssignment = async (req: Request, res: Response) => {
 
 export const createOrganization = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const { name, code, description, type, approvalOrder } = req.body;
 
     const org = await Organization.create({
@@ -382,7 +392,7 @@ export const createOrganization = async (req: Request, res: Response) => {
 
 export const listOrganizations = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const orgs = await Organization.find({ institutionId, isDeleted: false }).sort({ approvalOrder: 1 });
     res.json(orgs);
   } catch (error: any) {
@@ -396,7 +406,7 @@ export const listOrganizations = async (req: Request, res: Response) => {
 
 export const createRequirement = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const { organizationId, title, description, requiredFiles, isMandatory } = req.body;
 
     const reqDoc = await ClearanceRequirement.create({
@@ -417,7 +427,7 @@ export const createRequirement = async (req: Request, res: Response) => {
 
 export const listRequirements = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const { organizationId } = req.query;
 
     const query: any = { institutionId };
@@ -434,7 +444,7 @@ export const updateRequirement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, requiredFiles, isMandatory, isActive } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const reqDoc = await ClearanceRequirement.findOne({ _id: id, institutionId });
     if (!reqDoc) return res.status(404).json({ message: "Requirement not found" });
@@ -455,7 +465,7 @@ export const updateRequirement = async (req: Request, res: Response) => {
 export const deleteRequirement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const reqDoc = await ClearanceRequirement.findOneAndDelete({ _id: id, institutionId });
     if (!reqDoc) return res.status(404).json({ message: "Requirement not found" });
@@ -472,7 +482,7 @@ export const deleteRequirement = async (req: Request, res: Response) => {
 
 export const createTerm = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const { name, academicYear, semester, isActive } = req.body;
 
     // Ensure only one active term per institution
@@ -497,7 +507,7 @@ export const createTerm = async (req: Request, res: Response) => {
 export const activateTerm = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     // Deactivate all terms for this institution
     await Term.updateMany({ institutionId }, { isActive: false });
@@ -532,7 +542,7 @@ export const activateTerm = async (req: Request, res: Response) => {
 export const deleteTerm = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const term = await Term.findOneAndDelete({ _id: id, institutionId });
     if (!term) return res.status(404).json({ message: "Term not found" });
@@ -561,7 +571,7 @@ export const deleteTerm = async (req: Request, res: Response) => {
 
 export const getClearanceStats = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const totalRequests = await ClearanceRequest.countDocuments({ institutionId });
     const completedRequests = await ClearanceRequest.countDocuments({ institutionId, status: 'completed' });
@@ -639,7 +649,7 @@ export const getClearanceStats = async (req: Request, res: Response) => {
 
 export const getInstitution = async (req: Request, res: Response) => {
   try {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
 
     const institution = await Institution.findById(institutionId);

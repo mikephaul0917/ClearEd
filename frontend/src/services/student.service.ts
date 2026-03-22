@@ -9,5 +9,10 @@ export const studentService = {
     updateRequirements: async (data: any) => {
         const response = await api.post('/student/requirements', data);
         return response.data;
+    },
+
+    getLeaderboardStats: async () => {
+        const response = await api.get('/student/leaderboard');
+        return response.data;
     }
 };

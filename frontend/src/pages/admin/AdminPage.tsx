@@ -36,8 +36,8 @@ const COLORS = {
   textPrimary: '#000000',
   textSecondary: '#64748B',
   accent: '#0a0a0a',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
+  teal: '#5eead4',
+  lavender: '#d8b4fe',
   yellow: '#FEF08A',
   orange: '#ff895d',
   border: '#E2E8F0',
@@ -430,7 +430,7 @@ export default function AdminPage() {
                   <Box sx={{
                     display: 'inline-block', fontFamily: fontStack,
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                    textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', mb: 1,
+                    textTransform: 'uppercase', color: '#0d9488', mb: 1,
                   }}>
                     Requests
                   </Box>
@@ -444,7 +444,7 @@ export default function AdminPage() {
                     </Typography>
                     <Typography sx={{
                       fontFamily: fontStack, fontWeight: 600,
-                      fontSize: 12, color: 'rgba(0,0,0,0.5)', mt: 1
+                      fontSize: 12, color: '#0d9488', mt: 1
                     }}>
                       Total submissions
                     </Typography>
@@ -464,7 +464,7 @@ export default function AdminPage() {
                   <Box sx={{
                     display: 'inline-block', fontFamily: fontStack,
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                    textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', mb: 1,
+                    textTransform: 'uppercase', color: '#7e22ce', mb: 1,
                   }}>
                     Pending Issues
                   </Box>
@@ -478,7 +478,7 @@ export default function AdminPage() {
                     </Typography>
                     <Typography sx={{
                       fontFamily: fontStack, fontWeight: 600,
-                      fontSize: 12, color: 'rgba(0,0,0,0.5)', mt: 1
+                      fontSize: 12, color: '#7e22ce', mt: 1
                     }}>
                       Requires attention
                     </Typography>

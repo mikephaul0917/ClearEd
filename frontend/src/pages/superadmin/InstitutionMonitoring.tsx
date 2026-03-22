@@ -301,6 +301,11 @@ export default function InstitutionMonitoring() {
                         <Visibility sx={{ fontSize: 18 }} />
                       </IconButton>
                     </Tooltip>
+                    <Tooltip title="Manage Users">
+                      <IconButton onClick={() => window.location.href = `/super-admin/institution-monitoring/${i._id}`}>
+                        <AdminPanelSettings sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}

@@ -33,8 +33,8 @@ const COLORS = {
   textPrimary: '#000000',
   textSecondary: '#64748B',
   accent: '#0a0a0a',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
+  teal: '#5eead4',
+  lavender: '#d8b4fe',
   yellow: '#FEF08A',
   orange: '#ff895d',
   border: '#E2E8F0',
@@ -947,24 +947,21 @@ export default function SuperAdminPage() {
               <Box sx={{
                 display: 'inline-block', fontFamily: fontStack,
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', mb: 1,
+                textTransform: 'uppercase', color: '#064E3B', mb: 1,
               }}>
                 System Status
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {/* Pulse dot */}
                 <Box sx={{
-                  width: 10, height: 10, borderRadius: '50%', backgroundColor: '#065f46',
-                  boxShadow: '0 0 0 3px rgba(6,95,70,0.25)',
-                  '@keyframes pulse': {
-                    '0%, 100%': { transform: 'scale(1)', opacity: 1 },
-                    '50%': { transform: 'scale(1.3)', opacity: 0.7 },
-                  },
+                  width: 12, height: 12, borderRadius: '50%', backgroundColor: '#064E3B',
+                  opacity: 0.8,
+                  boxShadow: '0 0 0 4px rgba(6,78,59,0.2)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
                 <Typography sx={{
                   fontFamily: fontStack, fontWeight: 800,
-                  fontSize: isSmallMobile ? 18 : 22, color: COLORS.black,
+                  fontSize: isSmallMobile ? 18 : 22, color: '#000000',
                   letterSpacing: '-0.5px',
                 }}>
                   Operational
@@ -985,17 +982,17 @@ export default function SuperAdminPage() {
               <Box sx={{
                 display: 'inline-block', fontFamily: fontStack,
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', mb: 1,
+                textTransform: 'uppercase', color: '#4C1D95', mb: 1,
               }}>
                 Security
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.black} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
                 <Typography sx={{
                   fontFamily: fontStack, fontWeight: 800,
-                  fontSize: isSmallMobile ? 18 : 22, color: COLORS.black,
+                  fontSize: isSmallMobile ? 18 : 22, color: '#000000',
                   letterSpacing: '-0.5px',
                 }}>
                   Stable
@@ -1029,70 +1026,62 @@ export default function SuperAdminPage() {
               sx={{
                 position: 'relative',
                 p: isSmallMobile ? 2.5 : 3,
-                borderRadius: COLORS.cardRadius,
-                backgroundColor: 'rgba(255,255,255,0.65)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(0,0,0,0.06)',
+                borderRadius: '12px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E5E7EB',
                 cursor: 'pointer',
                 overflow: 'hidden',
                 transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 140,
                 '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 12px 32px rgba(0,0,0,0.08)',
-                  border: '1px solid rgba(0,0,0,0.10)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                  borderColor: '#D1D5DB',
                 },
               }}
             >
-              {/* Accent dot */}
-              <Box sx={{
-                width: 8, height: 8,
-                borderRadius: '50%',
-                backgroundColor: item.accent,
-                mb: 2,
-              }} />
-
-              {/* Icon */}
-              <Box
-                sx={{
-                  width: isSmallMobile ? 36 : 44,
-                  height: isSmallMobile ? 36 : 44,
-                  borderRadius: '12px',
-                  backgroundColor: `${item.accent}18`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-              >
-                <svg
-                  width={isSmallMobile ? 18 : 22}
-                  height={isSmallMobile ? 18 : 22}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={COLORS.black}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {/* Icon and Title Row */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  {item.icon}
-                </svg>
+                  <svg
+                    width={isSmallMobile ? 20 : 24}
+                    height={isSmallMobile ? 20 : 24}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={item.accent}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {item.icon}
+                  </svg>
+                </Box>
+                <Typography sx={{
+                  fontFamily: fontStack,
+                  fontWeight: 600,
+                  fontSize: isSmallMobile ? 14 : 15,
+                  color: '#4B5563',
+                }}>
+                  {item.title}
+                </Typography>
               </Box>
 
+              {/* Description */}
               <Typography sx={{
                 fontFamily: fontStack,
-                fontWeight: 700,
-                fontSize: isSmallMobile ? 15 : 16,
-                color: COLORS.textPrimary,
-                mb: 0.5,
-              }}>
-                {item.title}
-              </Typography>
-              <Typography sx={{
-                fontFamily: fontStack,
-                fontSize: isSmallMobile ? 12 : 13,
-                color: COLORS.textSecondary,
-                lineHeight: 1.6,
+                fontSize: isSmallMobile ? 13 : 14,
+                color: '#9CA3AF',
+                lineHeight: 1.5,
+                mt: 1,
+                pr: 4, // Leave space for arrow
               }}>
                 {item.desc}
               </Typography>
@@ -1102,13 +1091,9 @@ export default function SuperAdminPage() {
                 position: 'absolute',
                 bottom: isSmallMobile ? 12 : 16,
                 right: isSmallMobile ? 12 : 16,
-                width: 28, height: 28,
-                borderRadius: 1,
-                backgroundColor: COLORS.black,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#FFFFFF', fontSize: 14, lineHeight: 1,
-                transition: 'transform 0.2s ease',
-                '&:hover': { transform: 'scale(1.15)' },
+                color: '#000000', fontSize: 24, lineHeight: 1,
+                transition: 'transform 0.2s ease, color 0.2s ease',
               }}>
                 →
               </Box>

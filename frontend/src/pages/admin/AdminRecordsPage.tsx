@@ -58,8 +58,8 @@ const COLORS = {
   textPrimary: '#000000',
   textSecondary: '#64748B',
   accent: '#0a0a0a',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
+  teal: '#5eead4',
+  lavender: '#d8b4fe',
   yellow: '#FEF08A',
   orange: '#ff895d',
   border: '#E2E8F0',
@@ -354,7 +354,7 @@ export default function AdminRecordsPage({
           ) : (
             <Box sx={{
               p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.black, color: '#fff',
-              minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              height: '100%', minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               position: 'relative', overflow: 'hidden'
             }}>
               <Box sx={{ position: 'absolute', top: -20, right: -20, width: 140, height: 140, borderRadius: '50%', backgroundColor: COLORS.teal, opacity: 0.15, filter: 'blur(40px)' }} />
@@ -376,14 +376,14 @@ export default function AdminRecordsPage({
               />
             ) : (
               <Box sx={{
-                p: 2.5, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.teal, color: COLORS.black,
-                minHeight: 102, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.teal, color: COLORS.black,
+                minHeight: 110, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
               }}>
                 <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', opacity: 0.6, textTransform: 'uppercase' }}>Security Events</Typography>
-                  <Typography sx={{ fontSize: 28, fontWeight: 800 }}>{logs.filter(l => l.category === 'security' || l.severity === 'high').length}</Typography>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#0d9488', textTransform: 'uppercase' }}>Security Events</Typography>
+                  <Typography sx={{ fontSize: 32, fontWeight: 800, color: COLORS.black, mt: 1 }}>{logs.filter(l => l.category === 'security' || l.severity === 'high').length}</Typography>
                 </Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 600 }}>Active monitoring enabled</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0d9488' }}>Active monitoring enabled</Typography>
               </Box>
             )}
 
@@ -395,14 +395,14 @@ export default function AdminRecordsPage({
               />
             ) : (
               <Box sx={{
-                p: 2.5, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.lavender, color: COLORS.black,
-                minHeight: 102, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.lavender, color: COLORS.black,
+                minHeight: 110, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
               }}>
                 <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', opacity: 0.6, textTransform: 'uppercase' }}>Last Activity</Typography>
-                  <Typography sx={{ fontSize: 18, fontWeight: 800 }}>{logs[0] ? formatDate(logs[0].createdAt).split(',')[1] : '—'}</Typography>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#7e22ce', textTransform: 'uppercase' }}>Last Activity</Typography>
+                  <Typography sx={{ fontSize: 32, fontWeight: 800, color: COLORS.black, mt: 1 }}>{logs[0] ? formatDate(logs[0].createdAt).split(',')[1] : '—'}</Typography>
                 </Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 600 }}>Real-time trail</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#7e22ce' }}>Real-time trail</Typography>
               </Box>
             )}
           </Box>
@@ -478,11 +478,11 @@ export default function AdminRecordsPage({
               </Grid>
               <Grid item xs={12} md={4} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                 <Tooltip title="Refresh Logs">
-                  <IconButton 
+                  <IconButton
                     onClick={() => {
                       setIsInitialLoad(true);
                       fetchAuditLogs(true);
-                    }} 
+                    }}
                     sx={{ border: '1px solid ' + COLORS.border }}
                   >
                     <Refresh />

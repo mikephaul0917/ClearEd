@@ -15,6 +15,7 @@ import StudentProgress from "./StudentProgress";
 import StudentCertificate from "./StudentCertificate";
 import RoleLayout from "../../components/layout/RoleLayout";
 import TodoPage from "../todo/TodoPage";
+import LeaderboardPage from "./LeaderboardPage";
 import { Skeleton, Card, CardContent, useTheme, useMediaQuery } from "@mui/material";
 import { clearanceService } from "../../services/clearance.service";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -64,9 +65,10 @@ export default function StudentPage() {
   const progOrgId = isProg ? location.pathname.split("/progress/")[1] : null;
   const isCert = location.pathname.includes("/certificate");
   const isTodo = location.pathname.includes("/todo");
-  const isDashboard = location.pathname.includes("/dashboard") || (!isSettings && !isSlip && !isReq && !isProg && !isCert && !isTodo && location.pathname.endsWith("/student"));
-  const active: "dashboard" | "settings" | "slip" | "requirements" | "progress" | "certificate" | "todo" =
-    isSettings ? "settings" : isSlip ? "slip" : isReq ? "requirements" : isProg ? "progress" : isCert ? "certificate" : isTodo ? "todo" : "dashboard";
+  const isLeaderboard = location.pathname.includes("/leaderboard");
+  const isDashboard = location.pathname.includes("/dashboard") || (!isSettings && !isSlip && !isReq && !isProg && !isCert && !isTodo && !isLeaderboard && location.pathname.endsWith("/student"));
+  const active: "dashboard" | "settings" | "slip" | "requirements" | "progress" | "certificate" | "todo" | "leaderboard" =
+    isSettings ? "settings" : isSlip ? "slip" : isReq ? "requirements" : isProg ? "progress" : isCert ? "certificate" : isTodo ? "todo" : isLeaderboard ? "leaderboard" : "dashboard";
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
   const email = typeof localStorage !== "undefined" ? (localStorage.getItem("email") || "student@example.com") : "student@example.com";
   const storedRole = (() => { try { return localStorage.getItem("role") || ""; } catch { return ""; } })();
@@ -163,12 +165,12 @@ export default function StudentPage() {
     try {
       // Update Auth Profile (Username)
       await api.put("/auth/profile", { username });
-      
+
       // Sync with Student Profile for document consistency
       try {
-        await api.put("/student/profile", { 
-          firstName: draftFirst.trim(), 
-          familyName: draftLast.trim() 
+        await api.put("/student/profile", {
+          firstName: draftFirst.trim(),
+          familyName: draftLast.trim()
         });
       } catch (e) {
         console.error("Failed to sync student profile name:", e);
@@ -177,7 +179,7 @@ export default function StudentPage() {
       try { localStorage.setItem("username", username); } catch { }
       setProfileFirst(draftFirst.trim());
       setProfileLast(draftLast.trim());
-      
+
       // Update sp states too
       setSpFirstName(draftFirst.trim());
       setSpFamilyName(draftLast.trim());
@@ -384,13 +386,13 @@ export default function StudentPage() {
               <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.textSecondary }}>
                 Institutional Organizations
               </Typography>
-              
-              <Box sx={{ 
-                display: 'flex', 
-                bgcolor: '#f8fafc', 
+
+              <Box sx={{
+                display: 'flex',
+                bgcolor: '#f8fafc',
                 borderRadius: '999px',
                 border: '1px solid #e2e8f0',
-                p: 0.5 
+                p: 0.5
               }}>
                 <Button
                   onClick={() => setOrgFilter('active')}
@@ -650,6 +652,8 @@ export default function StudentPage() {
         <StudentProgress organizationId={progOrgId} />
       ) : active === "todo" ? (
         <TodoPage />
+      ) : active === "leaderboard" ? (
+        <LeaderboardPage />
       ) : (
         <StudentCertificate />
       )}

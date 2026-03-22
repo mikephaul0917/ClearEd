@@ -7,13 +7,22 @@ import { logAudit } from "../utils/auditLogger";
 import mongoose from "mongoose";
 import { AppError, catchAsync } from "../utils/errors";
 
+const resolveInstitutionId = (req: Request) => {
+  const user = (req as any).user;
+  if (!user) return null;
+  if (user.role === 'super_admin') {
+    return req.query.institutionId || req.body.institutionId || user.institutionId;
+  }
+  return user.institutionId;
+};
+
 /**
  * Creates a new organization within an institution.
  * Role: Institution Admin, Super Admin
  */
 export const createOrganization = catchAsync(async (req: Request, res: Response) => {
     let { name, description, termId, code, signatoryName, isActive, order, isFinal } = req.body;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const creatorId = (req as any).user?.id;
 
     if (!name) {
@@ -100,7 +109,7 @@ export const createOrganization = catchAsync(async (req: Request, res: Response)
  * Get all organizations for the current institution
  */
 export const getInstitutionOrganizations = catchAsync(async (req: Request, res: Response) => {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     if (!institutionId) throw new AppError("Institution context is required.", 401);
 
     const organizations = await Organization.find({ institutionId, status: 'active' })
@@ -114,7 +123,7 @@ export const getInstitutionOrganizations = catchAsync(async (req: Request, res: 
  * Get all deleted (archived) organizations for the institution
  */
 export const getDeletedOrganizations = catchAsync(async (req: Request, res: Response) => {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     if (!institutionId) throw new AppError("Institution context is required.", 401);
 
     const organizations = await Organization.find({ institutionId, status: 'archived' })
@@ -129,7 +138,7 @@ export const getDeletedOrganizations = catchAsync(async (req: Request, res: Resp
  */
 export const updateOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const updateData = req.body;
 
     const organization = await Organization.findOneAndUpdate(
@@ -149,7 +158,7 @@ export const updateOrganization = catchAsync(async (req: Request, res: Response)
 export const updateOrganizationAppearance = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
     const userId = (req as any).user?.id;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const { themeColor, headerImage } = req.body;
 
     // 1. Verify officer status
@@ -183,7 +192,7 @@ export const updateOrganizationAppearance = catchAsync(async (req: Request, res:
  */
 export const restoreOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const userId = (req as any).user?.id;
     const userRole = (req as any).user?.role;
 
@@ -217,7 +226,7 @@ export const restoreOrganization = catchAsync(async (req: Request, res: Response
  */
 export const permanentDeleteOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const organization = await Organization.findOneAndDelete({ _id: organizationId, institutionId });
 
@@ -235,7 +244,7 @@ export const permanentDeleteOrganization = catchAsync(async (req: Request, res: 
 export const joinOrganization = catchAsync(async (req: Request, res: Response) => {
     const { joinCode } = req.body;
     const userId = (req as any).user?.id;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!joinCode) {
         throw new AppError("Join code is required.", 400);
@@ -387,7 +396,7 @@ export const joinOrganization = catchAsync(async (req: Request, res: Response) =
 export const leaveOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
     const userId = (req as any).user?.id;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     const membership = await OrganizationMember.findOne({
         organizationId,
@@ -425,7 +434,7 @@ export const removeMember = catchAsync(async (req: Request, res: Response) => {
     const { organizationId, targetUserId } = req.body;
     const adminId = (req as any).user?.id;
     const adminRole = (req as any).user?.role;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!organizationId || !targetUserId) {
         throw new AppError("Organization ID and Target User ID are required.", 400);
@@ -487,7 +496,7 @@ export const removeMember = catchAsync(async (req: Request, res: Response) => {
 export const getOrganizationDetails = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
     const userId = (req as any).user?.id;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!mongoose.Types.ObjectId.isValid(organizationId)) {
         throw new AppError("Invalid organization ID.", 400);
@@ -526,7 +535,7 @@ export const getOrganizationDetails = catchAsync(async (req: Request, res: Respo
  */
 export const archiveOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const userId = (req as any).user?.id;
     const userRole = (req as any).user?.role;
 
@@ -581,7 +590,7 @@ export const archiveOrganization = catchAsync(async (req: Request, res: Response
  */
 export const getOrganizationMembers = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
     const userId = (req as any).user?.id;
     const userRole = (req as any).user?.role;
 
@@ -621,7 +630,7 @@ export const getOrganizationMembers = catchAsync(async (req: Request, res: Respo
  * Get all terms for the current institution.
  */
 export const getTerms = catchAsync(async (req: Request, res: Response) => {
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!institutionId) {
         throw new AppError("Institution context is required.", 401);
@@ -641,7 +650,7 @@ export const getTerms = catchAsync(async (req: Request, res: Response) => {
  */
 export const getMyOrganizations = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
-    const institutionId = (req as any).user?.institutionId;
+    const institutionId = resolveInstitutionId(req);
 
     if (!userId || !institutionId) {
         throw new AppError("Authentication required.", 401);

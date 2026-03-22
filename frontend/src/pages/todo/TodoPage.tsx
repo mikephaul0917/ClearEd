@@ -398,15 +398,15 @@ const TodoPage: React.FC = () => {
                                 color: '#3C4043',
                                 fontSize: '0.875rem',
                                 '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#1A73E8', // Blue border
+                                    borderColor: '#dadce0', // Gray border default
                                     borderWidth: 1,
                                     borderRadius: '4px'
                                 },
                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#1A73E8'
+                                    borderColor: '#202124' // Dark hover
                                 },
                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#1A73E8',
+                                    borderColor: '#000', // Black when focused
                                     borderWidth: 2
                                 },
                                 '& .MuiSelect-select': {
@@ -414,7 +414,7 @@ const TodoPage: React.FC = () => {
                                     px: 2
                                 },
                                 '& .MuiSvgIcon-root': {
-                                    color: '#1A73E8' // blue dropdown arrow
+                                    color: '#5f6368' // Gray dropdown arrow
                                 }
                             }}
                         >
