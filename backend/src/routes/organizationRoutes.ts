@@ -9,6 +9,7 @@ import {
     getTerms,
     getOrganizationMembers,
     archiveOrganization,
+    restoreOrganization,
     getMyOrganizations,
     updateOrganizationAppearance
 } from "../controllers/organizationController";
@@ -35,9 +36,11 @@ router.post("/join", auth, joinOrganization);
 router.post("/:organizationId/leave", auth, leaveOrganization);
 
 // Admin / Officer actions
+// Admin / Officer actions
 router.get("/", auth, admin, getInstitutionOrganizations);
 router.post("/", auth, admin, createOrganization);
-router.patch("/:organizationId/archive", auth, admin, archiveOrganization);
+router.patch("/:organizationId/archive", auth, archiveOrganization);
+router.put("/:organizationId/restore", auth, restoreOrganization);
 router.post("/remove-member", auth, removeMember); // Officer check inside controller
 router.put("/:organizationId/appearance", auth, updateOrganizationAppearance); // Officer / Admin check inside
 

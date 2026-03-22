@@ -31,7 +31,7 @@ const COLORS = {
   border: '#E2E8F0',
 };
 
-export default function StudentProgress({ organizationId }: { organizationId?: string | null }) {
+export default function StudentProgress({ organizationId, studentId, studentInfo, readOnly }: { organizationId?: string | null, studentId?: string | null, studentInfo?: any, readOnly?: boolean }) {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [orgInfo, setOrgInfo] = useState<any>(null);
@@ -50,13 +50,14 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
     setLoading(true);
     try {
       if (isOverview) {
-        const res = await clearanceService.getMyClearances();
+        const res = await clearanceService.getMyClearances(studentId || undefined);
         setMyClearances(res.organizations || []);
         setActiveTerm(res.term || null);
         setInstitutionInfo(res.institution || null);
         setFinalClearance(res.finalClearance || null);
       } else {
-        const response = await api.get(`/clearance/timeline/${organizationId}`);
+        const url = studentId ? `/clearance/timeline/${organizationId}?studentId=${studentId}` : `/clearance/timeline/${organizationId}`;
+        const response = await api.get(url);
         setItems(response.data.items || []);
         setOrgInfo(response.data);
         // Also fetch active term if not already fetched
@@ -67,10 +68,14 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
         }
       }
 
-      // Always fetch profile to ensure name/year is accurate
+      // Display profile information
       try {
-        const p = await api.get("/student/profile");
-        setProfile(p.data || null);
+        if (studentInfo) {
+           setProfile(studentInfo);
+        } else if (!studentId) {
+          const p = await api.get("/student/profile");
+          setProfile(p.data || null);
+        }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
       }
@@ -163,8 +168,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
             <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
               <Typography sx={{ fontSize: 16, textAlign: "center", fontWeight: 600 }}>
                 {(() => {
-                  const storedUser = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null;
-                  const fallbackName = storedUser?.fullName || "Student Name";
+                  const fallbackName = studentInfo?.fullName || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!)?.fullName : "Student Name");
                   
                   if (!profile) return fallbackName;
 
@@ -294,22 +298,24 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
       </Dialog>
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
-        <Button 
-          variant="outlined" 
-          disabled={submittingDean || finalClearance !== null}
-          onClick={handleSubmitToDean} 
-          sx={{ 
-            borderRadius: '8px', 
-            color: '#000', 
-            borderColor: '#000', 
-            bgcolor: '#FFF', 
-            fontWeight: 700,
-            '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
-            '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
-          }}
-        >
-          {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'DEAN APPROVED' : finalClearance ? 'SUBMITTED TO DEAN' : 'SUBMIT TO DEAN'}
-        </Button>
+        {!readOnly && (
+          <Button 
+            variant="outlined" 
+            disabled={submittingDean || finalClearance !== null}
+            onClick={handleSubmitToDean} 
+            sx={{ 
+              borderRadius: '8px', 
+              color: '#000', 
+              borderColor: '#000', 
+              bgcolor: '#FFF', 
+              fontWeight: 700,
+              '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
+              '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
+            }}
+          >
+            {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'DEAN APPROVED' : finalClearance ? 'SUBMITTED TO DEAN' : 'SUBMIT TO DEAN'}
+          </Button>
+        )}
         <Button variant="contained" color="inherit" onClick={() => window.print()} sx={{ bgcolor: '#000', color: '#FFF' }}>Print Clearance Slip</Button>
       </Box>
     </Box>
@@ -394,7 +400,7 @@ export default function StudentProgress({ organizationId }: { organizationId?: s
           </Table>
         </Box>
 
-        {statsRejected > 0 && (
+        {!readOnly && statsRejected > 0 && (
           <Box sx={{ mt: 4, p: 3, bgcolor: COLORS.orange + '08', borderRadius: "16px", border: `1px dashed ${COLORS.orange}40`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box>
               <Typography sx={{ fontWeight: 800, color: COLORS.orange }}>Requirements Rejected</Typography>

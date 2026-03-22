@@ -255,11 +255,16 @@ export default function StudentPage() {
   const [loadingClearances, setLoadingClearances] = useState(true);
   const [activeTerm, setActiveTerm] = useState<{ name: string; academicYear: string } | null>(null);
   const [timeline, setTimeline] = useState<any[]>([]);
+  const [orgFilter, setOrgFilter] = useState<'active' | 'trash'>('active');
 
-  const approvedCount = useMemo(() => myClearances.filter(c => c.status === "completed").length, [myClearances]);
-  const pendingCount = useMemo(() => myClearances.filter(c => c.status === "pending" || c.status === "in_progress").length, [myClearances]);
-  const notStartedCount = useMemo(() => myClearances.filter(c => c.status === "not_started").length, [myClearances]);
-  const progressPercent = useMemo(() => Math.round((approvedCount / (myClearances.length || 1)) * 100), [approvedCount, myClearances.length]);
+  const filteredClearances = useMemo(() => {
+    return myClearances.filter((c) => orgFilter === 'active' ? c.orgStatus === 'active' : c.orgStatus === 'archived');
+  }, [myClearances, orgFilter]);
+
+  const approvedCount = useMemo(() => filteredClearances.filter(c => c.status === "completed").length, [filteredClearances]);
+  const pendingCount = useMemo(() => filteredClearances.filter(c => c.status === "pending" || c.status === "in_progress").length, [filteredClearances]);
+  const notStartedCount = useMemo(() => filteredClearances.filter(c => c.status === "not_started").length, [filteredClearances]);
+  const progressPercent = useMemo(() => Math.round((approvedCount / (filteredClearances.length || 1)) * 100), [approvedCount, filteredClearances.length]);
 
   const fetchClearances = async () => {
     setLoadingClearances(true);
@@ -348,7 +353,7 @@ export default function StudentPage() {
                 <Box sx={{ width: '100%', height: 10, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 5, overflow: 'hidden', mb: 1 }}>
                   <Box sx={{ width: `${progressPercent}%`, height: '100%', bgcolor: COLORS.teal, borderRadius: 5, transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                 </Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, opacity: 0.6 }}>{approvedCount} of {myClearances.length} organizations completed</Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, opacity: 0.6 }}>{approvedCount} of {filteredClearances.length} organizations completed</Typography>
               </Box>
 
               {/* Status Breakdown Grid */}
@@ -375,9 +380,42 @@ export default function StudentPage() {
             </Box>
 
             {/* ── Organizations Bento Grid ────────────────────────────────── */}
-            <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.textSecondary, mt: 4, mb: 2 }}>
-              Institutional Organizations
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 2 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.textSecondary }}>
+                Institutional Organizations
+              </Typography>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                bgcolor: '#f8fafc', 
+                borderRadius: '999px',
+                border: '1px solid #e2e8f0',
+                p: 0.5 
+              }}>
+                <Button
+                  onClick={() => setOrgFilter('active')}
+                  sx={{
+                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
+                    color: orgFilter === 'active' ? '#fff' : '#64748b',
+                    bgcolor: orgFilter === 'active' ? '#0f172a' : 'transparent',
+                    '&:hover': { bgcolor: orgFilter === 'active' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
+                  }}
+                >
+                  Active
+                </Button>
+                <Button
+                  onClick={() => setOrgFilter('trash')}
+                  sx={{
+                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
+                    color: orgFilter === 'trash' ? '#fff' : '#64748b',
+                    bgcolor: orgFilter === 'trash' ? '#0f172a' : 'transparent',
+                    '&:hover': { bgcolor: orgFilter === 'trash' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
+                  }}
+                >
+                  Trash
+                </Button>
+              </Box>
+            </Box>
 
             <Box sx={{
               display: 'grid',
@@ -387,7 +425,7 @@ export default function StudentPage() {
             }}>
               {loadingClearances ? (
                 [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: COLORS.cardRadius }} />)
-              ) : myClearances.map((org) => (
+              ) : filteredClearances.map((org) => (
                 <Box
                   key={org._id}
                   sx={{

@@ -63,6 +63,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
     setIsStudentOpen = () => {},
 }) => {
     const location = useLocation();
+    const isAdmin = role === 'admin' || role === 'super_admin';
     
     return (
         <Box
@@ -154,7 +155,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         {buttonEl}
                                         
                                         {/* "As an officer" Section */}
-                                        {officerOrgs.length > 0 && (
+                                        {officerOrgs.length > 0 && !isAdmin && (
                                             <Box mt={1} mb={0.5}>
                                                 <Divider sx={{ my: 1 }} />
                                                 <Box 
@@ -192,7 +193,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                             }}
                                                         >
                                                             <FolderIcon color={location.pathname === '/officer/to-review' ? "#0891b2" : "#0F172A"} />
-                                                            <Box ml={1.5}>To review</Box>
+                                                            <Box ml={1.5}>Home</Box>
                                                         </Button>
 
                                                         {officerOrgs.map((org: any) => {

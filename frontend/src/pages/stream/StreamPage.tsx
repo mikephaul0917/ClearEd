@@ -198,7 +198,7 @@ const StreamPage: React.FC = () => {
         if (!orgId || !window.confirm("Are you sure you want to unarchive this organization? It will become active again.")) return;
 
         try {
-            await api.put(`/admin/organizations/${orgId}/restore`);
+            await api.put(`/organizations/${orgId}/restore`);
             alert("Organization unarchived successfully.");
             fetchData();
         } catch (error) {
@@ -314,7 +314,7 @@ const StreamPage: React.FC = () => {
                                 )}
                             </Box>
                         </Box>
-                        {isAdmin && org.status !== 'archived' && (
+                        {(isAdmin || isOfficer || (membership && membership.role === 'member')) && org.status !== 'archived' && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 {isOfficer && (
                                     <Button
@@ -344,8 +344,29 @@ const StreamPage: React.FC = () => {
                                 </Tooltip>
                             </Box>
                         )}
-                        {isAdmin && org.status === 'archived' && (
+                        {(isAdmin || isOfficer || (membership && membership.role === 'member')) && org.status === 'archived' && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
+                                {isOfficer && (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<EditIcon sx={{ fontSize: 18 }} />}
+                                        onClick={() => setIsCustomiseModalOpen(true)}
+                                        sx={{
+                                            bgcolor: "white",
+                                            color: "#1967d2",
+                                            fontWeight: 500,
+                                            textTransform: "none",
+                                            borderRadius: 20,
+                                            px: 2,
+                                            mr: 1,
+                                            "&:hover": {
+                                                bgcolor: "#f8f9fa"
+                                            }
+                                        }}
+                                    >
+                                        Customise
+                                    </Button>
+                                )}
                                 <Tooltip title="Unarchive Organization">
                                     <IconButton onClick={handleUnarchive} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
                                         <UnarchiveIcon />
@@ -353,26 +374,7 @@ const StreamPage: React.FC = () => {
                                 </Tooltip>
                             </Box>
                         )}
-                        {isOfficer && !isAdmin && org.status !== 'archived' && (
-                             <Button
-                                 variant="contained"
-                                 startIcon={<EditIcon sx={{ fontSize: 18 }} />}
-                                 onClick={() => setIsCustomiseModalOpen(true)}
-                                 sx={{
-                                     bgcolor: "white",
-                                     color: "#1967d2",
-                                     fontWeight: 500,
-                                     textTransform: "none",
-                                     borderRadius: 20,
-                                     px: 2,
-                                     "&:hover": {
-                                         bgcolor: "#f8f9fa"
-                                     }
-                                 }}
-                             >
-                                 Customise
-                             </Button>
-                        )}
+
                     </Box>
 
                     {/* Decorative element */}

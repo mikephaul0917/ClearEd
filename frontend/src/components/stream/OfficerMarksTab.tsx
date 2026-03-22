@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress, CircularProgress, Chip } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { clearanceService } from '../../services';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
+import { clearanceService, api } from '../../services';
 import SignatureModal from './SignatureModal';
+import StudentProgress from '../../pages/student/StudentProgress';
 
 // Note: Ensure that the Empty State illustration reflects an empty grades view
 const EmptyStateSvg = () => (
@@ -35,6 +38,12 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
     const [requests, setRequests] = useState<any[]>([]);
     const [signatureModalOpen, setSignatureModalOpen] = useState(false);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
+    // View Modal State
+    const [viewStudentModalOpen, setViewStudentModalOpen] = useState(false);
+    const [viewedStudentName, setViewedStudentName] = useState("");
+    const [viewedStudentId, setViewedStudentId] = useState<string | null>(null);
+    const [viewedStudentInfo, setViewedStudentInfo] = useState<any>(null);
 
     const fetchOverview = async () => {
         try {
@@ -70,6 +79,16 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
             console.error('Failed to mark student as cleared', error);
             alert('Failed to mark student as cleared. Ensure all requirements have been approved.');
         }
+    };
+
+    const handleViewStudent = async (req: any) => {
+        const studentId = req.student?._id;
+        if (!studentId) return;
+        
+        setViewedStudentName(req.student?.fullName || "Student");
+        setViewedStudentId(studentId);
+        setViewedStudentInfo(req.student);
+        setViewStudentModalOpen(true);
     };
 
     if (loading) {
@@ -140,24 +159,41 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                                     {req.status === 'not_started' && <Chip label="Not Started" size="small" sx={{ bgcolor: '#f1f5f9', color: '#64748b', fontWeight: 600 }} />}
                                 </TableCell>
                                 <TableCell sx={{ align: 'right', textAlign: 'right' }}>
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        startIcon={<CheckCircleIcon />}
-                                        disabled={req.status === 'officer_cleared' || req.status === 'completed'}
-                                        onClick={() => handleOpenSignatureModal(req.student?._id)}
-                                        sx={{ 
-                                            textTransform: 'none', 
-                                            fontWeight: 600,
-                                            bgcolor: req.status === 'officer_cleared' || req.status === 'completed' ? '#e2e8f0' : '#0ea5e9',
-                                            color: req.status === 'officer_cleared' || req.status === 'completed' ? '#94a3b8' : '#fff',
-                                            '&:hover': { bgcolor: '#0284c7' },
-                                            boxShadow: 'none',
-                                            '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' }
-                                        }}
-                                    >
-                                        {req.status === 'officer_cleared' || req.status === 'completed' ? 'Cleared' : 'Mark as Cleared'}
-                                    </Button>
+                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<VisibilityIcon />}
+                                            onClick={() => handleViewStudent(req)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                fontWeight: 600,
+                                                borderColor: '#e2e8f0',
+                                                color: '#475569',
+                                                '&:hover': { bgcolor: '#f1f5f9', borderColor: '#cbd5e1' }
+                                            }}
+                                        >
+                                            View
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            startIcon={<CheckCircleIcon />}
+                                            disabled={req.status === 'officer_cleared' || req.status === 'completed'}
+                                            onClick={() => handleOpenSignatureModal(req.student?._id)}
+                                            sx={{ 
+                                                textTransform: 'none', 
+                                                fontWeight: 600,
+                                                bgcolor: req.status === 'officer_cleared' || req.status === 'completed' ? '#e2e8f0' : '#0ea5e9',
+                                                color: req.status === 'officer_cleared' || req.status === 'completed' ? '#94a3b8' : '#fff',
+                                                '&:hover': { bgcolor: '#0284c7' },
+                                                boxShadow: 'none',
+                                                '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' }
+                                            }}
+                                        >
+                                            {req.status === 'officer_cleared' || req.status === 'completed' ? 'Cleared' : 'Mark as Cleared'}
+                                        </Button>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -173,6 +209,33 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                 }} 
                 onConfirm={handleConfirmClearance} 
             />
+
+            {/* View Student Timeline Modal */}
+            <Dialog open={viewStudentModalOpen} onClose={() => setViewStudentModalOpen(false)} maxWidth="lg" fullWidth>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={700}>
+                        Clearance Overview: {viewedStudentName}
+                    </Typography>
+                    <IconButton onClick={() => setViewStudentModalOpen(false)}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{ p: 0, bgcolor: '#f4f6f8' }}>
+                    {viewedStudentId && (
+                        <StudentProgress 
+                            organizationId={null} 
+                            studentId={viewedStudentId} 
+                            studentInfo={viewedStudentInfo} 
+                            readOnly={true} 
+                        />
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setViewStudentModalOpen(false)} sx={{ color: '#475569', fontWeight: 600 }}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

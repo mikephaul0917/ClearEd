@@ -40,11 +40,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
     
-    // Verify user exists and is active
+    // Verify user exists and is active (fallback to status if isActive is missing)
     const user = await User.findOne({
       _id: decoded.id,
       enabled: true,
-      isActive: true
+      $or: [
+        { isActive: true },
+        { isActive: { $exists: false }, status: 'active' }
+      ]
     }).populate('institutionId');
 
     if (!user) {
@@ -119,12 +122,15 @@ export const institutionMember = async (req: Request, res: Response, next: NextF
     return res.status(401).json({ message: "Institution context required" });
   }
 
-  // Verify user belongs to institution
+  // Verify user belongs to institution (fallback to status if isActive missing)
   const user = await User.findOne({
     _id: req.user.id,
     institutionId: req.user.institutionId,
     enabled: true,
-    isActive: true
+    $or: [
+      { isActive: true },
+      { isActive: { $exists: false }, status: 'active' }
+    ]
   });
 
   if (!user) {

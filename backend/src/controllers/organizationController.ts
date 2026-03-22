@@ -184,6 +184,22 @@ export const updateOrganizationAppearance = catchAsync(async (req: Request, res:
 export const restoreOrganization = catchAsync(async (req: Request, res: Response) => {
     const { organizationId } = req.params;
     const institutionId = (req as any).user?.institutionId;
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    let isAuthorized = userRole === 'admin' || userRole === 'super_admin';
+    if (!isAuthorized) {
+        const membership = await OrganizationMember.findOne({
+            organizationId,
+            userId,
+            status: 'active'
+        });
+        if (membership) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+        throw new AppError("You don't have permission to restore this organization.", 403);
+    }
 
     const organization = await Organization.findOneAndUpdate(
         { _id: organizationId, institutionId },
@@ -512,6 +528,21 @@ export const archiveOrganization = catchAsync(async (req: Request, res: Response
     const { organizationId } = req.params;
     const institutionId = (req as any).user?.institutionId;
     const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    let isAuthorized = userRole === 'admin' || userRole === 'super_admin';
+    if (!isAuthorized) {
+        const membership = await OrganizationMember.findOne({
+            organizationId,
+            userId,
+            status: 'active'
+        });
+        if (membership) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+        throw new AppError("You don't have permission to archive this organization.", 403);
+    }
 
     const organization = await Organization.findOne({
         _id: organizationId,

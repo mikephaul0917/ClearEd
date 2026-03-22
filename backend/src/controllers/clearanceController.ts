@@ -100,17 +100,39 @@ export const startClearance = async (req: Request, res: Response) => {
  */
 export const getTimeline = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const requesterId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
     const { organizationId } = req.params;
+    const studentId = req.query.studentId as string;
 
-    if (!userId || !institutionId) {
+    if (!requesterId || !institutionId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    let targetUserId = requesterId;
+
+    if (studentId && studentId !== requesterId) {
+      // Verify requester has permission (admin or officer)
+      const userRole = (req as any).user?.role;
+      let isAuthorized = userRole === 'admin' || userRole === 'super_admin';
+      if (!isAuthorized) {
+          const officerMembership = await OrganizationMember.findOne({
+              organizationId,
+              userId: requesterId,
+              role: 'officer',
+              status: 'active'
+          });
+          if (officerMembership) isAuthorized = true;
+      }
+      if (!isAuthorized) {
+          return res.status(403).json({ message: "You don't have permission to view this student's clearance" });
+      }
+      targetUserId = studentId;
     }
 
     // 1. Find the clearance request
     const request = await ClearanceRequest.findOne({
-      userId,
+      userId: targetUserId,
       organizationId,
       institutionId
     }).populate("termId", "name academicYear");
@@ -128,7 +150,7 @@ export const getTimeline = async (req: Request, res: Response) => {
     // 3. Fetch all submissions for this request
     const submissions = await ClearanceSubmission.find({
       clearanceRequestId: request._id,
-      userId
+      userId: targetUserId
     });
 
     // 4. Map requirements to their submission status
@@ -166,11 +188,32 @@ export const getTimeline = async (req: Request, res: Response) => {
  */
 export const getMyClearances = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const requesterId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
+    const studentId = req.query.studentId as string;
 
-    if (!userId || !institutionId) {
+    if (!requesterId || !institutionId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    let targetUserId = requesterId;
+
+    if (studentId && studentId !== requesterId) {
+      // Verify requester has permission (admin or officer)
+      const userRole = (req as any).user?.role;
+      let isAuthorized = userRole === 'admin' || userRole === 'super_admin';
+      if (!isAuthorized) {
+          const officerMembership = await OrganizationMember.findOne({
+              userId: requesterId,
+              role: 'officer',
+              status: 'active'
+          });
+          if (officerMembership) isAuthorized = true;
+      }
+      if (!isAuthorized) {
+          return res.status(403).json({ message: "You don't have permission to view this student's clearance" });
+      }
+      targetUserId = studentId;
     }
 
     // 1. Get current active term
@@ -179,23 +222,22 @@ export const getMyClearances = async (req: Request, res: Response) => {
 
     // 2. Get all organizations the student is an active member of
     const memberships = await OrganizationMember.find({
-      userId,
+      userId: targetUserId,
       institutionId,
       status: 'active'
     });
     const joinedOrgIds = memberships.map(m => m.organizationId);
 
-    // 2.5 Get all active organizations for the institution that the student joined
+    // 2.5 Get all organizations for the institution that the student joined
     const organizations = await Organization.find({
       _id: { $in: joinedOrgIds },
       institutionId,
-      isActive: true,
-      status: 'active'
+      status: { $in: ['active', 'archived'] }
     }).sort({ order: 1 });
 
     // 3. Get all clearance requests for this user in this term
     const requests = await ClearanceRequest.find({
-      userId,
+      userId: targetUserId,
       institutionId,
       termId: term._id
     });
@@ -205,7 +247,7 @@ export const getMyClearances = async (req: Request, res: Response) => {
 
     // 3.8 Fetch any FinalClearance
     const finalClearance = await FinalClearance.findOne({
-      userId,
+      userId: targetUserId,
       institutionId,
       termId: term._id
     });
@@ -220,6 +262,7 @@ export const getMyClearances = async (req: Request, res: Response) => {
         signatoryName: org.signatoryName,
         isFinal: org.isFinal,
         status: request ? request.status : "not_started",
+        orgStatus: org.status,
         submittedAt: request ? request.submittedAt : null,
         signatureUrl: request ? (request as any).signatureUrl : undefined
       };

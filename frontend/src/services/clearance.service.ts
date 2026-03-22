@@ -72,8 +72,9 @@ export const clearanceService = {
         return response.data;
     },
 
-    getMyClearances: async () => {
-        const response = await api.get('/clearance/my-clearances');
+    getMyClearances: async (studentId?: string) => {
+        const url = studentId ? `/clearance/my-clearances?studentId=${studentId}` : '/clearance/my-clearances';
+        const response = await api.get(url);
         return response.data;
     },
 

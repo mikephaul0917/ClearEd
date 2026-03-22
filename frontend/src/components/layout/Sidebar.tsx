@@ -143,6 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = useState(false);
+    const isAdmin = role === 'admin' || role === 'super_admin';
 
     // Officer orgs feature
     const [officerOrgs, setOfficerOrgs] = useState<any[]>([]);
@@ -153,6 +154,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [isStudentOpen, setIsStudentOpen] = useState(true);
 
     React.useEffect(() => {
+        // Super Admins don't have personal organizations
+        if (role === 'super_admin') return;
+
         // Fetch orgs where user is officer
         organizationService.getMyOrganizations().then(res => {
             if (res && res.organizations) {
@@ -168,7 +172,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     let maxLen = -1;
 
     navItems.forEach((item, index) => {
-        const isMatch = location.pathname === item.path || 
+        const isMatch = location.pathname === item.path ||
             (item.path !== '/' && item.path !== '/home' && location.pathname.startsWith(item.path + '/'));
 
         // Prevent matching Home/dashboard for officer sub-routes which handle their own active styling
@@ -378,7 +382,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                         {buttonEl}
 
                                         {/* "As an officer" Section */}
-                                        {officerOrgs.length > 0 && (
+                                        {officerOrgs.length > 0 && role !== 'admin' && (
                                             <Box mt={1} mb={0.5}>
                                                 <Box
                                                     display="flex"
@@ -415,7 +419,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                             }}
                                                         >
                                                             <FolderIcon color={location.pathname === '/officer/to-review' ? "#0891b2" : "#0F172A"} />
-                                                            <Box ml={1.5}>To review</Box>
+                                                            <Box ml={1.5}>To Review</Box>
                                                         </Button>
 
                                                         {officerOrgs.map(org => {

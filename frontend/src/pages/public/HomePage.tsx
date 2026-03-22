@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import OrganizationBoard from "../../components/organization/OrganizationBoard";
 import JoinOrganizationModal from "../../components/organization/JoinOrganizationModal";
@@ -90,20 +93,26 @@ const HomePage: React.FC = () => {
                                 Create Organization
                             </Button>
                         )}
-                        <Button
-                            variant="contained"
-                            onClick={() => setIsJoinModalOpen(true)}
-                            sx={{
-                                bgcolor: "#0F172A",
-                                borderRadius: "10px",
-                                textTransform: "none",
-                                px: 3,
-                                fontWeight: 700,
-                                "&:hover": { bgcolor: "#1E293B" }
-                            }}
-                        >
-                            Join Organization
-                        </Button>
+                        <Tooltip title="Join Organization" arrow placement="top">
+                            <IconButton
+                                onClick={() => setIsJoinModalOpen(true)}
+                                sx={{
+                                    bgcolor: "#FFFFFF",
+                                    color: "#0F172A",
+                                    border: "1px solid #0F172A",
+                                    borderRadius: "10px",
+                                    width: 42,
+                                    height: 42,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    p: 0,
+                                    "&:hover": { bgcolor: "#F1F5F9" }
+                                }}
+                            >
+                                <AddIcon />
+                            </IconButton>
+                        </Tooltip>
                     </Box>
                 </Box>
 
