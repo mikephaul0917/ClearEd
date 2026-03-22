@@ -167,8 +167,8 @@ const RequirementDetailsPage: React.FC = () => {
 
     const handleStudentSubmit = async () => {
         const existingFiles = requirement?.submission?.files || [];
-        if (studentFiles.length === 0 && existingFiles.length === 0) {
-            setStudentSubError("Please upload at least one file.");
+        if (requirement?.requiredFiles?.includes('File') && studentFiles.length === 0 && existingFiles.length === 0) {
+            setStudentSubError("Please upload at least one file. This requirement mandates an attachment.");
             return;
         }
 
@@ -459,9 +459,16 @@ const RequirementDetailsPage: React.FC = () => {
                                     </Box>
 
                                     {requirement?.type !== 'material' && (
-                                        <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
-                                            {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
-                                        </Typography>
+                                        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
+                                            <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
+                                            </Typography>
+                                            {requirement.dueDate && (
+                                                <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                    Due {new Date(requirement.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}{new Date(requirement.dueDate).getHours() === 23 && new Date(requirement.dueDate).getMinutes() === 59 ? '' : `, ${new Date(requirement.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                                                </Typography>
+                                            )}
+                                        </Box>
                                     )}
                                 </Box>
                             </Box>
@@ -706,13 +713,15 @@ const RequirementDetailsPage: React.FC = () => {
                                             </Typography>
                                             <Typography variant="body2" sx={{ 
                                                 color: requirement?.submission?.status === "approved" ? "#10B981" : 
-                                                       requirement?.submission?.status === "pending" ? "#F59E0B" : 
-                                                       requirement?.submission?.status === "rejected" ? "#EF4444" : "#1a73e8", 
+                                                       requirement?.submission?.status === "pending" ? "#188038" : 
+                                                       requirement?.submission?.status === "rejected" ? "#EF4444" : 
+                                                       (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "#d93025" : "#188038", 
                                                 fontWeight: 500 
                                             }}>
                                                 {requirement?.submission?.status === "approved" ? "Approved" : 
                                                  requirement?.submission?.status === "pending" ? "Turned in" : 
-                                                 requirement?.submission?.status === "rejected" ? "Returned" : "Missing"}
+                                                 requirement?.submission?.status === "rejected" ? "Returned" : 
+                                                 (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "Missing" : "Assigned"}
                                             </Typography>
                                         </Box>
                                         
@@ -782,7 +791,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                         </Button>
                                                     </label>
                                                     
-                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#000", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
+                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (requirement?.requiredFiles?.includes('File') && studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#000", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                         {isSubmittingWork ? <CircularProgress size={24} color="inherit" /> : requirement?.submission?.status === "rejected" || requirement?.submission?.status === "resubmission_required" ? "Resubmit" : "Mark as done"}
                                                     </Button>
                                                 </Box>

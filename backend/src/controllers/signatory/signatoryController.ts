@@ -222,7 +222,7 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
   try {
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
-    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments, options } = req.body;
+    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments, options, dueDate, points } = req.body;
 
     const membership = await OrganizationMember.findOne({
       userId,
@@ -279,7 +279,9 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
       organizationId,
       institutionId,
       createdBy: userId,
-      isActive: true
+      isActive: true,
+      dueDate: dueDate || undefined,
+      points: points || undefined
     });
 
     res.status(201).json({ message: "Requirement created", requirement });
@@ -293,7 +295,7 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
     const { id } = req.params;
-    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, attachments: rawUrlAttachments, options } = req.body;
+    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, attachments: rawUrlAttachments, options, dueDate, points } = req.body;
 
     const requirement = await ClearanceRequirement.findOne({ _id: id, institutionId });
     if (!requirement) return res.status(404).json({ message: "Requirement not found" });
@@ -317,6 +319,8 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     if (isMandatory !== undefined) requirement.isMandatory = isMandatory === "true" || isMandatory === true;
     if (isAnnouncement !== undefined) requirement.isAnnouncement = isAnnouncement === "true" || isAnnouncement === true;
     if (isActive !== undefined) requirement.isActive = isActive === "true" || isActive === true;
+    if (dueDate !== undefined) requirement.dueDate = dueDate || undefined;
+    if (points !== undefined) requirement.points = points || undefined;
 
     if (options !== undefined) {
       try {

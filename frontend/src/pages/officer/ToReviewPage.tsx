@@ -50,13 +50,29 @@ export default function ToReviewPage() {
         return requirements.filter(r => r.organizationId?._id === selectedOrg);
     }, [requirements, selectedOrg]);
 
-    const noDueDateReqs = useMemo(() => {
-        return filteredRequirements.filter(r => !r.dueDate);
+    const toReviewReqs = useMemo(() => {
+        return filteredRequirements.filter(r => {
+            const pending = r.stats?.pending || 0;
+            const marked = (r.stats?.approved || 0) + (r.stats?.rejected || 0);
+            return pending > 0 || marked === 0;
+        });
     }, [filteredRequirements]);
 
-    const workInProgressReqs = useMemo(() => {
-        return filteredRequirements.filter(r => r.dueDate);
+    const reviewedReqs = useMemo(() => {
+        return filteredRequirements.filter(r => {
+            const pending = r.stats?.pending || 0;
+            const marked = (r.stats?.approved || 0) + (r.stats?.rejected || 0);
+            return pending === 0 && marked > 0;
+        });
     }, [filteredRequirements]);
+
+    const noDueDateReqs = useMemo(() => {
+        return toReviewReqs.filter(r => !r.dueDate);
+    }, [toReviewReqs]);
+
+    const workInProgressReqs = useMemo(() => {
+        return toReviewReqs.filter(r => r.dueDate);
+    }, [toReviewReqs]);
 
     const renderRequirementItem = (req: any) => {
         const Icon = req.type === 'poll' ? LiveHelpIcon : req.type === 'material' ? BookIcon : AssignmentIcon;
@@ -243,16 +259,45 @@ export default function ToReviewPage() {
                                 </AccordionDetails>
                             </Accordion>
                         </Box>
-                    ) : (
+                    ) : tabValue === 1 && reviewedReqs.length === 0 ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 12, pb: 10 }}>
                             <Typography sx={{ color: '#3c4043', mb: 1, fontWeight: 500, fontSize: '1rem' }}>
                                 No reviewed work yet
                             </Typography>
                             <Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>
-                                This is where you'll see work that you've marked as reviewed
+                                Assignments move here automatically when there are no more pending student submissions left to review.
                             </Typography>
                         </Box>
-                    )}
+                    ) : tabValue === 1 ? (
+                        <Box pb={8}>
+                            <Accordion
+                                disableGutters
+                                elevation={0}
+                                defaultExpanded
+                                sx={{
+                                    '&:before': { display: 'none' },
+                                    bgcolor: 'transparent'
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon sx={{ color: '#5f6368' }} />}
+                                    sx={{ px: 0, minHeight: '48px', '& .MuiAccordionSummary-content': { my: 1, alignItems: 'center' } }}
+                                >
+                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 400, flex: 1, fontSize: '1.25rem' }}>
+                                        Completed Reviews
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: '#5f6368', fontWeight: 500, mr: 1, fontSize: '0.875rem' }}>
+                                        {reviewedReqs.length}
+                                    </Typography>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ px: 0, py: 0 }}>
+                                    <Box sx={{ borderTop: '1px solid #f1f3f4' }}>
+                                        {reviewedReqs.map(renderRequirementItem)}
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
+                        </Box>
+                    ) : null}
                 </Box>
             </Container>
         </RoleLayout>

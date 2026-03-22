@@ -11,6 +11,8 @@ export interface IClearanceRequirement extends Document {
     instructions?: string; // Detailed instructions for the student
     topic?: string; // Optional grouping topic
     options?: string[]; // Multiple choice options
+    dueDate?: Date; // Optional due date for the requirement
+    points?: string; // Optional grading points
     attachments: {
         name: string;
         url: string;
@@ -54,6 +56,13 @@ const ClearanceRequirementSchema = new Schema<IClearanceRequirement>({
         maxlength: 100
     },
     options: [{ type: String }],
+    dueDate: {
+        type: Date
+    },
+    points: {
+        type: String,
+        trim: true
+    },
     attachments: [{
         name: { type: String, required: true },
         url: { type: String, required: true },

@@ -507,6 +507,7 @@ const StreamPage: React.FC = () => {
                                         author={req.createdBy}
                                         stats={isOfficer ? req.stats : undefined}
                                         createdAt={req.createdAt}
+                                        dueDate={req.dueDate}
                                         onAction={handleAction}
                                         onEdit={isOfficer ? handleEditRequirement : undefined}
                                         onDelete={isOfficer || isAdmin ? handleDeleteRequirement : undefined}
@@ -594,6 +595,7 @@ const StreamPage: React.FC = () => {
                                     author={req.createdBy}
                                     stats={isOfficer ? req.stats : undefined}
                                     createdAt={req.createdAt}
+                                    dueDate={req.dueDate}
                                     onAction={handleAction}
                                     onEdit={isOfficer ? handleEditRequirement : undefined}
                                     onDelete={isOfficer || isAdmin ? handleDeleteRequirement : undefined}

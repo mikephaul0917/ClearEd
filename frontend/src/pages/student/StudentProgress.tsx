@@ -193,10 +193,10 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           </Box>
           <Box sx={{ display: 'flex', gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-end', flex: 1.5 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 700, mr: 1, minWidth: 60 }}>Yr. Sec.:</Typography>
+              <Typography sx={{ fontSize: 14, fontWeight: 700, mr: 1, minWidth: 60 }}>Course/Year:</Typography>
               <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
                 <Typography sx={{ fontSize: 16, textAlign: "center" }}>
-                  {profile?.year ? `${profile.year}${profile.section ? ' - ' + profile.section : ''}` : "—"}
+                  {profile?.course || profile?.year ? `${profile.course || ''}${profile.course && profile.year ? ' / ' : ''}${profile.year || ''}${profile.section ? ' - ' + profile.section : ''}`.trim() : "—"}
                 </Typography>
               </Box>
             </Box>

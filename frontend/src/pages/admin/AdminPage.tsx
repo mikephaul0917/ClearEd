@@ -303,8 +303,8 @@ export default function AdminPage() {
               </Box>
             </Box>
             <Skeleton variant="text" width={140} height={20} sx={{ mb: 1.5, mt: 3, borderRadius: '8px' }} />
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-              {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: COLORS.cardRadius }} />)}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
+              {[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: COLORS.cardRadius }} />)}
             </Box>
           </Box>
         ) : (
@@ -500,7 +500,7 @@ export default function AdminPage() {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
                 gap: 2,
               }}
             >
@@ -508,8 +508,7 @@ export default function AdminPage() {
                 { title: "Manage Users", onClick: () => nav("/admin/users"), desc: "Add students and staff", color: COLORS.teal },
                 { title: "Organizations", onClick: () => nav("/admin/organizations"), desc: "Signatory structure & codes", color: COLORS.lavender },
                 { title: "AY & Term", onClick: () => nav("/admin/terms"), desc: "Active configuration", color: COLORS.orange },
-                { title: "System Records", onClick: () => nav("/admin/records"), desc: "View activity logs", color: '#94A3B8' },
-                { title: "Institution Info", onClick: () => nav("/admin/institution-requests"), desc: "Manage profile", color: COLORS.lavender }
+                { title: "System Records", onClick: () => nav("/admin/records"), desc: "View activity logs", color: '#94A3B8' }
               ].map((tile) => (
                 <Box
                   key={tile.title}
@@ -644,17 +643,52 @@ export default function AdminPage() {
                   ))}
                 </Box>
               </Box>
-              <Box display="flex" alignItems="flex-end" gap={1.5} sx={{ height: 120, px: 2 }}>
-                {(volume[range] || []).map((v, idx) => (
-                  <Box key={idx} sx={{
-                    flex: 1,
-                    backgroundColor: COLORS.teal,
-                    borderRadius: '4px 4px 0 0',
-                    height: `${Math.max(10, Math.min(100, v * 10))}%`,
-                    opacity: 0.8,
-                    transition: 'height 0.3s'
-                  }} />
-                ))}
+              <Box display="flex" alignItems="flex-end" gap={1.5} sx={{ height: 140, px: 2 }}>
+                {(() => {
+                  const labelsByRange = {
+                    day: ["12am", "3am", "6am", "9am", "12pm", "3pm", "6pm", "9pm"],
+                    week: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+                  };
+                  const currentData = volume[range] || [];
+                  const maxVol = Math.max(...currentData, 1); // Avoid division by zero
+                  
+                  return currentData.map((v, idx) => (
+                    <Tooltip key={idx} title={`${v} submissions`} arrow placement="top">
+                      <Box sx={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        height: '100%',
+                        cursor: 'pointer'
+                      }}>
+                        <Box sx={{
+                          width: '100%',
+                          backgroundColor: COLORS.teal,
+                          borderRadius: '4px 4px 0 0',
+                          height: `${Math.max(8, (v / maxVol) * 100)}%`,
+                          opacity: 0.8,
+                          transition: 'height 0.3s',
+                          '&:hover': { opacity: 1 }
+                        }} />
+                        <Typography sx={{ 
+                          fontFamily: fontStack, 
+                          fontSize: 10, 
+                          fontWeight: 600, 
+                          color: COLORS.textSecondary,
+                          mt: 1,
+                          height: 14,
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}>
+                          {labelsByRange[range][idx] || ''}
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  ));
+                })()}
               </Box>
             </Box>
           </Box>

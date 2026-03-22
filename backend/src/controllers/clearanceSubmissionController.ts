@@ -158,6 +158,8 @@ export const getStudentTodoList = catchAsync(async (req: Request, res: Response)
 
         const status = submission ? submission.status : 'not_started';
 
+        const now = new Date();
+
         return {
             requirement: {
                 id: reqObj._id,
@@ -165,7 +167,8 @@ export const getStudentTodoList = catchAsync(async (req: Request, res: Response)
                 description: reqObj.description,
                 isMandatory: reqObj.isMandatory,
                 organization: reqObj.organizationId?.name,
-                office: reqObj.officeId?.name
+                office: reqObj.officeId?.name,
+                dueDate: reqObj.dueDate
             },
             status,
             submissionId: submission ? submission._id : null,
@@ -174,15 +177,27 @@ export const getStudentTodoList = catchAsync(async (req: Request, res: Response)
         };
     });
 
+    const now = new Date();
+
     res.json({
         status: 'success',
         todoList: {
-            assigned: todoItems,
-            missing: todoItems.filter(item =>
-                item.requirement.isMandatory &&
-                ['not_started', 'rejected', 'resubmission_required'].includes(item.status)
-            ),
-            done: todoItems.filter(item => item.status === 'approved')
+            assigned: todoItems.filter(item => {
+                // Assigned: not completed, and either no due date OR due date is in the future/present
+                const isNotCompleted = ['not_started', 'rejected', 'resubmission_required'].includes(item.status);
+                const isNotMissing = !item.requirement.dueDate || new Date(item.requirement.dueDate) >= now;
+                return isNotCompleted && isNotMissing;
+            }),
+            missing: todoItems.filter(item => {
+                // Missing: not completed, and has a due date in the past
+                const isNotCompleted = ['not_started', 'rejected', 'resubmission_required'].includes(item.status);
+                const isMissing = item.requirement.dueDate && new Date(item.requirement.dueDate) < now;
+                return isNotCompleted && isMissing;
+            }),
+            done: todoItems.filter(item => {
+                // Done: pending or approved
+                return item.status === 'approved' || item.status === 'pending';
+            })
         }
     });
 });
