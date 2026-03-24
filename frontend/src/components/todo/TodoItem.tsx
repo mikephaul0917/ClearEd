@@ -1,33 +1,32 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import BusinessIcon from "@mui/icons-material/Business";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { useNavigate } from "react-router-dom";
 
 interface TodoItemProps {
-    id: string;
+    reqId: string;
+    orgId: string;
     title: string;
     organizationName: string;
     dueDate?: string;
     status: string;
     isOfficer?: boolean;
-    onAction: (id: string) => void;
 }
 
 const TodoItem: React.FC<TodoItemProps> = ({
-    id,
+    reqId,
+    orgId,
     title,
     organizationName,
     dueDate,
     status,
     isOfficer,
-    onAction
 }) => {
+    const nav = useNavigate();
+
     const getStatusConfig = () => {
         switch (status) {
             case "approved":
@@ -47,87 +46,48 @@ const TodoItem: React.FC<TodoItemProps> = ({
     const statusConfig = getStatusConfig();
 
     return (
-        <Paper
-            elevation={0}
+        <Box
+            onClick={() => nav(`/organization/${orgId}/requirement/${reqId}`)}
             sx={{
-                p: { xs: 2, sm: 3 },
-                mb: 2,
-                borderRadius: 3,
-                border: "1px solid #E2E8F0",
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                alignItems: { xs: "flex-start", sm: "center" },
-                gap: 2,
-                transition: "0.2s",
-                "&:hover": {
-                    borderColor: "#CBD5E1",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
-                }
+                display: 'flex',
+                alignItems: 'flex-start',
+                py: 2,
+                borderBottom: '1px solid #f1f3f4',
+                '&:hover': { bgcolor: '#f8f9fa' },
+                cursor: 'pointer',
+                px: 1,
+                borderRadius: 1
             }}
         >
-            <Avatar sx={{ bgcolor: "#0F172A", width: 44, height: 44 }}>
-                <AssignmentIcon />
+            <Avatar sx={{ bgcolor: '#f1f3f4', width: 40, height: 40, mr: 2 }}>
+                <AssignmentIcon sx={{ color: '#5f6368', fontSize: 24 }} />
             </Avatar>
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ mb: 0.5 }}>
+            <Box sx={{ flex: 1, minWidth: 0, pt: 0.5 }}>
+                <Typography sx={{ color: '#3c4043', fontWeight: 500, fontSize: '0.875rem', mb: 0.5, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                     {title}
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1.5}>
-                    <Box display="flex" alignItems="center" gap={0.5}>
-                        <BusinessIcon sx={{ fontSize: 14, color: "#64748B" }} />
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            {organizationName}
-                        </Typography>
-                    </Box>
-                    {dueDate && (
-                        <Box display="flex" alignItems="center" gap={0.5}>
-                            <AccessTimeIcon sx={{ fontSize: 14, color: "#EF4444" }} />
-                            <Typography variant="caption" color="#EF4444" fontWeight={700}>
-                                {dueDate}
-                            </Typography>
-                        </Box>
-                    )}
-                </Box>
+                <Typography sx={{ color: '#5f6368', fontSize: '0.75rem' }}>
+                    {organizationName} {dueDate ? `• Due ${dueDate}` : ''}
+                </Typography>
             </Box>
 
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    width: { xs: "100%", sm: "auto" },
-                    justifyContent: "space-between",
-                    gap: 3
-                }}
-            >
-                <Chip
-                    label={statusConfig.label}
-                    size="small"
-                    sx={{
-                        fontWeight: 800,
-                        fontSize: 10,
-                        bgcolor: statusConfig.bgcolor,
-                        color: `${statusConfig.color}.main`,
-                        border: `1px solid transparent`,
-                    }}
-                />
-
-                <Button
-                    variant="contained"
-                    onClick={() => onAction(id)}
-                    sx={{
-                        textTransform: "none",
-                        borderRadius: 2,
-                        bgcolor: "#0F172A",
-                        fontWeight: 700,
-                        px: 3,
-                        "&:hover": { bgcolor: "#1E293B" }
-                    }}
-                >
-                    {isOfficer ? "Review" : status === "approved" ? "View" : "Open"}
-                </Button>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', pt: 0.5, pr: 1 }}>
+                {status !== 'not_started' && (
+                    <Chip
+                        label={statusConfig.label}
+                        size="small"
+                        sx={{
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            bgcolor: statusConfig.bgcolor,
+                            color: `${statusConfig.color}.main`,
+                            border: `1px solid transparent`,
+                        }}
+                    />
+                )}
             </Box>
-        </Paper>
+        </Box>
     );
 };
 

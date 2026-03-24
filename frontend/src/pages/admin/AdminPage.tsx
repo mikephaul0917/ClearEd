@@ -54,8 +54,8 @@ const glassCard = {
   backgroundColor: 'rgba(255,255,255,0.65)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(0,0,0,0.06)',
-  boxShadow: 'none',
+  border: '1px solid #D1D5DB',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
 };
 
 export default function AdminPage() {
@@ -108,7 +108,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     try {
-      const savedUsername = localStorage.getItem("username") || "";
+      const storedUserStr = localStorage.getItem("user");
+      const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+      const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
       const base = savedUsername || (email || "").split("@")[0];
       const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
       const first = parts[0] || "";
@@ -652,7 +654,7 @@ export default function AdminPage() {
                   };
                   const currentData = volume[range] || [];
                   const maxVol = Math.max(...currentData, 1); // Avoid division by zero
-                  
+
                   return currentData.map((v, idx) => (
                     <Tooltip key={idx} title={`${v} submissions`} arrow placement="top">
                       <Box sx={{
@@ -673,10 +675,10 @@ export default function AdminPage() {
                           transition: 'height 0.3s',
                           '&:hover': { opacity: 1 }
                         }} />
-                        <Typography sx={{ 
-                          fontFamily: fontStack, 
-                          fontSize: 10, 
-                          fontWeight: 600, 
+                        <Typography sx={{
+                          fontFamily: fontStack,
+                          fontSize: 10,
+                          fontWeight: 600,
                           color: COLORS.textSecondary,
                           mt: 1,
                           height: 14,
@@ -708,10 +710,12 @@ export default function AdminPage() {
         ) : (
           <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', py: isSmallMobile ? 2 : 4, fontFamily: fontStack }}>
             <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
-              <Typography variant={isSmallMobile ? "h5" : "h3"} sx={{ fontWeight: 800, color: '#000000', fontSize: isSmallMobile ? '1.25rem' : '1.875rem' }}>
-                Settings
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#6B7280', fontSize: isSmallMobile ? '0.875rem' : '1rem' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
+                  Settings
+                </Typography>
+              </Box>
+              <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
                 Manage your administrative account settings
               </Typography>
               <style>{`
@@ -743,7 +747,7 @@ export default function AdminPage() {
                     {/* Honey-pot fields to catch aggressive autofill */}
                     <input type="text" name="email" style={{ display: 'none' }} tabIndex={-1} />
                     <input type="password" name="password" style={{ display: 'none' }} tabIndex={-1} />
-                    
+
                     <Box>
                       <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
                       <TextField

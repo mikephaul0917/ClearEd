@@ -15,20 +15,31 @@ interface OrganizationBoardProps {
     organizations: OrganizationCardProps[];
     loading?: boolean;
     onCardClick?: (id: string) => void;
+    title?: string;
+    description?: string;
+    emptyTitle?: string;
+    emptyMessage?: string;
+    headerAction?: React.ReactNode;
+    icon?: React.ReactNode;
+    iconBgColor?: string;
+    iconColor?: string;
 }
 
 const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
     organizations,
     loading = false,
-    onCardClick
+    onCardClick,
+    title = "Active Organizations",
+    description,
+    emptyTitle = "No organizations yet",
+    emptyMessage = "Join an organization using a code provided by your institution.",
+    headerAction,
+    icon,
+    iconBgColor,
+    iconColor
 }) => {
-    const [filterMode, setFilterMode] = useState<'active' | 'archived'>('active');
-
-    const activeOrgs = organizations.filter(org => org.status === "active");
-    const archivedOrgs = organizations.filter(org => org.status === "archived");
-
-    // Determine which organizations to show based on the toggle
-    const displayedOrgs = filterMode === 'active' ? activeOrgs : archivedOrgs;
+    // Rely on exactly what is passed via the organizations prop
+    const displayedOrgs = organizations;
 
     if (loading) {
         return (
@@ -51,13 +62,13 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                 }}
             >
                 <Typography variant="h5" fontWeight={600} gutterBottom>
-                    No organizations yet
+                    {emptyTitle}
                 </Typography>
                 <Typography color="text.secondary" sx={{ mb: 3 }}>
-                    Join an organization using a code provided by your institution.
+                    {emptyMessage}
                 </Typography>
                 <Box>
-                    {/* Join code button would go here */}
+                    {/* Placeholder action area */}
                 </Box>
             </Box>
         );
@@ -66,46 +77,46 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
     return (
         <Box>
             <Box sx={{ mb: 6 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} flexWrap="wrap" gap={2}>
-                    <Typography variant="h5" fontWeight={700} color="#0F172A">
-                        {filterMode === 'active' ? 'Active Organizations' : 'Archived Organizations'}
-                    </Typography>
+                <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={4} flexWrap="wrap" gap={2}>
+                    <Box>
+                        {title && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: description ? 1 : 0 }}>
+                                {icon && (
+                                    <Box sx={{
+                                        bgcolor: iconBgColor || '#FEF3C7',
+                                        color: iconColor || '#F59E0B',
+                                        p: 1,
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        {icon}
+                                    </Box>
+                                )}
+                                <Typography variant="h4" sx={{ 
+                                    fontWeight: 800, 
+                                    color: '#000', 
+                                    fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", 
+                                    letterSpacing: '-1.5px' 
+                                }}>
+                                    {title}
+                                </Typography>
+                            </Box>
+                        )}
+                        {description && (
+                            <Typography variant="body1" sx={{ 
+                                color: '#6B7280', 
+                                fontSize: '1.05rem', 
+                                fontFamily: "'Inter', sans-serif" 
+                            }}>
+                                {description}
+                            </Typography>
+                        )}
+                    </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            {filterMode === 'active' ? `${activeOrgs.length} Ongoing` : `${archivedOrgs.length} Past terms`}
-                        </Typography>
-
-                        <Box sx={{
-                            display: 'flex',
-                            bgcolor: '#f8fafc',
-                            borderRadius: '999px',
-                            border: '1px solid #e2e8f0',
-                            p: 0.5
-                        }}>
-                            <Button
-                                onClick={() => setFilterMode('active')}
-                                sx={{
-                                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
-                                    color: filterMode === 'active' ? '#fff' : '#64748b',
-                                    bgcolor: filterMode === 'active' ? '#0f172a' : 'transparent',
-                                    '&:hover': { bgcolor: filterMode === 'active' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
-                                }}
-                            >
-                                Active
-                            </Button>
-                            <Button
-                                onClick={() => setFilterMode('archived')}
-                                sx={{
-                                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
-                                    color: filterMode === 'archived' ? '#fff' : '#64748b',
-                                    bgcolor: filterMode === 'archived' ? '#0f172a' : 'transparent',
-                                    '&:hover': { bgcolor: filterMode === 'archived' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
-                                }}
-                            >
-                                Archived
-                            </Button>
-                        </Box>
+                        {headerAction}
                     </Box>
                 </Box>
 
@@ -128,7 +139,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                         }}
                     >
                         <Typography variant="h6" fontWeight={600} color="#64748b">
-                            No {filterMode} organizations
+                            {emptyTitle}
                         </Typography>
                     </Box>
                 )}

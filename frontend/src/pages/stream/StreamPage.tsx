@@ -187,7 +187,7 @@ const StreamPage: React.FC = () => {
         try {
             await organizationService.archiveOrganization(orgId);
             alert("Organization archived successfully.");
-            fetchData();
+            navigate("/archived-organizations");
         } catch (error) {
             console.error("Failed to archive organization:", error);
             alert("Failed to archive organization.");
@@ -200,7 +200,7 @@ const StreamPage: React.FC = () => {
         try {
             await api.put(`/organizations/${orgId}/restore`);
             alert("Organization unarchived successfully.");
-            fetchData();
+            navigate("/home");
         } catch (error) {
             console.error("Failed to unarchive organization:", error);
             alert("Failed to unarchive organization.");

@@ -50,8 +50,8 @@ const glassCard = {
   backgroundColor: 'rgba(255,255,255,0.65)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(0,0,0,0.06)',
-  boxShadow: 'none',
+  border: '1px solid #D1D5DB',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
 };
 
 export default function StudentPage() {
@@ -100,7 +100,9 @@ export default function StudentPage() {
 
   useEffect(() => {
     try {
-      const savedUsername = localStorage.getItem("username") || "";
+      const storedUserStr = localStorage.getItem("user");
+      const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+      const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
       const base = savedUsername || (email || "").split("@")[0];
       const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
       const first = parts[0] || "";
@@ -525,11 +527,13 @@ export default function StudentPage() {
         </Box>
       ) : active === "settings" ? (
         <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-          <Box sx={{ maxWidth: '800px', mx: 'auto', mb: isSmallMobile ? 4 : 6 }}>
-            <Typography variant={isSmallMobile ? "h4" : "h3"} sx={{ fontWeight: 800, color: COLORS.black, letterSpacing: '-0.03em' }}>
-              Account Settings
-            </Typography>
-            <Typography variant="body1" sx={{ color: COLORS.textSecondary, fontSize: isSmallMobile ? 14 : 16, mt: 0.5 }}>
+          <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
+                Account Settings
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
               Manage your profile information and security preferences
             </Typography>
           </Box>

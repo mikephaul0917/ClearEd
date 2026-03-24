@@ -132,10 +132,11 @@ const RegisterPage = () => {
     return (
         <div style={{
             display: "flex",
-            minHeight: "100vh",
+            height: "calc(100vh - 56px)",
+            overflow: "hidden",
+            boxSizing: "border-box",
             backgroundColor: C.white,
             fontFamily: C.font,
-            paddingTop: "60px",
             flexDirection: "row" // Default for desktop
         }} className="register-container">
             <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -353,7 +354,7 @@ const RegisterPage = () => {
             <style>{`
         ${spinnerStyles}
         @media (max-width: 900px) {
-            .register-container { flex-direction: column !important; height: auto !important; }
+            .register-container { flex-direction: column !important; height: auto !important; overflow: auto !important; min-height: 100vh !important; }
             .register-quote-side { 
                 flex: none !important;
                 min-height: 30vh !important;

@@ -332,13 +332,45 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </Typography>
             </Box>
 
-            <Box flex={1}>
+            <Box flex={1} sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 <Divider sx={{ my: 2 }} />
                 <Typography fontSize={12} color="#94A3B8" mb={1}>
                     Navigation
                 </Typography>
 
-                <Box position="relative">
+                <Box position="relative" sx={{
+                    flex: 1,
+                    overflowY: "auto",
+                    pr: 1,
+                    mr: -1,
+                    "&::-webkit-scrollbar": {
+                        width: "10px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                        backgroundColor: "#F1F5F9",
+                        borderRadius: "8px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#9CA3AF",
+                        borderRadius: "8px",
+                        border: "2px solid #F1F5F9",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                        backgroundColor: "#6B7280",
+                    },
+                    "&::-webkit-scrollbar-button:single-button": {
+                        display: "block",
+                        height: "14px",
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
+                    },
+                    "&::-webkit-scrollbar-button:single-button:vertical:decrement": {
+                        backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' fill='%239CA3AF'><path d='M4 0l4 6H0z'/></svg>")`,
+                    },
+                    "&::-webkit-scrollbar-button:single-button:vertical:increment": {
+                        backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' fill='%239CA3AF'><path d='M0 0h8l-4 6z'/></svg>")`,
+                    },
+                }}>
 
                     <Box display="flex" flexDirection="column" gap={0.5}>
                         {/* Split navItems into Home and others to insert the collapsible section */}

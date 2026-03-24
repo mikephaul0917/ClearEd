@@ -17,6 +17,7 @@ import OfficerPage from "./pages/officer/OfficerPage";
 import DeanPage from "./pages/dean/DeanPage";
 import SuperAdminPage from "./pages/superadmin/SuperAdminPage";
 import HomePage from "./pages/public/HomePage";
+import ArchivedOrganizationsPage from "./pages/public/ArchivedOrganizationsPage";
 import StreamPage from "./pages/stream/StreamPage";
 import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
 import TodoPage from "./pages/todo/TodoPage";
@@ -42,6 +43,7 @@ export default function App() {
     location.pathname.startsWith("/super-admin") ||
     location.pathname.startsWith("/organization") ||
     location.pathname === "/home" ||
+    location.pathname === "/archived-organizations" ||
     location.pathname === "/role-selection" ||
     location.pathname === "/super-admin/login");
 
@@ -111,6 +113,7 @@ export default function App() {
           <Route path="/super-admin/system-analytics" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/super-admin/announcements" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/archived-organizations" element={<ProtectedRoute><ArchivedOrganizationsPage /></ProtectedRoute>} />
           <Route path="/organization/:orgId" element={<ProtectedRoute><StreamPage /></ProtectedRoute>} />
           <Route path="/organization/:orgId/requirement/:reqId" element={<ProtectedRoute><RequirementDetailsPage /></ProtectedRoute>} />
         </Routes>

@@ -128,7 +128,9 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     try {
-      const savedUsername = localStorage.getItem("username") || "";
+      const storedUserStr = localStorage.getItem("user");
+      const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+      const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
       const base = savedUsername || (email || "").split("@")[0];
       const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
       const first = parts[0] || "";
@@ -276,7 +278,7 @@ export default function SuperAdminPage() {
             </Box>
 
             <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: isSmallMobile ? 2 : 3 }}>
-              <Card sx={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+              <Card sx={{ borderRadius: '12px', border: '1px solid #D1D5DB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
                   <Skeleton variant="rectangular" height={40} width="50%" sx={{ mb: 3, borderRadius: 2 }} />
                   <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} />
@@ -287,7 +289,7 @@ export default function SuperAdminPage() {
                 </CardContent>
               </Card>
 
-              <Card sx={{ borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+              <Card sx={{ borderRadius: '12px', border: '1px solid #D1D5DB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
                   <Skeleton variant="rectangular" height={40} width="40%" sx={{ mb: 3, borderRadius: 2 }} />
                   {[1, 2, 3].map((i) => (
@@ -318,25 +320,12 @@ export default function SuperAdminPage() {
             px: isSmallMobile ? 2 : 4,
             mb: isSmallMobile ? 4 : 6
           }}>
-            <Typography
-              variant={isSmallMobile ? "h5" : "h3"}
-              sx={{
-                fontWeight: 800,
-                color: '#000000',
-                fontSize: isSmallMobile ? '1.25rem' : '1.875rem'
-              }}
-            >
-              Settings
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: '#6B7280',
-                fontSize: isSmallMobile ? '0.875rem' : '1rem',
-                fontWeight: 400,
-                mb: 3
-              }}
-            >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
+                Settings
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem', mb: 3 }}>
               Manage your account settings and preferences
             </Typography>
           </Box>
@@ -354,9 +343,9 @@ export default function SuperAdminPage() {
             {/* Profile Card */}
             <Card sx={{
               backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #D1D5DB',
               borderRadius: '12px',
-              boxShadow: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               p: 0
             }}>
               <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
@@ -568,9 +557,9 @@ export default function SuperAdminPage() {
             {/* Security Card */}
             <Card sx={{
               backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #D1D5DB',
               borderRadius: '12px',
-              boxShadow: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               p: 0
             }}>
               <CardContent sx={{ p: 6 }}>
@@ -1028,7 +1017,7 @@ export default function SuperAdminPage() {
                 p: isSmallMobile ? 2.5 : 3,
                 borderRadius: '12px',
                 backgroundColor: '#FFFFFF',
-                border: '1px solid #E5E7EB',
+                border: '1px solid #D1D5DB',
                 cursor: 'pointer',
                 overflow: 'hidden',
                 transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',

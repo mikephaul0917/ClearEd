@@ -44,13 +44,17 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 maxWidth: 320,
                 borderRadius: "16px", // SuperAdmin cardRadius
                 overflow: "hidden",
-                border: "1px solid rgba(0,0,0,0.06)", // SuperAdmin default border
+                border: "1px solid rgba(0,0,0,0.12)", // Increased border visibility
                 cursor: "pointer",
                 transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)", // SuperAdmin transition
+                opacity: status === "archived" ? 0.65 : 1,
+                filter: status === "archived" ? "grayscale(40%)" : "none",
                 "&:hover": {
                     boxShadow: "0 12px 32px rgba(0,0,0,0.08)", // SuperAdmin hover shadow
                     transform: "translateY(-4px)", // SuperAdmin hover lift
-                    border: "1px solid rgba(0,0,0,0.10)" // SuperAdmin hover border
+                    border: "1px solid rgba(0,0,0,0.20)", // Increased hover border visibility
+                    opacity: status === "archived" ? 0.85 : 1,
+                    filter: status === "archived" ? "grayscale(20%)" : "none"
                 }
             }}
         >

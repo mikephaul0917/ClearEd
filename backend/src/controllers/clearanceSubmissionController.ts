@@ -166,6 +166,7 @@ export const getStudentTodoList = catchAsync(async (req: Request, res: Response)
                 title: reqObj.title,
                 description: reqObj.description,
                 isMandatory: reqObj.isMandatory,
+                organizationId: reqObj.organizationId?._id,
                 organization: reqObj.organizationId?.name,
                 office: reqObj.officeId?.name,
                 dueDate: reqObj.dueDate

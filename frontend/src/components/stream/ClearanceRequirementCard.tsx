@@ -111,6 +111,15 @@ const getAbsoluteUrl = (url: string) => {
     return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
 };
 
+export const getInitials = (name?: string, fallbackMail?: string): string => {
+    if (name) {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+    return fallbackMail?.charAt(0).toUpperCase() || "U";
+};
+
 const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     id,
     title,
@@ -278,7 +287,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                             {comments.map((comment: any) => (
                                 <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
                                     <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
-                                        {comment.userId?.fullName?.charAt(0) || "U"}
+                                        {getInitials(comment.userId?.fullName)}
                                     </Avatar>
                                     <Box>
                                         <Box display="flex" alignItems="center" gap={1}>
@@ -300,7 +309,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
                             <Avatar src={currentUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
-                                {currentUser?.firstName?.charAt(0) || currentUser?.fullName?.charAt(0) || "U"}
+                                {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
                             </Avatar>
                             
                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
@@ -444,7 +453,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                 src={author?.profilePicture} 
                                 sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
                             >
-                                {author?.fullName?.charAt(0) || "U"}
+                                {getInitials(author?.fullName)}
                             </Avatar>
                             <Box>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem", fontFamily: "'Google Sans', 'Inter', sans-serif" }}>

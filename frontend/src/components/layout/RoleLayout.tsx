@@ -34,14 +34,19 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
     const navItems = NAV_CONFIG[user.role] || [];
 
     // Extract initials from fullName or email
-    const fullName = user.username || (user.email ? user.email.split('@')[0] : "User");
-    const initials = fullName
-        .split(' ')
-        .map((n: string) => n && n[0])
-        .filter(Boolean)
-        .join('')
-        .toUpperCase()
-        .slice(0, 2) || "U";
+    const storedUser = localStorage.getItem('user');
+    const fullUser = storedUser ? JSON.parse(storedUser) : null;
+    const fullName = fullUser?.fullName || user.username || (user.email ? user.email.split('@')[0] : "User");
+    
+    let initials = "U";
+    if (fullName) {
+        const parts = fullName.trim().split(/\s+/);
+        if (parts.length === 1) {
+            initials = parts[0].charAt(0).toUpperCase();
+        } else {
+            initials = (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+    }
 
     return (
         <Box display="flex" minHeight="100vh" flexDirection={{ xs: "column", md: "row" }}>

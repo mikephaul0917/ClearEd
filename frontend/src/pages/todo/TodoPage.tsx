@@ -9,8 +9,6 @@ import Alert from "@mui/material/Alert";
 import TodoItem from "../../components/todo/TodoItem";
 import { useAuth } from "../../hooks/useAuth";
 import { clearanceService } from "../../services";
-import SubmissionModal from "../../components/stream/SubmissionModal";
-import ReviewSubmissionsModal from "../../components/stream/ReviewSubmissionsModal";
 import { EmptyState } from "../../components/layout/EmptyState";
 import Button from "@mui/material/Button";
 
@@ -51,11 +49,6 @@ const TodoPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [todoData, setTodoData] = useState<any>({ assigned: [], missing: [], done: [] });
-
-    // Modal state
-    const [selectedItem, setSelectedItem] = useState<any>(null);
-    const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
-    const [isReviewOpen, setIsReviewOpen] = useState(false);
 
     // Filter state
     const [selectedOrg, setSelectedOrg] = useState<string>("all");
@@ -106,15 +99,6 @@ const TodoPage: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
-
-    const handleAction = (item: any) => {
-        setSelectedItem(item);
-        if (isOfficer) {
-            setIsReviewOpen(true);
-        } else {
-            setIsSubmissionOpen(true);
-        }
-    };
 
     const renderEmptyState = (type: 'assigned' | 'missing' | 'done') => {
         if (isOfficer) {
@@ -294,17 +278,20 @@ const TodoPage: React.FC = () => {
                             const id = isOfficer ? item._id : (item.requirement?.id || item._id);
                             const dueDateStr = isOfficer ? item.dueDate : item.requirement?.dueDate;
                             const formattedDueDate = dueDateStr ? new Date(dueDateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : undefined;
+                            
+                            const reqId = isOfficer ? (item.clearanceRequirementId?._id || item.clearanceRequirementId) : (item.requirement?._id || item.requirement?.id || item._id);
+                            const orgId = isOfficer ? (item.organizationId?._id || item.organizationId) : (item.requirement?.organizationId || item.organizationId?._id || item.organizationId);
 
                             return (
                                 <TodoItem
                                     key={id}
-                                    id={id}
+                                    reqId={reqId}
+                                    orgId={orgId}
                                     title={title}
                                     organizationName={orgName}
                                     dueDate={formattedDueDate}
                                     status={item.status || "not_started"}
                                     isOfficer={isOfficer}
-                                    onAction={() => handleAction(item)}
                                 />
                             );
                         })}
@@ -449,29 +436,6 @@ const TodoPage: React.FC = () => {
                 </>
             )}
 
-            {/* Modals for actions */}
-            {!isOfficer && selectedItem && (
-                <SubmissionModal
-                    open={isSubmissionOpen}
-                    onClose={() => setIsSubmissionOpen(false)}
-                    requirementId={selectedItem._id}
-                    organizationId={selectedItem.organizationId?._id || selectedItem.organizationId}
-                    requirementTitle={selectedItem.title}
-                    status={selectedItem.status || "not_started"}
-                    existingFiles={selectedItem.files || []}
-                    onSubmitted={fetchData}
-                />
-            )}
-
-            {isOfficer && selectedItem && (
-                <ReviewSubmissionsModal
-                    open={isReviewOpen}
-                    onClose={() => setIsReviewOpen(false)}
-                    requirementId={selectedItem.clearanceRequirementId?._id || selectedItem.clearanceRequirementId}
-                    requirementTitle={selectedItem.requirementTitle}
-                    onReviewComplete={fetchData}
-                />
-            )}
         </Container>
     );
 };

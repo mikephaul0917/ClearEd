@@ -72,10 +72,21 @@ const getAbsoluteUrl = (url: string) => {
     return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
 };
 
+export const getInitials = (name?: string, fallbackMail?: string): string => {
+    if (name) {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+    return fallbackMail?.charAt(0).toUpperCase() || "U";
+};
+
 const RequirementDetailsPage: React.FC = () => {
     const { orgId, reqId } = useParams<{ orgId: string; reqId: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const fullUser = React.useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
+    const userInitial = getInitials(fullUser?.fullName || fullUser?.firstName, user?.email);
 
     const [loading, setLoading] = useState(true);
     const [tabValue, setTabValue] = useState(0);
@@ -606,7 +617,7 @@ const RequirementDetailsPage: React.FC = () => {
                                     {comments.map((comment: any) => (
                                         <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
                                             <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
-                                                {comment.userId?.fullName?.charAt(0) || "U"}
+                                                {getInitials(comment.userId?.fullName)}
                                             </Avatar>
                                             <Box>
                                                 <Box display="flex" alignItems="center" gap={1}>
@@ -627,8 +638,8 @@ const RequirementDetailsPage: React.FC = () => {
 
                                 <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                                        <Avatar src={(user as any)?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
-                                            {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || user?.username?.charAt(0) || "U"}
+                                        <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                                            {userInitial}
                                         </Avatar>
                                         
                                         <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
@@ -817,7 +828,7 @@ const RequirementDetailsPage: React.FC = () => {
                                             {privateComments.map((comment: any) => (
                                                 <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
                                                     <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
-                                                        {comment.userId?.firstName?.charAt(0) || comment.userId?.fullName?.charAt(0) || "U"}
+                                                        {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
                                                     </Avatar>
                                                     <Box>
                                                         <Box display="flex" alignItems="center" gap={1}>
@@ -838,8 +849,8 @@ const RequirementDetailsPage: React.FC = () => {
                                             {/* Input Area */}
                                             <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                    <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
-                                                        {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || "U"}
+                                                    <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                        {userInitial}
                                                     </Avatar>
                                                     <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
                                                         <Box 
@@ -1203,7 +1214,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                     {privateComments.map((comment: any) => (
                                                         <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
                                                             <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
-                                                                {comment.userId?.firstName?.charAt(0) || comment.userId?.fullName?.charAt(0) || "U"}
+                                                                {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
                                                             </Avatar>
                                                             <Box>
                                                                 <Box display="flex" alignItems="center" gap={1}>
@@ -1224,8 +1235,8 @@ const RequirementDetailsPage: React.FC = () => {
                                                     {/* Input Area */}
                                                     <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                            <Avatar src={(user as any)?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
-                                                                {(user as any)?.firstName?.charAt(0) || (user as any)?.fullName?.charAt(0) || "U"}
+                                                            <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                                {userInitial}
                                                             </Avatar>
                                                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
                                                                 <Box 

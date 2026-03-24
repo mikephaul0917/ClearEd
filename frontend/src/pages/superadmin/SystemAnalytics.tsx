@@ -127,8 +127,8 @@ const glassCard = {
   backgroundColor: 'rgba(255,255,255,0.65)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(0,0,0,0.06)',
-  boxShadow: 'none',
+  border: '1px solid #D1D5DB',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
 };
 
 export default function SystemAnalytics() {
