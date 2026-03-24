@@ -616,7 +616,7 @@ export const getOrganizationMembers = catchAsync(async (req: Request, res: Respo
         organizationId,
         status: 'active'
     })
-        .populate('userId', 'fullName email studentId role')
+        .populate('userId', 'fullName email studentId role enabled')
         .sort({ joinedAt: 1 });
 
     res.json({

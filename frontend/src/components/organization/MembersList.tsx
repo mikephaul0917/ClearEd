@@ -65,8 +65,9 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
         );
     }
 
-    const officers = members.filter(m => m.role === 'officer');
-    const students = members.filter(m => m.role === 'member');
+    const activeMembers = members.filter(m => m.userId.enabled !== false);
+    const officers = activeMembers.filter(m => m.role === 'officer' && m.userId.role !== 'admin' && m.userId.role !== 'super_admin');
+    const students = activeMembers.filter(m => m.role === 'member');
 
     const canManage = isOfficer || isAdmin;
 

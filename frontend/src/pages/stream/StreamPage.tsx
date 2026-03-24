@@ -111,7 +111,8 @@ const StreamPage: React.FC = () => {
             try {
                 const membersData = await organizationService.getMembers(orgId);
                 const memberList = membersData.data || membersData.members || [];
-                const studentsOnly = memberList.filter((m: any) => m.role === "member");
+                const activeMembers = memberList.filter((m: any) => m.userId?.enabled !== false);
+                const studentsOnly = activeMembers.filter((m: any) => m.role === "member");
                 setStudents(studentsOnly);
             } catch (err) {
                 console.error("Failed to fetch members for AssignTo:", err);
@@ -410,7 +411,7 @@ const StreamPage: React.FC = () => {
                         }}
                     >
                         <Tab label="Stream" />
-                        <Tab label="Classwork" />
+                        <Tab label="Requirements" />
                         <Tab label="People" />
                         {isOfficer && <Tab label="Marks" />}
                     </Tabs>

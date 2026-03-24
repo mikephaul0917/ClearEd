@@ -142,6 +142,7 @@ export class InstitutionRequestController {
       // Log the submission
       await AuditLog.create({
         action: 'INSTITUTION_REQUEST_SUBMITTED',
+        category: 'system',
         resource: 'Institution Request',
         resourceType: 'InstitutionRequest',
         resourceId: institutionRequest._id,
@@ -230,6 +231,7 @@ export class InstitutionRequestController {
       // Log the verification
       await AuditLog.create({
         action: 'INSTITUTION_REQUEST_VERIFIED',
+        category: 'system',
         resourceType: 'InstitutionRequest',
         resourceId: institutionRequest._id,
         details: {
@@ -392,6 +394,7 @@ export class InstitutionRequestController {
       // Log the approval
       await AuditLog.create({
         action: 'INSTITUTION_REQUEST_APPROVED',
+        category: 'system',
         resourceType: 'InstitutionRequest',
         resourceId: request._id,
         details: {
@@ -462,6 +465,7 @@ export class InstitutionRequestController {
       // Log the rejection
       await AuditLog.create({
         action: 'INSTITUTION_REQUEST_REJECTED',
+        category: 'system',
         resourceType: 'InstitutionRequest',
         resourceId: request._id,
         details: {
@@ -523,6 +527,7 @@ export class InstitutionRequestController {
       // Log the clarification request
       await AuditLog.create({
         action: 'INSTITUTION_REQUEST_CLARIFICATION',
+        category: 'system',
         resourceType: 'InstitutionRequest',
         resourceId: request._id,
         details: {

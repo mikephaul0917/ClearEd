@@ -1,4 +1,6 @@
-// Mock email service for development - replace with actual nodemailer implementation
+import nodemailer from 'nodemailer';
+
+// Email options interface
 interface EmailOptions {
   to: string;
   subject: string;
@@ -8,19 +10,21 @@ interface EmailOptions {
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   try {
-    // For development, just log email instead of sending it
-    console.log(`📧 EMAIL SENT TO: ${options.to}`);
-    console.log(`📋 SUBJECT: ${options.subject}`);
-    console.log(`📄 CONTENT: ${options.html.substring(0, 100)}...`);
+    // We keep a small log to know it's attempting to send
+    console.log(`📧 SENDING EMAIL TO: ${options.to} | SUBJECT: ${options.subject}`);
     
-    // In production, replace this with actual nodemailer implementation:
-    /*
-    import nodemailer from 'nodemailer';
-    
-    const transporter = nodemailer.createTransporter({
+    // Use nodemailer in production or configured local environments
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.warn('⚠️ SMTP_USER or SMTP_PASS is missing in .env file. Falling back to mock email dump:');
+        console.log(`📋 SUBJECT: ${options.subject}`);
+        console.log(`📄 CONTENT: ${options.html.substring(0, 100)}...`);
+        return;
+    }
+
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      secure: process.env.SMTP_PORT === '465', // true for 465, false for 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -28,7 +32,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     });
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@eclearance.com',
+      from: process.env.SMTP_FROM || `"E-Clearance System" <${process.env.SMTP_USER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -36,7 +40,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     };
 
     await transporter.sendMail(mailOptions);
-    */
+    console.log(`✅ Email successfully sent to ${options.to}`);
     
   } catch (error) {
     console.error('Email send error:', error);
