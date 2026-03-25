@@ -9,7 +9,6 @@ import Avatar from "@mui/material/Avatar";
  * OrganizationCard Component
  * Displays essential organization info in a card format (Google Classroom style).
  */
-
 export interface OrganizationCardProps {
     id: string;
     name: string;
