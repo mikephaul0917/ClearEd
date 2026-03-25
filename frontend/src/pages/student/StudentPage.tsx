@@ -259,11 +259,8 @@ export default function StudentPage() {
   const [loadingClearances, setLoadingClearances] = useState(true);
   const [activeTerm, setActiveTerm] = useState<{ name: string; academicYear: string } | null>(null);
   const [timeline, setTimeline] = useState<any[]>([]);
-  const [orgFilter, setOrgFilter] = useState<'active' | 'trash'>('active');
 
-  const filteredClearances = useMemo(() => {
-    return myClearances.filter((c) => orgFilter === 'active' ? c.orgStatus === 'active' : c.orgStatus === 'archived');
-  }, [myClearances, orgFilter]);
+  const filteredClearances = myClearances;
 
   const approvedCount = useMemo(() => filteredClearances.filter(c => c.status === "completed").length, [filteredClearances]);
   const pendingCount = useMemo(() => filteredClearances.filter(c => c.status === "pending" || c.status === "in_progress").length, [filteredClearances]);
@@ -383,90 +380,193 @@ export default function StudentPage() {
               </Box>
             </Box>
 
-            {/* ── Organizations Bento Grid ────────────────────────────────── */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 2 }}>
               <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.textSecondary }}>
                 Institutional Organizations
               </Typography>
-
-              <Box sx={{
-                display: 'flex',
-                bgcolor: '#f8fafc',
-                borderRadius: '999px',
-                border: '1px solid #e2e8f0',
-                p: 0.5
-              }}>
-                <Button
-                  onClick={() => setOrgFilter('active')}
-                  sx={{
-                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
-                    color: orgFilter === 'active' ? '#fff' : '#64748b',
-                    bgcolor: orgFilter === 'active' ? '#0f172a' : 'transparent',
-                    '&:hover': { bgcolor: orgFilter === 'active' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
-                  }}
-                >
-                  Active
-                </Button>
-                <Button
-                  onClick={() => setOrgFilter('trash')}
-                  sx={{
-                    px: 3, py: 0.5, borderRadius: '999px', textTransform: 'none', fontWeight: 700, fontSize: 14,
-                    color: orgFilter === 'trash' ? '#fff' : '#64748b',
-                    bgcolor: orgFilter === 'trash' ? '#0f172a' : 'transparent',
-                    '&:hover': { bgcolor: orgFilter === 'trash' ? '#0f172a' : 'rgba(0,0,0,0.04)' }
-                  }}
-                >
-                  Trash
-                </Button>
-              </Box>
             </Box>
 
             <Box sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-              gap: 2,
+              gap: 5,
               mb: 4
             }}>
               {loadingClearances ? (
-                [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: COLORS.cardRadius }} />)
+                [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={220} sx={{ borderRadius: '32px' }} />)
               ) : filteredClearances.map((org) => (
                 <Box
                   key={org._id}
+                  onClick={() => nav(`/student/progress/${org._id}`)}
                   sx={{
-                    ...glassCard, p: 3, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    position: 'relative', overflow: 'hidden', cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 12px 24px -10px rgba(0,0,0,0.1)',
-                      borderColor: 'rgba(0,0,0,0.12)'
+                    width: "100%",
+                    maxWidth: 320,
+                    aspectRatio: "1/1",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    opacity: org.orgStatus === 'archived' ? 0.7 : 1,
+                    "&:hover": {
+                      transform: "translateY(-6px)",
+                      "& .card-description": {
+                        maxHeight: "100px",
+                        opacity: 1,
+                        mt: 1,
+                      }
                     }
                   }}
-                  onClick={() => nav(`/student/progress/${org._id}`)}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box sx={{
-                      width: 40, height: 40, borderRadius: '10px',
-                      bgcolor: org.status === 'completed' ? COLORS.teal + '20' : org.status === 'not_started' ? COLORS.orange + '15' : COLORS.lavender + '20',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                      <BusinessIcon sx={{ color: org.status === 'completed' ? COLORS.teal : org.status === 'not_started' ? COLORS.orange : COLORS.lavender }} />
-                    </Box>
-                    <Box sx={{
-                      px: 1.5, py: 0.5, borderRadius: COLORS.pillRadius,
-                      bgcolor: org.status === 'completed' ? COLORS.teal + '15' : org.status === 'not_started' ? '#f1f5f9' : COLORS.lavender + '15',
-                      color: org.status === 'completed' ? '#059669' : org.status === 'not_started' ? '#64748b' : '#7c3aed',
-                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em'
-                    }}>
-                      {org.status === 'completed' ? 'Cleared' : org.status === 'not_started' ? 'Pending' : 'In Review'}
+                  {/* Header Background Container (Rounded and Clipped) */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: "32px",
+                      overflow: "hidden",
+                      bgcolor: "#FFFFFF",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+                      border: "1px solid #F1F5F9",
+                    }}
+                  >
+                    {/* Header Section */}
+                    <Box
+                      className="card-header"
+                      sx={{
+                        height: "100%",
+                        bgcolor: org.themeColor || COLORS.black,
+                        backgroundImage: org.headerImage ? `url(${org.headerImage})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'center',
+                        pt: 5,
+                      }}
+                    >
+                      {/* Centered Icon Container */}
+                      <Box
+                        className="icon-box"
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          bgcolor: "#FFFFFF",
+                          borderRadius: "16px",
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                          zIndex: 2
+                        }}
+                      >
+                        <BusinessIcon sx={{ color: org.themeColor || COLORS.black, fontSize: 28 }} />
+                      </Box>
                     </Box>
                   </Box>
 
-                  <Typography sx={{ fontWeight: 800, fontSize: 16, mb: 0.5, color: COLORS.black, lineHeight: 1.2 }}>{org.name}</Typography>
-                  <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500, mb: 2 }}>{org.signatoryName || 'Signatory Representative'}</Typography>
+                  {/* Sliding Content Overlay (Floating Panel - Wider than header) */}
+                  <Box
+                    className="content-overlay"
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: -6,
+                      right: -6,
+                      bgcolor: "#FFFFFF",
+                      p: "20px",
+                      borderRadius: "24px",
+                      boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
+                      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                      display: "flex",
+                      flexDirection: "column",
+                      zIndex: 3
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "1.25rem",
+                        fontWeight: 800,
+                        color: "#111",
+                        fontFamily: "'Inter', sans-serif",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden"
+                      }}
+                    >
+                      {org.name}
+                    </Typography>
 
-                  <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.black, opacity: 0.4 }}>{org.code}</Typography>
-                    {org.status === 'completed' && <CheckCircleIcon sx={{ fontSize: 16, color: COLORS.teal }} />}
+                    <Box 
+                      className="card-description"
+                      sx={{
+                        maxHeight: 0,
+                        opacity: 0,
+                        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                        overflow: "hidden"
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.875rem",
+                          color: "#6B7280",
+                          lineHeight: 1.5,
+                          fontFamily: "'Inter', sans-serif",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          mt: 1
+                        }}
+                      >
+                        {org.signatoryName || 'Signatory Representative'}
+                      </Typography>
+                    </Box>
+
+                    {/* Footer Section - Pills (Always visible) */}
+                    <Box sx={{ pt: 1, display: 'flex', gap: 1.5, mt: 1 }}>
+                      <Box
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          bgcolor: "#F3F4F6",
+                          borderRadius: "20px",
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                          Learn more
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          flex: 1,
+                          bgcolor: org.status === 'completed' ? COLORS.teal + '15' : "#F3F4F6",
+                          borderRadius: "20px",
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography sx={{
+                          fontSize: "0.725rem",
+                          fontWeight: 800,
+                          color: org.status === 'completed' ? '#059669' : "#4B5563",
+                          fontFamily: "'Inter', sans-serif",
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.02em'
+                        }}>
+                          {org.status === 'completed' ? 'Cleared' : org.status === 'not_started' ? 'Pending' : 'Reviewing'}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
                 </Box>
               ))}

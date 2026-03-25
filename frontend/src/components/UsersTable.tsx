@@ -44,6 +44,7 @@ interface UserRow {
   role?: string;
   organizationId?: string;
   organizationName?: string;
+  organizationIds?: string[];
 }
 
 const maskEmail = (email: string) => {
@@ -81,6 +82,7 @@ export default function UsersTable({
   const [manageUser, setManageUser] = useState<UserRow | null>(null);
   const [role, setRole] = useState("student");
   const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [createPassword, setCreatePassword] = useState("");
   const [deanAssignments, setDeanAssignments] = useState<any[]>([]);
@@ -132,21 +134,31 @@ export default function UsersTable({
     if (manageUser) {
       const r = manageUser.role || (manageUser.isAdmin ? "admin" : "student");
       setRole(r);
-      setSelectedOrgId(manageUser.organizationId || "");
 
-      if (manageUser._id && (r === 'student' || r === 'officer')) {
-        adminService.getStudentProfile(manageUser._id).then(profile => {
-          if (profile) {
-            setIsStudentMode(true);
-            setStudentCourse(profile.course || "");
-            setStudentYear(profile.year || "First Year");
-          } else {
-            setIsStudentMode(r === 'student');
-            setStudentCourse("");
-            setStudentYear("First Year");
-          }
+      if (manageUser._id) {
+        // Fetch full user details to get all organization IDs
+        adminService.getUser(manageUser._id).then((details: any) => {
+          const ids = details.organizationIds || (details.organizationId ? [details.organizationId] : []);
+          setSelectedOrgIds(ids);
+          if (ids.length > 0) setSelectedOrgId(ids[0]);
         }).catch(console.error);
+
+        if (r === 'student' || r === 'officer') {
+          adminService.getStudentProfile(manageUser._id).then(profile => {
+            if (profile) {
+              setIsStudentMode(true);
+              setStudentCourse(profile.course || "");
+              setStudentYear(profile.year || "First Year");
+            } else {
+              setIsStudentMode(r === 'student');
+              setStudentCourse("");
+              setStudentYear("First Year");
+            }
+          }).catch(console.error);
+        }
       } else {
+        setSelectedOrgIds([]);
+        setSelectedOrgId("");
         setIsStudentMode(r === 'student');
         setStudentCourse("");
         setStudentYear("First Year");
@@ -592,14 +604,29 @@ export default function UsersTable({
 
             {(role === 'officer') && (
               <FormControl fullWidth>
-                <InputLabel>Assign to Organization</InputLabel>
+                <InputLabel>Assign to Organizations</InputLabel>
                 <Select
-                  value={selectedOrgId}
-                  label="Assign to Organization"
-                  onChange={(e) => setSelectedOrgId(e.target.value as string)}
+                  multiple
+                  value={selectedOrgIds}
+                  label="Assign to Organizations"
+                  onChange={(e) => {
+                    const value = e.target.value as string[];
+                    setSelectedOrgIds(value);
+                  }}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip 
+                          key={value} 
+                          label={organizations.find(o => o._id === value)?.name || value} 
+                          size="small"
+                          sx={{ borderRadius: '6px', bgcolor: `${COLORS.teal}15`, fontWeight: 600 }}
+                        />
+                      ))}
+                    </Box>
+                  )}
                   sx={{ borderRadius: '12px' }}
                 >
-                  <MenuItem value=""><em>None</em></MenuItem>
                   {organizations.map(org => (
                     <MenuItem key={org._id} value={org._id}>{org.name}</MenuItem>
                   ))}
@@ -769,7 +796,7 @@ export default function UsersTable({
             onClick={async () => {
               if (manageUser?._id) {
                 try {
-                  await adminService.updateUserRole(manageUser._id, role, selectedOrgId ? selectedOrgId : undefined);
+                  await adminService.updateUserRole(manageUser._id, role, selectedOrgIds);
                   await adminService.updateUserProfile(manageUser._id, { fullName: manageUser.fullName, username: manageUser.username });
                   Swal.fire({ icon: 'success', title: 'User Updated', timer: 1500, showConfirmButton: false });
                 } catch (error: any) {
@@ -789,7 +816,7 @@ export default function UsersTable({
                     password: createPassword,
                     isAdmin: role === "admin",
                     role,
-                    ...(selectedOrgId ? { organizationId: selectedOrgId } : {})
+                    ...(selectedOrgIds.length > 0 ? { organizationIds: selectedOrgIds } : {})
                   });
                   Swal.fire({ icon: 'success', title: 'User Created', timer: 1500, showConfirmButton: false });
                   setCreatePassword("");

@@ -7,6 +7,11 @@ export const adminService = {
         return response.data;
     },
 
+    getUser: async (userId: string) => {
+        const response = await api.get(`/admin/users/${userId}`);
+        return response.data;
+    },
+
     createUser: async (userData: any) => {
         const response = await api.post('/admin/users', userData);
         return response.data;
@@ -17,8 +22,14 @@ export const adminService = {
         return response.data;
     },
 
-    updateUserRole: async (userId: string, role: string, organizationId?: string) => {
-        const response = await api.put(`/admin/users/${userId}/role`, { role, organizationId });
+    updateUserRole: async (userId: string, role: string, organizationIds?: string | string[]) => {
+        const payload: any = { role };
+        if (Array.isArray(organizationIds)) {
+            payload.organizationIds = organizationIds;
+        } else if (organizationIds) {
+            payload.organizationId = organizationIds;
+        }
+        const response = await api.put(`/admin/users/${userId}/role`, payload);
         return response.data;
     },
 

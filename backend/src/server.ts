@@ -57,7 +57,8 @@ const app = express();
 
 // Configure middleware
 app.use(cors()); // Enable cross-origin requests
-app.use(express.json()); // Parse JSON request bodies
+app.use(express.json({ limit: '50mb' })); // Parse JSON request bodies with increased limit for images
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // Serve uploaded files
 
 // Register API routes

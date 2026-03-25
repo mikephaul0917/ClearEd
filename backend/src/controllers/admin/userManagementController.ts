@@ -44,7 +44,21 @@ export const getUser = async (req: Request, res: Response) => {
     const institutionId = resolveInstitutionId(req);
     const user = await User.findOne({ _id: id, institutionId }, { password: 0 });
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+
+    // Fetch active officer memberships
+    const memberships = await OrganizationMember.find({ 
+      userId: id, 
+      institutionId, 
+      role: 'officer', 
+      status: 'active' 
+    });
+    
+    const organizationIds = memberships.map(m => m.organizationId);
+
+    res.json({
+      ...user.toObject(),
+      organizationIds
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -55,7 +69,7 @@ export const createUser = async (req: Request, res: Response) => {
     console.log('[DEBUG] createUser request body:', req.body);
     console.log('[DEBUG] createUser req.user:', (req as any).user);
 
-    const { email, password, fullName, role, organizationId } = req.body;
+    const { email, password, fullName, role, organizationId, organizationIds } = req.body;
     const institutionId = resolveInstitutionId(req);
 
     if (!email || !password || !fullName || !role) {
@@ -72,18 +86,21 @@ export const createUser = async (req: Request, res: Response) => {
       fullName,
       role,
       institutionId,
-      organizationId,
+      organizationId: organizationId || (organizationIds && organizationIds.length > 0 ? organizationIds[0] : undefined),
       status: 'active',
       enabled: true
     });
 
-    // Handle OrganizationMember synchronization for officers
-    if (role === 'officer' && organizationId) {
-      await OrganizationMember.findOneAndUpdate(
-        { userId: user._id, organizationId, institutionId },
-        { role: 'officer', status: 'active', joinedAt: new Date() },
-        { upsert: true, new: true }
-      );
+    // Handle OrganizationMember synchronization for officers (Multi-org support)
+    const targetOrgIds = organizationIds || (organizationId ? [organizationId] : []);
+    if (role === 'officer' && targetOrgIds.length > 0) {
+      for (const orgId of targetOrgIds) {
+        await OrganizationMember.findOneAndUpdate(
+          { userId: user._id, organizationId: orgId, institutionId },
+          { role: 'officer', status: 'active', joinedAt: new Date() },
+          { upsert: true, new: true }
+        );
+      }
     }
 
     res.status(201).json({
@@ -150,7 +167,7 @@ export const updateStatus = async (req: Request, res: Response) => {
 export const updateRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { role, organizationId } = req.body;
+    const { role, organizationId, organizationIds } = req.body;
     const institutionId = resolveInstitutionId(req);
     const adminRole = (req as any).user?.role;
 
@@ -170,7 +187,16 @@ export const updateRole = async (req: Request, res: Response) => {
 
     const oldRole = user.role;
     user.role = role;
-    if (organizationId !== undefined) (user as any).organizationId = organizationId || null;
+    
+    const targetOrgIds = organizationIds || (organizationId ? [organizationId] : []);
+    
+    // Maintain single organizationId in User model for backward compatibility (using first in array)
+    if (organizationId !== undefined) {
+      (user as any).organizationId = organizationId || null;
+    } else if (organizationIds !== undefined) {
+      (user as any).organizationId = organizationIds.length > 0 ? organizationIds[0] : null;
+    }
+    
     await user.save();
 
     await logAudit({
@@ -182,26 +208,45 @@ export const updateRole = async (req: Request, res: Response) => {
       resourceId: user._id as any,
       details: {
         targetUserId: user._id,
-        oldRole, newRole: user.role
+        oldRole, newRole: user.role,
+        organizationIds: targetOrgIds
       },
       severity: 'high',
       req
     });
 
-    // Officer Role Synchronization Logic:
-    // 1. If becoming an officer, add/update OrganizationMember
-    if (role === 'officer' && organizationId) {
-      await OrganizationMember.findOneAndUpdate(
-        { userId: user._id, organizationId, institutionId },
-        { role: 'officer', status: 'active', joinedAt: new Date() },
-        { upsert: true, new: true }
-      );
+    // Officer Role Synchronization Logic (Multi-org support):
+    if (role === 'officer') {
+      // 1. Deactivate memberships NOT in the new list
+      if (targetOrgIds.length > 0) {
+        await OrganizationMember.updateMany(
+          { 
+            userId: user._id, 
+            institutionId, 
+            role: 'officer',
+            organizationId: { $nin: targetOrgIds } 
+          },
+          { status: 'removed', role: 'member', statusChangedAt: new Date() }
+        );
+
+        // 2. Add/Update memberships IN the new list
+        for (const orgId of targetOrgIds) {
+          await OrganizationMember.findOneAndUpdate(
+            { userId: user._id, organizationId: orgId, institutionId },
+            { role: 'officer', status: 'active', joinedAt: new Date(), statusChangedAt: new Date() },
+            { upsert: true, new: true }
+          );
+        }
+      } else {
+        // No organizations assigned, remove all officer status
+        await OrganizationMember.updateMany(
+          { userId: user._id, institutionId, role: 'officer' },
+          { status: 'removed', role: 'member', statusChangedAt: new Date() }
+        );
+      }
     }
-    // 2. If changing FROM officer to something else, remove/deactivate officer status
-    else if (oldRole === 'officer') {
-      // We deactivate their officer status in all organizations for this institution
-      // or just the one they were in. To be safe, we mark them as 'left' or 'removed'
-      // from their officer roles.
+    // 3. If changing FROM officer to something else, remove all officer status
+    else if (oldRole === 'officer' && role !== 'officer') {
       await OrganizationMember.updateMany(
         { userId: user._id, institutionId, role: 'officer' },
         { status: 'removed', role: 'member', statusChangedAt: new Date() }
