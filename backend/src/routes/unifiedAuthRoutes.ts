@@ -7,9 +7,11 @@ import {
   googleAuth,
   superAdminLogin,
   getMyProfile,
-  updateMyProfile,
-  updateMyPassword
+  updateMyProfile, 
+  updateMyPassword,
+  uploadAvatar
 } from "../controllers/unifiedAuthController";
+import { avatarUpload } from "../middleware/avatarUpload";
 import { authenticate, institutionAdminOnly } from "../middleware/enhancedAuthMiddleware";
 import { auth } from "../middleware/authMiddleware";
 
@@ -31,6 +33,7 @@ router.post("/super-admin/login", superAdminLogin);
 router.get("/profile", auth, getMyProfile);
 router.put("/profile", auth, updateMyProfile);
 router.put("/password", auth, updateMyPassword);
+router.post("/avatar", auth, avatarUpload.single('avatar'), uploadAvatar);
 
 // Protected routes (for admin user creation)
 router.post("/create-user", authenticate, institutionAdminOnly, createUserByAdmin);

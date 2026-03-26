@@ -54,6 +54,7 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           id: existingUser._id,
           email: existingUser.email,
           fullName: existingUser.fullName,
+          avatarUrl: existingUser.avatarUrl,
           role: existingUser.role,
           institutionId: null,
           isNewUser: false
@@ -128,6 +129,7 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           id: existingUser._id,
           email: existingUser.email,
           fullName: existingUser.fullName,
+          avatarUrl: existingUser.avatarUrl,
           role: existingUser.role,
           institutionId: existingUser.institutionId,
           isNewUser: false
@@ -324,6 +326,7 @@ export const googleAuth = async (req: Request, res: Response) => {
           id: user._id,
           email: user.email,
           fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
           role: user.role,
           institutionId: user.institutionId,
           lastLoginAt: user.lastLoginAt,
@@ -420,6 +423,7 @@ export const googleAuth = async (req: Request, res: Response) => {
             id: createdUser._id,
             email: createdUser.email,
             fullName: createdUser.fullName,
+            avatarUrl: createdUser.avatarUrl,
             role: createdUser.role,
             institutionId: createdUser.institutionId,
             isNewUser: true,
@@ -674,7 +678,8 @@ export const superAdminLogin = async (req: Request, res: Response) => {
         id: superAdmin._id,
         email: superAdmin.email,
         role: superAdmin.role,
-        fullName: superAdmin.fullName
+        fullName: superAdmin.fullName,
+        avatarUrl: superAdmin.avatarUrl 
       }
     });
 
@@ -701,6 +706,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       email: user.email,
       fullName: user.fullName,
       username: user.username,
+      avatarUrl: user.avatarUrl,
       role: user.role,
       signatureUrl: user.signatureUrl
     });
@@ -731,6 +737,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
       user: {
         fullName: user.fullName,
         username: user.username,
+        avatarUrl: user.avatarUrl,
         signatureUrl: user.signatureUrl
       }
     });
@@ -762,6 +769,33 @@ export const updateMyPassword = async (req: Request, res: Response) => {
     await user.save();
 
     res.json({ message: "Password updated successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Upload profile picture
+ */
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Store relative path or full URL. Usually relative + dynamic base is safer
+    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+    user.avatarUrl = avatarPath;
+    await user.save();
+
+    res.json({
+      message: "Profile picture updated",
+      avatarUrl: avatarPath
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

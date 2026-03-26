@@ -27,7 +27,7 @@ export const getComments = async (req: Request, res: Response) => {
     }
 
     const comments = await Comment.find(query)
-      .populate("userId", "firstName lastName fullName profilePicture")
+      .populate("userId", "firstName lastName fullName profilePicture avatarUrl")
       .sort({ createdAt: 1 });
 
     res.json(comments);
@@ -73,7 +73,7 @@ export const createComment = async (req: Request, res: Response) => {
     });
 
     // Populate user info before returning
-    await newComment.populate("userId", "firstName lastName fullName profilePicture");
+    await newComment.populate("userId", "firstName lastName fullName profilePicture avatarUrl");
 
     res.status(201).json({
       message: "Comment added successfully",

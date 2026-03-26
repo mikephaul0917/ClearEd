@@ -42,6 +42,7 @@ import InputBase from "@mui/material/InputBase";
 import { useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { clearanceService } from "../../services";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 
 /**
  * ClearanceRequirementCard Component
@@ -101,24 +102,6 @@ const getFileLabel = (file: any) => {
     return 'File';
 };
 
-const getAbsoluteUrl = (url: string) => {
-    if (!url) return '';
-    const normalizedUrl = url.replace(/\\/g, '/');
-    if (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://')) return normalizedUrl;
-    // @ts-ignore
-    let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    baseUrl = baseUrl.replace(/\/api$/, '');
-    return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
-};
-
-export const getInitials = (name?: string, fallbackMail?: string): string => {
-    if (name) {
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-    }
-    return fallbackMail?.charAt(0).toUpperCase() || "U";
-};
 
 const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     id,
@@ -154,11 +137,11 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
 
     const handleFileClick = (file: any) => {
         if (file.type === 'YouTube' || file.type === 'Link' || file.type === 'Drive') {
-            window.open(file.url, "_blank");
+            window.open(getAbsoluteUrl(file.url) || '', "_blank");
             return;
         }
 
-        const absoluteUrl = getAbsoluteUrl(file.url);
+        const absoluteUrl = getAbsoluteUrl(file.url) || '';
         const link = document.createElement('a');
         link.href = absoluteUrl;
         link.download = file.name || 'download';
@@ -286,7 +269,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
                             {comments.map((comment: any) => (
                                 <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                    <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
+                                    <Avatar src={getAbsoluteUrl(comment.userId?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
                                         {getInitials(comment.userId?.fullName)}
                                     </Avatar>
                                     <Box>
@@ -308,7 +291,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     )}
                     <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
-                            <Avatar src={currentUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                            <Avatar src={getAbsoluteUrl(currentUser?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
                                 {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
                             </Avatar>
 
@@ -452,7 +435,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <Box display="flex" gap={3} alignItems="center">
                             <Avatar
-                                src={author?.profilePicture}
+                                src={getAbsoluteUrl(author?.profilePicture)}
                                 sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
                             >
                                 {getInitials(author?.fullName)}

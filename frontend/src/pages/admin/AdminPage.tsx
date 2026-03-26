@@ -21,6 +21,14 @@ import FormLabel from "@mui/material/FormLabel";
 import { useTheme, useMediaQuery, Skeleton, Card, CardContent } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
+import { 
+  SettingsContainer, 
+  SettingsSection, 
+  SettingsRow, 
+  SettingsField, 
+  ProfilePictureSection,
+  SettingsHeader
+} from "../../components/layout/SettingsLayout";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
@@ -98,6 +106,15 @@ export default function AdminPage() {
   const [draftLast, setDraftLast] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const updateLocalAvatar = (url: string) => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      u.avatarUrl = url;
+      localStorage.setItem("user", JSON.stringify(u));
+      window.dispatchEvent(new Event("storage")); 
+    } catch {}
+  };
 
 
   useEffect(() => {
@@ -119,6 +136,12 @@ export default function AdminPage() {
       setProfileLast(last);
       setDraftFirst(first);
       setDraftLast(last);
+      (async () => {
+        try {
+          const res = await api.get("/auth/profile");
+          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
+        } catch { }
+      })();
     } catch { }
   }, [email]);
 
@@ -708,138 +731,134 @@ export default function AdminPage() {
             </Box>
           </Box>
         ) : (
-          <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', py: isSmallMobile ? 2 : 4, fontFamily: fontStack }}>
-            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
-                  Settings
-                </Typography>
-              </Box>
-              <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
-                Manage your administrative account settings
-              </Typography>
-              <style>{`
-                input:-webkit-autofill,
-                input:-webkit-autofill:hover,
-                input:-webkit-autofill:focus {
-                  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
-                  -webkit-text-fill-color: #000000 !important;
-                  transition: background-color 5000s ease-in-out 0s;
-                }
-              `}</style>
+          <SettingsContainer>
+            <SettingsHeader 
+              title="Settings" 
+              subtitle="Manage your administrative account settings" 
+            />
+
+            <SettingsSection>
+              <ProfilePictureSection 
+                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
+                initials={fullName.split(' ').map(n=>n[0]).join('')} 
+                onFileSelect={async (file) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    const res = await api.post("/auth/avatar", formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    setAvatarUrl(res.data.avatarUrl);
+                    updateLocalAvatar(res.data.avatarUrl);
+                  } catch (err: any) {
+                    console.error("Upload failed:", err);
+                  }
+                }}
+                onDelete={async () => {
+                  try {
+                    await api.put("/auth/profile", { avatarUrl: "" });
+                    setAvatarUrl("");
+                    updateLocalAvatar("");
+                  } catch (err) {
+                    console.error("Delete failed:", err);
+                  }
+                }} 
+              />
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="First name">
+                  <TextField
+                    fullWidth
+                    name="first-name"
+                    autoComplete="given-name"
+                    value={draftFirst}
+                    onChange={(e) => setDraftFirst(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Last name">
+                  <TextField
+                    fullWidth
+                    name="last-name"
+                    autoComplete="family-name"
+                    value={draftLast}
+                    onChange={(e) => setDraftLast(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsField label="Email">
+                <TextField 
+                  fullWidth 
+                  name="real-email" 
+                  autoComplete="email" 
+                  value={email} 
+                  disabled 
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: '8px', 
+                      backgroundColor: '#F8FAFC' 
+                    } 
+                  }} 
+                />
+              </SettingsField>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="New password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Confirm password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+              <Button
+                variant="contained"
+                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                sx={{
+                  backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { backgroundColor: '#111' }
+                }}
+              >
+                Save Profile
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={updatePassword}
+                sx={{
+                  color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                }}
+              >
+                Update Password
+              </Button>
             </Box>
-
-            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Profile Card */}
-              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
-                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <PersonIcon sx={{ color: '#374151' }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Profile Information</Typography>
-                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Update your personal details</Typography>
-                    </Box>
-                  </Box>
-
-                  <Box component="form" autoComplete="off" display="flex" flexDirection="column" gap={3}>
-                    {/* Honey-pot fields to catch aggressive autofill */}
-                    <input type="text" name="email" style={{ display: 'none' }} tabIndex={-1} />
-                    <input type="password" name="password" style={{ display: 'none' }} tabIndex={-1} />
-
-                    <Box>
-                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
-                      <TextField
-                        fullWidth
-                        name="first-name"
-                        autoComplete="given-name"
-                        value={draftFirst}
-                        onChange={(e) => setDraftFirst(e.target.value)}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                      />
-                    </Box>
-                    <Box>
-                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Last Name</Typography>
-                      <TextField
-                        fullWidth
-                        name="last-name"
-                        autoComplete="family-name"
-                        value={draftLast}
-                        onChange={(e) => setDraftLast(e.target.value)}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                      />
-                    </Box>
-                    <Box>
-                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
-                      <TextField fullWidth name="real-email" autoComplete="email" value={email} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }} />
-                    </Box>
-                    <Button
-                      variant="contained"
-                      onClick={(e) => { e.preventDefault(); updateProfile(); }}
-                      type="submit"
-                      sx={{
-                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                        '&:hover': { backgroundColor: '#111' }
-                      }}
-                    >
-                      Save Changes
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-
-              {/* Security Card */}
-              <Card sx={{ ...glassCard, borderRadius: '12px' }}>
-                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                  <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SecurityIcon sx={{ color: '#374151' }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>Security</Typography>
-                      <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Change your password</Typography>
-                    </Box>
-                  </Box>
-
-                  <Box display="flex" flexDirection="column" gap={3}>
-                    <Box>
-                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>New Password</Typography>
-                      <TextField
-                        type="password"
-                        fullWidth
-                        placeholder="Enter new password"
-                        value={newPass}
-                        onChange={(e) => setNewPass(e.target.value)}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                      />
-                    </Box>
-                    <Box>
-                      <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Confirm New Password</Typography>
-                      <TextField
-                        type="password"
-                        fullWidth
-                        placeholder="Confirm new password"
-                        value={confirmPass}
-                        onChange={(e) => setConfirmPass(e.target.value)}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                      />
-                    </Box>
-                    <Button
-                      variant="contained"
-                      onClick={updatePassword}
-                      sx={{
-                        backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                        '&:hover': { backgroundColor: '#111' }
-                      }}
-                    >
-                      Update Password
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
-          </Box>
+          </SettingsContainer>
         )
       ) : (
         <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>

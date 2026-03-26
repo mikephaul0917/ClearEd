@@ -23,6 +23,7 @@ import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
 import TodoPage from "./pages/todo/TodoPage";
 import ToReviewPage from "./pages/officer/ToReviewPage";
 import InstitutionUsersPage from "./pages/superadmin/InstitutionUsersPage";
+import FAQPage from "./pages/FAQPage";
 import Header from "./components/layout/Header";
 import GlobalAnnouncements from "./components/GlobalAnnouncements";
 import Box from "@mui/material/Box";
@@ -44,6 +45,7 @@ export default function App() {
     location.pathname.startsWith("/organization") ||
     location.pathname === "/home" ||
     location.pathname === "/archived-organizations" ||
+    location.pathname === "/faqs" ||
     location.pathname === "/role-selection" ||
     location.pathname === "/super-admin/login");
 
@@ -116,6 +118,7 @@ export default function App() {
           <Route path="/archived-organizations" element={<ProtectedRoute><ArchivedOrganizationsPage /></ProtectedRoute>} />
           <Route path="/organization/:orgId" element={<ProtectedRoute><StreamPage /></ProtectedRoute>} />
           <Route path="/organization/:orgId/requirement/:reqId" element={<ProtectedRoute><RequirementDetailsPage /></ProtectedRoute>} />
+          <Route path="/faqs" element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
         </Routes>
       </Box>
     </LoadingProvider>

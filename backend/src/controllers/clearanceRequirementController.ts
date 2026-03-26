@@ -124,7 +124,7 @@ export const getOrganizationRequirements = async (req: Request, res: Response) =
             isActive: true
         })
             .populate('officeId', 'name sequence')
-            .populate('createdBy', 'fullName profilePicture')
+            .populate('createdBy', 'fullName profilePicture avatarUrl')
             .sort({ order: 1, createdAt: 1 });
 
         // 2. If requester is an officer, fetch submission counts

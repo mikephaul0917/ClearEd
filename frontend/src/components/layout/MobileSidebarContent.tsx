@@ -28,6 +28,7 @@ const ChevronDownIcon = ({ color }: any) => <IconBase color={color}><polyline po
 import Collapse from "@mui/material/Collapse";
 import Avatar from "@mui/material/Avatar";
 import { useLocation } from "react-router-dom";
+import { getAbsoluteUrl } from "../../utils/avatarUtils";
 
 interface MobileSidebarContentProps {
     systemName?: string;
@@ -44,6 +45,7 @@ interface MobileSidebarContentProps {
     setIsOfficerOpen?: (open: boolean) => void;
     isStudentOpen?: boolean;
     setIsStudentOpen?: (open: boolean) => void;
+    avatarUrl?: string;
 }
 
 const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
@@ -61,6 +63,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
     setIsOfficerOpen = () => {},
     isStudentOpen = false,
     setIsStudentOpen = () => {},
+    avatarUrl
 }) => {
     const location = useLocation();
     const isAdmin = role === 'admin' || role === 'super_admin';
@@ -153,6 +156,34 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                 return (
                                     <React.Fragment key="home-group">
                                         {buttonEl}
+
+                                        {(() => {
+                                            const faqItem = navItems.find(i => i.key === 'faqs');
+                                            if (!faqItem) return null;
+                                            const faqIsActive = location.pathname === faqItem.path;
+                                            const FaqIcon = faqItem.icon;
+                                            return (
+                                                <Button
+                                                    key={faqItem.key}
+                                                    onClick={() => handleNavClick(faqItem.path)}
+                                                    sx={{
+                                                        justifyContent: "flex-start",
+                                                        textTransform: "none",
+                                                        fontSize: 14,
+                                                        fontWeight: 500,
+                                                        px: 2,
+                                                        height: 40,
+                                                        borderRadius: "10px",
+                                                        color: faqIsActive ? "#0891b2" : "#0F172A",
+                                                        backgroundColor: faqIsActive ? "#ecfeff" : "transparent",
+                                                        "&:hover": { backgroundColor: faqIsActive ? "#cffafe" : "#F1F5F9" },
+                                                    }}
+                                                >
+                                                    <FaqIcon color={faqIsActive ? "#0891b2" : "#0F172A"} />
+                                                    <Box ml={1.5}>{faqItem.label}</Box>
+                                                </Button>
+                                            );
+                                        })()}
                                         
                                         {/* "As an officer" Section */}
                                         {officerOrgs.length > 0 && !isAdmin && (
@@ -341,6 +372,10 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                 );
                             }
 
+                            if (item.key === 'faqs') {
+                                return null; // Rendered after dashboard
+                            }
+
                             return buttonEl;
                         })}
 
@@ -370,21 +405,18 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
 
             {/* User (Bottom) */}
             <Box display="flex" alignItems="center" gap={1.5}>
-                <Box
+                <Avatar
+                    src={getAbsoluteUrl(avatarUrl)}
                     sx={{
                         width: 36,
                         height: 36,
-                        borderRadius: "50%",
-                        backgroundColor: "#0F172A",
-                        color: "#FFFFFF",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        bgcolor: "#0F172A",
+                        fontSize: 14,
+                        fontWeight: 600
                     }}
                 >
                     {initials}
-                </Box>
+                </Avatar>
                 <Box>
                     <Typography fontSize={14} fontWeight={600}>
                         {fullName}

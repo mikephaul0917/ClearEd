@@ -105,7 +105,7 @@ export const createUser = async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "User created",
-      user: { id: user._id, email: user.email, role: user.role, fullName: user.fullName }
+      user: { id: user._id, email: user.email, role: user.role, fullName: user.fullName, avatarUrl: user.avatarUrl }
     });
   } catch (error: any) {
     console.error('[CreateUser Error]:', error);
@@ -294,7 +294,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       req
     });
 
-    res.json({ message: "Profile updated", user: { fullName: user.fullName, username: user.username } });
+    res.json({ message: "Profile updated", user: { fullName: user.fullName, username: user.username, avatarUrl: user.avatarUrl } });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

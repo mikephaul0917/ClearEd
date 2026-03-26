@@ -14,6 +14,7 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import { organizationService } from "../../services";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 
 interface MembersListProps {
     organizationId: string;
@@ -83,8 +84,11 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                         <React.Fragment key={member._id}>
                             <ListItem sx={{ py: 2 }}>
                                 <ListItemAvatar>
-                                    <Avatar sx={{ bgcolor: "#F1F5F9", color: "#0F172A" }}>
-                                        {member.userId.fullName.charAt(0)}
+                                    <Avatar 
+                                        src={getAbsoluteUrl(member.userId.profilePicture)}
+                                        sx={{ bgcolor: "#F1F5F9", color: "#0F172A" }}
+                                    >
+                                        {getInitials(member.userId.fullName)}
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
@@ -137,8 +141,11 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                         <React.Fragment key={member._id}>
                             <ListItem sx={{ py: 2 }}>
                                 <ListItemAvatar>
-                                    <Avatar sx={{ bgcolor: "#F8FAFC", color: "#64748B" }}>
-                                        {member.userId.studentId?.charAt(0) || member.userId.fullName.charAt(0)}
+                                    <Avatar 
+                                        src={getAbsoluteUrl(member.userId.profilePicture)}
+                                        sx={{ bgcolor: "#F8FAFC", color: "#64748B" }}
+                                    >
+                                        {getInitials(member.userId.fullName)}
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText

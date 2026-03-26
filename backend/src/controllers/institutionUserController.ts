@@ -143,7 +143,8 @@ export const createInstitutionUser = async (req: AuthRequest, res: Response) => 
         email: user.email,
         fullName: user.fullName,
         role: user.role,
-        institutionId: user.institutionId
+        institutionId: user.institutionId,
+        avatarUrl: user.avatarUrl
       }
     });
 
@@ -222,6 +223,7 @@ export const updateUserRole = async (req: AuthRequest, res: Response) => {
       user: {
         id: targetUser._id,
         email: targetUser.email,
+        avatarUrl: targetUser.avatarUrl,
         role: targetUser.role
       }
     });
@@ -285,6 +287,7 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
       message: "User status updated successfully",
       user: {
         id: targetUser._id,
+        avatarUrl: targetUser.avatarUrl,
         enabled: targetUser.enabled,
         status: targetUser.status
       }

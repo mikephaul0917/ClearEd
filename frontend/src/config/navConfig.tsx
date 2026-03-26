@@ -18,6 +18,10 @@ export const HomeIcon: React.FC<IconProps> = ({ color }) => (
     <IconBase color={color} > <path d="M3 12l9-9 9 9" /> <path d="M5 10v10h14V10" /> </IconBase>
 );
 
+export const HelpIcon: React.FC<IconProps> = ({ color }) => (
+    <IconBase color={color} > <circle cx="12" cy="12" r="10" /> <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <line x1="12" y1="17" x2="12.01" y2="17" /> </IconBase>
+);
+
 export const FileIcon: React.FC<IconProps> = ({ color }) => (
     <IconBase color={color} > <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /> <path d="M14 2v6h6" /> </IconBase>
 );
@@ -114,6 +118,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     ],
     student: [
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
+        { key: "faqs", label: "FAQs", path: "/faqs", icon: HelpIcon },
         { key: "archived-organizations", label: "Archived organization", path: "/archived-organizations", icon: ArchiveBoxIcon },
         { key: "leaderboard", label: "Leaderboard", path: "/student/leaderboard", icon: TrophyIcon },
         { key: "todo", label: "To-Do", path: "/student/todo", icon: CheckCircleIcon },
@@ -123,6 +128,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     ],
     officer: [
         { key: "dashboard", label: "Home", path: "/home", icon: HomeIcon },
+        { key: "faqs", label: "FAQs", path: "/faqs", icon: HelpIcon },
         { key: "archived-organizations", label: "Archived organization", path: "/archived-organizations", icon: ArchiveBoxIcon },
         { key: "leaderboard", label: "Leaderboard", path: "/student/leaderboard", icon: TrophyIcon },
         { key: "todo", label: "To-Do", path: "/officer/todo", icon: CheckCircleIcon },

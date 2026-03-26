@@ -25,10 +25,11 @@ export const getFinalReadySubmissions = async (req: Request, res: Response) => {
     const term = await Term.findOne({ institutionId, isActive: true });
     if (!term) return res.json({ rows: [] });
 
+    const { status = "pending" } = req.query;
     const pendingFinals = await FinalClearance.find({
       institutionId,
       termId: term._id,
-      status: "pending"
+      status: status as string
     }).populate("userId", "fullName email");
 
     const rows = [];
@@ -71,6 +72,7 @@ export const getFinalReadySubmissions = async (req: Request, res: Response) => {
           course: studentProfile.course,
           year: studentProfile.year,
           dateSubmitted: final.submittedAt.toISOString().slice(0, 10),
+          dateApproved: final.reviewedAt ? final.reviewedAt.toISOString().slice(0, 10) : null,
           reqCompleted: numCompleted,
           reqTotal: numTotal,
           organizations: orgs

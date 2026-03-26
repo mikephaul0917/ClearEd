@@ -54,7 +54,9 @@ export const getOrganizationClearanceOverview = async (req: AuthRequest, res: Re
     // For each request, calculate progress based on requirements vs submissions
     const requirementsCount = await ClearanceRequirement.countDocuments({
       organizationId,
-      isActive: true
+      isActive: true,
+      isAnnouncement: { $ne: true },
+      type: { $nin: ['announcement', 'material'] }
     });
 
     const requestsWithProgress = await Promise.all(members.map(async (member: any) => {

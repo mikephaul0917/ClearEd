@@ -228,7 +228,7 @@ export const getSubmissionsForReview = catchAsync(async (req: Request, res: Resp
     if (status) query.status = status;
 
     const submissions = await ClearanceSubmission.find(query)
-        .populate('userId', 'name email studentId')
+        .populate('userId', 'fullName firstName lastName email studentId avatarUrl profilePicture')
         .populate('clearanceRequirementId', 'title officeId')
         .sort({ submittedAt: 1 });
 

@@ -112,13 +112,14 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
         percent: Math.round((approved / (total || 1)) * 100)
       };
     } else {
-      const approved = items.filter(i => i.status === "approved").length;
-      const total = items.length;
+      const filteredItems = items.filter(i => !i.isAnnouncement && i.type !== 'announcement' && i.type !== 'material');
+      const approved = filteredItems.filter(i => i.status === "approved").length;
+      const total = filteredItems.length;
       return {
         total,
         approved,
-        pending: items.filter(i => i.status === "pending").length,
-        rejected: items.filter(i => i.status === "rejected").length,
+        pending: filteredItems.filter(i => i.status === "pending").length,
+        rejected: filteredItems.filter(i => i.status === "rejected").length,
         percent: Math.round((approved / (total || 1)) * 100)
       };
     }

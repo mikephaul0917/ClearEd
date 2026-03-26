@@ -44,6 +44,7 @@ import CreatePollModal from "../../components/stream/CreatePollModal";
 import CreateMaterialModal from "../../components/stream/CreateMaterialModal";
 import { useAuth } from "../../hooks/useAuth";
 import { api, clearanceService, organizationService } from "../../services";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 
 const getFileLabel = (file: any) => {
     if (file.type === 'Drive') return 'Google Drive';
@@ -62,31 +63,21 @@ const getFileLabel = (file: any) => {
     return 'File';
 };
 
-const getAbsoluteUrl = (url: string) => {
-    if (!url) return '';
-    const normalizedUrl = url.replace(/\\/g, '/');
-    if (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://')) return normalizedUrl;
-    // @ts-ignore
-    let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    baseUrl = baseUrl.replace(/\/api$/, '');
-    return `${baseUrl}${normalizedUrl.startsWith('/') ? '' : '/'}${normalizedUrl}`;
-};
-
-export const getInitials = (name?: string, fallbackMail?: string): string => {
-    if (name) {
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-    }
-    return fallbackMail?.charAt(0).toUpperCase() || "U";
-};
 
 const RequirementDetailsPage: React.FC = () => {
     const { orgId, reqId } = useParams<{ orgId: string; reqId: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const fullUser = React.useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
+    const [fullUser, setFullUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
     const userInitial = getInitials(fullUser?.fullName || fullUser?.firstName, user?.email);
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setFullUser(JSON.parse(localStorage.getItem('user') || '{}'));
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const [loading, setLoading] = useState(true);
     const [tabValue, setTabValue] = useState(0);
@@ -213,6 +204,8 @@ const RequirementDetailsPage: React.FC = () => {
         }
         
         const absoluteUrl = getAbsoluteUrl(file.url);
+        if (!absoluteUrl) return;
+
         const link = document.createElement('a');
         link.href = absoluteUrl;
         link.download = file.name || 'download';
@@ -616,7 +609,7 @@ const RequirementDetailsPage: React.FC = () => {
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: comments.length > 0 ? 4 : 0 }}>
                                     {comments.map((comment: any) => (
                                         <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                            <Avatar src={comment.userId?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
+                                            <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
                                                 {getInitials(comment.userId?.fullName)}
                                             </Avatar>
                                             <Box>
@@ -638,7 +631,7 @@ const RequirementDetailsPage: React.FC = () => {
 
                                 <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                                        <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                                        <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
                                             {userInitial}
                                         </Avatar>
                                         
@@ -827,7 +820,7 @@ const RequirementDetailsPage: React.FC = () => {
                                             {/* Render Private Comments List */}
                                             {privateComments.map((comment: any) => (
                                                 <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                    <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
+                                                    <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
                                                         {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
                                                     </Avatar>
                                                     <Box>
@@ -849,7 +842,7 @@ const RequirementDetailsPage: React.FC = () => {
                                             {/* Input Area */}
                                             <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                    <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                    <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
                                                         {userInitial}
                                                     </Avatar>
                                                     <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
@@ -1049,8 +1042,15 @@ const RequirementDetailsPage: React.FC = () => {
                                                             }}
                                                         >
                                                             <ListItemAvatar>
-                                                                <Avatar sx={{ bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B" }}>
-                                                                    <PersonIcon />
+                                                                <Avatar 
+                                                                    src={getAbsoluteUrl(sub.userId?.avatarUrl || sub.userId?.profilePicture)}
+                                                                    sx={{ 
+                                                                        bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B",
+                                                                        width: 40,
+                                                                        height: 40
+                                                                    }}
+                                                                >
+                                                                    {getInitials(sub.userId?.fullName || sub.userId?.firstName)}
                                                                 </Avatar>
                                                             </ListItemAvatar>
                                                             <ListItemText
@@ -1213,7 +1213,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                     {/* Render Private Comments List */}
                                                     {privateComments.map((comment: any) => (
                                                         <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                            <Avatar src={comment.userId?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
+                                                            <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
                                                                 {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
                                                             </Avatar>
                                                             <Box>
@@ -1235,7 +1235,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                     {/* Input Area */}
                                                     <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                            <Avatar src={(user as any)?.profilePicture || fullUser?.profilePicture} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                            <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
                                                                 {userInitial}
                                                             </Avatar>
                                                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>

@@ -50,30 +50,6 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
         );
     }
 
-    if (organizations.length === 0) {
-        return (
-            <Box
-                sx={{
-                    p: 8,
-                    textAlign: "center",
-                    bgcolor: "white",
-                    borderRadius: 4,
-                    border: "2px dashed #E2E8F0"
-                }}
-            >
-                <Typography variant="h5" fontWeight={600} gutterBottom>
-                    {emptyTitle}
-                </Typography>
-                <Typography color="text.secondary" sx={{ mb: 3 }}>
-                    {emptyMessage}
-                </Typography>
-                <Box>
-                    {/* Placeholder action area */}
-                </Box>
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Box sx={{ mb: 6 }}>
@@ -83,8 +59,8 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: description ? 1 : 0 }}>
                                 {icon && (
                                     <Box sx={{
-                                        bgcolor: iconBgColor || '#FEF3C7',
-                                        color: iconColor || '#F59E0B',
+                                        bgcolor: iconBgColor || '#F1F5F9',
+                                        color: iconColor || '#475569',
                                         p: 1,
                                         borderRadius: 2,
                                         display: 'flex',
@@ -131,15 +107,18 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                 ) : (
                     <Box
                         sx={{
-                            p: 6,
+                            p: 8,
                             textAlign: "center",
-                            bgcolor: "#f8fafc",
+                            bgcolor: "white",
                             borderRadius: 4,
-                            border: "1px dashed #cbd5e1"
+                            border: "2px dashed #E2E8F0"
                         }}
                     >
-                        <Typography variant="h6" fontWeight={600} color="#64748b">
+                        <Typography variant="h5" fontWeight={600} gutterBottom>
                             {emptyTitle}
+                        </Typography>
+                        <Typography color="text.secondary" sx={{ mb: 3 }}>
+                            {emptyMessage}
                         </Typography>
                     </Box>
                 )}

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getAbsoluteUrl } from "../../utils/avatarUtils";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -123,6 +124,7 @@ interface SidebarProps {
     systemName?: string;
     fullName: string;
     initials: string;
+    avatarUrl?: string;
     role: string;
     logout: () => void;
     isLoading?: boolean;
@@ -133,6 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     systemName,
     fullName,
     initials,
+    avatarUrl,
     role,
     logout,
     isLoading = false,
@@ -272,6 +275,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         systemName={systemName}
                         fullName={fullName}
                         initials={initials}
+                        avatarUrl={avatarUrl}
                         role={role}
                         logout={logout}
                         navItems={navItems}
@@ -409,9 +413,39 @@ const Sidebar: React.FC<SidebarProps> = ({
                             }
 
                             if (item.key === 'dashboard') {
+                                const faqItem = navItems.find(i => i.key === 'faqs');
+                                const faqsEl = faqItem && (() => {
+                                    const faqIsActive = location.pathname === faqItem.path;
+                                    const FaqIcon = faqItem.icon;
+                                    return (
+                                        <Button
+                                            key={faqItem.key}
+                                            onClick={() => handleNavClick(faqItem.path)}
+                                            sx={{
+                                                justifyContent: "flex-start",
+                                                textTransform: "none",
+                                                fontSize: 14,
+                                                fontWeight: 500,
+                                                px: 2,
+                                                height: 40,
+                                                borderRadius: "10px",
+                                                color: faqIsActive ? "#0891b2" : "#0F172A",
+                                                backgroundColor: faqIsActive ? "#ecfeff" : "transparent",
+                                                "&:hover": {
+                                                    backgroundColor: faqIsActive ? "#cffafe" : "#F1F5F9",
+                                                },
+                                            }}
+                                        >
+                                            <FaqIcon color={faqIsActive ? "#0891b2" : "#0F172A"} />
+                                            <Box ml={1.5}>{faqItem.label}</Box>
+                                        </Button>
+                                    );
+                                })();
+
                                 return (
                                     <React.Fragment key="home-group">
                                         {buttonEl}
+                                        {faqsEl}
 
                                         {/* "As an officer" Section */}
                                         {officerOrgs.length > 0 && role !== 'admin' && (
@@ -644,6 +678,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 );
                             }
 
+                            if (item.key === 'faqs') {
+                                return null; // Rendered after dashboard
+                            }
+
                             return buttonEl;
                         })}
 
@@ -671,21 +709,18 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Divider sx={{ my: 2 }} />
 
             <Box display="flex" alignItems="center" gap={1.5}>
-                <Box
+                <Avatar
+                    src={getAbsoluteUrl(avatarUrl)}
                     sx={{
                         width: 36,
                         height: 36,
-                        borderRadius: "50%",
-                        backgroundColor: "#0F172A",
-                        color: "#FFFFFF",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        bgcolor: "#0F172A",
+                        fontSize: 14,
+                        fontWeight: 600
                     }}
                 >
                     {initials}
-                </Box>
+                </Avatar>
                 <Box>
                     <Typography fontSize={14} fontWeight={600}>
                         {fullName}

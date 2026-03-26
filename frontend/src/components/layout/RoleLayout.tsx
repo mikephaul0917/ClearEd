@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { useAuth } from "../../hooks/useAuth";
 import Sidebar from "./Sidebar";
 import { NAV_CONFIG } from "../../config/navConfig";
+import { getInitials } from "../../utils/avatarUtils";
 
 interface RoleLayoutProps {
     children: ReactNode;
@@ -37,22 +38,16 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     const fullUser = storedUser ? JSON.parse(storedUser) : null;
     const fullName = fullUser?.fullName || user.username || (user.email ? user.email.split('@')[0] : "User");
+    const avatarUrl = fullUser?.avatarUrl || "";
     
-    let initials = "U";
-    if (fullName) {
-        const parts = fullName.trim().split(/\s+/);
-        if (parts.length === 1) {
-            initials = parts[0].charAt(0).toUpperCase();
-        } else {
-            initials = (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-        }
-    }
+    const initials = getInitials(fullName);
 
     return (
         <Box display="flex" minHeight="100vh" flexDirection={{ xs: "column", md: "row" }}>
             <Sidebar
                 fullName={fullName}
                 initials={initials}
+                avatarUrl={avatarUrl}
                 role={user.role}
                 logout={logout}
                 navItems={navItems}

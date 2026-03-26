@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import SuccessMessage from "../../components/SuccessMessage";
 import { api, authService } from '../../services';
 import { Divider } from "@mui/material";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import StudentClearanceSlip from "./StudentClearanceSlip";
 import ClearanceRequirements from "../../components/student/ClearanceRequirements";
 import StudentProgress from "./StudentProgress";
@@ -26,6 +27,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
 import CloseIcon from "@mui/icons-material/Close";
+import { 
+  SettingsContainer, 
+  SettingsSection, 
+  SettingsRow, 
+  SettingsField, 
+  ProfilePictureSection,
+  SettingsHeader
+} from "../../components/layout/SettingsLayout";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
@@ -90,6 +99,20 @@ export default function StudentPage() {
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u.avatarUrl || "";
+    } catch { return ""; }
+  });
+  const updateLocalAvatar = (url: string) => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      u.avatarUrl = url;
+      localStorage.setItem("user", JSON.stringify(u));
+      window.dispatchEvent(new Event("storage")); // Trigger RoleLayout re-render
+    } catch {}
+  };
   const [spFamilyName, setSpFamilyName] = useState("");
   const [spFirstName, setSpFirstName] = useState("");
   const [spMiddleName, setSpMiddleName] = useState("");
@@ -123,9 +146,10 @@ export default function StudentPage() {
           setSpMiddleName(scrub(p.middleName));
           setSpStudentNumber(scrub(p.studentNumber));
           setSpCourse(scrub(p.course));
-          setSpYear(scrub(p.year));
+           setSpYear(scrub(p.year));
           setSpSemester(scrub(p.semester));
           setSpAcademicYear(scrub(p.academicYear));
+          if (p.avatarUrl) setAvatarUrl(p.avatarUrl);
           // Sync with general profile states to avoid stale 'admin' data
           const fName = scrub(p.firstName) || first;
           const lName = scrub(p.familyName) || last;
@@ -150,10 +174,7 @@ export default function StudentPage() {
   }, [profileFirst, profileLast, email]);
 
   const initials = useMemo(() => {
-    const words = fullName.split(" ").filter(Boolean);
-    const first = words[0]?.[0] || "S";
-    const second = words[1]?.[0] || "T";
-    return (first + second).toUpperCase();
+    return getInitials(fullName);
   }, [fullName]);
 
   const logout = () => { authService.logout(); nav("/", { state: { banner: { message: "Logged out successfully!", variant: "success" } } }); };
@@ -530,24 +551,24 @@ export default function StudentPage() {
 
                     {/* Footer Section - Pills (Always visible) */}
                     <Box sx={{ pt: 1, display: 'flex', gap: 1.5, mt: 1 }}>
-                        <Box
-                          onClick={(e) => { e.stopPropagation(); setViewingOrg(org); }}
-                          sx={{
-                            px: 2,
-                            py: 1,
-                            bgcolor: "#F3F4F6",
-                            borderRadius: "20px",
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: '#E2E8F0' }
-                          }}
-                        >
-                          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
-                            Learn more
-                          </Typography>
-                        </Box>
+                      <Box
+                        onClick={(e) => { e.stopPropagation(); setViewingOrg(org); }}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          bgcolor: "#F3F4F6",
+                          borderRadius: "20px",
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: '#E2E8F0' }
+                        }}
+                      >
+                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                          Learn more
+                        </Typography>
+                      </Box>
                       <Box
                         sx={{
                           px: 2,
@@ -578,17 +599,17 @@ export default function StudentPage() {
             </Box>
 
             {/* Modal for Full Description (Student Dashboard) */}
-            <Dialog 
-              open={!!viewingOrg} 
+            <Dialog
+              open={!!viewingOrg}
               onClose={() => setViewingOrg(null)}
               onClick={(e) => e.stopPropagation()}
               PaperProps={{
-                  sx: {
-                      borderRadius: "24px",
-                      padding: "8px",
-                      maxWidth: "500px",
-                      width: "100%"
-                  }
+                sx: {
+                  borderRadius: "24px",
+                  padding: "8px",
+                  maxWidth: "500px",
+                  width: "100%"
+                }
               }}
             >
               <DialogTitle sx={{ m: 0, p: 2, pr: 6, fontWeight: 800, fontSize: "1.5rem", fontFamily: fontStack }}>
@@ -623,17 +644,17 @@ export default function StudentPage() {
                 </Box>
               </DialogContent>
               <DialogActions sx={{ p: 2, pt: 0 }}>
-                <Button 
-                  fullWidth 
+                <Button
+                  fullWidth
                   onClick={() => setViewingOrg(null)}
                   variant="contained"
-                  sx={{ 
-                      borderRadius: "12px", 
-                      bgcolor: COLORS.black, 
-                      textTransform: "none", 
-                      fontWeight: 700,
-                      py: 1.5,
-                      '&:hover': { bgcolor: COLORS.black, opacity: 0.8 }
+                  sx={{
+                    borderRadius: "12px",
+                    bgcolor: COLORS.black,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    py: 1.5,
+                    '&:hover': { bgcolor: COLORS.black, opacity: 0.8 }
                   }}
                 >
                   Close
@@ -669,155 +690,177 @@ export default function StudentPage() {
 
               {/* Requirements Status */}
               <Box sx={{ ...glassCard, p: 4 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: 18, mb: 3 }}>Core Requirements</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {[
-                    { label: 'Validated School ID', status: reqValidId },
-                    { label: 'Adviser-signed form', status: reqAdviser },
-                    { label: 'Organization form', status: reqOrg }
-                  ].map(req => (
-                    <Box key={req.label} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: '12px', bgcolor: req.status ? COLORS.teal + '08' : '#F8FAFC' }}>
-                      <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{req.label}</Typography>
-                      <Box sx={{
-                        px: 1.2, py: 0.4, borderRadius: COLORS.pillRadius,
-                        bgcolor: req.status ? COLORS.teal : '#E2E8F0',
-                        color: req.status ? '#FFF' : '#64748B',
-                        fontSize: 10, fontWeight: 800, textTransform: 'uppercase'
-                      }}>
-                        {req.status ? 'Uploaded' : 'Missing'}
+                <SettingsSection>
+                  <Typography sx={{ fontWeight: 800, fontSize: 18, mb: 3 }}>Core Requirements</Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {[
+                      { label: 'Validated School ID', status: reqValidId },
+                      { label: 'Adviser-signed form', status: reqAdviser },
+                      { label: 'Organization form', status: reqOrg }
+                    ].map(req => (
+                      <Box key={req.label} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: '12px', bgcolor: req.status ? COLORS.teal + '08' : '#F8FAFC' }}>
+                        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{req.label}</Typography>
+                        <Box sx={{
+                          px: 1.2, py: 0.4, borderRadius: COLORS.pillRadius,
+                          bgcolor: req.status ? COLORS.teal : '#E2E8F0',
+                          color: req.status ? '#FFF' : '#64748B',
+                          fontSize: 10, fontWeight: 800, textTransform: 'uppercase'
+                        }}>
+                          {req.status ? 'Uploaded' : 'Missing'}
+                        </Box>
                       </Box>
-                    </Box>
-                  ))}
-                </Box>
-                <Button variant="text" size="small" onClick={() => nav("/student/requirements")} sx={{ mt: 2, textTransform: 'none', fontWeight: 700, color: COLORS.black }}>Upload Requirements →</Button>
+                    ))}
+                  </Box>
+                  <Button variant="text" size="small" onClick={() => nav("/student/requirements")} sx={{ mt: 2, textTransform: 'none', fontWeight: 700, color: COLORS.black }}>Upload Requirements →</Button>
+                </SettingsSection>
               </Box>
             </Box>
           </Box>
         </Box>
       ) : active === "settings" ? (
-        <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-          <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
-                Account Settings
-              </Typography>
+          <SettingsContainer>
+            <SettingsHeader 
+              title="Account Settings" 
+              subtitle="Manage your profile information and security preferences" 
+            />
+
+            <SettingsSection>
+              <ProfilePictureSection 
+                avatarUrl={getAbsoluteUrl(avatarUrl)}
+                initials={getInitials(fullName)} 
+                onFileSelect={async (file) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    const res = await api.post("/auth/avatar", formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    setAvatarUrl(res.data.avatarUrl);
+                    updateLocalAvatar(res.data.avatarUrl);
+                  } catch (err: any) {
+                    console.error("Upload failed:", err);
+                  }
+                }}
+                onDelete={async () => {
+                  try {
+                    // Update profile with empty avatarUrl
+                    await api.put("/auth/profile", { avatarUrl: "" });
+                    setAvatarUrl("");
+                    updateLocalAvatar("");
+                  } catch (err) {
+                    console.error("Delete failed:", err);
+                  }
+                }} 
+              />
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="First name">
+                  <TextField
+                    fullWidth
+                    value={draftFirst}
+                    onChange={(e) => setDraftFirst(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Last name">
+                  <TextField
+                    fullWidth
+                    value={draftLast}
+                    onChange={(e) => setDraftLast(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsField label="Email">
+                <TextField 
+                  fullWidth 
+                  value={email} 
+                  disabled 
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: '8px', 
+                      backgroundColor: '#F8FAFC' 
+                    } 
+                  }} 
+                />
+              </SettingsField>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="Student Number">
+                  <TextField fullWidth value={spStudentNumber} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+                <SettingsField label="Course">
+                  <TextField fullWidth value={spCourse} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+              </SettingsRow>
+              <SettingsRow>
+                <SettingsField label="Year Level">
+                  <TextField fullWidth value={`${spYear} Year`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+                <SettingsField label="Academic Period">
+                  <TextField fullWidth value={`${spSemester} • ${spAcademicYear}`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="New password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Confirm password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+              <Button
+                variant="contained"
+                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                sx={{
+                  backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { backgroundColor: '#111' }
+                }}
+              >
+                Save Profile
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={updatePassword}
+                sx={{
+                  color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                }}
+              >
+                Update Password
+              </Button>
             </Box>
-            <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
-              Manage your profile information and security preferences
-            </Typography>
-          </Box>
-
-          <Box sx={{ maxWidth: '800px', mx: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Account Profile Card - Matches Admin Style Table/Image */}
-            <Card sx={glassCard}>
-              <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <PersonIcon sx={{ color: '#374151' }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Profile Information</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Update your personal details</Typography>
-                  </Box>
-                </Box>
-
-                <Box component="form" autoComplete="off" display="flex" flexDirection="column" gap={3}>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
-                    <TextField
-                      fullWidth
-                      value={draftFirst}
-                      onChange={(e) => setDraftFirst(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Last Name</Typography>
-                    <TextField
-                      fullWidth
-                      value={draftLast}
-                      onChange={(e) => setDraftLast(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
-                    <TextField
-                      fullWidth
-                      value={email}
-                      disabled
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }}
-                    />
-                  </Box>
-                  <Button
-                    variant="contained"
-                    onClick={(e) => { e.preventDefault(); updateProfile(); }}
-                    type="submit"
-                    sx={{
-                      backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                      '&:hover': { backgroundColor: '#111' }
-                    }}
-                  >
-                    Save Changes
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-
-
-            {/* Security Card */}
-            <Card sx={glassCard}>
-              <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <SecurityIcon sx={{ color: '#374151' }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Security</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Change your password</Typography>
-                  </Box>
-                </Box>
-
-                <Box display="flex" flexDirection="column" gap={3}>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>New Password</Typography>
-                    <TextField
-                      type="password"
-                      fullWidth
-                      placeholder="Enter new password"
-                      value={newPass}
-                      onChange={(e) => setNewPass(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Confirm New Password</Typography>
-                    <TextField
-                      type="password"
-                      fullWidth
-                      placeholder="Confirm new password"
-                      value={confirmPass}
-                      onChange={(e) => setConfirmPass(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                    />
-                  </Box>
-                  <Button
-                    variant="contained"
-                    onClick={updatePassword}
-                    sx={{
-                      backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                      '&:hover': { backgroundColor: '#111' }
-                    }}
-                  >
-                    Update Password
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-
-          </Box>
-        </Box>
-      ) : active === "slip" ? (
+          </SettingsContainer>
+        ) : active === "slip" ? (
         <StudentClearanceSlip />
       ) : active === "requirements" ? (
         <ClearanceRequirements />

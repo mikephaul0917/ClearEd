@@ -163,6 +163,8 @@ export const getTimeline = async (req: Request, res: Response) => {
         requirementId: reqItem._id,
         title: reqItem.title,
         description: reqItem.description,
+        isAnnouncement: reqItem.isAnnouncement,
+        type: reqItem.type,
         status: submission ? submission.status : "pending_submission",
         submittedAt: submission ? submission.submittedAt : null,
         reviewedAt: submission ? submission.reviewedAt : null,

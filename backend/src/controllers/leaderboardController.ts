@@ -5,6 +5,7 @@ import ClearanceSubmission from "../models/ClearanceSubmission";
 import Term from "../models/Term";
 import FinalClearance from "../models/FinalClearance";
 import StudentProfile from "../models/StudentProfile";
+import ClearanceSubmission from "../models/ClearanceSubmission";
 export const getLeaderboardStats = async (req: Request, res: Response) => {
   try {
     const institutionId = (req as any).user.institutionId;
@@ -55,19 +56,18 @@ export const getLeaderboardStats = async (req: Request, res: Response) => {
 
         if (finalClearance && finalClearance.reviewedAt) {
             isCleared = true;
-            // Find earliest clearance request
-            const firstReq = await ClearanceRequest.findOne({
-                userId: student._id,
-                termId: term._id
-            }).sort({ createdAt: 1 });
+            
+            // Find earliest activity (submission or requested)
+            const [firstSub, firstReq] = await Promise.all([
+                ClearanceSubmission.findOne({ userId: student._id, institutionId, status: { $ne: 'rejected' } }).sort({ submittedAt: 1 }),
+                ClearanceRequest.findOne({ userId: student._id, termId: term._id }).sort({ createdAt: 1 })
+            ]);
 
-            let start = term.startDate ? term.startDate.getTime() : null;
-            if (firstReq) {
-                const reqStart = firstReq.createdAt.getTime();
-                // Prefer term start date as the baseline, or fallback to first request
-                if (!start || reqStart < start) {
-                    start = reqStart;
-                }
+            let start: number | null = null;
+            if (firstSub) {
+                start = firstSub.submittedAt.getTime();
+            } else if (firstReq) {
+                start = firstReq.createdAt.getTime();
             }
 
             if (start) {

@@ -43,6 +43,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
+import { 
+  SettingsContainer, 
+  SettingsSection, 
+  SettingsRow, 
+  SettingsField, 
+  ProfilePictureSection,
+  SettingsHeader
+} from "../../components/layout/SettingsLayout";
 
 type PendingRow = {
   id: string;
@@ -108,6 +116,15 @@ export default function OfficerPage() {
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const updateLocalAvatar = (url: string) => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      u.avatarUrl = url;
+      localStorage.setItem("user", JSON.stringify(u));
+      window.dispatchEvent(new Event("storage")); 
+    } catch {}
+  };
   const [notice, setNotice] = useState<any>((location.state as any)?.banner ?? null);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -218,6 +235,12 @@ export default function OfficerPage() {
       setProfileLast(last);
       setDraftFirst(first);
       setDraftLast(last);
+      (async () => {
+        try {
+          const res = await api.get("/auth/profile");
+          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
+        } catch { }
+      })();
     } catch { }
     (async () => {
       try {
@@ -448,255 +471,234 @@ export default function OfficerPage() {
       ) : active === "todo" ? (
         <TodoPage />
       ) : (
-        <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', py: isSmallMobile ? 2 : 4, fontFamily: fontStack }}>
-          <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
-                Settings
-              </Typography>
-            </Box>
-            <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
-              Manage your administrative account settings
-            </Typography>
-            <style>{`
-                input:-webkit-autofill,
-                input:-webkit-autofill:hover,
-                input:-webkit-autofill:focus {
-                  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
-                  -webkit-text-fill-color: #000000 !important;
-                  transition: background-color 5000s ease-in-out 0s;
-                }
-              `}</style>
-          </Box>
+          <SettingsContainer>
+            <SettingsHeader 
+              title="Settings" 
+              subtitle="Manage your administrative account settings" 
+            />
 
-          <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Profile Card */}
-            <Card sx={{ ...glassCard, borderRadius: '12px' }}>
-              <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <PersonIcon sx={{ color: '#374151' }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Profile Information</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Update your personal details</Typography>
-                  </Box>
+            <SettingsSection>
+              <ProfilePictureSection 
+                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
+                initials={fullName.split(' ').map(n=>n[0]).join('')} 
+                onFileSelect={async (file) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    const res = await api.post("/auth/avatar", formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    setAvatarUrl(res.data.avatarUrl);
+                    updateLocalAvatar(res.data.avatarUrl);
+                  } catch (err: any) {
+                    console.error("Upload failed:", err);
+                  }
+                }}
+                onDelete={async () => {
+                  try {
+                    await api.put("/auth/profile", { avatarUrl: "" });
+                    setAvatarUrl("");
+                    updateLocalAvatar("");
+                  } catch (err) {
+                    console.error("Delete failed:", err);
+                  }
+                }} 
+              />
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="First name">
+                  <TextField
+                    fullWidth
+                    name="first-name"
+                    autoComplete="given-name"
+                    value={draftFirst}
+                    onChange={(e) => setDraftFirst(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Last name">
+                  <TextField
+                    fullWidth
+                    name="last-name"
+                    autoComplete="family-name"
+                    value={draftLast}
+                    onChange={(e) => setDraftLast(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsField label="Email">
+                <TextField 
+                  fullWidth 
+                  name="real-email" 
+                  autoComplete="email" 
+                  value={email} 
+                  disabled 
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: '8px', 
+                      backgroundColor: '#F8FAFC' 
+                    } 
+                  }} 
+                />
+              </SettingsField>
+            </SettingsSection>
+
+            <SettingsSection>
+              {signatureUrl && !sigDrawData && (
+                <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '8px', mb: 2, textAlign: 'center', backgroundColor: '#FFF' }}>
+                  <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#64748B' }}>Current Saved Signature:</Typography>
+                  <img src={signatureUrl} alt="Last Saved Signature" style={{ maxHeight: 80, maxWidth: '100%' }} />
                 </Box>
+              )}
 
-                <Box component="form" autoComplete="off" display="flex" flexDirection="column" gap={3}>
-                  <input type="text" name="email" style={{ display: 'none' }} tabIndex={-1} />
-                  <input type="password" name="password" style={{ display: 'none' }} tabIndex={-1} />
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Button
+                  size="small"
+                  variant={sigMode === "draw" ? "contained" : "outlined"}
+                  onClick={() => setSigMode("draw")}
+                  sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "draw" ? '#000' : 'transparent', color: sigMode === "draw" ? '#FFF' : '#000' }}
+                >
+                  Draw Signature
+                </Button>
+                <Button
+                  size="small"
+                  variant={sigMode === "upload" ? "contained" : "outlined"}
+                  onClick={() => setSigMode("upload")}
+                  sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "upload" ? '#000' : 'transparent', color: sigMode === "upload" ? '#FFF' : '#000' }}
+                >
+                  Upload Image
+                </Button>
+              </Box>
 
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>First Name</Typography>
-                    <TextField
-                      fullWidth
-                      name="first-name"
-                      autoComplete="given-name"
-                      value={draftFirst}
-                      onChange={(e) => setDraftFirst(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+              {sigMode === "draw" && (
+                <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 1, backgroundColor: '#FFF' }}>
+                  <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: '#94A3B8' }}>Draw your signature in the box below</Typography>
+                  <Box sx={{ height: 150, width: '100%', position: 'relative', border: '1px solid #F1F5F9', borderRadius: '4px' }}>
+                    <canvas
+                      width={700}
+                      height={150}
+                      onMouseDown={(e) => {
+                        const canvas = e.currentTarget;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        ctx.beginPath();
+                        ctx.lineWidth = 2;
+                        ctx.lineCap = 'round';
+                        ctx.strokeStyle = '#000';
+                        const rect = canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        ctx.moveTo(x, y);
+                        (canvas as any).isDrawing = true;
+                      }}
+                      onMouseMove={(e) => {
+                        const canvas = e.currentTarget;
+                        if (!(canvas as any).isDrawing) return;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        const rect = canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                      }}
+                      onMouseUp={(e) => {
+                        const canvas = e.currentTarget;
+                        (canvas as any).isDrawing = false;
+                        setSigDrawData(canvas.toDataURL());
+                      }}
+                      style={{ width: '100%', height: '100%', cursor: 'crosshair', touchAction: 'none' }}
                     />
                   </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Last Name</Typography>
-                    <TextField
-                      fullWidth
-                      name="last-name"
-                      autoComplete="family-name"
-                      value={draftLast}
-                      onChange={(e) => setDraftLast(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
-                    <TextField fullWidth name="real-email" autoComplete="email" value={email} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }} />
-                  </Box>
+                  <Button size="small" fullWidth sx={{ mt: 1, textTransform: 'none' }} onClick={() => {
+                    setSigDrawData("");
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) {
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                  }}>Clear Canvas</Button>
+                </Box>
+              )}
 
-                  <Divider sx={{ my: 1 }} />
-                  
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Digital Signature</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem', mb: 2 }}>This signature will be applied to clearance slips you approve.</Typography>
-                    
-                    {signatureUrl && !sigDrawData && (
-                      <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '8px', mb: 2, textAlign: 'center', backgroundColor: '#FFF' }}>
-                        <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#64748B' }}>Current Saved Signature:</Typography>
-                        <img src={signatureUrl} alt="Last Saved Signature" style={{ maxHeight: 80, maxWidth: '100%' }} />
-                      </Box>
-                    )}
-
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                      <Button 
-                        size="small" 
-                        variant={sigMode === "draw" ? "contained" : "outlined"} 
-                        onClick={() => setSigMode("draw")}
-                        sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "draw" ? '#000' : 'transparent', color: sigMode === "draw" ? '#FFF' : '#000' }}
-                      >
-                        Draw Signature
-                      </Button>
-                      <Button 
-                        size="small" 
-                        variant={sigMode === "upload" ? "contained" : "outlined"} 
-                        onClick={() => setSigMode("upload")}
-                        sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "upload" ? '#000' : 'transparent', color: sigMode === "upload" ? '#FFF' : '#000' }}
-                      >
-                        Upload Image
-                      </Button>
+              {sigMode === "upload" && (
+                <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 3, textAlign: 'center', backgroundColor: '#FFF' }}>
+                  <Button variant="outlined" component="label" sx={{ textTransform: 'none', borderRadius: '8px', color: '#000', borderColor: '#000' }}>
+                    Select Signature Image
+                    <input type="file" hidden accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const base64 = await toBase64(file);
+                        setSigDrawData(base64);
+                      }
+                    }} />
+                  </Button>
+                  {sigDrawData && sigMode === "upload" && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>Preview:</Typography>
+                      <img src={sigDrawData} alt="Upload Preview" style={{ maxHeight: 80 }} />
                     </Box>
-
-                    {sigMode === "draw" && (
-                      <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 1, backgroundColor: '#FFF' }}>
-                         <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: '#94A3B8' }}>Draw your signature in the box below</Typography>
-                         <Box sx={{ height: 150, width: '100%', position: 'relative', border: '1px solid #F1F5F9', borderRadius: '4px' }}>
-                            <canvas 
-                              width={700}
-                              height={150}
-                              onMouseDown={(e) => {
-                                const canvas = e.currentTarget;
-                                const ctx = canvas.getContext('2d');
-                                if (!ctx) return;
-                                ctx.beginPath();
-                                ctx.lineWidth = 2;
-                                ctx.lineCap = 'round';
-                                ctx.strokeStyle = '#000';
-                                const rect = canvas.getBoundingClientRect();
-                                const x = e.clientX - rect.left;
-                                const y = e.clientY - rect.top;
-                                ctx.moveTo(x, y);
-                                (canvas as any).isDrawing = true;
-                              }}
-                              onMouseMove={(e) => {
-                                const canvas = e.currentTarget;
-                                if (!(canvas as any).isDrawing) return;
-                                const ctx = canvas.getContext('2d');
-                                if (!ctx) return;
-                                const rect = canvas.getBoundingClientRect();
-                                const x = e.clientX - rect.left;
-                                const y = e.clientY - rect.top;
-                                ctx.lineTo(x, y);
-                                ctx.stroke();
-                              }}
-                              onMouseUp={(e) => {
-                                const canvas = e.currentTarget;
-                                (canvas as any).isDrawing = false;
-                                setSigDrawData(canvas.toDataURL());
-                              }}
-                              style={{ width: '100%', height: '100%', cursor: 'crosshair', touchAction: 'none' }}
-                            />
-                         </Box>
-                         <Button size="small" fullWidth sx={{ mt: 1, textTransform: 'none' }} onClick={() => {
-                           setSigDrawData("");
-                           const canvas = document.querySelector('canvas');
-                           if (canvas) {
-                             const ctx = canvas.getContext('2d');
-                             if (ctx) ctx.clearRect(0,0, canvas.width, canvas.height);
-                           }
-                         }}>Clear Canvas</Button>
-                      </Box>
-                    )}
-
-                    {sigMode === "upload" && (
-                      <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 3, textAlign: 'center', backgroundColor: '#FFF' }}>
-                        <Button variant="outlined" component="label" sx={{ textTransform: 'none', borderRadius: '8px', color: '#000', borderColor: '#000' }}>
-                          Select Signature Image
-                          <input type="file" hidden accept="image/*" onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const base64 = await toBase64(file);
-                              setSigDrawData(base64);
-                            }
-                          }} />
-                        </Button>
-                        {sigDrawData && sigMode === "upload" && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>Preview:</Typography>
-                            <img src={sigDrawData} alt="Upload Preview" style={{ maxHeight: 80 }} />
-                          </Box>
-                        )}
-                      </Box>
-                    )}
-                  </Box>
-
-                  <Button
-                    variant="contained"
-                    onClick={(e) => { e.preventDefault(); updateProfile(); }}
-                    type="submit"
-                    sx={{
-                      backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                      mt: 2,
-                      '&:hover': { backgroundColor: '#111' }
-                    }}
-                  >
-                    Save Changes
-                  </Button>
+                  )}
                 </Box>
-              </CardContent>
-            </Card>
+              )}
+            </SettingsSection>
 
-            {/* Security Card */}
-            <Card sx={{ ...glassCard, borderRadius: '12px' }}>
-              <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <SecurityIcon sx={{ color: '#374151' }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Security</Typography>
-                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem' }}>Change your password</Typography>
-                  </Box>
-                </Box>
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="New password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Confirm password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
 
-                <Box display="flex" flexDirection="column" gap={3}>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Current Password</Typography>
-                    <TextField
-                      type="password"
-                      fullWidth
-                      placeholder="Enter current password"
-                      value={currentPass}
-                      onChange={(e) => setCurrentPass(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>New Password</Typography>
-                    <TextField
-                      type="password"
-                      fullWidth
-                      placeholder="Enter new password"
-                      value={newPass}
-                      onChange={(e) => setNewPass(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem' }}>Confirm New Password</Typography>
-                    <TextField
-                      type="password"
-                      fullWidth
-                      placeholder="Confirm new password"
-                      value={confirmPass}
-                      onChange={(e) => setConfirmPass(e.target.value)}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, '& .MuiInputBase-input::placeholder': { color: '#9CA3AF' } }}
-                    />
-                  </Box>
-                  <Button
-                    variant="contained"
-                    onClick={updatePassword}
-                    sx={{
-                      backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                      '&:hover': { backgroundColor: '#111' }
-                    }}
-                  >
-                    Update Password
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-        </Box>
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+              <Button
+                variant="contained"
+                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                sx={{
+                  backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { backgroundColor: '#111' }
+                }}
+              >
+                Save Profile
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={updatePassword}
+                sx={{
+                  color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                  '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                }}
+              >
+                Update Password
+              </Button>
+            </Box>
+          </SettingsContainer>
       )}
     </RoleLayout>
   );
