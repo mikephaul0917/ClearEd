@@ -109,6 +109,7 @@ export default function OfficerPage() {
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [notice, setNotice] = useState<any>((location.state as any)?.banner ?? null);
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filterCourse, setFilterCourse] = useState<string>("");
   const [filterYear, setFilterYear] = useState<string>("");
@@ -244,6 +245,23 @@ export default function OfficerPage() {
     })();
   }, [email]);
 
+  useEffect(() => {
+    if (isSettings) {
+      (async () => {
+        try {
+          const res = await api.get("/auth/profile");
+          const p = res.data;
+          setSignatureUrl(p.signatureUrl || null);
+          if (p.fullName) {
+            const parts = p.fullName.split(" ");
+            setDraftFirst(parts[0] || "");
+            setDraftLast(parts.slice(1).join(" ") || "");
+          }
+        } catch { }
+      })();
+    }
+  }, [isSettings]);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -361,13 +379,13 @@ export default function OfficerPage() {
   const logout = () => { authService.logout(); nav("/", { state: { banner: { message: "Logged out successfully!", variant: "success" } } }); };
 
   const updateProfile = async () => {
-    const username = `${draftFirst} ${draftLast}`.trim();
+    const fullName = `${draftFirst} ${draftLast}`.trim();
     try {
-      await api.put("/auth/profile", { username });
-      try { localStorage.setItem("username", username); } catch { }
+      await api.put("/auth/profile", { fullName, signatureUrl: sigDrawData || sigMode === "upload" && sigDrawData ? sigDrawData : signatureUrl });
       setProfileFirst(draftFirst.trim());
       setProfileLast(draftLast.trim());
-      setNotice({ message: "Profile updated", variant: "success" });
+      setSignatureUrl(sigDrawData || signatureUrl);
+      setNotice({ message: "Profile updated successfully", variant: "success" });
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update profile";
       setNotice({ message: msg, variant: "error" });
@@ -495,12 +513,119 @@ export default function OfficerPage() {
                     <Typography sx={{ mb: 1, fontWeight: 500, fontSize: '0.875rem', color: COLORS.textSecondary }}>Email Address (Locked)</Typography>
                     <TextField fullWidth name="real-email" autoComplete="email" value={email} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: '#F8FAFC' } }} />
                   </Box>
+
+                  <Divider sx={{ my: 1 }} />
+                  
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Digital Signature</Typography>
+                    <Typography sx={{ color: '#6B7280', fontSize: '0.875rem', mb: 2 }}>This signature will be applied to clearance slips you approve.</Typography>
+                    
+                    {signatureUrl && !sigDrawData && (
+                      <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '8px', mb: 2, textAlign: 'center', backgroundColor: '#FFF' }}>
+                        <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#64748B' }}>Current Saved Signature:</Typography>
+                        <img src={signatureUrl} alt="Last Saved Signature" style={{ maxHeight: 80, maxWidth: '100%' }} />
+                      </Box>
+                    )}
+
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                      <Button 
+                        size="small" 
+                        variant={sigMode === "draw" ? "contained" : "outlined"} 
+                        onClick={() => setSigMode("draw")}
+                        sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "draw" ? '#000' : 'transparent', color: sigMode === "draw" ? '#FFF' : '#000' }}
+                      >
+                        Draw Signature
+                      </Button>
+                      <Button 
+                        size="small" 
+                        variant={sigMode === "upload" ? "contained" : "outlined"} 
+                        onClick={() => setSigMode("upload")}
+                        sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "upload" ? '#000' : 'transparent', color: sigMode === "upload" ? '#FFF' : '#000' }}
+                      >
+                        Upload Image
+                      </Button>
+                    </Box>
+
+                    {sigMode === "draw" && (
+                      <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 1, backgroundColor: '#FFF' }}>
+                         <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: '#94A3B8' }}>Draw your signature in the box below</Typography>
+                         <Box sx={{ height: 150, width: '100%', position: 'relative', border: '1px solid #F1F5F9', borderRadius: '4px' }}>
+                            <canvas 
+                              width={700}
+                              height={150}
+                              onMouseDown={(e) => {
+                                const canvas = e.currentTarget;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) return;
+                                ctx.beginPath();
+                                ctx.lineWidth = 2;
+                                ctx.lineCap = 'round';
+                                ctx.strokeStyle = '#000';
+                                const rect = canvas.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                ctx.moveTo(x, y);
+                                (canvas as any).isDrawing = true;
+                              }}
+                              onMouseMove={(e) => {
+                                const canvas = e.currentTarget;
+                                if (!(canvas as any).isDrawing) return;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) return;
+                                const rect = canvas.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                ctx.lineTo(x, y);
+                                ctx.stroke();
+                              }}
+                              onMouseUp={(e) => {
+                                const canvas = e.currentTarget;
+                                (canvas as any).isDrawing = false;
+                                setSigDrawData(canvas.toDataURL());
+                              }}
+                              style={{ width: '100%', height: '100%', cursor: 'crosshair', touchAction: 'none' }}
+                            />
+                         </Box>
+                         <Button size="small" fullWidth sx={{ mt: 1, textTransform: 'none' }} onClick={() => {
+                           setSigDrawData("");
+                           const canvas = document.querySelector('canvas');
+                           if (canvas) {
+                             const ctx = canvas.getContext('2d');
+                             if (ctx) ctx.clearRect(0,0, canvas.width, canvas.height);
+                           }
+                         }}>Clear Canvas</Button>
+                      </Box>
+                    )}
+
+                    {sigMode === "upload" && (
+                      <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 3, textAlign: 'center', backgroundColor: '#FFF' }}>
+                        <Button variant="outlined" component="label" sx={{ textTransform: 'none', borderRadius: '8px', color: '#000', borderColor: '#000' }}>
+                          Select Signature Image
+                          <input type="file" hidden accept="image/*" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const base64 = await toBase64(file);
+                              setSigDrawData(base64);
+                            }
+                          }} />
+                        </Button>
+                        {sigDrawData && sigMode === "upload" && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>Preview:</Typography>
+                            <img src={sigDrawData} alt="Upload Preview" style={{ maxHeight: 80 }} />
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
+
                   <Button
                     variant="contained"
                     onClick={(e) => { e.preventDefault(); updateProfile(); }}
                     type="submit"
                     sx={{
                       backgroundColor: '#000', color: '#FFF', py: 2, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                      mt: 2,
                       '&:hover': { backgroundColor: '#111' }
                     }}
                   >

@@ -28,7 +28,9 @@ export default function ToReviewPage() {
                 // Fetch orgs
                 const orgsRes = await organizationService.getMyOrganizations();
                 if (orgsRes && orgsRes.organizations) {
-                    const officers = orgsRes.organizations.filter((org: any) => org.membership?.role === 'officer');
+                    const officers = orgsRes.organizations.filter((org: any) => 
+                        org.membership?.role === 'officer' && org.status === 'active'
+                    );
                     setOrganizations(officers);
                 }
 

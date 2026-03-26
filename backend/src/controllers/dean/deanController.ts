@@ -201,9 +201,16 @@ export const approveFinalClearance = async (req: Request, res: Response) => {
     }
 
     finalClearance.status = "approved";
+    finalClearance.reviewedBy = deanId;
     finalClearance.reviewedAt = new Date();
     if (signatureUrl) {
       finalClearance.signatureUrl = signatureUrl;
+    } else {
+      // Fallback to Dean's profile signature
+      const dean = await User.findById(deanId);
+      if (dean?.signatureUrl) {
+        finalClearance.signatureUrl = dean.signatureUrl;
+      }
     }
     await finalClearance.save();
 

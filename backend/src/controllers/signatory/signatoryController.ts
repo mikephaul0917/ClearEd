@@ -429,21 +429,32 @@ export const markAsOfficerCleared = async (req: Request, res: Response) => {
 
     if (!clearanceRequest) {
       // If student hasn't started the clearance process, create it initialized to 'officer_cleared'
+      const officer = await User.findById(officerId);
       clearanceRequest = new ClearanceRequest({
         userId: studentId,
         organizationId,
         institutionId,
         termId: term._id,
         status: "officer_cleared",
-        signatureUrl: signatureData
+        signatureUrl: signatureData || officer?.signatureUrl,
+        officerId: officerId, // Set officerId here
+        finalApprovalDate: new Date() // Set finalApprovalDate here
       });
     } else {
       if (clearanceRequest.status === "completed") {
         return res.status(400).json({ message: "Student is already fully cleared" });
       }
       clearanceRequest.status = "officer_cleared";
+      clearanceRequest.officerId = officerId; // Set officerId here
+      clearanceRequest.finalApprovalDate = new Date(); // Set finalApprovalDate here
       if (signatureData) {
         clearanceRequest.signatureUrl = signatureData;
+      } else if (!clearanceRequest.signatureUrl) {
+        // Only fallback if the request doesn't already have a signature
+        const officer = await User.findById(officerId);
+        if (officer?.signatureUrl) {
+          clearanceRequest.signatureUrl = officer.signatureUrl;
+        }
       }
     }
 

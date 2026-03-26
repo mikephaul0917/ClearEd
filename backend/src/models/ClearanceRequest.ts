@@ -8,6 +8,7 @@ export interface IClearanceRequest extends Document {
   status: "pending" | "in_progress" | "officer_cleared" | "completed" | "rejected";
   finalApprovalDate?: Date;
   signatureUrl?: string;
+  officerId?: mongoose.Types.ObjectId;
   createdBy?: mongoose.Types.ObjectId;
   submittedAt?: Date;
   createdAt: Date;
@@ -26,6 +27,7 @@ const ClearanceRequestSchema = new Schema<IClearanceRequest>({
   },
   finalApprovalDate: { type: Date },
   signatureUrl: { type: String },
+  officerId: { type: Schema.Types.ObjectId, ref: "User" },
   createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   submittedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

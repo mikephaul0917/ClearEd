@@ -12,6 +12,7 @@ import ClearanceSubmission from "../models/ClearanceSubmission";
 import Term from "../models/Term";
 import Institution from "../models/Institution";
 import FinalClearance from "../models/FinalClearance";
+import User from "../models/User";
 
 /**
  * Start a new clearance request for a specific organization in the current active term
@@ -46,6 +47,7 @@ export const startClearance = async (req: Request, res: Response) => {
     const membership = await OrganizationMember.findOne({
       userId,
       organizationId,
+      role: "member",
       status: "active"
     });
 
@@ -224,6 +226,7 @@ export const getMyClearances = async (req: Request, res: Response) => {
     const memberships = await OrganizationMember.find({
       userId: targetUserId,
       institutionId,
+      role: "member",
       status: 'active'
     });
     const joinedOrgIds = memberships.map(m => m.organizationId);
@@ -253,8 +256,23 @@ export const getMyClearances = async (req: Request, res: Response) => {
     });
 
     // 4. Map organizations to their clearance status
-    const data = organizations.map((org: any) => {
+    const data = await Promise.all(organizations.map(async (org: any) => {
       const request = requests.find(r => r.organizationId.toString() === org._id.toString());
+      let sig = request ? (request as any).signatureUrl : undefined;
+      
+      // Retroactive fallback: if cleared but no signature, try officer profile
+      if (!sig && request && (request.status === 'officer_cleared' || request.status === 'completed')) {
+        const officerId = (request as any).officerId;
+        if (officerId) {
+          const officer = await User.findById(officerId);
+          sig = officer?.signatureUrl;
+        } else {
+          // Absolute fallback: find any active officer for this org
+          const anyOfficer = await OrganizationMember.findOne({ organizationId: org._id, role: 'officer', status: 'active' }).populate('userId');
+          sig = (anyOfficer?.userId as any)?.signatureUrl;
+        }
+      }
+
       return {
         _id: org._id,
         name: org.name,
@@ -264,9 +282,26 @@ export const getMyClearances = async (req: Request, res: Response) => {
         status: request ? request.status : "not_started",
         orgStatus: org.status,
         submittedAt: request ? request.submittedAt : null,
-        signatureUrl: request ? (request as any).signatureUrl : undefined
+        signatureUrl: sig
       };
-    });
+    }));
+
+    // Retroactive fallback for Final Clearance
+    let finalSig = finalClearance ? finalClearance.signatureUrl : null;
+    if (!finalSig && finalClearance && finalClearance.status === 'approved') {
+      // If we have a reviewer, try their signature first
+      if (finalClearance.reviewedBy) {
+        const reviewer = await User.findById(finalClearance.reviewedBy);
+        finalSig = reviewer?.signatureUrl || null;
+      }
+      
+      // Secondary fallback: Any dean in this institution
+      if (!finalSig) {
+        const deans = await User.find({ role: 'dean', institutionId });
+        const deanWithSig = deans.find((d: any) => d.signatureUrl);
+        finalSig = deanWithSig?.signatureUrl || null;
+      }
+    }
 
     res.json({
       term: { name: term.name, academicYear: term.academicYear },
@@ -277,7 +312,11 @@ export const getMyClearances = async (req: Request, res: Response) => {
         region: (institution as any)?.region,
         division: (institution as any)?.division
       },
-      finalClearance: finalClearance ? { status: finalClearance.status, submittedAt: finalClearance.submittedAt, signatureUrl: finalClearance.signatureUrl } : null,
+      finalClearance: finalClearance ? { 
+        status: finalClearance.status, 
+        submittedAt: finalClearance.submittedAt, 
+        signatureUrl: finalSig
+      } : null,
       organizations: data
     });
 
@@ -324,6 +363,7 @@ export const submitToDean = async (req: Request, res: Response) => {
     // 3. Find all organizations the user is a member of
     const memberships = await OrganizationMember.find({
       userId,
+      role: "member",
       status: "active"
     });
 

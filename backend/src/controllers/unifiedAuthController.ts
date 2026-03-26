@@ -686,3 +686,83 @@ export const superAdminLogin = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Get current user profile (Settings)
+ */
+export const getMyProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const user = await User.findById(userId, { password: 0 });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+      role: user.role,
+      signatureUrl: user.signatureUrl
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Update current user profile (fullName, username, signatureUrl)
+ */
+export const updateMyProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { fullName, username, signatureUrl } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (fullName !== undefined) user.fullName = fullName;
+    if (username !== undefined) user.username = username;
+    if (signatureUrl !== undefined) user.signatureUrl = signatureUrl;
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        fullName: user.fullName,
+        username: user.username,
+        signatureUrl: user.signatureUrl
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Update current user password
+ */
+export const updateMyPassword = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password" });
+    }
+
+    // Hash and save new password
+    // Pre-save hook in User model will handle hashing if we just set user.password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -5,9 +5,13 @@ import {
   createUserByAdmin, 
   getInstitutionByDomain,
   googleAuth,
-  superAdminLogin 
+  superAdminLogin,
+  getMyProfile,
+  updateMyProfile,
+  updateMyPassword
 } from "../controllers/unifiedAuthController";
 import { authenticate, institutionAdminOnly } from "../middleware/enhancedAuthMiddleware";
+import { auth } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
@@ -22,6 +26,11 @@ router.post("/google-auth", googleAuth);
 
 // Super Admin login endpoint
 router.post("/super-admin/login", superAdminLogin);
+
+// User Profile and Password Settings (Used by Officer/Dean settings)
+router.get("/profile", auth, getMyProfile);
+router.put("/profile", auth, updateMyProfile);
+router.put("/password", auth, updateMyPassword);
 
 // Protected routes (for admin user creation)
 router.post("/create-user", authenticate, institutionAdminOnly, createUserByAdmin);

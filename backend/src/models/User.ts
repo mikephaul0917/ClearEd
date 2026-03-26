@@ -29,6 +29,7 @@ export interface IUser extends Document {
   accessKey?: string;
   isActive: boolean;
   organizationId?: mongoose.Types.ObjectId;
+  signatureUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
@@ -107,6 +108,9 @@ const UserSchema = new Schema<IUser>({
   organizationId: {
     type: Schema.Types.ObjectId,
     ref: "Organization"
+  },
+  signatureUrl: {
+    type: String
   }
 }, {
   timestamps: true

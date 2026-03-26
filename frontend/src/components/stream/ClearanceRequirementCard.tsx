@@ -88,7 +88,7 @@ const getFileLabel = (file: any) => {
     if (file.type === 'Drive') return 'Google Drive';
     if (file.type === 'YouTube') return 'YouTube video';
     if (file.type === 'Link') return 'Link';
-    
+
     const name = (file.name || '').toLowerCase();
     if (name.endsWith('.pdf')) return 'PDF';
     if (name.endsWith('.doc') || name.endsWith('.docx')) return 'Microsoft Word';
@@ -97,7 +97,7 @@ const getFileLabel = (file: any) => {
     if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return 'Image';
     if (name.match(/\.(mp4|webm|avi|mov)$/)) return 'Video';
     if (name.endsWith('.zip') || name.endsWith('.rar')) return 'Archive';
-    
+
     return 'File';
 };
 
@@ -151,13 +151,13 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
     const [showComments, setShowComments] = useState(false);
     const [loadingComments, setLoadingComments] = useState(false);
     const [isCommentFocused, setIsCommentFocused] = useState(false);
-    
+
     const handleFileClick = (file: any) => {
         if (file.type === 'YouTube' || file.type === 'Link' || file.type === 'Drive') {
             window.open(file.url, "_blank");
             return;
         }
-        
+
         const absoluteUrl = getAbsoluteUrl(file.url);
         const link = document.createElement('a');
         link.href = absoluteUrl;
@@ -263,10 +263,10 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     variant="text"
                     startIcon={<ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />}
                     onClick={() => setShowComments(!showComments)}
-                    sx={{ 
-                        color: "#1967d2", 
-                        textTransform: "none", 
-                        fontWeight: 500, 
+                    sx={{
+                        color: "#1967d2",
+                        textTransform: "none",
+                        fontWeight: 500,
                         borderRadius: 20,
                         fontSize: "0.875rem",
                         px: 2,
@@ -311,13 +311,13 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                             <Avatar src={currentUser?.profilePicture} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
                                 {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
                             </Avatar>
-                            
+
                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
-                                <Box 
-                                    sx={{ 
-                                        flex: 1, 
-                                        border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`, 
-                                        borderRadius: "24px", 
+                                <Box
+                                    sx={{
+                                        flex: 1,
+                                        border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`,
+                                        borderRadius: "24px",
                                         bgcolor: "#f1f3f4",
                                         px: 2,
                                         py: isCommentFocused ? 1.5 : 0.5,
@@ -344,12 +344,12 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                                 setIsCommentFocused(false);
                                             }
                                         }}
-                                        sx={{ 
+                                        sx={{
                                             typography: 'body2',
-                                            '& .MuiInputBase-input': { 
+                                            '& .MuiInputBase-input': {
                                                 py: 0.5,
-                                                fontSize: '0.875rem' 
-                                            } 
+                                                fontSize: '0.875rem'
+                                            }
                                         }}
                                     />
                                     {isCommentFocused && (
@@ -362,7 +362,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                         </Box>
                                     )}
                                 </Box>
-                                
+
                                 <IconButton
                                     onClick={() => {
                                         handleAddComment();
@@ -399,7 +399,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
         if (type === 'material') {
             return { label: "Material", color: "#8B5CF6", icon: <BookIcon sx={{ fontSize: 16 }} />, bgcolor: "#F5F3FF" }; // Same color space as form for now
         }
-        
+
         // Default requirements behavior
         switch (status) {
             case "approved":
@@ -413,21 +413,23 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                 return { label: "Assigned", color: "#64748B", icon: null, bgcolor: "#F8FAFC" };
         }
     };
-    
-    // Determine the large leading Avatar Icon and Color
+
     const getAvatarConfig = () => {
+        const isAssigned = (status === "not_started" || !status) && !isAnnouncement && type !== 'announcement' && type !== 'material';
+        const iconColor = isAssigned ? "#9ca3af" : "#5f6368";
+
         if (type === 'announcement' || isAnnouncement) return { icon: <AnnouncementIcon />, color: "#5f6368" };
-        if (type === 'form') return { icon: <FactCheckIcon />, color: "#5f6368" };
-        if (type === 'poll') return { icon: <HelpOutlineIcon />, color: "#5f6368" };
+        if (type === 'form') return { icon: <FactCheckIcon />, color: iconColor };
+        if (type === 'poll') return { icon: <HelpOutlineIcon />, color: iconColor };
         if (type === 'material') return { icon: <BookIcon />, color: "#5f6368" };
-        
+
         // Default requirement logic
-        return { icon: <AssignmentIcon />, color: "#5f6368" };
+        return { icon: <AssignmentIcon />, color: iconColor };
     };
-    
+
     const avatarConfig = getAvatarConfig();
     const statusConfig = getStatusConfig();
-    
+
     // ANNOUNCEMENT SPECIFIC GOOGLE CLASSROOM LAYOUT
     if (type === 'announcement' || isAnnouncement) {
         return (
@@ -449,8 +451,8 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                 >
                     <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <Box display="flex" gap={3} alignItems="center">
-                            <Avatar 
-                                src={author?.profilePicture} 
+                            <Avatar
+                                src={author?.profilePicture}
                                 sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
                             >
                                 {getInitials(author?.fullName)}
@@ -468,7 +470,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                             <MoreVertIcon fontSize="small" />
                         </IconButton>
                     </Box>
-                    
+
                     <Box sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
                         <Typography
                             variant="body2"
@@ -481,7 +483,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                             }}
                             dangerouslySetInnerHTML={{ __html: description }}
                         />
-                        
+
                         {attachments.length > 0 && (
                             <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
                                 {attachments.map((file, idx) => (
@@ -503,15 +505,15 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     >
                                         {/* Text Container (Left Column) */}
                                         <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
-                                            <Typography 
-                                                variant="body2" 
+                                            <Typography
+                                                variant="body2"
                                                 className="att-title"
-                                                sx={{ 
-                                                    color: "#3c4043", 
-                                                    fontWeight: 500, 
+                                                sx={{
+                                                    color: "#3c4043",
+                                                    fontWeight: 500,
                                                     fontSize: "0.875rem",
-                                                    textOverflow: "ellipsis", 
-                                                    overflow: "hidden", 
+                                                    textOverflow: "ellipsis",
+                                                    overflow: "hidden",
                                                     whiteSpace: "nowrap",
                                                     lineHeight: 1.2,
                                                     "&:hover": { textDecoration: "underline" }
@@ -525,22 +527,22 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                         </Box>
 
                                         {/* Icon Container (Right Column) */}
-                                        <Box sx={{ 
-                                            width: 72, 
-                                            height: 72, 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'center', 
+                                        <Box sx={{
+                                            width: 72,
+                                            height: 72,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
                                             bgcolor: '#f8f9fa',
                                             flexShrink: 0,
                                             borderLeft: '1px solid #dadce0',
                                             overflow: 'hidden'
                                         }}>
                                             {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
-                                             file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
-                                             file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
-                                             (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
-                                             <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                    file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                                        (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                                            <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
                                         </Box>
                                     </Box>
                                 ))}
@@ -550,7 +552,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     {renderCommentsSection()}
                     {renderSharedMenus()}
                 </Paper>
-                </>
+            </>
         );
     }
 
@@ -648,9 +650,9 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                         >
                                             {points ? (points === 'Ungraded' ? 'Ungraded' : `${points} points`) : "100 points"}
                                         </Typography>
-                                        
+
                                         <Typography variant="caption" sx={{ color: '#5f6368', fontWeight: 500 }}>•</Typography>
-                                        
+
                                         <Typography
                                             variant="caption"
                                             sx={{
@@ -711,15 +713,15 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                                 >
                                                     {/* Text Container (Left Column) */}
                                                     <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
-                                                        <Typography 
-                                                            variant="body2" 
+                                                        <Typography
+                                                            variant="body2"
                                                             className="att-title"
-                                                            sx={{ 
-                                                                color: "#3c4043", 
-                                                                fontWeight: 500, 
+                                                            sx={{
+                                                                color: "#3c4043",
+                                                                fontWeight: 500,
                                                                 fontSize: "0.875rem",
-                                                                textOverflow: "ellipsis", 
-                                                                overflow: "hidden", 
+                                                                textOverflow: "ellipsis",
+                                                                overflow: "hidden",
                                                                 whiteSpace: "nowrap",
                                                                 lineHeight: 1.2,
                                                                 "&:hover": { textDecoration: "underline" }
@@ -733,22 +735,22 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                                     </Box>
 
                                                     {/* Icon Container (Right Column) */}
-                                                    <Box sx={{ 
-                                                        width: 72, 
-                                                        height: 72, 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        justifyContent: 'center', 
+                                                    <Box sx={{
+                                                        width: 72,
+                                                        height: 72,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
                                                         bgcolor: '#f8f9fa',
                                                         flexShrink: 0,
                                                         borderLeft: '1px solid #dadce0',
                                                         overflow: 'hidden'
                                                     }}>
                                                         {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
-                                                         file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
-                                                         file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
-                                                         (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
-                                                         <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                            file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                                file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                                                    (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                                                        <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
                                                     </Box>
                                                 </Box>
                                             ))}

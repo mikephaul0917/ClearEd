@@ -2,7 +2,12 @@ import { useEffect, useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
-import { clearanceService, api } from "../../services";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
+import { clearanceService } from "../../services/clearance.service";
+import { api } from "../../services";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
@@ -38,6 +43,9 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   const [myClearances, setMyClearances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTerm, setActiveTerm] = useState<any>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedRequirement, setSelectedRequirement] = useState<any>(null);
+  const [showMaximized, setShowMaximized] = useState(false);
   const [institutionInfo, setInstitutionInfo] = useState<any>(null);
   const [finalClearance, setFinalClearance] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -71,7 +79,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
       // Display profile information
       try {
         if (studentInfo) {
-           setProfile(studentInfo);
+          setProfile(studentInfo);
         } else if (!studentId) {
           const p = await api.get("/student/profile");
           setProfile(p.data || null);
@@ -86,7 +94,10 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   };
 
   useEffect(() => {
-    fetchData();
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [organizationId]);
 
   const stats = useMemo(() => {
@@ -117,11 +128,8 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
 
   const resubmitAll = async () => {
     try {
-      const data = await clearanceService.resubmitClearance();
+      await clearanceService.resubmitClearance();
       if (!isOverview) {
-        // If we're in detail mode, we might need to refresh local items
-        // but resubmitAll usually affects the global state.
-        // For now, let's just refresh the data.
         fetchData();
       }
     } catch { }
@@ -132,7 +140,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
     try {
       await clearanceService.submitToDean();
       alert("Successfully submitted clearance to the Dean!");
-      fetchData(); // Refresh to get the new status
+      fetchData();
     } catch (err: any) {
       alert(err.response?.data?.message || "Failed to submit clearance to Dean.");
     } finally {
@@ -140,156 +148,261 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
     }
   };
 
-  const renderOverview = () => (
-    <Box sx={{ maxWidth: 850, mx: "auto", py: 4 }}>
-      <Paper elevation={0} sx={{
-        p: { xs: 3, md: 6 },
-        border: "1px solid #000",
-        borderRadius: 0,
-        backgroundColor: "#FFF",
-        fontFamily: "'Times New Roman', Times, serif",
-        color: "#000",
-        position: 'relative'
+  const renderCertificateContent = () => (
+    <>
+      {/* Subtle Pattern Background Overlay */}
+      <Box sx={{
+        position: "absolute",
+        inset: 0,
+        opacity: 0.05,
+        pointerEvents: "none",
+        background: "radial-gradient(#000 0.5px, transparent 0.5px)",
+        backgroundSize: "20px 20px"
+      }} />
+
+      {/* Left Vertical Banner */}
+      <Box sx={{
+        width: 70,
+        bgcolor: "#008080",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2,
+        position: "relative"
       }}>
-        {/* Header Section */}
-        <Box textAlign="center" mb={4}>
-          <Typography variant="h5" sx={{ fontWeight: 800, textTransform: "uppercase", mb: 0.5, letterSpacing: '0.05em' }}>
-            STUDENT'S CLEARANCE
+        <Typography
+          sx={{
+            color: "white",
+            whiteSpace: "nowrap",
+            fontSize: "2.8rem",
+            fontWeight: 800,
+            letterSpacing: "4px",
+            fontFamily: "'Playfair Display', serif",
+            textTransform: "uppercase",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%) rotate(-90deg)",
+            zIndex: 3,
+            width: "max-content",
+            userSelect: "none"
+          }}
+        >
+          Certificate
+        </Typography>
+      </Box>
+
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}>
+        <Typography sx={{ fontSize: "1rem", fontStyle: "italic", mb: 2, color: "#475569" }}>
+          This is to certify that
+        </Typography>
+
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 800,
+            color: "#008080",
+            mb: 1,
+            textAlign: "center",
+            fontFamily: "'Lora', serif",
+            textTransform: "uppercase"
+          }}
+        >
+          {(() => {
+            const fallbackName = studentInfo?.fullName || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!)?.fullName : "Student Name");
+            if (!profile) return fallbackName;
+            const fName = (profile.firstName || "").trim();
+            const lName = (profile.familyName || "").trim();
+            const mName = (profile.middleName || "").trim();
+            const scrub = (s: string) => s.toLowerCase() === "undefined" ? "" : s;
+            const first = scrub(fName);
+            const last = scrub(lName);
+            const middle = scrub(mName);
+            if (first || last) return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || fallbackName;
+            return fallbackName;
+          })()}
+        </Typography>
+
+        <Typography sx={{ fontSize: "1rem", mb: 2, color: "#475569", textAlign: "center", maxWidth: 500 }}>
+          ID: {profile?.studentNumber || "N/A"} • {profile?.course || "General Student"}
+        </Typography>
+
+        <Typography sx={{ fontSize: "1.1rem", textAlign: "center", lineHeight: 1.6, color: "#1e293b", mt: 2, mb: 2, px: 4 }}>
+          Is hereby cleared of any responsibilities from his organizations for the Academic Year <strong>{activeTerm?.academicYear || "2025–2026"}</strong>, and is now ready for the Dean’s approval.
+        </Typography>
+
+        {/* Signature Section */}
+        <Box sx={{ width: "100%", mt: 4 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.875rem", letterSpacing: "2px", mb: 3, color: "#64748b", textTransform: "uppercase" }}>
+            Verified By
           </Typography>
-          <Typography sx={{ fontSize: 16, fontWeight: 700, mt: 0.5, textTransform: "uppercase" }}>
-            {institutionInfo?.name || "STA. CRUZ HIGH SCHOOL"}
-          </Typography>
-        </Box>
 
-        {/* Student Info Section */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 700, mr: 1, minWidth: 60 }}>Name:</Typography>
-            <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
-              <Typography sx={{ fontSize: 16, textAlign: "center", fontWeight: 600 }}>
-                {(() => {
-                  const fallbackName = studentInfo?.fullName || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!)?.fullName : "Student Name");
-                  
-                  if (!profile) return fallbackName;
-
-                  const fName = (profile.firstName || "").trim();
-                  const lName = (profile.familyName || "").trim();
-                  const mName = (profile.middleName || "").trim();
-                  
-                  // Scrub the literal string "undefined" if it exists
-                  const scrub = (s: string) => s.toLowerCase() === "undefined" ? "" : s;
-                  const first = scrub(fName);
-                  const last = scrub(lName);
-                  const middle = scrub(mName);
-                  
-                  if (first || last) {
-                    return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || fallbackName;
-                  }
-                  
-                  return fallbackName;
-                })()}
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end', flex: 1.5 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 700, mr: 1, minWidth: 60 }}>Course/Year:</Typography>
-              <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
-                <Typography sx={{ fontSize: 16, textAlign: "center" }}>
-                  {profile?.course || profile?.year ? `${profile.course || ''}${profile.course && profile.year ? ' / ' : ''}${profile.year || ''}${profile.section ? ' - ' + profile.section : ''}`.trim() : "—"}
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 700, mr: 1 }}>School Year</Typography>
-              <Box sx={{ flex: 1, borderBottom: "1px solid #000", pb: 0.2 }}>
-                <Typography sx={{ fontSize: 16, textAlign: "center" }}>{activeTerm?.academicYear || "—"}</Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Table Header */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr', borderTop: '2px solid #000', borderBottom: '2px solid #000', py: 1, mb: 1 }}>
-          <Typography sx={{ fontWeight: 800, textAlign: "center", fontSize: 14 }}>SUBJECT</Typography>
-          <Typography sx={{ fontWeight: 800, textAlign: "center", fontSize: 14 }}>OFFICER'S SIGNATURES</Typography>
-          <Typography sx={{ fontWeight: 800, textAlign: "center", fontSize: 14 }}>DATE</Typography>
-        </Box>
-
-        {/* Subjects/Organizations List */}
-        <Box>
-          {myClearances.map((org) => (
-            <Box
-              key={org._id}
-              onClick={() => navigate(`/student/progress/${org._id}`)}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '1.5fr 2fr 1fr',
-                alignItems: 'center',
-                py: 1,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' }
-              }}
-            >
-              <Typography sx={{ fontSize: 14, px: 1 }}>{org.name}</Typography>
-              <Box sx={{ px: 2, display: 'flex', justifyContent: 'center' }}>
-                <Box sx={{ width: '100%', borderBottom: "1px solid #CCC", minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {org.status === 'completed' || org.status === 'officer_cleared' ? (
-                    org.signatureUrl ? (
-                      <img 
-                        src={org.signatureUrl} 
-                        alt="Signature" 
-                        onClick={(e) => { e.stopPropagation(); setZoomedSignature(org.signatureUrl); }}
-                        style={{ maxHeight: '35px', maxWidth: '100%', objectFit: 'contain', cursor: 'pointer' }} 
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, width: "100%", mb: 2 }}>
+            {myClearances.map((org) => {
+              const isApproved = org.status === 'completed' || org.status === 'officer_cleared';
+              return (
+                <Box
+                  key={org._id}
+                  onClick={() => navigate(`/student/progress/${org._id}`)}
+                  sx={{ display: "flex", flexDirection: "column", position: "relative", cursor: "pointer" }}
+                >
+                  <Box sx={{ height: 40, position: "relative", display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
+                    {org.signatureUrl && isApproved ? (
+                      <img
+                        src={org.signatureUrl}
+                        alt="Signature"
+                        style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
                       />
-                    ) : (
-                      <Typography sx={{ fontFamily: 'cursive', fontSize: 18, color: '#1a365d' }}>Signed Digitally</Typography>
-                    )
-                  ) : (
-                    <Typography sx={{ fontSize: 11, color: '#999', letterSpacing: '0.1em' }}>PENDING</Typography>
+                    ) : isApproved && (
+                      <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
+                        [ DIGITALLY CLEARED ]
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ borderBottom: "1.5px solid #cbd5e1", mt: 1, mb: 0.5 }} />
+                  <Typography sx={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600, textAlign: "center" }}>{org.name}</Typography>
+                  {!isApproved && (
+                    <Typography sx={{ fontSize: "0.65rem", color: "#ef4444", fontStyle: "italic", textAlign: "center" }}>Pending</Typography>
                   )}
                 </Box>
-              </Box>
-              <Box sx={{ px: 1, borderBottom: "1px solid #CCC", minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography sx={{ fontSize: 13 }}>
-                  {org.submittedAt && (org.status === 'completed' || org.status === 'officer_cleared') ? new Date(org.submittedAt).toLocaleDateString() : "—"}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-          {/* Empty dynamic space logic removed to allow the form to natively shrink/expand */}
-        </Box>
+              );
+            })}
+          </Box>
 
-        <Box sx={{ mt: 8, display: 'flex', justifyContent: 'flex-end' }}>
-          <Box sx={{ width: 220, textAlign: 'center', position: 'relative' }}>
-            {finalClearance?.signatureUrl ? (
-              <img 
-                src={finalClearance.signatureUrl} 
-                alt="Dean Signature" 
-                onClick={(e) => { e.stopPropagation(); setZoomedSignature(finalClearance.signatureUrl); }}
-                style={{ 
-                  position: 'absolute', 
-                  bottom: '24px', 
-                  left: '50%', 
-                  transform: 'translateX(-50%)', 
-                  maxHeight: '70px', 
-                  maxWidth: '100%',
-                  mixBlendMode: 'multiply',
-                  zIndex: 1,
-                  cursor: 'pointer'
-                }} 
-              />
-            ) : (
-              finalClearance?.status === 'approved' && (
-                <Typography sx={{ position: 'absolute', bottom: '24px', left: 0, right: 0, fontFamily: 'cursive', fontSize: 18, color: '#10B981', zIndex: 1 }}>Approved by Dean</Typography>
-              )
-            )}
-            <Box sx={{ borderBottom: "1px solid #000", minHeight: 30, display: 'flex', alignItems: 'end', justifyContent: 'center', position: 'relative', zIndex: 2 }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, mt: 0.5 }}>Dean's Signature</Typography>
+          {/* Final/Dean Signature Block - Isolated at the bottom/right */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mt: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", position: "relative", width: 250 }}>
+              <Box sx={{ height: 40, position: "relative", display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
+                {finalClearance?.signatureUrl ? (
+                  <img
+                    src={finalClearance.signatureUrl}
+                    alt="Dean Signature"
+                    style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
+                  />
+                ) : finalClearance?.status === 'approved' && (
+                  <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
+                )}
+              </Box>
+              <Box sx={{ borderBottom: "1.5px solid #008080", mt: 1, mb: 0.5 }} />
+              <Typography sx={{ fontSize: "0.75rem", color: "#008080", fontWeight: 800, textAlign: "center" }}>Dean's Signature</Typography>
+            </Box>
           </Box>
         </Box>
-      </Paper>
 
+        {/* Badge Overlay */}
+        <Box sx={{ position: "absolute", top: 40, right: 40, width: 120, height: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Box sx={{ position: "relative", width: 100, height: 100 }}>
+            <Box sx={{ position: "absolute", inset: 0, borderRadius: "50%", bgcolor: "#94a3b8", border: "4px double white", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", p: 1 }}>
+              <Typography sx={{ color: "white", fontWeight: 800, fontSize: "0.7rem", textTransform: "uppercase" }}>Pending Clearance</Typography>
+            </Box>
+            <Box sx={{ position: "absolute", bottom: -15, left: -5, width: 30, height: 50, bgcolor: "#64748b", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(15deg)", zIndex: -1 }} />
+            <Box sx={{ position: "absolute", bottom: -15, right: -5, width: 30, height: 50, bgcolor: "#64748b", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(-15deg)", zIndex: -1 }} />
+          </Box>
+        </Box>
+      </Box>
+    </>
+  );
+
+  const renderSkeleton = () => (
+    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#fff", position: "relative" }}>
+      {/* Left Skeleton Banner */}
+      <Skeleton 
+        variant="rectangular" 
+        width={70} 
+        height="100%" 
+        sx={{ bgcolor: "#f1f5f9", animationDuration: "1.5s" }} 
+      />
+      
+      {/* Main Content Skeleton Area */}
+      <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Skeleton width="30%" height={24} sx={{ mb: 2, borderRadius: "4px" }} />
+        <Skeleton width="60%" height={80} sx={{ mb: 0.5, borderRadius: "8px" }} />
+        <Skeleton width="40%" height={32} sx={{ mb: 2, borderRadius: "6px" }} />
+        
+        <Skeleton width="85%" height={80} sx={{ mb: 2, borderRadius: "8px" }} />
+        
+        <Box sx={{ width: "100%", mt: "auto" }}>
+          <Skeleton width="20%" height={20} sx={{ mb: 1.5, borderRadius: "4px" }} />
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, width: "100%" }}>
+            {[1, 2, 3].map((i) => (
+              <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Skeleton variant="rectangular" width="80%" height={40} sx={{ mb: 1, borderRadius: "4px" }} />
+                <Box sx={{ borderBottom: "1.5px solid #f1f5f9", width: "100%", mb: 0.5 }} />
+                <Skeleton width="70%" height={16} sx={{ borderRadius: "2px" }} />
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Badge Skeleton Placeholder */}
+      <Box sx={{ position: "absolute", top: 40, right: 40 }}>
+        <Skeleton variant="circular" width={100} height={100} />
+      </Box>
+    </Box>
+  );
+
+  const renderOverview = () => (
+    <Box sx={{ maxWidth: 850, mx: "auto", pt: 0, pb: 4, position: "relative" }}>
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #slip, #slip * { visibility: visible; }
+          #slip { 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+          }
+        }
+      `}</style>
+
+      <Paper
+        id="slip"
+        elevation={0}
+        sx={{
+          position: "relative",
+          minHeight: 600,
+          bgcolor: "#fff",
+          borderRadius: "4px",
+          boxShadow: isOverview ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "none",
+          overflow: "hidden",
+          display: "flex",
+          border: "12px solid #fff",
+          outline: "1px solid #e2e8f0",
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
+        {renderCertificateContent()}
+
+        {/* Maximize Button - ICON ONLY AS REQUESTED */}
+        {!showMaximized && (
+          <IconButton
+            onClick={() => setShowMaximized(true)}
+            data-html2canvas-ignore
+            sx={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              zIndex: 9999,
+              bgcolor: "rgba(255,255,255,0.7)",
+              color: "#000",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+              "&:hover": { bgcolor: "rgba(255,255,255,0.9)", transform: "scale(1.1)" },
+              transition: "all 0.2s"
+            }}
+            className="no-print"
+          >
+            <FullscreenIcon fontSize="large" />
+          </IconButton>
+        )}
+      </Paper>
       <Dialog open={!!zoomedSignature} onClose={() => setZoomedSignature(null)} maxWidth="md">
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#FFF' }}>
           <img src={zoomedSignature || ''} alt="Zoomed Signature" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
@@ -299,15 +412,15 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
         {!readOnly && (
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             disabled={submittingDean || finalClearance !== null}
-            onClick={handleSubmitToDean} 
-            sx={{ 
-              borderRadius: '8px', 
-              color: '#000', 
-              borderColor: '#000', 
-              bgcolor: '#FFF', 
+            onClick={handleSubmitToDean}
+            sx={{
+              borderRadius: '8px',
+              color: '#000',
+              borderColor: '#000',
+              bgcolor: '#FFF',
               fontWeight: 700,
               '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
               '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
@@ -422,16 +535,30 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
 
   if (loading) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
-        <Skeleton variant="text" width={300} height={60} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={200} sx={{ borderRadius: "24px", mb: 4 }} />
-        <Grid container spacing={2}>
-          {[1, 2, 3].map(i => (
-            <Grid item xs={12} sm={4} key={i}>
-              <Skeleton variant="rounded" height={100} sx={{ borderRadius: "20px" }} />
+      <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#FFFFFF' }}>
+        {isOverview ? (
+          <Box sx={{ maxWidth: 850, mx: "auto", pt: 0, pb: 4 }}>
+            <Paper elevation={0} sx={{ border: "12px solid #fff", outline: "1px solid #e2e8f0", overflow: "hidden", borderRadius: "4px" }}>
+              {renderSkeleton()}
+            </Paper>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: '8px' }} />
+              <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: '8px' }} />
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ p: { xs: 2, md: 4 } }}>
+            <Skeleton variant="text" width={300} height={60} sx={{ mb: 2 }} />
+            <Skeleton variant="rounded" height={200} sx={{ borderRadius: "24px", mb: 4 }} />
+            <Grid container spacing={2}>
+              {[1, 2, 3].map(i => (
+                <Grid item xs={12} sm={4} key={i}>
+                  <Skeleton variant="rounded" height={100} sx={{ borderRadius: "20px" }} />
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </Box>
+        )}
       </Box>
     );
   }
@@ -439,6 +566,60 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   return (
     <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#FFFFFF', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       {isOverview ? renderOverview() : renderDetail()}
+      {/* Maximized View Dialog */}
+      <Dialog
+        open={showMaximized}
+        onClose={() => setShowMaximized(false)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: "transparent",
+            boxShadow: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "visible"
+          }
+        }}
+      >
+        {/* Close Button on Maximized View - Fixed position on screen for visibility */}
+        <IconButton
+          onClick={() => setShowMaximized(false)}
+          sx={{
+            position: "fixed",
+            top: 24,
+            right: 24,
+            zIndex: 11000,
+            bgcolor: "rgba(255,255,255,0.9)",
+            color: "#000",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            "&:hover": { bgcolor: "#fff", transform: "scale(1.1)" },
+            transition: "all 0.2s"
+          }}
+        >
+          <CloseIcon fontSize="large" sx={{ fontWeight: 800 }} />
+        </IconButton>
+
+        <Box sx={{ position: "relative", transform: "scale(1.3)", transformOrigin: "center" }}>
+          <Box
+            sx={{
+              position: "relative",
+              width: 850,
+              minHeight: 600,
+              bgcolor: "#fff",
+              borderRadius: "4px",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
+              display: "flex",
+              border: "12px solid #fff",
+              outline: "1px solid #e2e8f0"
+            }}
+          >
+            {renderCertificateContent()}
+          </Box>
+        </Box>
+      </Dialog>
     </Box>
   );
 }

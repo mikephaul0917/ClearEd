@@ -9,6 +9,7 @@ export interface IFinalClearance extends Document {
   reviewedAt?: Date;
   notes?: string;
   signatureUrl?: string; // Dean's signature
+  reviewedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,7 +26,8 @@ const FinalClearanceSchema = new Schema<IFinalClearance>({
   submittedAt: { type: Date, default: Date.now },
   reviewedAt: { type: Date },
   notes: { type: String },
-  signatureUrl: { type: String }
+  signatureUrl: { type: String },
+  reviewedBy: { type: Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
 // A user can only have one final clearance per term per institution

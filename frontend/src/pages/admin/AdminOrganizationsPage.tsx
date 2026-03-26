@@ -34,8 +34,8 @@ const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
 interface OrganizationRow {
   _id: string;
   name: string;
-  code?: string;
-  joinCode: string; // Added joinCode
+  description?: string;
+  joinCode: string; 
   signatoryName?: string;
   isFinal?: boolean;
 }
@@ -58,7 +58,7 @@ export default function AdminOrganizationsPage({
   const [view, setView] = useState<"active" | "deleted">("active");
   const [manageOrg, setManageOrg] = useState<OrganizationRow | null>(null);
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
+  const [description, setDescription] = useState("");
   const [joinCode, setJoinCode] = useState(""); // Added joinCode state
   const [signatoryName, setSignatoryName] = useState("");
   const [isFinal, setIsFinal] = useState(false);
@@ -97,13 +97,13 @@ export default function AdminOrganizationsPage({
   useEffect(() => {
     if (manageOrg) {
       setName(manageOrg.name || "");
-      setCode(manageOrg.code || "");
+      setDescription(manageOrg.description || "");
       setJoinCode(manageOrg.joinCode || ""); // Populate joinCode
       setSignatoryName(manageOrg.signatoryName || "");
       setIsFinal(manageOrg.isFinal || false);
     } else {
       setName("");
-      setCode("");
+      setDescription("");
       setJoinCode(""); // Reset joinCode
       setSignatoryName("");
       setIsFinal(false);
@@ -122,7 +122,7 @@ export default function AdminOrganizationsPage({
     if (!q) return activeRows;
     return activeRows.filter(r => (
       r.name.toLowerCase().includes(q) ||
-      (r.code || "").toLowerCase().includes(q) ||
+      (r.description || "").toLowerCase().includes(q) ||
       (r.joinCode || "").toLowerCase().includes(q) || // Added joinCode search
       (r.signatoryName || "").toLowerCase().includes(q)
     ));
@@ -266,7 +266,7 @@ export default function AdminOrganizationsPage({
               disableElevation
               fullWidth={isSmallMobile}
               startIcon={<AddCircle />}
-              onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", code: "", joinCode: "", isFinal: false })}
+              onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
               sx={{
                 borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
                 textTransform: 'none', px: 3, py: 1, fontWeight: 600,
@@ -317,7 +317,7 @@ export default function AdminOrganizationsPage({
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: '#F8FAFC' }}>
-                {['Organization', 'Shorthand', 'Join Code', 'Signatory', 'Actions'].map((h, i) => (
+                {['Organization', 'Description', 'Join Code', 'Signatory', 'Actions'].map((h, i) => (
                   <TableCell
                     key={h}
                     align={h === 'Actions' ? 'right' : 'left'}
@@ -367,7 +367,7 @@ export default function AdminOrganizationsPage({
                     </TableCell>
                     <TableCell>
                       <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>
-                        {org.code || "—"}
+                        {org.description || "—"}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -497,13 +497,13 @@ export default function AdminOrganizationsPage({
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <FormLabel sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'block' }}>
-                  Shorthand Code
+                  Short Description
                 </FormLabel>
                 <TextField
                   fullWidth
-                  placeholder="e.g. REG"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. Office of the Registrar"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
                 />
               </Grid>
@@ -569,14 +569,14 @@ export default function AdminOrganizationsPage({
               if (!name.trim()) return;
               try {
                 if (manageOrg?._id) {
-                  await adminService.updateOrganization(manageOrg._id, { name, code, signatoryName, isFinal });
+                  await adminService.updateOrganization(manageOrg._id, { name, description, signatoryName, isFinal });
                 } else {
                   const terms = await adminService.getTerms();
                   const activeTerm = terms.data?.find((t: any) => t.isActive) || terms.data?.[0];
 
                   await adminService.createOrganization({
                     name,
-                    code,
+                    description,
                     signatoryName,
                     isFinal,
                     termId: activeTerm?._id
@@ -584,7 +584,7 @@ export default function AdminOrganizationsPage({
                 }
                 fetchData();
                 setManageOrg(null);
-                setName(""); setCode(""); setSignatoryName(""); setIsFinal(false);
+                setName(""); setDescription(""); setSignatoryName(""); setIsFinal(false);
               } catch (err: any) {
                 console.error("Failed to save organization:", err);
                 const msg = err.response?.data?.message || err.message || "An error occurred";

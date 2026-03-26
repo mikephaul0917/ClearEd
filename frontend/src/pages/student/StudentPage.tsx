@@ -16,7 +16,7 @@ import StudentCertificate from "./StudentCertificate";
 import RoleLayout from "../../components/layout/RoleLayout";
 import TodoPage from "../todo/TodoPage";
 import LeaderboardPage from "./LeaderboardPage";
-import { Skeleton, Card, CardContent, useTheme, useMediaQuery } from "@mui/material";
+import { Skeleton, Card, CardContent, useTheme, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
 import { clearanceService } from "../../services/clearance.service";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
@@ -25,6 +25,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
+import CloseIcon from "@mui/icons-material/Close";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
@@ -95,6 +96,7 @@ export default function StudentPage() {
   const [spStudentNumber, setSpStudentNumber] = useState("");
   const [spCourse, setSpCourse] = useState("");
   const [spYear, setSpYear] = useState("");
+  const [viewingOrg, setViewingOrg] = useState<any>(null);
   const [spSemester, setSpSemester] = useState("");
   const [spAcademicYear, setSpAcademicYear] = useState("");
 
@@ -260,7 +262,7 @@ export default function StudentPage() {
   const [activeTerm, setActiveTerm] = useState<{ name: string; academicYear: string } | null>(null);
   const [timeline, setTimeline] = useState<any[]>([]);
 
-  const filteredClearances = myClearances;
+  const filteredClearances = myClearances.filter(c => c.orgStatus === 'active');
 
   const approvedCount = useMemo(() => filteredClearances.filter(c => c.status === "completed").length, [filteredClearances]);
   const pendingCount = useMemo(() => filteredClearances.filter(c => c.status === "pending" || c.status === "in_progress").length, [filteredClearances]);
@@ -500,7 +502,7 @@ export default function StudentPage() {
                       {org.name}
                     </Typography>
 
-                    <Box 
+                    <Box
                       className="card-description"
                       sx={{
                         maxHeight: 0,
@@ -528,21 +530,24 @@ export default function StudentPage() {
 
                     {/* Footer Section - Pills (Always visible) */}
                     <Box sx={{ pt: 1, display: 'flex', gap: 1.5, mt: 1 }}>
-                      <Box
-                        sx={{
-                          px: 2,
-                          py: 1,
-                          bgcolor: "#F3F4F6",
-                          borderRadius: "20px",
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
-                          Learn more
-                        </Typography>
-                      </Box>
+                        <Box
+                          onClick={(e) => { e.stopPropagation(); setViewingOrg(org); }}
+                          sx={{
+                            px: 2,
+                            py: 1,
+                            bgcolor: "#F3F4F6",
+                            borderRadius: "20px",
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: '#E2E8F0' }
+                          }}
+                        >
+                          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                            Learn more
+                          </Typography>
+                        </Box>
                       <Box
                         sx={{
                           px: 2,
@@ -571,6 +576,70 @@ export default function StudentPage() {
                 </Box>
               ))}
             </Box>
+
+            {/* Modal for Full Description (Student Dashboard) */}
+            <Dialog 
+              open={!!viewingOrg} 
+              onClose={() => setViewingOrg(null)}
+              onClick={(e) => e.stopPropagation()}
+              PaperProps={{
+                  sx: {
+                      borderRadius: "24px",
+                      padding: "8px",
+                      maxWidth: "500px",
+                      width: "100%"
+                  }
+              }}
+            >
+              <DialogTitle sx={{ m: 0, p: 2, pr: 6, fontWeight: 800, fontSize: "1.5rem", fontFamily: fontStack }}>
+                {viewingOrg?.name}
+                <IconButton
+                  onClick={() => setViewingOrg(null)}
+                  sx={{
+                    position: "absolute",
+                    right: 16,
+                    top: 16,
+                    color: (theme) => theme.palette.grey[500],
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent sx={{ p: 2 }}>
+                <Typography sx={{ color: "#4B5563", lineHeight: 1.6, fontFamily: fontStack }}>
+                  {viewingOrg?.description || viewingOrg?.signatoryName || "Join this organization to access exclusive content and tools for your clearance process."}
+                </Typography>
+                <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Signatory</Typography>
+                    <Typography sx={{ fontWeight: 700 }}>{viewingOrg?.signatoryName || 'Representative'}</Typography>
+                  </Box>
+                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Status</Typography>
+                    <Typography sx={{ fontWeight: 700, textTransform: 'capitalize' }}>
+                      {viewingOrg?.status === 'completed' ? 'Cleared' : viewingOrg?.status === 'not_started' ? 'Pending' : 'Reviewing'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ p: 2, pt: 0 }}>
+                <Button 
+                  fullWidth 
+                  onClick={() => setViewingOrg(null)}
+                  variant="contained"
+                  sx={{ 
+                      borderRadius: "12px", 
+                      bgcolor: COLORS.black, 
+                      textTransform: "none", 
+                      fontWeight: 700,
+                      py: 1.5,
+                      '&:hover': { bgcolor: COLORS.black, opacity: 0.8 }
+                  }}
+                >
+                  Close
+                </Button>
+              </DialogActions>
+            </Dialog>
 
             {/* ── Requirements & Profile Quick View ───────────────────────── */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3, mb: 4 }}>

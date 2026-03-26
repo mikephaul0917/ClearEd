@@ -666,11 +666,8 @@ export const getMyOrganizations = catchAsync(async (req: Request, res: Response)
             populate: { path: 'termId', select: 'name academicYear semester' }
         });
 
-    // Filter out memberships where the underlying organization is archived
-    const activeMemberships = memberships.filter(m => {
-        const org: any = m.organizationId;
-        return org && org.status === 'active';
-    });
+    // Keep all memberships, including those where the underlying organization is archived
+    const activeMemberships = memberships;
 
     const organizations = activeMemberships.map(m => {
         const org: any = m.organizationId;
