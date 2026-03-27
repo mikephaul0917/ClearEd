@@ -51,7 +51,7 @@ export const getClearanceRequirements = async (req: Request, res: Response) => {
     }
 
     const requirements = await ClearanceRequirement.find(query)
-      .populate('createdBy', 'fullName profilePicture')
+      .populate('createdBy', 'fullName avatarUrl')
       .sort({ order: 1 });
 
     // 2. Fetch submissions for this user in this organization
@@ -349,7 +349,7 @@ export const getClearanceRequirementById = async (req: Request, res: Response) =
     const requirement = await ClearanceRequirement.findOne({
       _id: new mongoose.Types.ObjectId(id),
       institutionId: new mongoose.Types.ObjectId(institutionId as string)
-    }).populate('createdBy', 'fullName profilePicture');
+    }).populate('createdBy', 'fullName avatarUrl');
 
     if (!requirement) {
       return res.status(404).json({ success: false, message: "Requirement not found" });

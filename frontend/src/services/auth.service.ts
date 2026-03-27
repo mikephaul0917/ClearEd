@@ -42,5 +42,9 @@ export const authService = {
         localStorage.removeItem('authToken');
         localStorage.removeItem('email');
         localStorage.removeItem('username');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('institutionId');
+        localStorage.removeItem('studentProfile');
     }
 };

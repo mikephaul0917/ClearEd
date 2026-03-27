@@ -17,23 +17,24 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                py: 8,
-                px: 2,
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                boxShadow: 1,
+                py: 12,
+                px: 4,
+                borderRadius: '16px',
+                border: '1.5px dashed #CBD5E1',
+                bgcolor: 'transparent',
+                my: 4
             }}
         >
             {icon && (
-                <Box sx={{ mb: 2, color: 'text.secondary', '& > svg': { fontSize: 64 } }}>
+                <Box sx={{ mb: 2, color: '#94A3B8', '& > svg': { fontSize: 48 } }}>
                     {icon}
                 </Box>
             )}
-            <Typography variant="h6" gutterBottom color="text.primary" fontWeight="bold">
+            <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", mb: 1 }}>
                 {title}
             </Typography>
             {description && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
+                <Typography sx={{ color: "#64748B", fontSize: "1rem", maxWidth: 440, mb: 3, lineHeight: 1.5 }}>
                     {description}
                 </Typography>
             )}

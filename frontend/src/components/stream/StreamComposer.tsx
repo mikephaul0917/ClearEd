@@ -26,10 +26,10 @@ import { clearanceService } from "../../services";
 interface StreamComposerProps {
     organizationId: string;
     onCreated: () => void;
-    userProfilePicture?: string;
+    userAvatarUrl?: string;
 }
 
-const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreated, userProfilePicture }) => {
+const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreated, userAvatarUrl }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
@@ -170,7 +170,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                 }}
                 onClick={handleExpand}
             >
-                <Avatar src={userProfilePicture} sx={{ bgcolor: "#F1F5F9", color: "#64748B", width: 40, height: 40 }}>
+                <Avatar src={userAvatarUrl} sx={{ bgcolor: "#F1F5F9", color: "#64748B", width: 40, height: 40 }}>
                     <AddIcon />
                 </Avatar>
                 <Typography

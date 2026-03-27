@@ -3,7 +3,9 @@ export interface AuthPayload {
     role: 'student' | 'officer' | 'admin' | 'super_admin' | 'dean';
     institutionId?: string; // undefined for super‑admin
     email?: string; // optional, useful for UI
-    username?: string; // full name
+    username?: string; // or full name
+    fullName?: string;
+    avatarUrl?: string;
     exp: number; // JWT expiry (seconds since epoch)
     iat: number; // issued‑at
 }
@@ -15,4 +17,6 @@ export interface AuthUser {
     institutionId?: string;
     email?: string;
     username?: string;
+    fullName?: string;
+    avatarUrl?: string;
 }

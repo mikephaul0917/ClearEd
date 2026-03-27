@@ -14,6 +14,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import SuccessMessage from "../../components/SuccessMessage";
 import { api, authService } from '../../services';
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import { Divider } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
@@ -77,7 +78,8 @@ export default function AdminPage() {
   const isRecords = location.pathname.includes("/records");
   const isQuotes = location.pathname.includes("/quotes");
   const isInstitutionRequests = location.pathname.includes("/institution-requests");
-  const active: "dashboard" | "settings" | "users" | "organizations" | "terms" | "records" | "quotes" | "institution-requests" =
+  const isFAQs = location.pathname.includes("/faqs");
+  const active: "dashboard" | "settings" | "users" | "organizations" | "terms" | "records" | "quotes" | "institution-requests" | "faqs" =
     isSettings ? "settings" :
       isUsers ? "users" :
         isOrganizations ? "organizations" :
@@ -85,7 +87,8 @@ export default function AdminPage() {
             isRecords ? "records" :
               isQuotes ? "quotes" :
                 isInstitutionRequests ? "institution-requests" :
-                  "dashboard";
+                  isFAQs ? "faqs" :
+                    "dashboard";
 
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
   const email = typeof localStorage !== "undefined" ? (localStorage.getItem("email") || "admin@example.com") : "admin@example.com";
@@ -158,11 +161,12 @@ export default function AdminPage() {
   }, [profileFirst, profileLast, email]);
 
   const initials = useMemo(() => {
-    const words = fullName.split(" ").filter(Boolean);
-    const first = words[0]?.[0] || "A";
-    const second = words[1]?.[0] || "D";
-    return (first + second).toUpperCase();
+    return getInitials(fullName);
   }, [fullName]);
+
+  const draftFullName = useMemo(() => {
+    return `${draftFirst.trim()} ${draftLast.trim()}`.trim() || fullName;
+  }, [draftFirst, draftLast, fullName]);
 
   const [users, setUsers] = useState<any[]>([]);
   const roleOf = (u: any) => {
@@ -739,8 +743,8 @@ export default function AdminPage() {
 
             <SettingsSection>
               <ProfilePictureSection 
-                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
-                initials={fullName.split(' ').map(n=>n[0]).join('')} 
+                avatarUrl={getAbsoluteUrl(avatarUrl)}
+                initials={getInitials(draftFullName)} 
                 onFileSelect={async (file) => {
                   try {
                     const formData = new FormData();

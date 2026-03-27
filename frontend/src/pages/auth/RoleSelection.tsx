@@ -6,6 +6,7 @@ interface UserAccount {
   email: string;
   roles: string[];
   fullName: string;
+  avatarUrl?: string;
   currentRole?: string;
 }
 
@@ -95,7 +96,8 @@ export default function RoleSelection() {
     // Set current session data
     localStorage.setItem('user', JSON.stringify({
       ...selectedAccountData,
-      role: role
+      role: role,
+      avatarUrl: selectedAccountData.avatarUrl || '' // Preserve avatarUrl
     }));
     localStorage.setItem('role', role);
 

@@ -3,14 +3,17 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Swal from "sweetalert2";
+import React, { useState } from "react";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { authService } from "../../services";
 
 export default function Header() {
   const location = useLocation();
   const nav = useNavigate();
   const inProtected = location.pathname.startsWith("/admin") || location.pathname.startsWith("/user");
+  const isToggled = location.pathname === '/how-it-works';
   const confirmLogout = () => { authService.logout(); nav("/register", { state: { banner: { message: "Logged out successfully!", variant: "success" } } }); };
   const promptLogout = async () => {
     const res = await Swal.fire({
@@ -99,9 +102,59 @@ export default function Header() {
                 Logout
               </Button>
             ) : (
-              <Button component={RouterLink} to="/how-it-works" variant="contained" sx={{ backgroundColor: "#000000", color: "#FFFFFF", "&:hover": { backgroundColor: "#333333" }, borderRadius: 2, padding: 1.5 }}>
-                How It Works
-              </Button>
+              <Box 
+                onClick={() => {
+                  // Small delay to let animation play
+                  setTimeout(() => {
+                    nav(isToggled ? "/register" : "/how-it-works");
+                  }, 400);
+                }}
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1.5, 
+                  bgcolor: '#F2F4F7', 
+                  borderRadius: '100px', 
+                  p: '4px',
+                  pr: isToggled ? 0.5 : 2.25,
+                  pl: isToggled ? 2.25 : 0.5,
+                  flexDirection: isToggled ? 'row-reverse' : 'row',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': { 
+                    bgcolor: '#E5E7EB',
+                    '& .inner-pill': { boxShadow: '0 4px 6px rgba(0,0,0,0.08)' },
+                    '& .arrow-icon': { transform: isToggled ? 'translateX(-2px)' : 'translateX(2px)' }
+                  }
+                }}
+              >
+                <Box 
+                  className="inner-pill"
+                  sx={{ 
+                    bgcolor: isToggled ? '#FFFFFF' : '#000000', 
+                    borderRadius: '100px', 
+                    px: 3, 
+                    py: 1.25, 
+                    color: isToggled ? '#000000' : '#FFFFFF', 
+                    fontWeight: 700, 
+                    fontSize: '0.875rem',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  {isToggled ? "Get Started" : "How It Works"}
+                </Box>
+                <ArrowForwardIcon 
+                  className="arrow-icon" 
+                  sx={{ 
+                    color: '#000000', 
+                    fontSize: '1.2rem', 
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isToggled ? 'rotate(180deg)' : 'none'
+                  }} 
+                />
+              </Box>
             )}
           </Box>
         </Box>

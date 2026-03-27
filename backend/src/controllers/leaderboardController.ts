@@ -5,7 +5,6 @@ import ClearanceSubmission from "../models/ClearanceSubmission";
 import Term from "../models/Term";
 import FinalClearance from "../models/FinalClearance";
 import StudentProfile from "../models/StudentProfile";
-import ClearanceSubmission from "../models/ClearanceSubmission";
 export const getLeaderboardStats = async (req: Request, res: Response) => {
   try {
     const institutionId = (req as any).user.institutionId;
@@ -24,7 +23,7 @@ export const getLeaderboardStats = async (req: Request, res: Response) => {
         role: { $in: ['student', 'officer'] }, 
         status: { $nin: ['deleted', 'locked'] },
         enabled: true 
-    }).select('fullName username profilePicture role');
+    }).select('fullName username avatarUrl role');
 
     // Get all student profiles to verify which officers are also students
     const studentProfiles = await StudentProfile.find({ institutionId });
@@ -93,7 +92,7 @@ export const getLeaderboardStats = async (req: Request, res: Response) => {
             _id: student._id,
             user: {
                name: student.fullName || student.username || "Unknown Student",
-               avatar: (student as any).profilePicture || undefined
+               avatarUrl: (student as any).avatarUrl || undefined
             },
             certifications: certCount,
             clearanceTime: clearanceDurationStr,

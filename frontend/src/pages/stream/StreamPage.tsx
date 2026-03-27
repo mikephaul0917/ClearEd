@@ -58,6 +58,21 @@ const StreamPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
+    const [fullUser, setFullUser] = useState(() => {
+        const str = localStorage.getItem("user");
+        return str ? JSON.parse(str) : null;
+    });
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user' && e.newValue) {
+                setFullUser(JSON.parse(e.newValue));
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     const [org, setOrg] = useState<any>(null);
     const [membership, setMembership] = useState<any>(null);
     const [students, setStudents] = useState<any[]>([]); // New state for AssignTo modal
@@ -488,6 +503,7 @@ const StreamPage: React.FC = () => {
                                 <StreamComposer 
                                     organizationId={org._id}
                                     onCreated={fetchData}
+                                    userAvatarUrl={fullUser?.avatarUrl}
                                 />
                             )}
 

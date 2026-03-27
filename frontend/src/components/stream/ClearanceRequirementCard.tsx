@@ -67,7 +67,7 @@ export interface ClearanceRequirementCardProps {
     type?: string;
     author?: {
         fullName: string;
-        profilePicture?: string;
+        avatarUrl?: string;
     };
     submittedAt?: string;
     createdAt?: string;
@@ -151,8 +151,20 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
         document.body.removeChild(link);
     };
 
-    const currentUserStr = localStorage.getItem("user");
-    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+    const [currentUser, setCurrentUser] = useState<any>(() => {
+        const str = localStorage.getItem("user");
+        return str ? JSON.parse(str) : null;
+    });
+    
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user' && e.newValue) {
+                setCurrentUser(JSON.parse(e.newValue));
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     useEffect(() => {
         if (showComments) {
@@ -267,31 +279,44 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         </Box>
                     ) : (
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
-                            {comments.map((comment: any) => (
-                                <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                    <Avatar src={getAbsoluteUrl(comment.userId?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
-                                        {getInitials(comment.userId?.fullName)}
-                                    </Avatar>
-                                    <Box>
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem" }}>
-                                                {comment.userId?.fullName}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ color: "#5f6368" }}>
-                                                {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {comments.map((comment: any) => {
+                                // Robust ID comparison
+                                const currentId = (user as any)?.id || currentUser?._id || currentUser?.id;
+                                const commentAuthorId = comment.userId?._id || comment.userId?.id || (typeof comment.userId === 'string' ? comment.userId : null);
+                                const isCurrentUser = !!currentId && currentId === commentAuthorId;
+
+                                const commentUser = isCurrentUser ? { ...comment.userId, ...currentUser } : comment.userId;
+                                const avatarSrc = commentUser?.avatarUrl || "";
+
+                                return (
+                                    <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
+                                        <Avatar 
+                                            src={getAbsoluteUrl(avatarSrc)} 
+                                            sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}
+                                        >
+                                            {getInitials(commentUser?.fullName, commentUser?.email)}
+                                        </Avatar>
+                                        <Box>
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem" }}>
+                                                    {commentUser?.fullName}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: "#5f6368" }}>
+                                                    {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </Typography>
+                                            </Box>
+                                            <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.5 }}>
+                                                {comment.content}
                                             </Typography>
                                         </Box>
-                                        <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.5 }}>
-                                            {comment.content}
-                                        </Typography>
                                     </Box>
-                                </Box>
-                            ))}
+                                );
+                            })}
                         </Box>
                     )}
                     <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
-                            <Avatar src={getAbsoluteUrl(currentUser?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                            <Avatar src={getAbsoluteUrl(currentUser?.avatarUrl)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
                                 {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
                             </Avatar>
 
@@ -435,7 +460,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <Box display="flex" gap={3} alignItems="center">
                             <Avatar
-                                src={getAbsoluteUrl(author?.profilePicture)}
+                                src={getAbsoluteUrl(author?.avatarUrl)}
                                 sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
                             >
                                 {getInitials(author?.fullName)}

@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import { getAbsoluteUrl } from "../../utils/avatarUtils";
 
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -161,7 +162,7 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
                                             color="primary"
                                         />
                                         <Avatar 
-                                            src={userObj?.profilePicture} 
+                                            src={getAbsoluteUrl(userObj?.avatarUrl)} 
                                             alt={fullName}
                                             sx={{ width: 32, height: 32, mr: 2, ml: 1, bgcolor: "#1967d2" }}
                                         >

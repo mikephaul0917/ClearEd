@@ -27,6 +27,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, authService } from '../../services';
+import { getInitials } from "../../utils/avatarUtils";
 import SuccessMessage from "../../components/SuccessMessage";
 import OfficerClassroomView from "../../components/officer/OfficerClassroomView";
 import RoleLayout from "../../components/layout/RoleLayout";
@@ -223,47 +224,57 @@ export default function OfficerPage() {
   };
 
   useEffect(() => {
-    try {
-      const storedUserStr = localStorage.getItem("user");
-      const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
-      const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
-      const base = savedUsername || (email || "").split("@")[0];
-      const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
-      const first = parts[0] || "";
-      const last = parts.slice(1).join(" ") || "";
-      setProfileFirst(first);
-      setProfileLast(last);
-      setDraftFirst(first);
-      setDraftLast(last);
-      (async () => {
-        try {
-          const res = await api.get("/auth/profile");
-          if (res.data.avatarUrl) setAvatarUrl(res.data.avatarUrl);
-        } catch { }
-      })();
-    } catch { }
     (async () => {
       try {
-        const res = await api.get("/signatory/pending");
-        const base: PendingRow[] = (res.data.rows || []).map((r: any, idx: number) => ({
-          id: r.id || String(idx + 1),
-          name: r.name || r.studentName || "Unknown",
-          course: r.course || "BSCS",
-          year: r.year || "3rd Year",
-          status: r.status || "Pending",
-          reqCompleted: r.reqCompleted ?? 2,
-          reqTotal: r.reqTotal ?? 3,
-          dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
-          studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
-          approvedAt: null,
-          rejectedAt: null
-        }));
-        setRows(base);
-      } catch {
-        setRows([
-          { id: "1", name: "Juan Dela Cruz", course: "BSIT", year: "3rd Year", status: "Pending", reqCompleted: 2, reqTotal: 3, dateSubmitted: new Date().toISOString().slice(0, 10), studentId: "S-00001", approvedAt: null, rejectedAt: null },
-          { id: "2", name: "Maria Santos", course: "BSCS", year: "4th Year", status: "For Review", reqCompleted: 3, reqTotal: 3, dateSubmitted: new Date().toISOString().slice(0, 10), studentId: "S-00002", approvedAt: null, rejectedAt: null }
-        ]);
+        const storedUserStr = localStorage.getItem("user");
+        const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+        const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
+        const base = savedUsername || (email || "").split("@")[0];
+        const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
+        const first = parts[0] || "";
+        const last = parts.slice(1).join(" ") || "";
+        setProfileFirst(first);
+        setProfileLast(last);
+        setDraftFirst(first);
+        setDraftLast(last);
+
+        // Fetch avatar and profile
+        try {
+          const profileRes = await api.get("/auth/profile");
+          if (profileRes.data.avatarUrl) {
+            setAvatarUrl(profileRes.data.avatarUrl);
+            updateLocalAvatar(profileRes.data.avatarUrl);
+          }
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+        }
+
+        // Fetch pending submissions
+        try {
+          const pendingRes = await api.get("/signatory/pending");
+          const pendingRows: PendingRow[] = (pendingRes.data.rows || []).map((r: any, idx: number) => ({
+            id: r.id || String(idx + 1),
+            name: r.name || r.studentName || "Unknown",
+            course: r.course || "BSCS",
+            year: r.year || "3rd Year",
+            status: r.status || "Pending",
+            reqCompleted: r.reqCompleted ?? 2,
+            reqTotal: r.reqTotal ?? 3,
+            dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
+            studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
+            approvedAt: null,
+            rejectedAt: null
+          }));
+          setRows(pendingRows);
+        } catch (err) {
+          console.error("Failed to fetch pending:", err);
+          setRows([
+            { id: "1", name: "Juan Dela Cruz", course: "BSIT", year: "3rd Year", status: "Pending", reqCompleted: 2, reqTotal: 3, dateSubmitted: new Date().toISOString().slice(0, 10), studentId: "S-00001", approvedAt: null, rejectedAt: null },
+            { id: "2", name: "Maria Santos", course: "BSCS", year: "4th Year", status: "For Review", reqCompleted: 3, reqTotal: 3, dateSubmitted: new Date().toISOString().slice(0, 10), studentId: "S-00002", approvedAt: null, rejectedAt: null }
+          ]);
+        }
+      } catch (err) {
+        console.error("Initialization error:", err);
       }
     })();
   }, [email]);
@@ -356,11 +367,12 @@ export default function OfficerPage() {
   }, [profileFirst, profileLast, email]);
 
   const initials = useMemo(() => {
-    const words = fullName.split(" ").filter(Boolean);
-    const first = words[0]?.[0] || "O";
-    const second = words[1]?.[0] || "F";
-    return (first + second).toUpperCase();
+    return getInitials(fullName);
   }, [fullName]);
+
+  const draftFullName = useMemo(() => {
+    return `${draftFirst.trim()} ${draftLast.trim()}`.trim() || fullName;
+  }, [draftFirst, draftLast, fullName]);
 
   const approve = async () => {
     if (!selected) { setNotice({ message: "Select a student first", variant: "error" }); return; }
@@ -480,7 +492,7 @@ export default function OfficerPage() {
             <SettingsSection>
               <ProfilePictureSection 
                 avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
-                initials={fullName.split(' ').map(n=>n[0]).join('')} 
+                initials={getInitials(draftFullName)} 
                 onFileSelect={async (file) => {
                   try {
                     const formData = new FormData();

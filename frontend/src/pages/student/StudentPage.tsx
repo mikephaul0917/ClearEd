@@ -149,7 +149,10 @@ export default function StudentPage() {
            setSpYear(scrub(p.year));
           setSpSemester(scrub(p.semester));
           setSpAcademicYear(scrub(p.academicYear));
-          if (p.avatarUrl) setAvatarUrl(p.avatarUrl);
+          if (p.avatarUrl) {
+            setAvatarUrl(p.avatarUrl);
+            updateLocalAvatar(p.avatarUrl);
+          }
           // Sync with general profile states to avoid stale 'admin' data
           const fName = scrub(p.firstName) || first;
           const lName = scrub(p.familyName) || last;
@@ -176,6 +179,10 @@ export default function StudentPage() {
   const initials = useMemo(() => {
     return getInitials(fullName);
   }, [fullName]);
+
+  const draftFullName = useMemo(() => {
+    return `${draftFirst.trim()} ${draftLast.trim()}`.trim() || fullName;
+  }, [draftFirst, draftLast, fullName]);
 
   const logout = () => { authService.logout(); nav("/", { state: { banner: { message: "Logged out successfully!", variant: "success" } } }); };
 
@@ -727,7 +734,7 @@ export default function StudentPage() {
             <SettingsSection>
               <ProfilePictureSection 
                 avatarUrl={getAbsoluteUrl(avatarUrl)}
-                initials={getInitials(fullName)} 
+                initials={getInitials(draftFullName)} 
                 onFileSelect={async (file) => {
                   try {
                     const formData = new FormData();

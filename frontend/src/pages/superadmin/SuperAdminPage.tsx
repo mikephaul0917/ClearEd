@@ -180,11 +180,12 @@ export default function SuperAdminPage() {
   }, [profileFirst, profileLast, email]);
 
   const initials = useMemo(() => {
-    const words = fullName.split(" ").filter(Boolean);
-    return words.length >= 2
-      ? words[0][0] + words[1][0]
-      : words[0] ? words[0].slice(0, 2) : "SA";
+    return getInitials(fullName);
   }, [fullName]);
+
+  const draftFullName = useMemo(() => {
+    return `${draftFirst.trim()} ${draftLast.trim()}`.trim() || fullName;
+  }, [draftFirst, draftLast, fullName]);
 
   const logout = () => {
     authService.logout();
@@ -342,7 +343,7 @@ export default function SuperAdminPage() {
           <SettingsSection>
             <ProfilePictureSection
               avatarUrl={getAbsoluteUrl(avatarUrl)}
-              initials={getInitials(fullName)}
+              initials={getInitials(draftFullName)}
               onFileSelect={async (file) => {
                 try {
                   const formData = new FormData();

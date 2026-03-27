@@ -6,6 +6,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Divider from "@mui/material/Divider";
 import RoleLayout from "../components/layout/RoleLayout";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const FAQ_DATA = {
   general: [
@@ -54,9 +55,13 @@ const CATEGORIES = [
   { id: "features", label: "Features & tools" }
 ];
 
+const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
+
 export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState("general");
   const [expanded, setExpanded] = useState<string | false>("panel0");
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
@@ -64,68 +69,64 @@ export default function FAQPage() {
 
   return (
     <RoleLayout>
-      <Box sx={{ maxWidth: 1200, mx: "auto", pt: 2 }}>
-        <Box display="flex" gap={6} mt={4}>
-          {/* Left Category Sidebar */}
-          <Box sx={{ width: 220, flexShrink: 0 }}>
-            <Box display="flex" flexDirection="column" gap={1}>
-              {CATEGORIES.map((cat) => (
-                <Box
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    backgroundColor: activeCategory === cat.id ? "#ecfeff" : "transparent",
-                    color: activeCategory === cat.id ? "#0891b2" : "#64748B",
-                    fontWeight: activeCategory === cat.id ? 600 : 500,
-                    fontSize: "0.95rem",
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      backgroundColor: activeCategory === cat.id ? "#ecfeff" : "#F8FAFC",
-                    }
-                  }}
-                >
-                  {cat.label}
-                </Box>
-              ))}
+      <Box sx={{ maxWidth: 1200, ml: 0, pt: 4, pb: 8, pl: isMobile ? 2 : 0, pr: isMobile ? 2 : 6, mx: isMobile ? "auto" : 0 }}>
+        <Box display="flex" flexDirection={isMobile ? "column" : "row"} gap={isMobile ? 4 : 20}>
+          
+          {/* Sidebar Nav */}
+          <Box sx={{ width: isMobile ? "100%" : 240, flexShrink: 0 }}>
+            <Box display="flex" flexDirection={isMobile ? "row" : "column"} gap={1} sx={{ overflowX: isMobile ? 'auto' : 'visible' }}>
+              {CATEGORIES.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <Box
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    sx={{
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      backgroundColor: isActive ? "#ecfeff" : "transparent",
+                      color: isActive ? "#0891b2" : "#64748B",
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: "0.95rem",
+                      transition: "all 0.2s ease",
+                      whiteSpace: "nowrap",
+                      "&:hover": {
+                        backgroundColor: isActive ? "#ecfeff" : "#F8FAFC",
+                      }
+                    }}
+                  >
+                    {cat.label}
+                  </Box>
+                );
+              })}
             </Box>
           </Box>
 
-          {/* Right Content */}
+          {/* Content Area */}
           <Box flex={1}>
-            <Box mb={5}>
-              <Box
-                display="inline-flex"
-                alignItems="center"
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "99px",
-                  backgroundColor: "#ecfeff",
-                  mb: 2
-                }}
-              >
-                <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.05em" }}>
+            {/* Badge */}
+            <Box mb={1}>
+               <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
                   / FAQS
-                </Typography>
-              </Box>
-              <Typography
-                variant="h2"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: "3.2rem",
-                  color: "#0F172A",
-                  fontFamily: "'Inter', sans-serif",
-                  lineHeight: 1.1,
-                  maxWidth: 500
-                }}
-              >
-                Frequently asked question
-              </Typography>
+               </Typography>
             </Box>
+            
+            <Typography
+              variant="h1"
+              sx={{
+                fontWeight: 800,
+                fontSize: isMobile ? "2.5rem" : "3.5rem",
+                color: "#0F172A",
+                fontFamily: fontStack,
+                lineHeight: 1.1,
+                mb: 6,
+                letterSpacing: '-0.04em'
+              }}
+            >
+              Frequently asked<br />question
+            </Typography>
 
             <Box>
               {(FAQ_DATA[activeCategory as keyof typeof FAQ_DATA] || []).map((faq, index) => {
@@ -133,66 +134,42 @@ export default function FAQPage() {
                 const isExpanded = expanded === panelId;
 
                 return (
-                  <Accordion
-                    key={index}
-                    expanded={isExpanded}
-                    onChange={handleChange(panelId)}
-                    disableGutters
-                    elevation={0}
-                    sx={{
-                      backgroundColor: "transparent",
-                      "&:before": { display: "none" },
-                      borderBottom: "1px solid #E2E8F0",
-                      py: 1
-                    }}
-                  >
-                    <AccordionSummary
-                      expandIcon={
-                        <Box sx={{ position: "relative", width: 14, height: 14 }}>
-                          {/* Horizontal line */}
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              top: "50%",
-                              left: 0,
-                              right: 0,
-                              height: 2,
-                              backgroundColor: "#0F172A",
-                              transform: "translateY(-50%)"
-                            }}
-                          />
-                          {/* Vertical line - hidden when expanded */}
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              left: "50%",
-                              top: 0,
-                              bottom: 0,
-                              width: 2,
-                              backgroundColor: "#0F172A",
-                              transform: "translateX(-50%)",
-                              display: isExpanded ? "none" : "block",
-                              transition: "all 0.2s"
-                            }}
-                          />
-                        </Box>
-                      }
+                  <Box key={index}>
+                    <Accordion
+                      expanded={isExpanded}
+                      onChange={handleChange(panelId)}
+                      disableGutters
+                      elevation={0}
                       sx={{
-                        px: 0,
-                        "& .MuiAccordionSummary-content": { my: 2.5 },
-                        "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": { transform: "none" }
+                        backgroundColor: "transparent",
+                        "&:before": { display: "none" },
+                        py: 1
                       }}
                     >
-                      <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.1rem" }}>
-                        {faq.question}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
-                      <Typography sx={{ color: "#64748B", fontSize: "1rem", lineHeight: 1.6, maxWidth: 600 }}>
-                        {faq.answer}
-                      </Typography>
-                    </AccordionDetails>
-                  </Accordion>
+                      <AccordionSummary
+                        expandIcon={
+                          <Box sx={{ fontSize: '24px', fontWeight: 400, color: '#0F172A', transition: 'all 0.2s' }}>
+                            {isExpanded ? "−" : "+"}
+                          </Box>
+                        }
+                        sx={{
+                          px: 0,
+                          "& .MuiAccordionSummary-content": { my: 2 },
+                          "& .MuiAccordionSummary-expandIconWrapper": { transform: 'none' }
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", fontFamily: fontStack }}>
+                          {faq.question}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
+                        <Typography sx={{ color: "#64748B", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: 700, fontFamily: fontStack }}>
+                          {faq.answer}
+                        </Typography>
+                      </AccordionDetails>
+                    </Accordion>
+                    <Divider sx={{ borderColor: '#F1F5F9' }} />
+                  </Box>
                 );
               })}
             </Box>

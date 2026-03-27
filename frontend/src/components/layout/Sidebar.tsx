@@ -714,9 +714,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                     sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: "#0F172A",
+                        bgcolor: "#020617",
+                        color: "#FFFFFF",
                         fontSize: 14,
-                        fontWeight: 600
+                        fontWeight: 800,
+                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
                     }}
                 >
                     {initials}

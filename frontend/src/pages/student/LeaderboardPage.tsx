@@ -4,6 +4,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { studentService } from "../../services/student.service";
 import { useAuth } from "../../contexts/AuthContext";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 
 // Define the precise Trophy Icon matching the sidebar/header mapping
 const CustomTrophyIcon = ({ color }: { color?: string }) => (
@@ -22,7 +23,7 @@ interface LeaderboardUser {
     rank: number;
     user: {
         name: string;
-        avatar?: string;
+        avatarUrl?: string;
     };
     certifications: number;
     clearanceTime: string;
@@ -34,6 +35,21 @@ export default function LeaderboardPage() {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const userId = user?.id || null;
+    const [fullUser, setFullUser] = useState<any>(() => {
+        const str = localStorage.getItem("user");
+        return str ? JSON.parse(str) : null;
+    });
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user' && e.newValue) {
+                setFullUser(JSON.parse(e.newValue));
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
@@ -157,12 +173,40 @@ export default function LeaderboardPage() {
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <Avatar src={row.user.avatar} sx={{ width: 32, height: 32, bgcolor: '#F3F4F6', color: '#6B7280', fontSize: '0.9rem' }}>
-                                                {row.user.name.charAt(0).toUpperCase()}
-                                            </Avatar>
-                                            <Typography sx={{ fontWeight: 500, color: '#111827', fontSize: '0.95rem' }}>
-                                                {row.user.name}
-                                            </Typography>
+                                            {(() => {
+                                                // Robust ID comparison for reactive leaderboard updates
+                                                const currentId = user?.id || fullUser?._id || fullUser?.id;
+                                                const rowUserId = row._id; // Leaderboard rows _id is the User ID
+                                                const isCurrentUser = !!currentId && currentId === rowUserId;
+
+                                                const leaderboardUser = isCurrentUser ? { ...row.user, ...fullUser } : row.user;
+                                                
+                                                // Consistently use the same fallback logic as comments/submissions
+                                                const avatarSrc = leaderboardUser?.avatarUrl || 
+                                                                leaderboardUser?.avatarUrl || ""
+                                                
+                                                return (
+                                                    <>
+                                                        <Avatar 
+                                                            src={getAbsoluteUrl(avatarSrc)} 
+                                                            sx={{ 
+                                                                width: 32, 
+                                                                height: 32, 
+                                                                bgcolor: '#020617', 
+                                                                color: '#FFFFFF', 
+                                                                fontSize: '0.875rem',
+                                                                fontWeight: 800,
+                                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                            }}
+                                                        >
+                                                            {getInitials(leaderboardUser?.name || leaderboardUser?.fullName, leaderboardUser?.email)}
+                                                        </Avatar>
+                                                        <Typography sx={{ fontWeight: 500, color: '#111827', fontSize: '0.95rem' }}>
+                                                            {leaderboardUser?.name || leaderboardUser?.fullName}
+                                                        </Typography>
+                                                    </>
+                                                );
+                                            })()}
                                         </Box>
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>

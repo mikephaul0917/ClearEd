@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
 import StudentProfile from "../../models/StudentProfile";
+import User from "../../models/User";
 
 export const getDashboard = async (_req: Request, res: Response) => {
   res.json({ message: "OK" });
@@ -11,8 +11,13 @@ export const getProfile = async (req: Request, res: Response) => {
     const institutionId = (req as any).user?.institutionId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const profile = await StudentProfile.findOne({ userId, institutionId });
-    res.json(profile || {});
+    const profile = await StudentProfile.findOne({ userId, institutionId }).lean();
+    const user = await User.findById(userId).select("avatarUrl").lean();
+    
+    res.json({
+      ...(profile || {}),
+      avatarUrl: user?.avatarUrl || ""
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

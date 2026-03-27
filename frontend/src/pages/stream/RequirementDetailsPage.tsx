@@ -607,31 +607,67 @@ const RequirementDetailsPage: React.FC = () => {
                                 </Box>
 
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: comments.length > 0 ? 4 : 0 }}>
-                                    {comments.map((comment: any) => (
-                                        <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                            <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}>
-                                                {getInitials(comment.userId?.fullName)}
-                                            </Avatar>
-                                            <Box>
-                                                <Box display="flex" alignItems="center" gap={1}>
-                                                    <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem" }}>
-                                                        {comment.userId?.fullName}
-                                                    </Typography>
-                                                    <Typography variant="caption" sx={{ color: "#5f6368" }}>
-                                                        {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </Typography>
+                                        {comments.map((comment: any) => {
+                                            // Robust ID comparison
+                                            const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
+                                            const commentAuthorId = comment.userId?._id || comment.userId?.id || (typeof comment.userId === 'string' ? comment.userId : null);
+                                            const isCurrentUser = !!currentId && currentId === commentAuthorId;
+
+                                            // Matching logic refined
+                                            const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
+                                            
+                                            // Fallback string matches the one used in the input area
+                                            const avatarSrc = commentUser?.avatarUrl || "";
+
+                                            return (
+                                                <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
+                                                    <Avatar 
+                                                        src={getAbsoluteUrl(avatarSrc)} 
+                                                        sx={{ 
+                                                            width: 32, 
+                                                            height: 32, 
+                                                            bgcolor: "#020617", 
+                                                            color: "#FFFFFF",
+                                                            fontSize: "0.875rem",
+                                                            fontWeight: 800,
+                                                            textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                        }}
+                                                    >
+                                                        {getInitials(commentUser?.fullName, commentUser?.email)}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.875rem" }}>
+                                                                {commentUser?.fullName}
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: "#5f6368" }}>
+                                                                {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.5 }}>
+                                                            {comment.content}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
-                                                <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.5 }}>
-                                                    {comment.content}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    ))}
+                                            );
+                                        })}
                                 </Box>
 
                                 <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                                        <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                                        <Avatar 
+                                            src={getAbsoluteUrl(fullUser?.avatarUrl)} 
+                                            sx={{ 
+                                                width: 32, 
+                                                height: 32, 
+                                                bgcolor: "#020617", 
+                                                color: "#FFFFFF",
+                                                fontSize: "0.875rem", 
+                                                fontWeight: 800,
+                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                                mt: 0.5 
+                                            }}
+                                        >
                                             {userInitial}
                                         </Avatar>
                                         
@@ -818,31 +854,55 @@ const RequirementDetailsPage: React.FC = () => {
                                         
                                         <Box sx={{ px: 2.5, pb: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
                                             {/* Render Private Comments List */}
-                                            {privateComments.map((comment: any) => (
-                                                <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                    <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
-                                                        {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
-                                                    </Avatar>
-                                                    <Box>
-                                                        <Box display="flex" alignItems="center" gap={1}>
-                                                            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
-                                                                {comment.userId?.fullName}
-                                                            </Typography>
-                                                            <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
-                                                                {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {privateComments.map((comment: any) => {
+                                                const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
+                                                const commentAuthorId = comment.userId?._id || comment.userId?.id || (typeof comment.userId === 'string' ? comment.userId : null);
+                                                const isCurrentUser = !!currentId && currentId === commentAuthorId;
+
+                                                const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
+                                                const avatarSrc = commentUser?.avatarUrl || "";
+                                                
+                                                return (
+                                                    <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
+                                                        <Avatar 
+                                                            src={getAbsoluteUrl(avatarSrc)} 
+                                                            sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}
+                                                        >
+                                                            {getInitials(commentUser?.fullName)}
+                                                        </Avatar>
+                                                        <Box>
+                                                            <Box display="flex" alignItems="center" gap={1}>
+                                                                <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
+                                                                    {commentUser?.fullName}
+                                                                </Typography>
+                                                                <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
+                                                                    {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
+                                                                {comment.content}
                                                             </Typography>
                                                         </Box>
-                                                        <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
-                                                            {comment.content}
-                                                        </Typography>
                                                     </Box>
-                                                </Box>
-                                            ))}
+                                                );
+                                            })}
 
                                             {/* Input Area */}
                                             <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                    <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                <Avatar 
+                                                    src={getAbsoluteUrl(fullUser?.avatarUrl)} 
+                                                    sx={{ 
+                                                        width: 28, 
+                                                        height: 28, 
+                                                        bgcolor: "#020617", 
+                                                        color: "#FFFFFF",
+                                                        fontSize: "0.75rem", 
+                                                        fontWeight: 800,
+                                                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                                        mt: 0.5 
+                                                    }}
+                                                >
                                                         {userInitial}
                                                     </Avatar>
                                                     <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
@@ -1030,50 +1090,63 @@ const RequirementDetailsPage: React.FC = () => {
                                             </Box>
                                         ) : (
                                             <List disablePadding>
-                                                {submissions.map((sub) => (
-                                                    <React.Fragment key={sub._id}>
-                                                        <ListItem
-                                                            button
-                                                            onClick={() => setSelectedSub(sub)}
-                                                            selected={selectedSub?._id === sub._id}
-                                                            sx={{
-                                                                py: 2,
-                                                                borderLeft: selectedSub?._id === sub._id ? "4px solid #1a73e8" : "4px solid transparent"
-                                                            }}
-                                                        >
-                                                            <ListItemAvatar>
-                                                                <Avatar 
-                                                                    src={getAbsoluteUrl(sub.userId?.avatarUrl || sub.userId?.profilePicture)}
-                                                                    sx={{ 
-                                                                        bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B",
-                                                                        width: 40,
-                                                                        height: 40
-                                                                    }}
-                                                                >
-                                                                    {getInitials(sub.userId?.fullName || sub.userId?.firstName)}
-                                                                </Avatar>
-                                                            </ListItemAvatar>
-                                                            <ListItemText
-                                                                primary={sub.userId?.fullName || "Student"}
-                                                                secondary={
-                                                                    <Chip
-                                                                        label={sub.status.toUpperCase()}
-                                                                        size="small"
+                                                        {submissions.map((sub) => {
+                                                            // Robust ID comparison
+                                                            const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
+                                                            const subAuthorId = sub.userId?._id || sub.userId?.id || (typeof sub.userId === 'string' ? sub.userId : null);
+                                                            const isCurrentUser = !!currentId && currentId === subAuthorId;
+
+                                                            const subUser = isCurrentUser ? { ...sub.userId, ...fullUser } : sub.userId;
+                                                            const avatarSrc = subUser?.avatarUrl || "";
+
+                                                            return (
+                                                                <React.Fragment key={sub._id}>
+                                                                    <ListItem
+                                                                        button
+                                                                        onClick={() => setSelectedSub(sub)}
+                                                                        selected={selectedSub?._id === sub._id}
                                                                         sx={{
-                                                                            height: 16,
-                                                                            fontSize: 9,
-                                                                            mt: 0.5,
-                                                                            bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
-                                                                            color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
+                                                                            py: 2,
+                                                                            borderLeft: selectedSub?._id === sub._id ? "4px solid #1a73e8" : "4px solid transparent"
                                                                         }}
-                                                                    />
-                                                                }
-                                                                primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
-                                                            />
-                                                        </ListItem>
-                                                        <Divider />
-                                                    </React.Fragment>
-                                                ))}
+                                                                    >
+                                                                        <ListItemAvatar>
+                                                                            <Avatar 
+                                                                                src={getAbsoluteUrl(avatarSrc)}
+                                                                                sx={{ 
+                                                                                    bgcolor: sub.status === 'approved' ? "#10B981" : "#020617",
+                                                                                    color: "#FFFFFF",
+                                                                                    width: 40,
+                                                                                    height: 40,
+                                                                                    fontWeight: 800,
+                                                                                    textShadow: '-1px 0 0 rgba(0,255,255,0.4), 1px 0 0 rgba(255,165,0,0.4)'
+                                                                                }}
+                                                                            >
+                                                                                {getInitials(subUser?.fullName, subUser?.email)}
+                                                                            </Avatar>
+                                                                        </ListItemAvatar>
+                                                                        <ListItemText
+                                                                            primary={subUser?.fullName || "Student"}
+                                                                            secondary={
+                                                                                <Chip
+                                                                                    label={sub.status.toUpperCase()}
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        height: 16,
+                                                                                        fontSize: 9,
+                                                                                        mt: 0.5,
+                                                                                        bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
+                                                                                        color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
+                                                                                    }}
+                                                                                />
+                                                                            }
+                                                                            primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
+                                                                        />
+                                                                    </ListItem>
+                                                                    <Divider />
+                                                                </React.Fragment>
+                                                            );
+                                                        })}
                                             </List>
                                         )}
                                     </Box>
@@ -1211,31 +1284,63 @@ const RequirementDetailsPage: React.FC = () => {
                                                 
                                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                                     {/* Render Private Comments List */}
-                                                    {privateComments.map((comment: any) => (
-                                                        <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                            <Avatar src={getAbsoluteUrl(comment.userId?.avatarUrl || comment.userId?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}>
-                                                                {getInitials(comment.userId?.fullName || comment.userId?.firstName)}
-                                                            </Avatar>
-                                                            <Box>
-                                                                <Box display="flex" alignItems="center" gap={1}>
-                                                                    <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
-                                                                        {comment.userId?.fullName}
-                                                                    </Typography>
-                                                                    <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
-                                                                        {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {privateComments.map((comment: any) => {
+                                                        const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
+                                                        const commentAuthorId = comment.userId?._id || comment.userId?.id || (typeof comment.userId === 'string' ? comment.userId : null);
+                                                        const isCurrentUser = !!currentId && currentId === commentAuthorId;
+
+                                                        const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
+                                                        const avatarSrc = commentUser?.avatarUrl || "";
+                                                        
+                                                        return (
+                                                            <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
+                                                                <Avatar 
+                                                                    src={getAbsoluteUrl(avatarSrc)} 
+                                                                    sx={{ 
+                                                                        width: 28, 
+                                                                        height: 28, 
+                                                                        bgcolor: "#020617", 
+                                                                        color: "#FFFFFF",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: 800,
+                                                                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                                    }}
+                                                                >
+                                                                    {getInitials(commentUser?.fullName)}
+                                                                </Avatar>
+                                                                <Box>
+                                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                                        <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#3c4043", fontSize: "0.8125rem" }}>
+                                                                            {commentUser?.fullName}
+                                                                        </Typography>
+                                                                        <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem" }}>
+                                                                            {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                    <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
+                                                                        {comment.content}
                                                                     </Typography>
                                                                 </Box>
-                                                                <Typography variant="body2" sx={{ color: "#3c4043", mt: 0.25, fontSize: "0.875rem" }}>
-                                                                    {comment.content}
-                                                                </Typography>
                                                             </Box>
-                                                        </Box>
-                                                    ))}
+                                                        );
+                                                    })}
 
                                                     {/* Input Area */}
                                                     <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                            <Avatar src={getAbsoluteUrl(fullUser?.avatarUrl || fullUser?.profilePicture || (user as any)?.profilePicture)} sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem", mt: 0.5 }}>
+                                                            <Avatar 
+                                                                src={getAbsoluteUrl(fullUser?.avatarUrl)} 
+                                                                sx={{ 
+                                                                    width: 28, 
+                                                                    height: 28, 
+                                                                    bgcolor: "#020617", 
+                                                                    color: "#FFFFFF",
+                                                                    fontSize: "0.75rem", 
+                                                                    fontWeight: 800,
+                                                                    textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                                                    mt: 0.5 
+                                                                }}
+                                                            >
                                                                 {userInitial}
                                                             </Avatar>
                                                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>

@@ -129,10 +129,12 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
         sx={{
           width: 80,
           height: 80,
-          fontSize: '1.5rem',
-          bgcolor: '#0F172A10',
-          color: '#374151',
-          border: '1px solid #E5E7EB'
+          fontSize: '1.75rem',
+          bgcolor: '#020617', // Deep Dark Navy (Slate 950)
+          color: '#FFFFFF',
+          fontWeight: 800,
+          textShadow: '-1px 0 0 rgba(0,255,255,0.4), 1px 0 0 rgba(255,165,0,0.4)',
+          border: '1px solid #1E293B'
         }}
       >
         {initials}

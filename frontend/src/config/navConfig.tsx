@@ -40,8 +40,17 @@ export const BellIcon: React.FC<IconProps> = ({ color }) => (
 
 export const SettingsIcon: React.FC<IconProps> = ({ color }) => (
     <IconBase color={color} >
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 3.4 19l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L3.2 6.2A2 2 0 1 1 6.03 3.4l.06.06a1.65 1.65 0 0 0 1.82.33h.01A1.65 1.65 0 0 0 9 2.28V2a2 2 0 1 1 4 0v.09c0 .7.4 1.34 1.03 1.64.63.3 1.37.2 1.88-.3l.06-.06A2 2 0 1 1 20.6 6.03l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01c.3.63.94 1.03 1.64 1.03H22a2 2 0 1 1 0 4h-.09c-.7 0-1.34.4-1.64 1.03z" />
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8.5" cy="7" r="4" />
+        <circle cx="18" cy="15" r="3" />
+        <path d="M18 11v1" />
+        <path d="M18 18v1" />
+        <path d="M21 15h-1" />
+        <path d="M15 15h-1" />
+        <path d="M20.1 12.9l-.7.7" />
+        <path d="M15.9 17.1l-.7.7" />
+        <path d="M20.1 17.1l-.7-.7" />
+        <path d="M15.9 12.9l-.7-.7" />
     </IconBase>
 );
 
@@ -136,6 +145,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
     ],
     dean: [
         { key: "dashboard", label: "Final Approvals", path: "/dean", icon: CheckCircleIcon },
+        { key: "faqs", label: "FAQs", path: "/dean/faqs", icon: HelpIcon },
         { key: "settings", label: "Settings", path: "/dean/settings", icon: SettingsIcon },
     ],
 };

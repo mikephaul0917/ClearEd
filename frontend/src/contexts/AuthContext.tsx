@@ -134,20 +134,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const payload = decodeToken(jwt);
             if (!payload) throw new Error('Invalid token');
 
-            persistToken(jwt);
-            setToken(jwt);
-            setUser({
+            const userData: AuthUser = {
                 id: payload.id,
                 role: payload.role,
                 institutionId: payload.institutionId,
-                email: payload.email
-            });
+                email: payload.email,
+                avatarUrl: returnedUser.avatarUrl,
+                fullName: returnedUser.fullName,
+                username: returnedUser.username
+            };
+
+            persistToken(jwt);
+            setToken(jwt);
+            setUser(userData);
 
             // Set variables needed by other pages/legacy logic
             localStorage.setItem("token", jwt);
-            localStorage.setItem("user", JSON.stringify(returnedUser));
-            localStorage.setItem("role", returnedUser.role);
-            localStorage.setItem("email", returnedUser.email);
+            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem("role", userData.role);
+            localStorage.setItem("email", userData.email || "");
 
             return true;
         } catch (error: any) {

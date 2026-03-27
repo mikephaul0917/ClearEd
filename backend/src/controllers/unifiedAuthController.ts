@@ -721,7 +721,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 export const updateMyProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
-    const { fullName, username, signatureUrl } = req.body;
+    const { fullName, username, signatureUrl, avatarUrl } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -729,6 +729,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
     if (fullName !== undefined) user.fullName = fullName;
     if (username !== undefined) user.username = username;
     if (signatureUrl !== undefined) user.signatureUrl = signatureUrl;
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
 
     await user.save();
 

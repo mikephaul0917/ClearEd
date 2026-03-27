@@ -30,7 +30,7 @@ export const getFinalReadySubmissions = async (req: Request, res: Response) => {
       institutionId,
       termId: term._id,
       status: status as string
-    }).populate("userId", "fullName email");
+    }).populate("userId", "fullName email avatarUrl");
 
     const rows = [];
     for (const final of pendingFinals) {
@@ -67,6 +67,7 @@ export const getFinalReadySubmissions = async (req: Request, res: Response) => {
         rows.push({
           id: final._id,
           name: (final.userId as any).fullName,
+          avatarUrl: (final.userId as any).avatarUrl,
           studentId: final.userId._id, // User ID needed for approval payload
           studentNumber: studentProfile.studentNumber || (final.userId as any).username,
           course: studentProfile.course,
@@ -104,8 +105,7 @@ export const listOrganizationPending = async (req: Request, res: Response) => {
     const pendingReqs = await ClearanceRequest.find({
       institutionId,
       termId: term._id,
-      status: { $in: ["pending", "in_progress", "rejected"] }
-    }).populate("userId", "fullName email");
+    }).populate("userId", "fullName email avatarUrl");
 
     const rows = [];
     const processedStudentIds = new Set<string>();
