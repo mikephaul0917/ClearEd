@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { authService } from "../../services";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import { motion } from "framer-motion";
 import AuthenticationOverlay from "../../components/AuthenticationOverlay";
 import { InlineSpinner, spinnerStyles } from "../../components/ui/LoadingSpinner";
 import { formatErrorForDisplay } from "../../utils/errorMessages";
@@ -130,15 +131,20 @@ const RegisterPage = () => {
     });
 
     return (
-        <div style={{
-            display: "flex",
-            height: "calc(100vh - 56px)",
-            overflow: "hidden",
-            boxSizing: "border-box",
-            backgroundColor: C.white,
-            fontFamily: C.font,
-            flexDirection: "row" // Default for desktop
-        }} className="register-container">
+        <motion.div 
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            style={{
+                display: "flex",
+                height: "calc(100vh - 56px)",
+                overflow: "hidden",
+                boxSizing: "border-box",
+                backgroundColor: C.white,
+                fontFamily: C.font,
+                flexDirection: "row" // Default for desktop
+            }} className="register-container">
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link
                 rel="stylesheet"
@@ -400,7 +406,7 @@ const RegisterPage = () => {
                 duration={2500}
                 onComplete={handleAuthOverlayComplete}
             />
-        </div>
+        </motion.div>
     );
 };
 
