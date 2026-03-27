@@ -7,9 +7,10 @@ import { getInitials } from "../../utils/avatarUtils";
 
 interface RoleLayoutProps {
     children: ReactNode;
+    bgcolor?: string;
 }
 
-const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
+const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
     const { user, logout, loading } = useAuth();
 
     if (loading) {
@@ -23,7 +24,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
                     isLoading={true}
                     navItems={[]}
                 />
-                <Box flex={1} p={4} sx={{ backgroundColor: "#FBFBFB" }}>
+                <Box flex={1} p={4} sx={{ backgroundColor: "#f6f6f6" }}>
                     {/* Main content loading state could be here */}
                 </Box>
             </Box>
@@ -39,7 +40,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
     const fullUser = storedUser ? JSON.parse(storedUser) : null;
     const fullName = fullUser?.fullName || user.username || (user.email ? user.email.split('@')[0] : "User");
     const avatarUrl = fullUser?.avatarUrl || "";
-    
+
     const initials = getInitials(fullName);
 
     return (
@@ -56,7 +57,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
                 component="main"
                 flex={1}
                 sx={{
-                    backgroundColor: "#FBFBFB",
+                    backgroundColor: bgcolor || "#FBFBFB",
                     p: { xs: 2, md: 4 },
                     mt: { xs: "64px", md: 0 }, // Offset for fixed mobile header
                     overflowX: "hidden"

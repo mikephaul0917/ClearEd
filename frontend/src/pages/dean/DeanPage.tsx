@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
@@ -96,6 +97,42 @@ const YEAR_LEVELS = [
   "Fourth Year"
 ];
 
+const variants: Variants = {
+  initial: {
+    scaleY: 0.5,
+    opacity: 0,
+  },
+  animate: {
+    scaleY: 1,
+    opacity: 1,
+    transition: {
+      repeat: Infinity,
+      repeatType: "mirror",
+      duration: 1,
+      ease: "circIn",
+    },
+  },
+};
+
+const BarLoader = () => {
+  return (
+    <motion.div
+      transition={{
+        staggerChildren: 0.25,
+      }}
+      initial="initial"
+      animate="animate"
+      style={{ display: 'flex', gap: '4px' }}
+    >
+      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
+      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
+      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
+      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
+      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
+    </motion.div>
+  );
+};
+
 const normalizeCourse = (c: string) => {
   const s = (c || "").trim().toUpperCase();
   const map: Record<string, string> = {
@@ -169,9 +206,8 @@ export default function DeanPage() {
   const [filterYear, setFilterYear] = useState<string>("");
   const [filterDate, setFilterDate] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterStatus, setFilterStatus] = useState<"pending" | "approved">("pending");
+  const [isShuffling, setIsShuffling] = useState(false);
   const [selected, setSelected] = useState<any>(null);
 
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
@@ -189,6 +225,8 @@ export default function DeanPage() {
   const [studentListOpen, setStudentListOpen] = useState(false);
   const [popupSearch, setPopupSearch] = useState("");
   const [courseMenuAnchor, setCourseMenuAnchor] = useState<null | HTMLElement>(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
 
   const theme = useTheme();
@@ -254,62 +292,69 @@ export default function DeanPage() {
   }, [draftFirst, draftLast, fullName]);
 
   const loadData = async () => {
+    setIsShuffling(true);
+    const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
     try {
-      const res = await api.get("/dean/courses");
-      setAvailableCourses(res.data.courses || []);
-    } catch {
-      setAvailableCourses(COURSES);
-    }
-    try {
-      const pendingRes = await api.get("/dean/final-ready", { params: { status: 'pending' } });
-      const approvedRes = await api.get("/dean/final-ready", { params: { status: 'approved' } });
+      try {
+        const res = await api.get("/dean/courses");
+        setAvailableCourses(res.data.courses || []);
+      } catch {
+        setAvailableCourses(COURSES);
+      }
+      try {
+        const pendingRes = await api.get("/dean/final-ready", { params: { status: 'pending' } });
+        const approvedRes = await api.get("/dean/final-ready", { params: { status: 'approved' } });
 
-      const today = new Date().toISOString().slice(0, 10);
-      const approvedToday = (approvedRes.data.rows || []).filter((r: any) => (r.dateApproved || "").startsWith(today));
-      setFinalizedTodayCount(approvedToday.length);
+        const today = new Date().toISOString().slice(0, 10);
+        const approvedToday = (approvedRes.data.rows || []).filter((r: any) => (r.dateApproved || "").startsWith(today));
+        setFinalizedTodayCount(approvedToday.length);
 
-      const res = filterStatus === 'approved' ? approvedRes : pendingRes;
-      const items = (res.data.rows || []).map((r: any, idx: number) => ({
-        id: r.id || String(idx + 1),
-        status: filterStatus,
-        name: r.name || r.studentName || "Unknown",
-        avatarUrl: r.avatarUrl,
-        studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
-        course: r.course || "BSCS",
-        year: r.year || "4th Year",
-        dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
-        dateApproved: r.dateApproved,
-        reqCompleted: r.reqCompleted ?? 3,
-        reqTotal: r.reqTotal ?? 3,
-        organizations: r.organizations || []
-      }));
-      setReadyRows(items);
-    } catch {
-      setReadyRows([
-        { id: "1", name: "Juan Dela Cruz", studentId: "S-00011", course: "BSIT", year: "4th Year", dateSubmitted: new Date().toISOString().slice(0, 10), reqCompleted: 3, reqTotal: 3 },
-        { id: "2", name: "Maria Santos", studentId: "S-00012", course: "BSCS", year: "4th Year", dateSubmitted: new Date().toISOString().slice(0, 10), reqCompleted: 3, reqTotal: 3 }
-      ]);
-    }
-    try {
-      const res = await api.get("/dean/organization-pending");
-      const items = (res.data.rows || []).map((r: any, idx: number) => ({
-        id: r.id || `D-${idx + 1}`,
-        name: r.name || r.studentName || "Unknown",
-        studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
-        course: r.course || "BSCS",
-        year: r.year || "3rd Year",
-        dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
-        status: r.status || "Pending",
-        reqCompleted: r.reqCompleted ?? 2,
-        reqTotal: r.reqTotal ?? 3,
-        organizations: r.organizations || []
-      }));
-      setOrgRows(items);
-    } catch {
-      setOrgRows([
-        { id: "D-1", name: "Pedro Cruz", studentId: "S-00021", course: "BSCS", year: "3rd Year", dateSubmitted: new Date().toISOString().slice(0, 10), status: "Pending", reqCompleted: 2, reqTotal: 3 },
-        { id: "D-2", name: "Ana Reyes", studentId: "S-00022", course: "BSIT", year: "2nd Year", dateSubmitted: new Date().toISOString().slice(0, 10), status: "Pending", reqCompleted: 1, reqTotal: 3 }
-      ]);
+        const res = filterStatus === 'approved' ? approvedRes : pendingRes;
+        const items = (res.data.rows || []).map((r: any, idx: number) => ({
+          id: r.id || String(idx + 1),
+          status: filterStatus,
+          name: r.name || r.studentName || "Unknown",
+          avatarUrl: r.avatarUrl,
+          studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
+          course: r.course || "BSCS",
+          year: r.year || "4th Year",
+          dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
+          dateApproved: r.dateApproved,
+          reqCompleted: r.reqCompleted ?? 3,
+          reqTotal: r.reqTotal ?? 3,
+          organizations: r.organizations || []
+        }));
+        setReadyRows(items);
+      } catch {
+        setReadyRows([
+          { id: "1", name: "Juan Dela Cruz", studentId: "S-00011", course: "BSIT", year: "4th Year", dateSubmitted: new Date().toISOString().slice(0, 10), reqCompleted: 3, reqTotal: 3 },
+          { id: "2", name: "Maria Santos", studentId: "S-00012", course: "BSCS", year: "4th Year", dateSubmitted: new Date().toISOString().slice(0, 10), reqCompleted: 3, reqTotal: 3 }
+        ]);
+      }
+      try {
+        const res = await api.get("/dean/organization-pending");
+        const items = (res.data.rows || []).map((r: any, idx: number) => ({
+          id: r.id || `D-${idx + 1}`,
+          name: r.name || r.studentName || "Unknown",
+          studentId: r.studentId || `S-${(idx + 1).toString().padStart(5, "0")}`,
+          course: r.course || "BSCS",
+          year: r.year || "3rd Year",
+          dateSubmitted: r.dateSubmitted || new Date().toISOString().slice(0, 10),
+          status: r.status || "Pending",
+          reqCompleted: r.reqCompleted ?? 2,
+          reqTotal: r.reqTotal ?? 3,
+          organizations: r.organizations || []
+        }));
+        setOrgRows(items);
+      } catch {
+        setOrgRows([
+          { id: "D-1", name: "Pedro Cruz", studentId: "S-00021", course: "BSCS", year: "3rd Year", dateSubmitted: new Date().toISOString().slice(0, 10), status: "Pending", reqCompleted: 2, reqTotal: 3 },
+          { id: "D-2", name: "Ana Reyes", studentId: "S-00022", course: "BSIT", year: "2nd Year", dateSubmitted: new Date().toISOString().slice(0, 10), status: "Pending", reqCompleted: 1, reqTotal: 3 }
+        ]);
+      }
+      await minDelay;
+    } finally {
+      setIsShuffling(false);
     }
   };
 
@@ -439,38 +484,64 @@ export default function DeanPage() {
       )}
       {active === "final" ? (
         <>
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={4}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
             <Box sx={{ mb: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: "#111827", fontFamily: fontStack, letterSpacing: '-0.02em', mb: 1 }}>Final Clearances</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 2, borderBottom: '1px solid #E5E7EB', pb: 0.5 }}>
+              <Box sx={{
+                position: 'relative',
+                display: 'inline-flex',
+                alignItems: 'center',
+                bgcolor: '#FFFFFF',
+                borderRadius: '999px',
+                p: '6px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05), inset 0 2px 5px rgba(255,255,255,1)'
+              }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '6px',
+                    bottom: '6px',
+                    left: filterStatus === 'pending' ? '6px' : 'calc(100% - 116px)',
+                    width: '110px',
+                    bgcolor: '#18181B',
+                    borderRadius: '999px',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
+                    transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    zIndex: 1
+                  }}
+                />
                 {["Pending", "Approved"].map((tab) => {
                   const val = tab.toLowerCase();
                   const isActive = filterStatus === val;
                   return (
-                    <Typography
+                    <Box
                       key={tab}
-                      onClick={() => setFilterStatus(val as any)}
+                      onClick={() => {
+                        if (val !== filterStatus) {
+                          setFilterStatus(val as any);
+                          setPage(0);
+                        }
+                      }}
                       sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: isActive ? 600 : 500,
-                        color: isActive ? '#000000' : '#6B7280',
-                        cursor: 'pointer',
-                        pb: 1,
                         position: 'relative',
-                        '&:after': isActive ? {
-                          content: '""',
-                          position: 'absolute',
-                          bottom: -1,
-                          left: 0,
-                          right: 0,
-                          height: '2px',
-                          bgcolor: '#000000'
-                        } : {},
-                        '&:hover': { color: '#111827' }
+                        zIndex: 2,
+                        width: '110px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        py: 1.25,
+                        borderRadius: '999px',
+                        cursor: 'pointer',
+                        transition: 'color 0.4s ease',
+                        color: isActive ? '#FFFFFF' : '#52525B',
+                        fontWeight: 500,
+                        fontSize: '0.9rem',
+                        '&:hover': {
+                          color: isActive ? '#FFFFFF' : '#18181B'
+                        }
                       }}
                     >
                       {tab}
-                    </Typography>
+                    </Box>
                   );
                 })}
               </Box>
@@ -479,19 +550,66 @@ export default function DeanPage() {
               <Button
                 variant="outlined"
                 startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>}
-                sx={{ textTransform: 'none', borderRadius: '8px', color: '#374151', borderColor: '#D1D5DB', fontWeight: 600, fontSize: '0.875rem', px: 2 }}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  color: '#374151',
+                  borderColor: '#E5E7EB',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  px: 2,
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    borderColor: '#D1D5DB',
+                    bgcolor: '#F9FAFB',
+                    boxShadow: '0 8px 15px rgba(0,0,0,0.08)',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
               >
                 Export
               </Button>
               <Button
                 variant="contained"
                 startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: '#000000', '&:hover': { bgcolor: '#333333' }, color: '#FFFFFF', fontWeight: 600, fontSize: '0.875rem', px: 2, boxShadow: 'none' }}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  bgcolor: '#000000',
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  px: 2,
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    bgcolor: '#1F2937',
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
               >
                 Approve All
               </Button>
             </Box>
           </Box>
+
+          {isShuffling ? (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              minHeight: '400px',
+              height: '100%',
+              flex: 1,
+              bgcolor: 'rgba(255, 255, 255, 1)', 
+              borderRadius: '16px'
+            }}>
+              <BarLoader />
+            </Box>
+          ) : (
+            <>
 
           <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
             {[
@@ -511,13 +629,14 @@ export default function DeanPage() {
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   transition: 'all 0.3s ease',
-                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 24px rgba(0,0,0,0.06)' }
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 32px rgba(0,0,0,0.08)' }
                 }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                   <Box>
                     <Typography sx={{ color: '#111827', fontSize: '1rem', fontWeight: 700, mb: 0.5 }}>
-                      {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : "All Students") : (card.isPendingFinal ? <Box component="span">Tasks this week <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : card.label)}
+                      {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : "Active Students") : (card.isPendingFinal ? <Box component="span">Tasks this week <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : card.label)}
                     </Typography>
                     {card.efficiency && (
                       <Box display="flex" alignItems="center" gap={0.75} sx={{ color: '#6B7280' }}>
@@ -557,7 +676,7 @@ export default function DeanPage() {
                   ) : (
                     <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
                   )}
-                  
+
                   {card.isPendingFinal ? (
                     <Box sx={{ position: 'relative', width: 120, height: 60, mb: -1 }}>
                       <svg width="120" height="60" viewBox="0 0 120 60" style={{ overflow: 'visible' }}>
@@ -632,112 +751,11 @@ export default function DeanPage() {
                     </Box>
                   </Box>
                 )}
-                  </Box>
+              </Box>
             ))}
           </Box>
 
-          <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
-            <Box display="flex" gap={1.5} flexWrap="wrap">
-              <Button
-                variant="outlined"
-                startIcon={filterDate ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
-                onClick={() => {
-                  if (filterDate) {
-                    setFilterDate("");
-                    setPage(0);
-                  } else {
-                    dateInputRef.current?.showPicker();
-                  }
-                }}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: filterDate ? '#ecfeff' : 'transparent', color: filterDate ? '#0891b2' : '#64748B', borderColor: filterDate ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36, '&:hover': { bgcolor: filterDate ? '#cffafe' : '#F9FAFB' } }}
-              >
-                {filterDate || "All time"}
-                <input
-                  type="date"
-                  ref={dateInputRef}
-                  style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
-                  onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
-                />
-              </Button>
-              <Select
-                variant="outlined"
-                displayEmpty
-                value={filterCourse}
-                onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
-                sx={{
-                  minWidth: 140, height: 36, bgcolor: '#ecfeff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0891b2',
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' }
-                }}
-              >
-                <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
-                {availableCourses.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.8125rem' }}>{getCourseLabel(c)}</MenuItem>))}
-              </Select>
-              <Button
-                variant="outlined"
-                onClick={(e) => setMoreAnchor(e.currentTarget)}
-                startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
-                sx={{ textTransform: 'none', borderRadius: '8px', color: filterYear ? '#0891b2' : '#374151', bgcolor: filterYear ? '#ecfeff' : 'transparent', borderColor: filterYear ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36 }}
-              >
-                {filterYear || "More filters"}
-              </Button>
-              <Menu
-                anchorEl={moreAnchor}
-                open={Boolean(moreAnchor)}
-                onClose={() => setMoreAnchor(null)}
-                PaperProps={{ sx: { borderRadius: '12px', mt: 1, minWidth: 180, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' } }}
-              >
-                <MenuItem disabled sx={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, color: '#64748B' }}>YEAR LEVEL</MenuItem>
-                <MenuItem
-                  selected={filterYear === ""}
-                  onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
-                  sx={{ fontSize: '0.875rem' }}
-                >
-                  All Years
-                </MenuItem>
-                {YEAR_LEVELS.map(y => (
-                  <MenuItem
-                    key={y}
-                    selected={filterYear === y}
-                    onClick={() => { setFilterYear(y); setPage(0); setMoreAnchor(null); }}
-                    sx={{ fontSize: '0.875rem' }}
-                  >
-                    {y}
-                  </MenuItem>
-                ))}
-                {filterYear && (
-                  <>
-                    <Divider />
-                    <MenuItem
-                      onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
-                      sx={{ fontSize: '0.875rem', color: '#EF4444' }}
-                    >
-                      Clear Year Filter
-                    </MenuItem>
-                  </>
-                )}
-              </Menu>
-            </Box>
-
-            <TextField
-              variant="outlined"
-              placeholder="Search..."
-              size="small"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-              sx={{ width: 280, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF', height: 40 } }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  </InputAdornment>
-                )
-              }}
-            />
-          </Box>
-
-          <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4 }}>
+          <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between" gap={1.5} mb={3}>
               <Box display="flex" alignItems="center" gap={1.5}>
                 <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -748,6 +766,107 @@ export default function DeanPage() {
                   <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>Manage and execute actions on final clearances</Typography>
                 </Box>
               </Box>
+            </Box>
+
+            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
+              <Box display="flex" gap={1.5} flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  startIcon={filterDate ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
+                  onClick={() => {
+                    if (filterDate) {
+                      setFilterDate("");
+                      setPage(0);
+                    } else {
+                      dateInputRef.current?.showPicker();
+                    }
+                  }}
+                  sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: filterDate ? '#ecfeff' : 'transparent', color: filterDate ? '#0891b2' : '#64748B', borderColor: filterDate ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36, '&:hover': { bgcolor: filterDate ? '#cffafe' : '#F9FAFB' } }}
+                >
+                  {filterDate || "All time"}
+                  <input
+                    type="date"
+                    ref={dateInputRef}
+                    style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                    onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
+                  />
+                </Button>
+                <Select
+                  variant="outlined"
+                  displayEmpty
+                  value={filterCourse}
+                  onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
+                  sx={{
+                    minWidth: 140, height: 36, bgcolor: '#ecfeff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0891b2',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' }
+                  }}
+                >
+                  <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
+                  {availableCourses.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.8125rem' }}>{getCourseLabel(c)}</MenuItem>))}
+                </Select>
+                <Button
+                  variant="outlined"
+                  onClick={(e) => setMoreAnchor(e.currentTarget)}
+                  startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
+                  sx={{ textTransform: 'none', borderRadius: '8px', color: filterYear ? '#0891b2' : '#374151', bgcolor: filterYear ? '#ecfeff' : 'transparent', borderColor: filterYear ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36 }}
+                >
+                  {filterYear || "More filters"}
+                </Button>
+                <Menu
+                  anchorEl={moreAnchor}
+                  open={Boolean(moreAnchor)}
+                  onClose={() => setMoreAnchor(null)}
+                  PaperProps={{ sx: { borderRadius: '12px', mt: 1, minWidth: 180, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' } }}
+                >
+                  <MenuItem disabled sx={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, color: '#64748B' }}>YEAR LEVEL</MenuItem>
+                  <MenuItem
+                    selected={filterYear === ""}
+                    onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
+                    sx={{ fontSize: '0.875rem' }}
+                  >
+                    All Years
+                  </MenuItem>
+                  {YEAR_LEVELS.map(y => (
+                    <MenuItem
+                      key={y}
+                      selected={filterYear === y}
+                      onClick={() => { setFilterYear(y); setPage(0); setMoreAnchor(null); }}
+                      sx={{ fontSize: '0.875rem' }}
+                    >
+                      {y}
+                    </MenuItem>
+                  ))}
+                  {filterYear && (
+                    <>
+                      <Divider />
+                      <MenuItem
+                        onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
+                        sx={{ fontSize: '0.875rem', color: '#EF4444' }}
+                      >
+                        Clear Year Filter
+                      </MenuItem>
+                    </>
+                  )}
+                </Menu>
+              </Box>
+
+              <TextField
+                variant="outlined"
+                placeholder="Search..."
+                size="small"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(0); }}
+                sx={{ width: 280, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF', height: 40 } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </InputAdornment>
+                  )
+                }}
+              />
             </Box>
 
             <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
@@ -874,7 +993,9 @@ export default function DeanPage() {
             </Box>
           </Box>
         </>
-      ) : active === "approvals" ? (
+      )}
+    </>
+  ) : active === "approvals" ? (
         <>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
             <Box>

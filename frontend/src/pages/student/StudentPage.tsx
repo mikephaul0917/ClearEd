@@ -27,11 +27,11 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
 import CloseIcon from "@mui/icons-material/Close";
-import { 
-  SettingsContainer, 
-  SettingsSection, 
-  SettingsRow, 
-  SettingsField, 
+import {
+  SettingsContainer,
+  SettingsSection,
+  SettingsRow,
+  SettingsField,
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
@@ -111,7 +111,7 @@ export default function StudentPage() {
       u.avatarUrl = url;
       localStorage.setItem("user", JSON.stringify(u));
       window.dispatchEvent(new Event("storage")); // Trigger RoleLayout re-render
-    } catch {}
+    } catch { }
   };
   const [spFamilyName, setSpFamilyName] = useState("");
   const [spFirstName, setSpFirstName] = useState("");
@@ -146,7 +146,7 @@ export default function StudentPage() {
           setSpMiddleName(scrub(p.middleName));
           setSpStudentNumber(scrub(p.studentNumber));
           setSpCourse(scrub(p.course));
-           setSpYear(scrub(p.year));
+          setSpYear(scrub(p.year));
           setSpSemester(scrub(p.semester));
           setSpAcademicYear(scrub(p.academicYear));
           if (p.avatarUrl) {
@@ -331,7 +331,7 @@ export default function StudentPage() {
   const reqOrg = (() => { try { const p = JSON.parse(localStorage.getItem("studentProfile") || "{}"); return !!p.reqOrgForm; } catch { return false; } })();
 
   return (
-    <RoleLayout>
+    <RoleLayout bgcolor="#f3f3f3">
       {notice && (
         <SuccessMessage
           message={notice.message}
@@ -725,149 +725,149 @@ export default function StudentPage() {
           </Box>
         </Box>
       ) : active === "settings" ? (
-          <SettingsContainer>
-            <SettingsHeader 
-              title="Account Settings" 
-              subtitle="Manage your profile information and security preferences" 
+        <SettingsContainer>
+          <SettingsHeader
+            title="Account Settings"
+            subtitle="Manage your profile information and security preferences"
+          />
+
+          <SettingsSection>
+            <ProfilePictureSection
+              avatarUrl={getAbsoluteUrl(avatarUrl)}
+              initials={getInitials(draftFullName)}
+              onFileSelect={async (file) => {
+                try {
+                  const formData = new FormData();
+                  formData.append('avatar', file);
+                  const res = await api.post("/auth/avatar", formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                  });
+                  setAvatarUrl(res.data.avatarUrl);
+                  updateLocalAvatar(res.data.avatarUrl);
+                } catch (err: any) {
+                  console.error("Upload failed:", err);
+                }
+              }}
+              onDelete={async () => {
+                try {
+                  // Update profile with empty avatarUrl
+                  await api.put("/auth/profile", { avatarUrl: "" });
+                  setAvatarUrl("");
+                  updateLocalAvatar("");
+                } catch (err) {
+                  console.error("Delete failed:", err);
+                }
+              }}
             />
+          </SettingsSection>
 
-            <SettingsSection>
-              <ProfilePictureSection 
-                avatarUrl={getAbsoluteUrl(avatarUrl)}
-                initials={getInitials(draftFullName)} 
-                onFileSelect={async (file) => {
-                  try {
-                    const formData = new FormData();
-                    formData.append('avatar', file);
-                    const res = await api.post("/auth/avatar", formData, {
-                      headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-                    setAvatarUrl(res.data.avatarUrl);
-                    updateLocalAvatar(res.data.avatarUrl);
-                  } catch (err: any) {
-                    console.error("Upload failed:", err);
-                  }
-                }}
-                onDelete={async () => {
-                  try {
-                    // Update profile with empty avatarUrl
-                    await api.put("/auth/profile", { avatarUrl: "" });
-                    setAvatarUrl("");
-                    updateLocalAvatar("");
-                  } catch (err) {
-                    console.error("Delete failed:", err);
-                  }
-                }} 
-              />
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsRow>
-                <SettingsField label="First name">
-                  <TextField
-                    fullWidth
-                    value={draftFirst}
-                    onChange={(e) => setDraftFirst(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                  />
-                </SettingsField>
-                <SettingsField label="Last name">
-                  <TextField
-                    fullWidth
-                    value={draftLast}
-                    onChange={(e) => setDraftLast(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                  />
-                </SettingsField>
-              </SettingsRow>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsField label="Email">
-                <TextField 
-                  fullWidth 
-                  value={email} 
-                  disabled 
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { 
-                      borderRadius: '8px', 
-                      backgroundColor: '#F8FAFC' 
-                    } 
-                  }} 
+          <SettingsSection>
+            <SettingsRow>
+              <SettingsField label="First name">
+                <TextField
+                  fullWidth
+                  value={draftFirst}
+                  onChange={(e) => setDraftFirst(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
                 />
               </SettingsField>
-            </SettingsSection>
+              <SettingsField label="Last name">
+                <TextField
+                  fullWidth
+                  value={draftLast}
+                  onChange={(e) => setDraftLast(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                />
+              </SettingsField>
+            </SettingsRow>
+          </SettingsSection>
 
-            <SettingsSection>
-              <SettingsRow>
-                <SettingsField label="Student Number">
-                  <TextField fullWidth value={spStudentNumber} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-                </SettingsField>
-                <SettingsField label="Course">
-                  <TextField fullWidth value={spCourse} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-                </SettingsField>
-              </SettingsRow>
-              <SettingsRow>
-                <SettingsField label="Year Level">
-                  <TextField fullWidth value={`${spYear} Year`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-                </SettingsField>
-                <SettingsField label="Academic Period">
-                  <TextField fullWidth value={`${spSemester} • ${spAcademicYear}`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-                </SettingsField>
-              </SettingsRow>
-            </SettingsSection>
-
-            <SettingsSection>
-              <SettingsRow>
-                <SettingsField label="New password">
-                  <TextField
-                    type="password"
-                    fullWidth
-                    placeholder="Enter new password"
-                    autoComplete="new-password"
-                    value={newPass}
-                    onChange={(e) => setNewPass(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                  />
-                </SettingsField>
-                <SettingsField label="Confirm password">
-                  <TextField
-                    type="password"
-                    fullWidth
-                    placeholder="Confirm new password"
-                    autoComplete="new-password"
-                    value={confirmPass}
-                    onChange={(e) => setConfirmPass(e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                  />
-                </SettingsField>
-              </SettingsRow>
-            </SettingsSection>
-
-            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-              <Button
-                variant="contained"
-                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+          <SettingsSection>
+            <SettingsField label="Email">
+              <TextField
+                fullWidth
+                value={email}
+                disabled
                 sx={{
-                  backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                  '&:hover': { backgroundColor: '#111' }
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    backgroundColor: '#F8FAFC'
+                  }
                 }}
-              >
-                Save Profile
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={updatePassword}
-                sx={{
-                  color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                  '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
-                }}
-              >
-                Update Password
-              </Button>
-            </Box>
-          </SettingsContainer>
-        ) : active === "slip" ? (
+              />
+            </SettingsField>
+          </SettingsSection>
+
+          <SettingsSection>
+            <SettingsRow>
+              <SettingsField label="Student Number">
+                <TextField fullWidth value={spStudentNumber} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+              </SettingsField>
+              <SettingsField label="Course">
+                <TextField fullWidth value={spCourse} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+              </SettingsField>
+            </SettingsRow>
+            <SettingsRow>
+              <SettingsField label="Year Level">
+                <TextField fullWidth value={`${spYear} Year`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+              </SettingsField>
+              <SettingsField label="Academic Period">
+                <TextField fullWidth value={`${spSemester} • ${spAcademicYear}`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+              </SettingsField>
+            </SettingsRow>
+          </SettingsSection>
+
+          <SettingsSection>
+            <SettingsRow>
+              <SettingsField label="New password">
+                <TextField
+                  type="password"
+                  fullWidth
+                  placeholder="Enter new password"
+                  autoComplete="new-password"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                />
+              </SettingsField>
+              <SettingsField label="Confirm password">
+                <TextField
+                  type="password"
+                  fullWidth
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                />
+              </SettingsField>
+            </SettingsRow>
+          </SettingsSection>
+
+          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+            <Button
+              variant="contained"
+              onClick={(e) => { e.preventDefault(); updateProfile(); }}
+              sx={{
+                backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                '&:hover': { backgroundColor: '#111' }
+              }}
+            >
+              Save Profile
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={updatePassword}
+              sx={{
+                color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
+                '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+              }}
+            >
+              Update Password
+            </Button>
+          </Box>
+        </SettingsContainer>
+      ) : active === "slip" ? (
         <StudentClearanceSlip />
       ) : active === "requirements" ? (
         <ClearanceRequirements />

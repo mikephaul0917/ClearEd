@@ -71,7 +71,7 @@ export default function FAQPage() {
     <RoleLayout>
       <Box sx={{ maxWidth: 1200, ml: 0, pt: 4, pb: 8, pl: isMobile ? 2 : 0, pr: isMobile ? 2 : 6, mx: isMobile ? "auto" : 0 }}>
         <Box display="flex" flexDirection={isMobile ? "column" : "row"} gap={isMobile ? 4 : 20}>
-          
+
           {/* Sidebar Nav */}
           <Box sx={{ width: isMobile ? "100%" : 240, flexShrink: 0 }}>
             <Box display="flex" flexDirection={isMobile ? "row" : "column"} gap={1} sx={{ overflowX: isMobile ? 'auto' : 'visible' }}>
@@ -108,11 +108,11 @@ export default function FAQPage() {
           <Box flex={1}>
             {/* Badge */}
             <Box mb={1}>
-               <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
-                  / FAQS
-               </Typography>
+              <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
+                / FAQS
+              </Typography>
             </Box>
-            
+
             <Typography
               variant="h1"
               sx={{

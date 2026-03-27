@@ -131,7 +131,7 @@ const RegisterPage = () => {
     });
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
@@ -154,7 +154,7 @@ const RegisterPage = () => {
             {/* ── Left Side: Inspiration ── */}
             <div className="register-quote-side" style={{
                 flex: 1,
-                backgroundColor: "#F9FAFB",
+                backgroundColor: "#FFFFFF",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -223,6 +223,7 @@ const RegisterPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 padding: "80px 40px",
+                backgroundColor: "#F9FAFB",
             }}>
                 <div style={{ width: "100%", maxWidth: "440px" }}>
                     <div className="register-form-header" style={{ textAlign: "center", marginBottom: "64px" }}>
@@ -299,21 +300,47 @@ const RegisterPage = () => {
                             disabled={isLoading}
                             style={{
                                 width: "100%",
-                                fontSize: "16px",
-                                fontWeight: 400,
+                                fontSize: "15px",
+                                fontWeight: 500,
                                 color: C.white,
                                 backgroundColor: C.black,
-                                border: "none",
-                                borderRadius: "12px",
+                                border: "1px solid #000000",
+                                borderRadius: "100px",
                                 padding: "14px",
                                 cursor: isLoading ? "not-allowed" : "pointer",
-                                transition: "all 0.2s ease",
+                                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                                 marginBottom: "0px",
+                                boxShadow: "0 8px 16px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)",
+                                transform: "translateY(0)"
                             }}
-                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#222")}
-                            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.black)}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = "#222";
+                                e.currentTarget.style.transform = "translateY(-1px)";
+                                e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.15)";
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = C.black;
+                                e.currentTarget.style.transform = "translateY(0)";
+                                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)";
+                            }}
                         >
-                            {isLoading ? "Signing in..." : "Sign in"}
+                            {isLoading ? (
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
+                                    <span>Signing in</span>
+                                    <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                    >.</motion.span>
+                                    <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                                    >.</motion.span>
+                                    <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                                    >.</motion.span>
+                                </div>
+                            ) : "Sign in"}
                         </button>
                     </form>
 
@@ -328,22 +355,32 @@ const RegisterPage = () => {
                         type="button"
                         style={{
                             width: "100%",
-                            fontSize: "16px",
-                            fontWeight: 400,
+                            fontSize: "15px",
+                            fontWeight: 500,
                             color: C.black,
                             backgroundColor: C.white,
-                            border: "1.5px solid #000000",
-                            borderRadius: "12px",
-                            padding: "14px",
+                            border: "3px solid #FFFFFF",
+                            borderRadius: "100px",
+                            padding: "11px",
                             cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             gap: "10px",
-                            transition: "all 0.2s ease",
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            boxShadow: "0 8px 16px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04)",
+                            transform: "translateY(0)"
                         }}
-                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#F9FAFB")}
-                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.white)}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = "#F9FAFB";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                            e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.08), 0 6px 10px rgba(0,0,0,0.06)";
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = C.white;
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04)";
+                        }}
                     >
                         {/* Placeholder for Google Icon */}
                         <svg width="20" height="20" viewBox="0 0 24 24">
