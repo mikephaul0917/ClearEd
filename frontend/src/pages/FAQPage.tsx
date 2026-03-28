@@ -86,14 +86,14 @@ export default function FAQPage() {
                       py: 1.5,
                       borderRadius: "8px",
                       cursor: "pointer",
-                      backgroundColor: isActive ? "#ecfeff" : "transparent",
-                      color: isActive ? "#0891b2" : "#64748B",
+                      backgroundColor: isActive ? "#f3e8ff" : "transparent",
+                      color: isActive ? "#7e22ce" : "#64748B",
                       fontWeight: isActive ? 700 : 500,
                       fontSize: "0.95rem",
                       transition: "all 0.2s ease",
                       whiteSpace: "nowrap",
                       "&:hover": {
-                        backgroundColor: isActive ? "#ecfeff" : "#F8FAFC",
+                        backgroundColor: isActive ? "#f3e8ff" : "#F8FAFC",
                       }
                     }}
                   >
@@ -107,8 +107,18 @@ export default function FAQPage() {
           {/* Content Area */}
           <Box flex={1}>
             {/* Badge */}
-            <Box mb={1}>
-              <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
+            <Box mb={2}>
+              <Typography sx={{ 
+                display: 'inline-block',
+                bgcolor: "#fef08a",
+                color: "#854d0e", 
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '6px',
+                fontSize: "0.75rem", 
+                fontWeight: 800, 
+                letterSpacing: "0.05em" 
+              }}>
                 / FAQS
               </Typography>
             </Box>

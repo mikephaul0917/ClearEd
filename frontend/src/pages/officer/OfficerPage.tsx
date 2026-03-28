@@ -52,6 +52,8 @@ import {
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
+import SuccessModal from "../../components/SuccessModal";
+import PasswordConfirmModal from "../dean/components/PasswordConfirmModal";
 
 type PendingRow = {
   id: string;
@@ -139,9 +141,12 @@ export default function OfficerPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [uploaded, setUploaded] = useState<{ organization: string; files: { url: string; name?: string; type?: string }[] }[]>([]);
-  const [sigMode, setSigMode] = useState<"upload" | "draw">("upload");
-  const [sigDrawData, setSigDrawData] = useState<string>("");
-  const canvasRef = (typeof document !== "undefined") ? (document.createElement("canvas") as HTMLCanvasElement) : null;
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false);
+
 
   const COURSES = [
     "BACHELOR OF ARTS IN COMMUNICATION (ABComm)",
@@ -374,53 +379,19 @@ export default function OfficerPage() {
     return `${draftFirst.trim()} ${draftLast.trim()}`.trim() || fullName;
   }, [draftFirst, draftLast, fullName]);
 
-  const approve = async () => {
-    if (!selected) { setNotice({ message: "Select a student first", variant: "error" }); return; }
-    try {
-      let signaturePayload: any = undefined;
-      if (sigMode === "upload" && signature) {
-        const content = await toBase64(signature);
-        signaturePayload = { mode: "upload", file: { name: signature.name, content } };
-      } else if (sigMode === "draw" && sigDrawData) {
-        signaturePayload = { mode: "draw", dataUrl: sigDrawData };
-      }
-      await api.post("/signatory/approve", { studentId: selected.studentId, signature: signaturePayload });
-      setNotice({ message: "Approval submitted", variant: "success" });
-      if (selected) {
-        setRows(prev => prev.map(r => r.id === selected.id ? { ...r, status: "Approved", approvedAt: new Date().toISOString() } : r));
-        setSelected(null);
-      }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || "Failed to submit approval";
-      setNotice({ message: msg, variant: "error" });
-    }
-  };
 
-  const reject = async () => {
-    try {
-      if (!selected) { setNotice({ message: "Select a student first", variant: "error" }); return; }
-      await api.post("/signatory/remarks", { remarks, studentId: selected.studentId });
-      setNotice({ message: "Remarks saved", variant: "success" });
-      if (selected) {
-        setRows(prev => prev.map(r => r.id === selected.id ? { ...r, status: "Rejected", rejectedAt: new Date().toISOString() } : r));
-        setSelected(null);
-      }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || "Failed to save remarks";
-      setNotice({ message: msg, variant: "error" });
-    }
-  };
 
   const logout = () => { authService.logout(); nav("/", { state: { banner: { message: "Logged out successfully!", variant: "success" } } }); };
 
   const updateProfile = async () => {
     const fullName = `${draftFirst} ${draftLast}`.trim();
     try {
-      await api.put("/auth/profile", { fullName, signatureUrl: sigDrawData || sigMode === "upload" && sigDrawData ? sigDrawData : signatureUrl });
+      await api.put("/auth/profile", { fullName, signatureUrl });
       setProfileFirst(draftFirst.trim());
       setProfileLast(draftLast.trim());
-      setSignatureUrl(sigDrawData || signatureUrl);
-      setNotice({ message: "Profile updated successfully", variant: "success" });
+      setSuccessModalTitle("Profile Updated Successfully");
+      setSuccessModalDescription("Your administrative account details have been successfully saved.");
+      setSuccessModalOpen(true);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update profile";
       setNotice({ message: msg, variant: "error" });
@@ -428,7 +399,7 @@ export default function OfficerPage() {
   };
 
   const updatePassword = async () => {
-    if (!currentPass || !newPass || !confirmPass) {
+    if (!newPass || !confirmPass) {
       setNotice({ message: "Please fill all password fields", variant: "error" });
       return;
     }
@@ -436,15 +407,24 @@ export default function OfficerPage() {
       setNotice({ message: "Passwords do not match", variant: "error" });
       return;
     }
+    setPasswordModalOpen(true);
+  };
+
+  const handleConfirmPasswordUpdate = async (currentPassword: string) => {
+    setPasswordUpdateLoading(true);
     try {
-      await api.put("/auth/password", { currentPassword: currentPass, newPassword: newPass });
-      setNotice({ message: "Password updated", variant: "success" });
-      setCurrentPass("");
+      await api.put("/auth/password", { currentPassword, newPassword: newPass });
+      setSuccessModalTitle("Password Updated Successfully");
+      setSuccessModalDescription("Your administrative password has been securely updated.");
+      setSuccessModalOpen(true);
       setNewPass("");
       setConfirmPass("");
+      setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
       setNotice({ message: msg, variant: "error" });
+    } finally {
+      setPasswordUpdateLoading(false);
     }
   };
 
@@ -484,9 +464,9 @@ export default function OfficerPage() {
         <TodoPage />
       ) : (
         <SettingsContainer>
-          <SettingsHeader
-            title="Settings"
-            subtitle="Manage your administrative account settings"
+          <SettingsHeader 
+            title="Account Information" 
+            subtitle="Manage your administrative account settings" 
           />
 
           <SettingsSection>
@@ -520,150 +500,118 @@ export default function OfficerPage() {
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField label="First name">
+              <SettingsField 
+                label="First Name"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', opacity: 0.8, '&:hover': { opacity: 1 } }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Edit</Typography>
+                  </Box>
+                }
+              >
                 <TextField
                   fullWidth
                   name="first-name"
                   autoComplete="given-name"
                   value={draftFirst}
                   onChange={(e) => setDraftFirst(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField label="Last name">
+              <SettingsField 
+                label="Last Name"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#64748B' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Save</Typography>
+                  </Box>
+                }
+              >
                 <TextField
                   fullWidth
                   name="last-name"
                   autoComplete="family-name"
                   value={draftLast}
                   onChange={(e) => setDraftLast(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
             </SettingsRow>
           </SettingsSection>
 
           <SettingsSection>
-            <SettingsField label="Email">
-              <TextField
-                fullWidth
-                name="real-email"
-                autoComplete="email"
-                value={email}
-                disabled
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    backgroundColor: '#F8FAFC'
-                  }
-                }}
-              />
-            </SettingsField>
-          </SettingsSection>
-
-          <SettingsSection>
-            {signatureUrl && !sigDrawData && (
-              <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '8px', mb: 2, textAlign: 'center', backgroundColor: '#FFF' }}>
-                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#64748B' }}>Current Saved Signature:</Typography>
-                <img src={signatureUrl} alt="Last Saved Signature" style={{ maxHeight: 80, maxWidth: '100%' }} />
-              </Box>
-            )}
-
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Button
-                size="small"
-                variant={sigMode === "draw" ? "contained" : "outlined"}
-                onClick={() => setSigMode("draw")}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "draw" ? '#000' : 'transparent', color: sigMode === "draw" ? '#FFF' : '#000' }}
-              >
-                Draw Signature
-              </Button>
-              <Button
-                size="small"
-                variant={sigMode === "upload" ? "contained" : "outlined"}
-                onClick={() => setSigMode("upload")}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "upload" ? '#000' : 'transparent', color: sigMode === "upload" ? '#FFF' : '#000' }}
-              >
-                Upload Image
-              </Button>
-            </Box>
-
-            {sigMode === "draw" && (
-              <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 1, backgroundColor: '#FFF' }}>
-                <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: '#94A3B8' }}>Draw your signature in the box below</Typography>
-                <Box sx={{ height: 150, width: '100%', position: 'relative', border: '1px solid #F1F5F9', borderRadius: '4px' }}>
-                  <canvas
-                    width={700}
-                    height={150}
-                    onMouseDown={(e) => {
-                      const canvas = e.currentTarget;
-                      const ctx = canvas.getContext('2d');
-                      if (!ctx) return;
-                      ctx.beginPath();
-                      ctx.lineWidth = 2;
-                      ctx.lineCap = 'round';
-                      ctx.strokeStyle = '#000';
-                      const rect = canvas.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      ctx.moveTo(x, y);
-                      (canvas as any).isDrawing = true;
-                    }}
-                    onMouseMove={(e) => {
-                      const canvas = e.currentTarget;
-                      if (!(canvas as any).isDrawing) return;
-                      const ctx = canvas.getContext('2d');
-                      if (!ctx) return;
-                      const rect = canvas.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      ctx.lineTo(x, y);
-                      ctx.stroke();
-                    }}
-                    onMouseUp={(e) => {
-                      const canvas = e.currentTarget;
-                      (canvas as any).isDrawing = false;
-                      setSigDrawData(canvas.toDataURL());
-                    }}
-                    style={{ width: '100%', height: '100%', cursor: 'crosshair', touchAction: 'none' }}
-                  />
-                </Box>
-                <Button size="small" fullWidth sx={{ mt: 1, textTransform: 'none' }} onClick={() => {
-                  setSigDrawData("");
-                  const canvas = document.querySelector('canvas');
-                  if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  }
-                }}>Clear Canvas</Button>
-              </Box>
-            )}
-
-            {sigMode === "upload" && (
-              <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 3, textAlign: 'center', backgroundColor: '#FFF' }}>
-                <Button variant="outlined" component="label" sx={{ textTransform: 'none', borderRadius: '8px', color: '#000', borderColor: '#000' }}>
-                  Select Signature Image
-                  <input type="file" hidden accept="image/*" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const base64 = await toBase64(file);
-                      setSigDrawData(base64);
-                    }
-                  }} />
-                </Button>
-                {sigDrawData && sigMode === "upload" && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>Preview:</Typography>
-                    <img src={sigDrawData} alt="Upload Preview" style={{ maxHeight: 80 }} />
+            <SettingsRow>
+              <SettingsField 
+                label="Email"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Verified</Typography>
                   </Box>
-                )}
-              </Box>
-            )}
+                }
+              >
+                <TextField
+                  fullWidth
+                  name="real-email"
+                  autoComplete="email"
+                  value={email}
+                  disabled
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                />
+              </SettingsField>
+              <SettingsField label="Account Type" labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Active</Typography>
+                  </Box>
+                }>
+                <TextField
+                  fullWidth
+                  value="Organization Officer"
+                  disabled
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                />
+              </SettingsField>
+            </SettingsRow>
           </SettingsSection>
+
+
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField label="New password">
+              <SettingsField label="New Password">
                 <TextField
                   type="password"
                   fullWidth
@@ -671,10 +619,17 @@ export default function OfficerPage() {
                   autoComplete="new-password"
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField label="Confirm password">
+              <SettingsField label="Confirm Password">
                 <TextField
                   type="password"
                   fullWidth
@@ -682,29 +637,43 @@ export default function OfficerPage() {
                   autoComplete="new-password"
                   value={confirmPass}
                   onChange={(e) => setConfirmPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
             </SettingsRow>
           </SettingsSection>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
             <Button
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
+              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
               sx={{
-                backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { backgroundColor: '#111' }
+                backgroundColor: '#000', color: '#FFF', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
+                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3)',
+                '&:hover': { backgroundColor: '#111', transform: 'translateY(-2px)', boxShadow: '0 12px 24px -5px rgba(0,0,0,0.4)' },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              Save Profile
+              Update Profile Info
             </Button>
             <Button
               variant="outlined"
               onClick={updatePassword}
+              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"></path></svg>}
               sx={{
-                color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                color: '#0F172A', borderColor: '#E2E8F0', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
+                bgcolor: '#FFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               Update Password
@@ -712,6 +681,18 @@ export default function OfficerPage() {
           </Box>
         </SettingsContainer>
       )}
+      <SuccessModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+      <PasswordConfirmModal
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        onConfirm={handleConfirmPasswordUpdate}
+        loading={passwordUpdateLoading}
+      />
     </RoleLayout>
   );
 }

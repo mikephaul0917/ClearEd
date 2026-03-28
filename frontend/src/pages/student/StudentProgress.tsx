@@ -164,7 +164,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
       {/* Left Vertical Banner */}
       <Box sx={{
         width: 70,
-        bgcolor: "#008080",
+        bgcolor: "#0d9488",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -204,7 +204,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           variant="h3"
           sx={{
             fontWeight: 800,
-            color: "#008080",
+            color: "#0d9488",
             mb: 1,
             textAlign: "center",
             fontFamily: "'Lora', serif",
@@ -286,8 +286,8 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
                   <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
                 )}
               </Box>
-              <Box sx={{ borderBottom: "1.5px solid #008080", mt: 1, mb: 0.5 }} />
-              <Typography sx={{ fontSize: "0.75rem", color: "#008080", fontWeight: 800, textAlign: "center" }}>Dean's Signature</Typography>
+              <Box sx={{ borderBottom: "1.5px solid #0d9488", mt: 1, mb: 0.5 }} />
+              <Typography sx={{ fontSize: "0.75rem", color: "#0d9488", fontWeight: 800, textAlign: "center" }}>Dean's Signature</Typography>
             </Box>
           </Box>
         </Box>

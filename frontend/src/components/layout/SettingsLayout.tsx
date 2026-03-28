@@ -8,7 +8,7 @@ import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid";
 import { useTheme, useMediaQuery, SvgIconProps } from "@mui/material";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import { RiUserSettingsFill } from "react-icons/ri";
+import { RiUserSettingsLine } from "react-icons/ri";
 
 interface SettingsHeaderProps {
   title: string;
@@ -16,33 +16,17 @@ interface SettingsHeaderProps {
   icon?: React.ReactElement<SvgIconProps>;
 }
 
-export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle, icon }) => {
+export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle }) => {
   return (
-    <Box sx={{ mb: 6, display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 48,
-        height: 48,
-        borderRadius: '12px',
-        bgcolor: '#F1F5F9', // Light slate/blue background from image
-        color: '#475569', // Dark slate color from image
-        flexShrink: 0,
-        mt: 0.5
-      }}>
-        {icon || <RiUserSettingsFill style={{ fontSize: 24 }} />}
-      </Box>
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 800, color: '#000', mb: 0.5 }}>
-          {title}
+    <Box sx={{ mb: 4, px: 1 }}>
+      <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 0.5 }}>
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500 }}>
+          {subtitle}
         </Typography>
-        {subtitle && (
-          <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
-            {subtitle}
-          </Typography>
-        )}
-      </Box>
+      )}
     </Box>
   );
 };
@@ -53,8 +37,8 @@ interface SettingsSectionProps {
 
 export const SettingsSection: React.FC<SettingsSectionProps> = ({ children }) => {
   return (
-    <Box sx={{ mb: 6 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <Box sx={{ mb: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {children}
       </Box>
     </Box>
@@ -65,14 +49,22 @@ interface SettingsFieldProps {
   label: string;
   children: React.ReactNode;
   fullWidth?: boolean;
+  labelAction?: React.ReactNode;
 }
 
-export const SettingsField: React.FC<SettingsFieldProps> = ({ label, children, fullWidth = true }) => {
+export const SettingsField: React.FC<SettingsFieldProps> = ({ label, children, fullWidth = true, labelAction }) => {
   return (
     <Box sx={{ width: fullWidth ? '100%' : 'auto' }}>
-      <Typography sx={{ mb: 1.5, fontWeight: 500, fontSize: '0.875rem', color: '#374151' }}>
-        {label}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#64748B' }}>
+          {label}
+        </Typography>
+        {labelAction && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {labelAction}
+          </Box>
+        )}
+      </Box>
       {children}
     </Box>
   );
@@ -98,13 +90,11 @@ interface ProfilePictureSectionProps {
   onDelete?: () => void;
 }
 
-export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ avatarUrl, initials, onUpload, onFileSelect, onDelete }) => {
+export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ avatarUrl, initials, onFileSelect }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
-    if (onUpload) {
-      onUpload();
-    } else if (fileInputRef.current) {
+    if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
@@ -117,7 +107,7 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
   };
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+    <Box sx={{ position: 'relative', width: 'fit-content', mb: 4 }}>
       <input
         type="file"
         ref={fileInputRef}
@@ -125,63 +115,50 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
         style={{ display: 'none' }}
         accept="image/*"
       />
-      <Avatar
-        src={avatarUrl}
-        sx={{
-          width: 80,
-          height: 80,
-          fontSize: '1.75rem',
-          bgcolor: '#020617', // Deep Dark Navy (Slate 950)
-          color: '#FFFFFF',
-          fontWeight: 800,
-          textShadow: '-1px 0 0 rgba(0,255,255,0.4), 1px 0 0 rgba(255,165,0,0.4)',
-          border: '1px solid #1E293B'
-        }}
-      >
-        {initials}
-      </Avatar>
-      <Box>
-        <Typography sx={{ fontWeight: 600, fontSize: '1rem', mb: 0.5 }}>
-          Profile picture
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#6B7280', mb: 1.5 }}>
-          PNG, JPEG under 15MB
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleUploadClick}
-            sx={{
-              textTransform: 'none',
-              borderRadius: '8px',
-              borderColor: '#D1D5DB',
-              color: '#374151',
-              fontWeight: 600,
-              '&:hover': {
-                borderColor: '#9CA3AF',
-                bgcolor: '#F9FAFB'
-              }
-            }}
-          >
-            Upload new picture
-          </Button>
-          <Button
-            variant="text"
-            size="small"
-            onClick={onDelete}
-            sx={{
-              textTransform: 'none',
-              borderRadius: '8px',
-              color: '#374151',
-              fontWeight: 600,
-              '&:hover': {
-                bgcolor: '#F3F4F6'
-              }
-            }}
-          >
-            Delete
-          </Button>
+      <Box sx={{ position: 'relative' }}>
+        <Avatar
+          src={avatarUrl}
+          sx={{
+            width: 80,
+            height: 80,
+            fontSize: '1.75rem',
+            bgcolor: '#0F172A',
+            color: '#FFFFFF',
+            fontWeight: 800,
+            border: '4px solid #FFF',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+          }}
+        >
+          {initials}
+        </Avatar>
+        <Box
+          onClick={handleUploadClick}
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: 32,
+            height: 32,
+            bgcolor: '#FFF',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            cursor: 'pointer',
+            border: '1px solid #E2E8F0',
+            transition: 'all 0.2s',
+            zIndex: 2,
+            '&:hover': {
+              transform: 'scale(1.1)',
+              bgcolor: '#F8FAFC'
+            }
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
         </Box>
       </Box>
     </Box>
@@ -194,12 +171,21 @@ export const SettingsContainer: React.FC<{ children: React.ReactNode }> = ({ chi
 
   return (
     <Box sx={{
-      maxWidth: '800px',
+      maxWidth: '850px',
       mx: 'auto',
       px: isSmallMobile ? 2 : 4,
-      py: isSmallMobile ? 4 : 8,
+      pt: isSmallMobile ? 2 : 4,
+      pb: isSmallMobile ? 4 : 8,
     }}>
-      {children}
+      <Box sx={{
+        bgcolor: '#FFF',
+        borderRadius: '24px',
+        p: { xs: 3, md: 4 },
+        boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
+        border: '1px solid #F8FAFC'
+      }}>
+        {children}
+      </Box>
     </Box>
   );
 };

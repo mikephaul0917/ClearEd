@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Accordion from "@mui/material/Accordion";
@@ -105,34 +106,66 @@ export default function DeanFAQPage() {
 
         {/* Sidebar Nav */}
         <Box sx={{ width: isMobile ? "100%" : 240, flexShrink: 0 }}>
-          <Box display="flex" flexDirection={isMobile ? "row" : "column"} gap={1} sx={{ overflowX: isMobile ? 'auto' : 'visible' }}>
-            {CATEGORIES.map((cat) => {
-              const isActive = activeCategory === cat.id;
-              return (
-                <Box
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  sx={{
-                    px: 3,
-                    py: 1.5,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    backgroundColor: isActive ? "#ecfeff" : "transparent",
-                    color: isActive ? "#0891b2" : "#64748B",
-                    fontWeight: isActive ? 700 : 500,
-                    fontSize: "0.95rem",
-                    transition: "all 0.2s ease",
-                    whiteSpace: "nowrap",
-                    "&:hover": {
-                      backgroundColor: isActive ? "#ecfeff" : "#f8fafc",
-                    }
-                  }}
-                >
-                  {cat.label}
-                </Box>
-              );
-            })}
-          </Box>
+          <motion.div layout>
+            <Box display="flex" flexDirection={isMobile ? "row" : "column"} gap={1} sx={{ overflowX: isMobile ? 'auto' : 'visible' }}>
+              {CATEGORIES.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <Box
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    sx={{
+                      position: 'relative',
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      color: isActive ? "#7e22ce" : "#64748B",
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: "0.95rem",
+                      transition: "color 0.2s ease",
+                      whiteSpace: "nowrap",
+                      zIndex: 1, // Base stacking context
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeCategoryIndicator"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: "#f3e8ff",
+                          borderRadius: "8px",
+                          zIndex: 0
+                        }}
+                        transition={{
+                          type: "spring",
+                          bounce: 0.15,
+                          duration: 0.5
+                        }}
+                      />
+                    )}
+                    <motion.span
+                      style={{
+                        position: 'relative',
+                        zIndex: 1,
+                        display: 'block',
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: "0.95rem"
+                      }}
+                      animate={{ color: isActive ? "#7e22ce" : "#64748B" }}
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                    >
+                      {cat.label}
+                    </motion.span>
+                  </Box>
+                );
+              })}
+            </Box>
+          </motion.div>
         </Box>
 
         {/* Content Area */}
@@ -141,8 +174,18 @@ export default function DeanFAQPage() {
         ) : (
           <Box flex={1}>
             {/* Badge */}
-            <Box mb={1}>
-              <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
+            <Box mb={2}>
+              <Typography sx={{
+                display: 'inline-block',
+                bgcolor: "#fef08a",
+                color: "#854d0e",
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '6px',
+                fontSize: "0.75rem",
+                fontWeight: 800,
+                letterSpacing: "0.05em"
+              }}>
                 / FAQS
               </Typography>
             </Box>

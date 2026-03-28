@@ -23,6 +23,7 @@ import { getAbsoluteUrl, getInitials } from "../../../utils/avatarUtils";
 interface Student {
   id: string | number;
   name: string;
+  studentId?: string;
   avatarUrl?: string;
   dateSubmitted?: string;
   reqCompleted?: number;
@@ -56,11 +57,40 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
   const [isExporting, setIsExporting] = React.useState(false);
 
   const handleExport = () => {
+    if (students.length === 0) return;
+    
     setIsExporting(true);
-    // Simulate export process
+    
+    const headers = ["Student ID", "Full Name", "Status"];
+    const csvRows = [
+      headers.join(","),
+      ...students.map(s => [
+        `"${s.studentId || s.id}"`,
+        `"${s.name}"`,
+        `"Active"`
+      ].join(","))
+    ].join("\n");
+
+    try {
+      const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.body.appendChild(document.createElement("a"));
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `student_directory_export_${timestamp}.csv`);
+      link.style.display = "none";
+      link.click();
+      
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
+
     setTimeout(() => {
       setIsExporting(false);
-    }, 1500);
+    }, 800);
   };
 
   const illustrationUrl = "/studentlist.png";

@@ -16,7 +16,10 @@ import { api, authService } from '../../services';
 import { useEffect, useState, useMemo, useRef } from "react";
 import DeanApprovalsSimple from "../../components/dean/DeanApprovalsSimple";
 import DeanFAQPage from "./DeanFAQPage";
+import SuccessActionModal from "./components/SuccessActionModal";
+import RevokeApprovalModal from "./components/RevokeApprovalModal";
 import StudentListPopup from "./components/StudentListPopup";
+import PasswordConfirmModal from "./components/PasswordConfirmModal";
 import InputAdornment from "@mui/material/InputAdornment";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
@@ -56,6 +59,7 @@ import {
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
+import SuccessModal from "../../components/SuccessModal";
 import { useTheme, useMediaQuery } from "@mui/material";
 import Swal from "sweetalert2";
 
@@ -253,9 +257,10 @@ export default function DeanPage() {
   const [profileLast, setProfileLast] = useState("");
   const [draftFirst, setDraftFirst] = useState("");
   const [draftLast, setDraftLast] = useState("");
-  const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const updateLocalAvatar = (url: string) => {
     try {
@@ -283,8 +288,7 @@ export default function DeanPage() {
   const [studentToApprove, setStudentToApprove] = useState<any>(null);
   const [actionState, setActionState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [actionRowId, setActionRowId] = useState<string | null>(null);
-  const [sigMode, setSigMode] = useState<"upload" | "draw">("upload");
-  const [sigDrawData, setSigDrawData] = useState<string>("");
+
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [moreAnchor, setMoreAnchor] = useState<null | HTMLElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -292,8 +296,14 @@ export default function DeanPage() {
   const [readyRows, setReadyRows] = useState<any[]>([]);
   const [finalizedTodayCount, setFinalizedTodayCount] = useState(0);
   const [studentListOpen, setStudentListOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
   const [popupSearch, setPopupSearch] = useState("");
   const [courseMenuAnchor, setCourseMenuAnchor] = useState<null | HTMLElement>(null);
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [studentToRevoke, setStudentToRevoke] = useState<any>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -480,7 +490,7 @@ export default function DeanPage() {
           `"${r.studentId}"`,
           `"${r.course}"`,
           `"${r.year}"`,
-          `"${filterStatus === "approved" ? "Approved" : "Pending Final"}"`,
+          `"${filterStatus === "approved" ? "Approved" : "Pending"}"`,
           `"${date || ""}"`
         ].join(",");
       })
@@ -500,11 +510,12 @@ export default function DeanPage() {
   const updateProfile = async () => {
     const fullName = `${draftFirst} ${draftLast}`.trim();
     try {
-      await api.put("/auth/profile", { fullName, signatureUrl: sigDrawData || signatureUrl });
+      await api.put("/auth/profile", { fullName, signatureUrl });
       setProfileFirst(draftFirst.trim());
       setProfileLast(draftLast.trim());
-      setSignatureUrl(sigDrawData || signatureUrl);
-      setNotice({ message: "Profile updated successfully", variant: "success" });
+      setSuccessModalTitle("Profile Updated Successfully");
+      setSuccessModalDescription("Your administrative account details have been successfully saved.");
+      setSuccessModalOpen(true);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update profile";
       setNotice({ message: msg, variant: "error" });
@@ -512,7 +523,7 @@ export default function DeanPage() {
   };
 
   const updatePassword = async () => {
-    if (!currentPass || !newPass || !confirmPass) {
+    if (!newPass || !confirmPass) {
       setNotice({ message: "Please fill all password fields", variant: "error" });
       return;
     }
@@ -520,79 +531,134 @@ export default function DeanPage() {
       setNotice({ message: "Passwords do not match", variant: "error" });
       return;
     }
+    // Instead of direct update, open confirmation modal
+    setPasswordModalOpen(true);
+  };
+
+  const handleConfirmPasswordUpdate = async (currentPassword: string) => {
+    setPasswordUpdateLoading(true);
     try {
-      await api.put("/auth/password", { currentPassword: currentPass, newPassword: newPass });
-      setNotice({ message: "Password updated", variant: "success" });
-      setCurrentPass("");
+      await api.put("/auth/password", { currentPassword, newPassword: newPass });
+      setSuccessModalTitle("Password Updated Successfully");
+      setSuccessModalDescription("Your administrative password has been securely updated.");
+      setSuccessModalOpen(true);
       setNewPass("");
       setConfirmPass("");
+      setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
       setNotice({ message: msg, variant: "error" });
+    } finally {
+      setPasswordUpdateLoading(false);
     }
   };
 
+  const handleBulkApprove = () => {
+    setStudentToApprove(null);
+    setSignatureModalOpen(true);
+  };
+
   const finalize = async (signatureData: string) => {
-    if (!studentToApprove) return;
+    const isBulk = !studentToApprove && selectedIds.length > 0;
+    if (!studentToApprove && !isBulk) return;
+
     try {
-      setActionRowId(studentToApprove.id);
-      setActionState('loading');
-      setSignatureModalOpen(false);
+      if (isBulk) {
+        setActionState('loading');
+        setSignatureModalOpen(false);
+        
+        // Sequential API calls for bulk approval
+        const currentSelected = [...selectedIds];
+        let processedCount = 0;
+        
+        for (const id of currentSelected) {
+          const student = readyRows.find(r => r.id === id);
+          if (student) {
+            try {
+              await api.post("/dean/final-approval", { 
+                studentId: student.studentId, 
+                signatureUrl: signatureData 
+              });
+              processedCount++;
+            } catch (e) {
+              console.error(`Failed to approve student ${id}`, e);
+            }
+          }
+        }
 
-      const payload = studentToApprove?.studentId ? { studentId: studentToApprove.studentId, signatureUrl: signatureData } : {};
-      await api.post("/dean/final-approval", payload);
+        setActionState('success');
+        setTimeout(() => {
+          setSuccessModalTitle("Bulk Approval Complete");
+          setSuccessModalDescription(`Final clearances for ${processedCount} students have been successfully recorded.`);
+          setSuccessModalOpen(true);
+          setReadyRows(prev => prev.filter(r => !currentSelected.includes(r.id)));
+          setSelectedIds([]);
+          setActionState('idle');
+        }, 800);
+        
+      } else {
+        setActionRowId(studentToApprove.id);
+        setActionState('loading');
+        setSignatureModalOpen(false);
 
-      setActionState('success');
+        const payload = studentToApprove?.studentId ? { studentId: studentToApprove.studentId, signatureUrl: signatureData } : {};
+        await api.post("/dean/final-approval", payload);
 
-      setTimeout(() => {
-        setNotice({ message: "Final clearance approved", variant: "success" });
-        setReadyRows(prev => prev.filter(r => r.id !== studentToApprove.id));
-        if (selected?.id === studentToApprove.id) setSelected(null);
-        setActionState('idle');
-        setActionRowId(null);
-        setStudentToApprove(null);
-      }, 800);
+        setActionState('success');
 
+        setTimeout(() => {
+          setSuccessModalTitle("Student Approved Successfully");
+          setSuccessModalDescription(`Final clearance for ${studentToApprove.name} has been successfully recorded and finalized.`);
+          setSuccessModalOpen(true);
+          setReadyRows(prev => prev.filter(r => r.id !== studentToApprove.id));
+          if (selected?.id === studentToApprove.id) setSelected(null);
+          setActionState('idle');
+          setActionRowId(null);
+          setStudentToApprove(null);
+        }, 800);
+      }
     } catch (err: any) {
       setActionState('idle');
       setActionRowId(null);
-      const msg = err.response?.data?.message || "Failed to approve final clearance";
+      const msg = err.response?.data?.message || "Failed to process approval";
       setNotice({ message: msg, variant: "error" });
     }
   };
 
-  const handleRevoke = async (student: any) => {
-    const result = await Swal.fire({
-      title: 'Revoke Approval?',
-      text: `Are you sure you want to revoke the final approval for ${student.name}? This will move them back to pending.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#000000',
-      cancelButtonColor: '#64748B',
-      confirmButtonText: 'Yes, revoke it',
-      cancelButtonText: 'Cancel',
-    });
+  const handleRevoke = (student: any) => {
+    setStudentToRevoke(student);
+    setRevokeModalOpen(true);
+  };
 
-    if (result.isConfirmed) {
-      try {
-        setActionRowId(student.id);
-        setActionState('loading');
+  const confirmRevoke = async () => {
+    if (!studentToRevoke) return;
+    try {
+      setRevokeLoading(true);
+      setActionRowId(studentToRevoke.id);
+      setActionState('loading');
 
-        await api.post("/dean/revoke-final-approval", { studentId: student.studentId });
+      await api.post("/dean/revoke-final-approval", { studentId: studentToRevoke.studentId });
 
-        setActionState('success');
-        setTimeout(() => {
-          setNotice({ message: "Approval revoked", variant: "info" });
-          setReadyRows(prev => prev.filter(r => r.id !== student.id));
-          setActionState('idle');
-          setActionRowId(null);
-        }, 800);
-      } catch (err: any) {
+      setActionState('success');
+      setRevokeModalOpen(false);
+      setRevokeLoading(false);
+
+      setTimeout(() => {
+        setSuccessModalTitle("Approval Revoked Successfully");
+        setSuccessModalDescription(`The final clearance approval for ${studentToRevoke.name} has been successfully revoked.`);
+        setSuccessModalOpen(true);
+        loadData(); // Re-fetch all to sync perfectly
         setActionState('idle');
         setActionRowId(null);
-        const msg = err.response?.data?.message || "Failed to revoke approval";
-        setNotice({ message: msg, variant: "error" });
-      }
+        setStudentToRevoke(null);
+      }, 800);
+    } catch (err: any) {
+      setActionState('idle');
+      setActionRowId(null);
+      setRevokeModalOpen(false);
+      setRevokeLoading(false);
+      const msg = err.response?.data?.message || "Failed to revoke approval";
+      setNotice({ message: msg, variant: "error" });
     }
   };
 
@@ -642,9 +708,15 @@ export default function DeanPage() {
   const readyCount = readyRows.length;
   const finalizedToday = finalizedTodayCount;
   const rejectedToday = 0;
+  const completionPercent = (readyCount + finalizedToday) > 0 ? Math.round((finalizedToday / (readyCount + finalizedToday)) * 100) : 0;
+
+  const currentTotal = readyRows.length + finalizedToday;
+  // A simplistic dynamic derivation based on current data volume
+  const lastWeekTotal = Math.max(1, currentTotal > 5 ? currentTotal - Math.floor(currentTotal * 0.2) : currentTotal);
+  const studentGrowthPercent = currentTotal > lastWeekTotal ? Math.round(((currentTotal - lastWeekTotal) / lastWeekTotal) * 100) : 0;
 
   return (
-    <RoleLayout>
+    <RoleLayout bgcolor="#F9FAFB">
       {notice && (
         <Snackbar open={!!notice} autoHideDuration={6000} onClose={() => setNotice(null)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
           <Alert onClose={() => setNotice(null)} severity={notice.variant || 'info'} sx={{ width: '100%' }}>
@@ -725,7 +797,7 @@ export default function DeanPage() {
                   textTransform: 'none',
                   borderRadius: '999px',
                   color: selectedIds.length > 0 ? '#000' : '#374151',
-                  borderColor: selectedIds.length > 0 ? '#000' : '#E5E7EB',
+                  borderColor: '#E5E7EB',
                   bgcolor: selectedIds.length > 0 ? '#F9FAFB' : 'transparent',
                   fontWeight: 600,
                   fontSize: '0.875rem',
@@ -742,28 +814,33 @@ export default function DeanPage() {
               >
                 {selectedIds.length > 0 ? `Export Selected (${selectedIds.length})` : 'Export All'}
               </Button>
-              <Button
-                variant="contained"
-                startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>}
-                sx={{
-                  textTransform: 'none',
-                  borderRadius: '999px',
-                  bgcolor: '#000000',
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  px: 3,
-                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25), 0 10px 10px -5px rgba(0,0,0,0.15)',
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    bgcolor: '#18181B',
-                    boxShadow: '0 25px 30px -5px rgba(0,0,0,0.35), 0 15px 15px -5px rgba(0,0,0,0.25)',
-                    transform: 'translateY(-2px)'
-                  }
-                }}
-              >
-                Approve All
-              </Button>
+              {selectedIds.length > 0 && filterStatus === 'pending' && (
+                <Button
+                  variant="contained"
+                  onClick={handleBulkApprove}
+                  startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '999px',
+                    bgcolor: '#000000',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    px: 3,
+                    height: 42,
+                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25), 0 10px 10px -5px rgba(0,0,0,0.15)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      bgcolor: '#18181B',
+                      boxShadow: '0 25px 30px -5px rgba(0,0,0,0.35), 0 15px 15px -5px rgba(0,0,0,0.25)',
+                      transform: 'translateY(-2px)'
+                    },
+                    '&:active': { transform: 'translateY(0)' }
+                  }}
+                >
+                  Approve All ({selectedIds.length})
+                </Button>
+              )}
             </Box>
           </Box>
 
@@ -774,15 +851,15 @@ export default function DeanPage() {
 
               <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
                 {[
-                  { label: "Total Students", value: readyRows.length + finalizedToday, trend: "+20%", trendUp: true, isTotalStudents: true },
-                  { label: "Pending Final", value: readyCount, isPendingFinal: true },
+                  { label: "Total Students", value: currentTotal, trend: `+${studentGrowthPercent}%`, trendUp: true, isTotalStudents: true, lastWeekValue: lastWeekTotal },
+                  { label: "Pending", value: readyCount, isPendingFinal: true },
                   { label: "Active Recently", value: filteredReady.length, efficiency: true }
                 ].map((card) => (
                   <Box
                     key={card.label}
                     sx={{
                       p: 3,
-                      bgcolor: card.efficiency ? '#f3f5f2' : '#FFF',
+                      bgcolor: '#FFFFFF',
                       border: '1px solid #E5E7EB',
                       borderRadius: '16px',
                       minHeight: 180,
@@ -815,22 +892,22 @@ export default function DeanPage() {
                       {card.isPendingFinal ? (
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#FEF2F2', px: 1, py: 0.5, borderRadius: '8px', width: 'fit-content' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#fef08a', px: 1, py: 0.5, borderRadius: '8px', width: 'fit-content' }}>
                             <Box sx={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#854d0e" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             </Box>
-                            <Typography sx={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 700 }}>+18% <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500 }}>last week</Box></Typography>
+                            <Typography sx={{ color: '#854d0e', fontSize: '0.75rem', fontWeight: 700 }}>{completionPercent > 0 ? '+' : ''}{completionPercent}% <Box component="span" sx={{ color: '#854d0e', fontWeight: 500 }}>completed</Box></Typography>
                           </Box>
                         </Box>
                       ) : card.isTotalStudents ? (
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #22C55E' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #10B981', bgcolor: '#ECFDF5' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             </Box>
-                            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#22C55E' }}>
-                              {card.trend} <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, ml: 0.5 }}>25 last week</Box>
+                            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#10B981' }}>
+                              {card.trend} <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, ml: 0.5 }}>{card.lastWeekValue} last week</Box>
                             </Typography>
                           </Box>
                         </Box>
@@ -859,7 +936,7 @@ export default function DeanPage() {
                               fill="url(#chartGradient)"
                             />
                             <circle cx="100" cy="45" r="4" fill="#FACC15" />
-                            <text x="100" y="32" fontSize="10" fontWeight="700" fill="#111827" textAnchor="middle">18%</text>
+                            <text x="100" y="32" fontSize="10" fontWeight="700" fill="#111827" textAnchor="middle">{completionPercent}%</text>
                           </svg>
                         </Box>
                       ) : (card.trend && !card.isTotalStudents) && (
@@ -904,19 +981,20 @@ export default function DeanPage() {
                               sx={{
                                 width: 42,
                                 height: 42,
-                                bgcolor: '#FFF',
+                                bgcolor: '#000',
+                                color: '#FFF',
                                 borderRadius: '50%',
                                 boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.15)',
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                '&:hover': { 
-                                  bgcolor: '#F9FAFB',
+                                '&:hover': {
+                                  bgcolor: '#27272a',
                                   boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.2)',
                                   transform: 'scale(1.1) translateY(-2px)'
                                 },
                                 '&:active': { transform: 'scale(0.95)' }
                               }}
                             >
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                             </IconButton>
                           </Tooltip>
                         </Box>
@@ -952,7 +1030,21 @@ export default function DeanPage() {
                           dateInputRef.current?.showPicker();
                         }
                       }}
-                      sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: filterDate ? '#ecfeff' : 'transparent', color: filterDate ? '#0891b2' : '#64748B', borderColor: filterDate ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36, '&:hover': { bgcolor: filterDate ? '#cffafe' : '#F9FAFB' } }}
+                      sx={{ 
+                        textTransform: 'none', 
+                        borderRadius: '8px', 
+                        bgcolor: filterDate ? '#f3e8ff' : 'transparent', 
+                        color: filterDate ? '#7e22ce' : '#64748B', 
+                        borderColor: filterDate ? '#e9d5ff' : '#D1D5DB', 
+                        fontWeight: 600, 
+                        fontSize: '0.8125rem', 
+                        px: 2, 
+                        height: 36, 
+                        '&:hover': { 
+                          bgcolor: filterDate ? '#e9d5ff' : '#F9FAFB',
+                          borderColor: '#e9d5ff'
+                        } 
+                      }}
                     >
                       {filterDate || "All time"}
                       <input
@@ -968,10 +1060,11 @@ export default function DeanPage() {
                       value={filterCourse}
                       onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
                       sx={{
-                        minWidth: 140, height: 36, bgcolor: '#ecfeff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0891b2',
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' }
+                        minWidth: 140, height: 36, bgcolor: '#f3e8ff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#7e22ce',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
+                        '& .MuiSvgIcon-root': { color: '#7e22ce' }
                       }}
                     >
                       <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
@@ -981,7 +1074,21 @@ export default function DeanPage() {
                       variant="outlined"
                       onClick={(e) => setMoreAnchor(e.currentTarget)}
                       startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
-                      sx={{ textTransform: 'none', borderRadius: '8px', color: filterYear ? '#0891b2' : '#374151', bgcolor: filterYear ? '#ecfeff' : 'transparent', borderColor: filterYear ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36 }}
+                      sx={{ 
+                        textTransform: 'none', 
+                        borderRadius: '8px', 
+                        color: filterYear ? '#7e22ce' : '#374151', 
+                        bgcolor: filterYear ? '#f3e8ff' : 'transparent', 
+                        borderColor: filterYear ? '#e9d5ff' : '#D1D5DB', 
+                        fontWeight: 600, 
+                        fontSize: '0.8125rem', 
+                        px: 2, 
+                        height: 36,
+                        '&:hover': {
+                          borderColor: '#e9d5ff',
+                          bgcolor: filterYear ? '#f3e8ff' : '#F9FAFB'
+                        }
+                      }}
                     >
                       {filterYear || "More filters"}
                     </Button>
@@ -1029,7 +1136,16 @@ export default function DeanPage() {
                     size="small"
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-                    sx={{ width: 280, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF', height: 40 } }}
+                    sx={{ 
+                      width: 280, 
+                      '& .MuiOutlinedInput-root': { 
+                        borderRadius: '8px', 
+                        bgcolor: '#FFF', 
+                        height: 40,
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff', borderWidth: '2px' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' }
+                      } 
+                    }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -1075,33 +1191,33 @@ export default function DeanPage() {
                                 '&:hover': { transform: 'scale(1.08)' }
                               }}>
                                 <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                               </Box>
                             }
                             indeterminateIcon={
                               <Box sx={{
                                 width: 26, height: 26, borderRadius: '8px',
-                                background: 'linear-gradient(160deg, #7af0e0 0%, #5eead4 60%, #45d6be 100%)',
+                                background: 'linear-gradient(160deg, #7af0e0 0%, #0d9488 60%, #45d6be 100%)',
                                 boxShadow: '0 4px 10px rgba(94,234,212,0.4), 0 1px 3px rgba(94,234,212,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                               }}>
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2.5 6H9.5" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round"/>
+                                  <path d="M2.5 6H9.5" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" />
                                 </svg>
                               </Box>
                             }
                             sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
                           />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>TIMESTAMP</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>COURSE & YEAR</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>ORGANIZATION SIGNATURES</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>CLEARANCE PROGRESS</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}></TableCell>
+                        <TableCell sx={{ width: '26%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
+                        <TableCell align="center" sx={{ width: '12%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
+                        <TableCell sx={{ width: '18%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>TIMESTAMP</TableCell>
+                        <TableCell align="center" sx={{ width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>COURSE & YEAR</TableCell>
+                        <TableCell align="center" sx={{ width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>SIGNATURES</TableCell>
+                        <TableCell align="center" sx={{ width: '12%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>PROGRESS</TableCell>
+                        <TableCell align="right" sx={{ width: '4%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1134,15 +1250,15 @@ export default function DeanPage() {
                                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                                 }}>
                                   <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                                    <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </Box>
                               }
                               sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
                             />
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
-                            <Box display="flex" alignItems="center" gap={1.5}>
+                          <TableCell sx={{ py: 2, verticalAlign: 'middle' }}>
+                            <Box display="flex" alignItems="center" gap={2}>
                               <Avatar
                                 src={getAbsoluteUrl(r.avatarUrl)}
                                 sx={{ width: 40, height: 40, bgcolor: '#020617', color: '#FFF', fontWeight: 800, fontSize: '0.875rem', textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)' }}
@@ -1155,18 +1271,18 @@ export default function DeanPage() {
                               </Box>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
+                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box sx={{
                               display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px',
-                              bgcolor: filterStatus === "approved" ? "rgba(94,234,212,0.15)" : "#F0F9FF"
+                              bgcolor: filterStatus === "approved" ? "#F0FDF4" : "#fef08a"
                             }}>
-                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#5eead4" : "#0EA5E9" }} />
-                              <Typography sx={{ color: filterStatus === "approved" ? "#0d9488" : "#0369A1", fontSize: '0.75rem', fontWeight: 600 }}>
-                                {filterStatus === "approved" ? "Approved" : "Pending Final"}
+                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#22C55E" : "#eab308" }} />
+                              <Typography sx={{ color: filterStatus === "approved" ? "#166534" : "#854d0e", fontSize: '0.75rem', fontWeight: 600 }}>
+                                {filterStatus === "approved" ? "Approved" : "Pending"}
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
+                          <TableCell sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Typography sx={{ color: "#64748B", fontSize: '0.75rem', fontWeight: 500 }}>
                               {new Date(r.dateApproved || r.dateSubmitted).toLocaleString('en-US', {
                                 month: 'short',
@@ -1177,28 +1293,33 @@ export default function DeanPage() {
                               })}
                             </Typography>
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
+                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box>
                               <Typography sx={{ fontWeight: 500, color: "#111827", fontSize: '0.875rem' }}>{r.course}</Typography>
                               <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.year}</Typography>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
-                            <Box display="flex" alignItems="center">
+                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
+                            <Box display="flex" alignItems="center" justifyContent="center">
                               {(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').slice(0, 3).map((org: any, idx: number) => (
                                 <Tooltip key={idx} title={org.name} arrow>
                                   <Avatar
                                     src={org.signatureUrl}
-                                    sx={{ 
-                                      width: 28, 
-                                      height: 28, 
-                                      ml: idx > 0 ? -1 : 0, 
-                                      border: '2px solid #FFF', 
-                                      bgcolor: '#F1F5F9', 
-                                      color: '#64748B', 
+                                    imgProps={{ sx: { objectFit: 'contain', p: '2px' } }}
+                                    onClick={() => setZoomedSignature(org.signatureUrl)}
+                                    sx={{
+                                      width: 32,
+                                      height: 32,
+                                      ml: idx > 0 ? -1.25 : 0,
+                                      border: '2px solid #FFF',
+                                      bgcolor: '#F3F4F6',
+                                      color: '#64748B',
                                       fontSize: '0.65rem',
                                       fontWeight: 800,
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      '&:hover': { transform: 'translateY(-2px) scale(1.1)', zIndex: 10 }
                                     }}
                                   >
                                     {org.name ? org.name[0] : '?'}
@@ -1210,23 +1331,23 @@ export default function DeanPage() {
                                   +{(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length - 3}
                                 </Typography>
                               )}
-                              { (r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length === 0 && (
-                                <Typography sx={{ color: '#94A3B8', fontSize: '0.7rem', fontStyle: 'italic', fontWeight: 500 }}>
-                                  No signatures yet
+                              {(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length === 0 && (
+                                <Typography sx={{ color: '#94A3B8', fontSize: '0.875rem', fontWeight: 600 }}>
+                                  —
                                 </Typography>
                               )}
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ py: 2 }}>
+                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Tooltip title={`${Math.round((r.reqCompleted / r.reqTotal) * 100)}% Complete (${r.reqCompleted}/${r.reqTotal})`} arrow>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', maxWidth: 120, cursor: 'pointer' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', cursor: 'pointer' }}>
                                 <Box sx={{ flex: 1, height: 8, bgcolor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
-                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#008080', borderRadius: '4px' }} />
+                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#10B981', borderRadius: '4px' }} />
                                 </Box>
                               </Box>
                             </Tooltip>
                           </TableCell>
-                          <TableCell align="right" sx={{ py: 2 }}>
+                          <TableCell align="right" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box display="flex" justifyContent="flex-end" gap={0.5}>
                               {filterStatus === "approved" ? (
                                 <Tooltip title="Revoke Approval" arrow>
@@ -1361,6 +1482,7 @@ export default function DeanPage() {
                     </Box>
                   </Box>
                 </Box>
+
               </Box>
             </>
           )}
@@ -1433,7 +1555,7 @@ export default function DeanPage() {
                 value={filterCourse}
                 onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
                 disableUnderline
-                sx={{ minWidth: 200, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 200, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Courses</em></MenuItem>
                 {COURSES.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.875rem' }}>{getCourseLabel(c)}</MenuItem>))}
@@ -1444,7 +1566,7 @@ export default function DeanPage() {
                 value={filterYear}
                 onChange={(e) => { setFilterYear(e.target.value as string); setPage(0); }}
                 disableUnderline
-                sx={{ minWidth: 160, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 160, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Year Levels</em></MenuItem>
                 {YEAR_LEVELS.map(y => (<MenuItem key={y} value={y} sx={{ fontSize: '0.875rem' }}>{y}</MenuItem>))}
@@ -1457,7 +1579,7 @@ export default function DeanPage() {
                 sx={{ minWidth: 160 }}
                 InputProps={{
                   disableUnderline: true,
-                  sx: { bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' } }
+                  sx: { bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' } }
                 }}
               />
               <Select
@@ -1465,7 +1587,7 @@ export default function DeanPage() {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
                 disableUnderline
-                sx={{ minWidth: 140, bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } } }}
+                sx={{ minWidth: 140, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
               >
                 <MenuItem value="newest" sx={{ fontSize: '0.875rem' }}>Newest First</MenuItem>
                 <MenuItem value="oldest" sx={{ fontSize: '0.875rem' }}>Oldest First</MenuItem>
@@ -1503,7 +1625,7 @@ export default function DeanPage() {
                         size="small"
                         sx={{
                           fontWeight: 700, fontSize: "0.65rem", height: 22,
-                          ...(r.status === "Approved" ? { bgcolor: "#ECFDF5", color: "#10B981" } :
+                          ...(r.status === "Approved" ? { bgcolor: "#F0FDF4", color: "#166534" } :
                             r.status === "Rejected" ? { bgcolor: "#FEF2F2", color: "#EF4444" } :
                               { bgcolor: "#F8FAFC", color: "#64748B", border: "1px solid #E2E8F0" })
                         }}
@@ -1551,14 +1673,14 @@ export default function DeanPage() {
         <DeanFAQPage />
       ) : (
         <SettingsContainer>
-          <SettingsHeader
-            title="Settings"
-            subtitle="Manage your administrative account settings"
+          <SettingsHeader 
+            title="Account Information" 
+            subtitle="Manage your administrative account settings" 
           />
 
           <SettingsSection>
             <ProfilePictureSection
-              avatarUrl={getAbsoluteUrl(avatarUrl)}
+              avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
               initials={getInitials(draftFullName)}
               onFileSelect={async (file) => {
                 try {
@@ -1573,164 +1695,121 @@ export default function DeanPage() {
                   console.error("Upload failed:", err);
                 }
               }}
-              onDelete={async () => {
-                try {
-                  await api.put("/auth/profile", { avatarUrl: "" });
-                  setAvatarUrl("");
-                  updateLocalAvatar("");
-                } catch (err) {
-                  console.error("Delete failed:", err);
-                }
-              }}
             />
           </SettingsSection>
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField label="First name">
+              <SettingsField 
+                label="First Name"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', opacity: 0.8, '&:hover': { opacity: 1 } }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Edit</Typography>
+                  </Box>
+                }
+              >
                 <TextField
                   fullWidth
                   name="first-name"
                   autoComplete="given-name"
                   value={draftFirst}
                   onChange={(e) => setDraftFirst(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField label="Last name">
+              <SettingsField 
+                label="Last Name"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#64748B' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Save</Typography>
+                  </Box>
+                }
+              >
                 <TextField
                   fullWidth
                   name="last-name"
                   autoComplete="family-name"
                   value={draftLast}
                   onChange={(e) => setDraftLast(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
             </SettingsRow>
           </SettingsSection>
 
           <SettingsSection>
-            <SettingsField label="Email">
-              <TextField
-                fullWidth
-                name="real-email"
-                autoComplete="email"
-                value={email}
-                disabled
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    backgroundColor: '#F8FAFC'
-                  }
-                }}
-              />
-            </SettingsField>
-          </SettingsSection>
-
-          <SettingsSection>
-            {signatureUrl && !sigDrawData && (
-              <Box sx={{ p: 2, border: '1px solid #E2E8F0', borderRadius: '8px', mb: 2, textAlign: 'center', backgroundColor: '#FFF' }}>
-                <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#64748B' }}>Current Saved Signature:</Typography>
-                <img src={signatureUrl} alt="Last Saved Signature" style={{ maxHeight: 80, maxWidth: '100%' }} />
-              </Box>
-            )}
-
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Button
-                size="small"
-                variant={sigMode === "draw" ? "contained" : "outlined"}
-                onClick={() => setSigMode("draw")}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "draw" ? '#000' : 'transparent', color: sigMode === "draw" ? '#FFF' : '#000' }}
-              >
-                Draw Signature
-              </Button>
-              <Button
-                size="small"
-                variant={sigMode === "upload" ? "contained" : "outlined"}
-                onClick={() => setSigMode("upload")}
-                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: sigMode === "upload" ? '#000' : 'transparent', color: sigMode === "upload" ? '#FFF' : '#000' }}
-              >
-                Upload Image
-              </Button>
-            </Box>
-
-            {sigMode === "draw" && (
-              <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 1, backgroundColor: '#FFF' }}>
-                <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: '#94A3B8' }}>Draw your signature in the box below</Typography>
-                <Box sx={{ height: 150, width: '100%', position: 'relative', border: '1px solid #F1F5F9', borderRadius: '4px' }}>
-                  <canvas
-                    width={700}
-                    height={150}
-                    onMouseDown={(e) => {
-                      const canvas = e.currentTarget;
-                      const ctx = canvas.getContext('2d');
-                      if (!ctx) return;
-                      ctx.beginPath();
-                      ctx.lineWidth = 2;
-                      ctx.lineCap = 'round';
-                      ctx.strokeStyle = '#000';
-                      const rect = canvas.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      ctx.moveTo(x, y);
-                      (canvas as any).isDrawing = true;
-                    }}
-                    onMouseMove={(e) => {
-                      const canvas = e.currentTarget;
-                      if (!(canvas as any).isDrawing) return;
-                      const ctx = canvas.getContext('2d');
-                      if (!ctx) return;
-                      const rect = canvas.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      ctx.lineTo(x, y);
-                      ctx.stroke();
-                    }}
-                    onMouseUp={(e) => {
-                      const canvas = e.currentTarget;
-                      (canvas as any).isDrawing = false;
-                      setSigDrawData(canvas.toDataURL());
-                    }}
-                    style={{ width: '100%', height: '100%', cursor: 'crosshair', touchAction: 'none' }}
-                  />
-                </Box>
-                <Button size="small" fullWidth sx={{ mt: 1, textTransform: 'none' }} onClick={() => {
-                  setSigDrawData("");
-                  const canvas = document.querySelector('canvas');
-                  if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  }
-                }}>Clear Canvas</Button>
-              </Box>
-            )}
-
-            {sigMode === "upload" && (
-              <Box sx={{ border: '1px dashed #CBD5E1', borderRadius: '8px', p: 3, textAlign: 'center', backgroundColor: '#FFF' }}>
-                <Button variant="outlined" component="label" sx={{ textTransform: 'none', borderRadius: '8px', color: '#000', borderColor: '#000' }}>
-                  Select Signature Image
-                  <input type="file" hidden accept="image/*" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const base64 = await toBase64(file);
-                      setSigDrawData(base64);
-                    }
-                  }} />
-                </Button>
-                {sigDrawData && sigMode === "upload" && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>Preview:</Typography>
-                    <img src={sigDrawData} alt="Upload Preview" style={{ maxHeight: 80 }} />
+            <SettingsRow>
+              <SettingsField 
+                label="Email"
+                labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Verified</Typography>
                   </Box>
-                )}
-              </Box>
-            )}
+                }
+              >
+                <TextField
+                  fullWidth
+                  name="real-email"
+                  autoComplete="email"
+                  value={email}
+                  disabled
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                />
+              </SettingsField>
+              <SettingsField label="Role Status" labelAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Active</Typography>
+                  </Box>
+                }>
+                <TextField
+                  fullWidth
+                  value="Dean of College"
+                  disabled
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                />
+              </SettingsField>
+            </SettingsRow>
           </SettingsSection>
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField label="New password">
+              <SettingsField label="New Password">
                 <TextField
                   type="password"
                   fullWidth
@@ -1738,10 +1817,17 @@ export default function DeanPage() {
                   autoComplete="new-password"
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField label="Confirm password">
+              <SettingsField label="Confirm Password">
                 <TextField
                   type="password"
                   fullWidth
@@ -1749,29 +1835,43 @@ export default function DeanPage() {
                   autoComplete="new-password"
                   value={confirmPass}
                   onChange={(e) => setConfirmPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      </Box>
+                    )
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
             </SettingsRow>
           </SettingsSection>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
             <Button
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
+              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
               sx={{
-                backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { backgroundColor: '#111' }
+                backgroundColor: '#000', color: '#FFF', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
+                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3)',
+                '&:hover': { backgroundColor: '#111', transform: 'translateY(-2px)', boxShadow: '0 12px 24px -5px rgba(0,0,0,0.4)' },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              Save Profile
+              Update Profile Info
             </Button>
             <Button
               variant="outlined"
               onClick={updatePassword}
+              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"></path></svg>}
               sx={{
-                color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                color: '#0F172A', borderColor: '#E2E8F0', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
+                bgcolor: '#FFF',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               Update Password
@@ -1780,10 +1880,10 @@ export default function DeanPage() {
         </SettingsContainer>
       )}
 
-      <Dialog 
-        open={!!selected && (isApprovals || isFinal)} 
-        onClose={() => setSelected(null)} 
-        fullWidth 
+      <Dialog
+        open={!!selected && (isApprovals || isFinal)}
+        onClose={() => setSelected(null)}
+        fullWidth
         maxWidth="xs"
         PaperProps={{
           sx: {
@@ -1805,9 +1905,9 @@ export default function DeanPage() {
               Detailed record and organizational <br /> clearance tracking
             </Typography>
           </Box>
-          <IconButton 
-            onClick={() => setSelected(null)} 
-            size="small" 
+          <IconButton
+            onClick={() => setSelected(null)}
+            size="small"
             sx={{ color: '#94A3B8', '&:hover': { color: '#0F172A', bgcolor: '#F1F5F9' } }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -1815,11 +1915,11 @@ export default function DeanPage() {
         </Box>
 
         {/* Segmented Control / Toggle */}
-        <Box sx={{ 
-          display: 'flex', 
-          p: '4px', 
-          bgcolor: '#F1F5F9', 
-          borderRadius: '16px', 
+        <Box sx={{
+          display: 'flex',
+          p: '4px',
+          bgcolor: '#F1F5F9',
+          borderRadius: '16px',
           mb: 3,
           position: 'relative',
           overflow: 'hidden'
@@ -1880,12 +1980,12 @@ export default function DeanPage() {
         </Box>
 
         {/* Content Area */}
-        <Box sx={{ 
-          minHeight: '320px', 
-          display: 'flex', 
-          flexDirection: 'column', 
+        <Box sx={{
+          minHeight: '320px',
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden',
-          position: 'relative' 
+          position: 'relative'
         }}>
           <AnimatePresence mode="wait">
             {selected && (
@@ -1931,9 +2031,9 @@ export default function DeanPage() {
                       selected.organizations.map((org: any, idx: number) => {
                         const isCleared = org.status === 'completed' || org.status === 'officer_cleared';
                         const label = isCleared ? 'Cleared' : 'Pending';
-                        
+
                         return (
-                          <Box key={idx} sx={{ 
+                          <Box key={idx} sx={{
                             p: 2,
                             bgcolor: '#FAFAFA',
                             borderRadius: '16px',
@@ -1947,17 +2047,17 @@ export default function DeanPage() {
                               <Typography sx={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
                                 {org.name}
                               </Typography>
-                              <Chip 
-                                size="small" 
-                                label={label} 
-                                sx={{ 
-                                  height: 24, 
-                                  fontSize: '0.75rem', 
+                              <Chip
+                                size="small"
+                                label={label}
+                                sx={{
+                                  height: 24,
+                                  fontSize: '0.75rem',
                                   fontWeight: 700,
                                   bgcolor: isCleared ? '#ECFDF5' : '#FEF2F2',
                                   color: isCleared ? '#10B981' : '#EF4444',
                                   borderRadius: '999px'
-                                }} 
+                                }}
                               />
                             </Box>
 
@@ -1969,10 +2069,10 @@ export default function DeanPage() {
                               <Typography sx={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: 800, mb: 1.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 Officer Signature
                               </Typography>
-                              <Box sx={{ 
-                                bgcolor: '#F8FAFC', 
-                                borderRadius: '12px', 
-                                p: 1.5, 
+                              <Box sx={{
+                                bgcolor: '#F8FAFC',
+                                borderRadius: '12px',
+                                p: 1.5,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -1981,19 +2081,19 @@ export default function DeanPage() {
                                 border: '1px solid #F1F5F9'
                               }}>
                                 {org.signatureUrl ? (
-                                  <img 
-                                    src={org.signatureUrl} 
-                                    alt="Signature" 
+                                  <img
+                                    src={org.signatureUrl}
+                                    alt="Signature"
                                     onClick={() => setZoomedSignature(org.signatureUrl)}
-                                    style={{ 
-                                      height: 40, 
+                                    style={{
+                                      height: 40,
                                       maxHeight: 40,
-                                      objectFit: 'contain', 
+                                      objectFit: 'contain',
                                       filter: 'contrast(1.1) brightness(0.95)',
                                       opacity: 0.9,
                                       cursor: 'zoom-in',
                                       transition: 'all 0.2s ease'
-                                    }} 
+                                    }}
                                     onMouseEnter={(e) => {
                                       e.currentTarget.style.transform = 'scale(1.05)';
                                       e.currentTarget.style.opacity = '1';
@@ -2029,7 +2129,7 @@ export default function DeanPage() {
 
         {/* Footer Action */}
         <Box mt={4}>
-          <Button 
+          <Button
             fullWidth
             onClick={() => {
               if (filterStatus === 'pending' && detailsTab === 'progress') {
@@ -2050,7 +2150,7 @@ export default function DeanPage() {
               fontSize: '1rem',
               boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
               transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#1E293B',
                 boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
                 transform: 'translateY(-2px)'
@@ -2101,30 +2201,49 @@ export default function DeanPage() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </IconButton>
         </Box>
-        <Box 
-          sx={{ 
-            bgcolor: '#FAFAFA', 
-            borderRadius: '16px', 
-            p: 4, 
-            display: 'flex', 
+        <Box
+          sx={{
+            bgcolor: '#FAFAFA',
+            borderRadius: '16px',
+            p: 4,
+            display: 'flex',
             justifyContent: 'center',
             border: '1px solid #F1F5F9'
           }}
         >
           {zoomedSignature && (
-            <img 
-              src={zoomedSignature} 
-              alt="Zoomed Signature" 
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '400px', 
+            <img
+              src={zoomedSignature}
+              alt="Zoomed Signature"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '400px',
                 objectFit: 'contain',
                 filter: 'contrast(1.1) brightness(0.95)'
-              }} 
+              }}
             />
           )}
         </Box>
       </Dialog>
+      <SuccessActionModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+      <RevokeApprovalModal
+        open={revokeModalOpen}
+        onClose={() => setRevokeModalOpen(false)}
+        onConfirm={confirmRevoke}
+        studentName={studentToRevoke?.name}
+        loading={revokeLoading}
+      />
+      <PasswordConfirmModal
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        onConfirm={handleConfirmPasswordUpdate}
+        loading={passwordUpdateLoading}
+      />
     </RoleLayout>
   );
 }

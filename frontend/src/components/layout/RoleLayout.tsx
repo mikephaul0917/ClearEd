@@ -24,7 +24,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                     isLoading={true}
                     navItems={[]}
                 />
-                <Box flex={1} p={4} sx={{ backgroundColor: "#f6f6f6" }}>
+                <Box flex={1} p={4} sx={{ backgroundColor: "#fbfbfb" }}>
                     {/* Main content loading state could be here */}
                 </Box>
             </Box>

@@ -1,5 +1,5 @@
 import React from "react";
-import { RiUserSettingsFill } from "react-icons/ri";
+import { RiUserSettingsLine } from "react-icons/ri";
 
 /* ---------------- Icon Components ---------------- */
 /**
@@ -40,7 +40,7 @@ export const BellIcon: React.FC<IconProps> = ({ color }) => (
 );
 
 export const SettingsIcon: React.FC<IconProps> = ({ color }) => (
-    <RiUserSettingsFill style={{ color, fontSize: '20px' }} />
+    <RiUserSettingsLine style={{ color, fontSize: '20px' }} />
 );
 
 
