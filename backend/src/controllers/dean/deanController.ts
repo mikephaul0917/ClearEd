@@ -255,3 +255,79 @@ export const getAssignedCourses = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch assigned courses" });
   }
 };
+
+export const revokeFinalApproval = async (req: Request, res: Response) => {
+  try {
+    const deanId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const { studentId } = req.body;
+
+    if (!deanId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active academic term found" });
+
+    const studentProfile = await StudentProfile.findOne({
+      userId: studentId,
+      institutionId
+    });
+
+    if (!studentProfile) return res.status(404).json({ message: "Student profile not found" });
+
+    const assignments = await DeanAssignment.find({ deanId, institutionId });
+    const hasJurisdiction = assignments.some(a => {
+      const courseMatch = a.course === "All" || a.course === studentProfile.course;
+      const yearMatch = a.yearLevel === "All" || a.yearLevel === studentProfile.year;
+      return courseMatch && yearMatch;
+    });
+
+    if (!hasJurisdiction) return res.status(403).json({ message: "No jurisdiction" });
+
+    // Find and update FinalClearance
+    const finalClearance = await FinalClearance.findOne({
+      userId: studentId,
+      institutionId,
+      termId: term._id,
+      status: "approved"
+    });
+
+    if (!finalClearance) {
+      return res.status(404).json({ message: "Approved final clearance not found" });
+    }
+
+    finalClearance.status = "pending";
+    finalClearance.reviewedBy = undefined;
+    finalClearance.reviewedAt = undefined;
+    finalClearance.signatureUrl = undefined;
+    await finalClearance.save();
+
+    // Also update all ClearanceRequests back to "officer_cleared"
+    await ClearanceRequest.updateMany({
+      userId: studentId,
+      institutionId,
+      termId: term._id,
+      status: "completed"
+    }, {
+      $set: { status: "officer_cleared" },
+      $unset: { finalApprovalDate: 1 }
+    });
+
+    await AuditLog.create({
+      userId: deanId,
+      institutionId,
+      action: 'clearance_final_revoke_dean',
+      resource: 'FinalClearance',
+      resourceId: finalClearance._id,
+      details: { studentId },
+      severity: 'high',
+      category: 'clearance_workflow'
+    });
+
+    res.json({ message: "Final clearance approval revoked successfully!" });
+
+  } catch (err: any) {
+    res.status(500).json({ message: "Failed to revoke final approval", error: err.message });
+  }
+};

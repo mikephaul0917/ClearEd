@@ -84,6 +84,21 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
       <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
         {/* Header Section */}
         <Box sx={{ p: 3, pt: 4, position: 'relative', bgcolor: '#FFF' }}>
+          <IconButton
+            onClick={onClose}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              color: '#98A2B3',
+              '&:hover': {
+                color: '#667085',
+                bgcolor: '#F9FAFB'
+              }
+            }}
+          >
+            <CloseIcon sx={{ fontSize: '1.25rem' }} />
+          </IconButton>
           <Box>
             <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: '#101828', fontFamily: fontStack, mb: 0.5 }}>
               Student Directory

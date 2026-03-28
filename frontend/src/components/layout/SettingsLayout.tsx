@@ -8,6 +8,7 @@ import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid";
 import { useTheme, useMediaQuery, SvgIconProps } from "@mui/material";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import { RiUserSettingsFill } from "react-icons/ri";
 
 interface SettingsHeaderProps {
   title: string;
@@ -30,7 +31,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle,
         flexShrink: 0,
         mt: 0.5
       }}>
-        {icon || <ManageAccountsIcon sx={{ fontSize: 24 }} />}
+        {icon || <RiUserSettingsFill style={{ fontSize: 24 }} />}
       </Box>
       <Box>
         <Typography variant="h4" sx={{ fontWeight: 800, color: '#000', mb: 0.5 }}>

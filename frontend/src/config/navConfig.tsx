@@ -1,4 +1,5 @@
 import React from "react";
+import { RiUserSettingsFill } from "react-icons/ri";
 
 /* ---------------- Icon Components ---------------- */
 /**
@@ -39,20 +40,9 @@ export const BellIcon: React.FC<IconProps> = ({ color }) => (
 );
 
 export const SettingsIcon: React.FC<IconProps> = ({ color }) => (
-    <IconBase color={color} >
-        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="8.5" cy="7" r="4" />
-        <circle cx="18" cy="15" r="3" />
-        <path d="M18 11v1" />
-        <path d="M18 18v1" />
-        <path d="M21 15h-1" />
-        <path d="M15 15h-1" />
-        <path d="M20.1 12.9l-.7.7" />
-        <path d="M15.9 17.1l-.7.7" />
-        <path d="M20.1 17.1l-.7-.7" />
-        <path d="M15.9 12.9l-.7-.7" />
-    </IconBase>
+    <RiUserSettingsFill style={{ color, fontSize: '20px' }} />
 );
+
 
 export const CheckCircleIcon: React.FC<IconProps> = ({ color }) => (
     <IconBase color={color} > <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /> <polyline points="22 4 12 14.01 9 11.01" /> </IconBase>

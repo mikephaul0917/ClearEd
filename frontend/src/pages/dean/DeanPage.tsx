@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
@@ -33,6 +34,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
+import Tooltip from "@mui/material/Tooltip";
 import Menu from "@mui/material/Menu";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -55,6 +57,7 @@ import {
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
 import { useTheme, useMediaQuery } from "@mui/material";
+import Swal from "sweetalert2";
 
 const COLORS = {
   black: '#0a0a0a',
@@ -97,39 +100,102 @@ const YEAR_LEVELS = [
   "Fourth Year"
 ];
 
-const variants: Variants = {
-  initial: {
-    scaleY: 0.5,
-    opacity: 0,
-  },
-  animate: {
-    scaleY: 1,
-    opacity: 1,
-    transition: {
-      repeat: Infinity,
-      repeatType: "mirror",
-      duration: 1,
-      ease: "circIn",
-    },
-  },
-};
 
-const BarLoader = () => {
+
+
+const DeanDashboardSkeleton = () => {
   return (
-    <motion.div
-      transition={{
-        staggerChildren: 0.25,
-      }}
-      initial="initial"
-      animate="animate"
-      style={{ display: 'flex', gap: '4px' }}
-    >
-      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
-      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
-      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
-      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
-      <motion.div variants={variants} style={{ height: '48px', width: '8px', backgroundColor: '#000' }} />
-    </motion.div>
+    <Box sx={{ width: '100%', animation: 'fadeIn 0.5s ease-in-out' }}>
+      {/* Stats Grid Skeleton */}
+      <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
+        {[1, 2, 3].map((i) => (
+          <Box
+            key={i}
+            sx={{
+              p: 3,
+              bgcolor: '#FFF',
+              border: '1px solid #E5E7EB',
+              borderRadius: '16px',
+              minHeight: 180,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
+            }}
+          >
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+              <Box sx={{ width: '100%' }}>
+                <Skeleton variant="text" width="60%" height={24} sx={{ mb: 0.5 }} />
+                {i === 3 && <Skeleton variant="text" width="40%" height={16} />}
+              </Box>
+              <Skeleton variant="circular" width={24} height={24} />
+            </Box>
+            <Box display="flex" alignItems="flex-end" justifyContent="space-between">
+              <Skeleton variant="text" width="30%" height={56} />
+              <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '12px' }} />
+            </Box>
+            {i === 3 && (
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box display="flex">
+                  {[1, 2, 3].map(n => (
+                    <Skeleton key={n} variant="circular" width={32} height={32} sx={{ ml: n > 1 ? -1 : 0, border: '2px solid #FFF' }} />
+                  ))}
+                </Box>
+                <Skeleton variant="circular" width={32} height={32} />
+              </Box>
+            )}
+          </Box>
+        ))}
+      </Box>
+
+      {/* Table Section Skeleton */}
+      <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <Skeleton variant="rectangular" width={36} height={36} sx={{ borderRadius: '8px' }} />
+            <Box>
+              <Skeleton variant="text" width={150} height={20} />
+              <Skeleton variant="text" width={200} height={16} />
+            </Box>
+          </Box>
+        </Box>
+
+        <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
+          <Box display="flex" gap={1.5}>
+            <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: '8px' }} />
+            <Skeleton variant="rectangular" width={140} height={36} sx={{ borderRadius: '8px' }} />
+            <Skeleton variant="rectangular" width={120} height={36} sx={{ borderRadius: '8px' }} />
+          </Box>
+          <Skeleton variant="rectangular" width={280} height={40} sx={{ borderRadius: '8px' }} />
+        </Box>
+
+        <Box sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
+          <Box sx={{ p: 2, bgcolor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', display: 'flex', gap: 2 }}>
+            <Skeleton variant="rectangular" width={20} height={20} />
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} variant="text" width="15%" height={20} />)}
+          </Box>
+          {[1, 2, 3, 4, 5].map(i => (
+            <Box key={i} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, borderBottom: '1px solid #F3F4F6' }}>
+              <Skeleton variant="rectangular" width={20} height={20} />
+              <Box display="flex" alignItems="center" gap={1.5} sx={{ flex: 2 }}>
+                <Skeleton variant="circular" width={40} height={40} />
+                <Box sx={{ width: '100%' }}>
+                  <Skeleton variant="text" width="60%" />
+                  <Skeleton variant="text" width="40%" />
+                </Box>
+              </Box>
+              <Skeleton variant="text" width="10%" sx={{ flex: 1 }} />
+              <Skeleton variant="text" width="15%" sx={{ flex: 1 }} />
+              <Skeleton variant="rectangular" width="15%" height={8} sx={{ borderRadius: 4, flex: 1 }} />
+              <Box display="flex" gap={1} sx={{ flex: 1, justifyContent: 'flex-end' }}>
+                <Skeleton variant="circular" width={24} height={24} />
+                <Skeleton variant="circular" width={24} height={24} />
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
@@ -209,6 +275,9 @@ export default function DeanPage() {
   const [filterStatus, setFilterStatus] = useState<"pending" | "approved">("pending");
   const [isShuffling, setIsShuffling] = useState(false);
   const [selected, setSelected] = useState<any>(null);
+  const [detailsTab, setDetailsTab] = useState<'info' | 'progress'>('info');
+  const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [studentToApprove, setStudentToApprove] = useState<any>(null);
@@ -362,6 +431,72 @@ export default function DeanPage() {
     loadData();
   }, [filterStatus]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [filterStatus, query, filterCourse, filterYear, filterDate, page]);
+
+  const handleExport = () => {
+    const isFiltered = selectedIds.length === 0;
+    const dataToExport = isFiltered ? filteredReady : readyRows.filter(r => selectedIds.includes(r.id));
+
+    if (dataToExport.length === 0) {
+      setNotice({ message: "No data to export", variant: "info" });
+      return;
+    }
+
+    if (isFiltered) {
+      Swal.fire({
+        title: 'Export all students?',
+        text: `You haven't selected any students. Do you want to export all ${filteredReady.length} students in the current filtered view?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#000000',
+        cancelButtonColor: '#64748B',
+        confirmButtonText: 'Yes, export all',
+        cancelButtonText: 'No, cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          generateCsv(dataToExport);
+        }
+      });
+    } else {
+      generateCsv(dataToExport);
+    }
+  };
+
+  const generateCsv = (dataToExport: any[]) => {
+    const timestamp = new Date().toLocaleString();
+    const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const headers = ["Name", "Student ID", "Course", "Year", "Status", "Date"];
+    const csvContent = [
+      `"Clearance Export Report"`,
+      `"Generated At: ${timestamp}"`,
+      `""`, // empty row
+      headers.join(","),
+      ...dataToExport.map(r => {
+        const date = filterStatus === "approved" ? r.dateApproved : r.dateSubmitted;
+        return [
+          `"${r.name}"`,
+          `"${r.studentId}"`,
+          `"${r.course}"`,
+          `"${r.year}"`,
+          `"${filterStatus === "approved" ? "Approved" : "Pending Final"}"`,
+          `"${date || ""}"`
+        ].join(",");
+      })
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `clearance_export_${filterStatus}_${fileTimestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const updateProfile = async () => {
     const fullName = `${draftFirst} ${draftLast}`.trim();
     try {
@@ -423,6 +558,41 @@ export default function DeanPage() {
       setActionRowId(null);
       const msg = err.response?.data?.message || "Failed to approve final clearance";
       setNotice({ message: msg, variant: "error" });
+    }
+  };
+
+  const handleRevoke = async (student: any) => {
+    const result = await Swal.fire({
+      title: 'Revoke Approval?',
+      text: `Are you sure you want to revoke the final approval for ${student.name}? This will move them back to pending.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#000000',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Yes, revoke it',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setActionRowId(student.id);
+        setActionState('loading');
+
+        await api.post("/dean/revoke-final-approval", { studentId: student.studentId });
+
+        setActionState('success');
+        setTimeout(() => {
+          setNotice({ message: "Approval revoked", variant: "info" });
+          setReadyRows(prev => prev.filter(r => r.id !== student.id));
+          setActionState('idle');
+          setActionRowId(null);
+        }, 800);
+      } catch (err: any) {
+        setActionState('idle');
+        setActionRowId(null);
+        const msg = err.response?.data?.message || "Failed to revoke approval";
+        setNotice({ message: msg, variant: "error" });
+      }
     }
   };
 
@@ -493,7 +663,7 @@ export default function DeanPage() {
                 bgcolor: '#FFFFFF',
                 borderRadius: '999px',
                 p: '6px',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.05), inset 0 2px 5px rgba(255,255,255,1)'
+                boxShadow: '0 10px 25px rgba(0,0,0,0.08), inset 0 2px 5px rgba(255,255,255,1)'
               }}>
                 <Box
                   sx={{
@@ -504,7 +674,7 @@ export default function DeanPage() {
                     width: '110px',
                     bgcolor: '#18181B',
                     borderRadius: '999px',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.1)',
+                    boxShadow: '0 12px 24px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.15)',
                     transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     zIndex: 1
                   }}
@@ -549,44 +719,46 @@ export default function DeanPage() {
             <Box display="flex" gap={1.5}>
               <Button
                 variant="outlined"
+                onClick={handleExport}
                 startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>}
                 sx={{
                   textTransform: 'none',
-                  borderRadius: '8px',
-                  color: '#374151',
-                  borderColor: '#E5E7EB',
+                  borderRadius: '999px',
+                  color: selectedIds.length > 0 ? '#000' : '#374151',
+                  borderColor: selectedIds.length > 0 ? '#000' : '#E5E7EB',
+                  bgcolor: selectedIds.length > 0 ? '#F9FAFB' : 'transparent',
                   fontWeight: 600,
                   fontSize: '0.875rem',
-                  px: 2,
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                  px: 3,
+                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04)',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     borderColor: '#D1D5DB',
                     bgcolor: '#F9FAFB',
-                    boxShadow: '0 8px 15px rgba(0,0,0,0.08)',
-                    transform: 'translateY(-1px)'
+                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.08)',
+                    transform: 'translateY(-2px)'
                   }
                 }}
               >
-                Export
+                {selectedIds.length > 0 ? `Export Selected (${selectedIds.length})` : 'Export All'}
               </Button>
               <Button
                 variant="contained"
                 startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>}
                 sx={{
                   textTransform: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '999px',
                   bgcolor: '#000000',
                   color: '#FFFFFF',
                   fontWeight: 600,
                   fontSize: '0.875rem',
-                  px: 2,
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  px: 3,
+                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25), 0 10px 10px -5px rgba(0,0,0,0.15)',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    bgcolor: '#1F2937',
-                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-                    transform: 'translateY(-1px)'
+                    bgcolor: '#18181B',
+                    boxShadow: '0 25px 30px -5px rgba(0,0,0,0.35), 0 15px 15px -5px rgba(0,0,0,0.25)',
+                    transform: 'translateY(-2px)'
                   }
                 }}
               >
@@ -596,406 +768,604 @@ export default function DeanPage() {
           </Box>
 
           {isShuffling ? (
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              minHeight: '400px',
-              height: '100%',
-              flex: 1,
-              bgcolor: 'rgba(255, 255, 255, 1)', 
-              borderRadius: '16px'
-            }}>
-              <BarLoader />
-            </Box>
+            <DeanDashboardSkeleton />
           ) : (
             <>
 
-          <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
-            {[
-              { label: "Total Students", value: readyRows.length + finalizedToday, trend: "+20%", trendUp: true, isTotalStudents: true },
-              { label: "Pending Final", value: readyCount, isPendingFinal: true },
-              { label: "Active Recently", value: filteredReady.length, efficiency: true }
-            ].map((card) => (
-              <Box
-                key={card.label}
-                sx={{
-                  p: 3,
-                  bgcolor: card.efficiency ? '#f3f5f2' : '#FFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '16px',
-                  minHeight: 180,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
-                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 32px rgba(0,0,0,0.08)' }
-                }}
-              >
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                  <Box>
-                    <Typography sx={{ color: '#111827', fontSize: '1rem', fontWeight: 700, mb: 0.5 }}>
-                      {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : "Active Students") : (card.isPendingFinal ? <Box component="span">Tasks this week <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : card.label)}
-                    </Typography>
+              <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
+                {[
+                  { label: "Total Students", value: readyRows.length + finalizedToday, trend: "+20%", trendUp: true, isTotalStudents: true },
+                  { label: "Pending Final", value: readyCount, isPendingFinal: true },
+                  { label: "Active Recently", value: filteredReady.length, efficiency: true }
+                ].map((card) => (
+                  <Box
+                    key={card.label}
+                    sx={{
+                      p: 3,
+                      bgcolor: card.efficiency ? '#f3f5f2' : '#FFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '16px',
+                      minHeight: 180,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
+                      '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 32px rgba(0,0,0,0.08)' }
+                    }}
+                  >
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                      <Box>
+                        <Typography sx={{ color: '#111827', fontSize: '1rem', fontWeight: 700, mb: 0.5 }}>
+                          {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : "Active Students") : (card.isPendingFinal ? <Box component="span">Tasks this week <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : card.label)}
+                        </Typography>
+                        {card.efficiency && (
+                          <Box display="flex" alignItems="center" gap={0.75} sx={{ color: '#6B7280' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>08:30 AM - 05:00 PM</Typography>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {!card.efficiency && (
+                        <IconButton size="small" sx={{ p: 0.5 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></IconButton>
+                      )}
+                    </Box>
+                    <Box display="flex" alignItems="flex-end" justifyContent="space-between">
+                      {card.isPendingFinal ? (
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#FEF2F2', px: 1, py: 0.5, borderRadius: '8px', width: 'fit-content' }}>
+                            <Box sx={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            </Box>
+                            <Typography sx={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 700 }}>+18% <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500 }}>last week</Box></Typography>
+                          </Box>
+                        </Box>
+                      ) : card.isTotalStudents ? (
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #22C55E' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            </Box>
+                            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#22C55E' }}>
+                              {card.trend} <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, ml: 0.5 }}>25 last week</Box>
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ) : (
+                        <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                      )}
+
+                      {card.isPendingFinal ? (
+                        <Box sx={{ position: 'relative', width: 120, height: 60, mb: -1 }}>
+                          <svg width="120" height="60" viewBox="0 0 120 60" style={{ overflow: 'visible' }}>
+                            <defs>
+                              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#FACC15" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="#FACC15" stopOpacity="0" />
+                              </linearGradient>
+                            </defs>
+                            <path
+                              d="M0 40 C 20 40, 30 20, 50 20 C 70 20, 80 45, 100 45 C 110 45, 115 35, 120 35"
+                              fill="none"
+                              stroke="#FACC15"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M0 40 C 20 40, 30 20, 50 20 C 70 20, 80 45, 100 45 C 110 45, 115 35, 120 35 V 60 H 0 Z"
+                              fill="url(#chartGradient)"
+                            />
+                            <circle cx="100" cy="45" r="4" fill="#FACC15" />
+                            <text x="100" y="32" fontSize="10" fontWeight="700" fill="#111827" textAnchor="middle">18%</text>
+                          </svg>
+                        </Box>
+                      ) : (card.trend && !card.isTotalStudents) && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: card.trendUp ? '#fef08a' : '#FEF2F2', px: 1, py: 0.25, borderRadius: '999px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={card.trendUp ? '#000000' : '#EF4444'} strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                          <Typography sx={{ color: card.trendUp ? '#000000' : '#DC2626', fontSize: '0.75rem', fontWeight: 700 }}>{card.trend}</Typography>
+                        </Box>
+                      )}
+                    </Box>
                     {card.efficiency && (
-                      <Box display="flex" alignItems="center" gap={0.75} sx={{ color: '#6B7280' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>08:30 AM - 05:00 PM</Typography>
+                      <Box sx={{ width: '100%', mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <Box display="flex" alignItems="center">
+                          <Box display="flex">
+                            {filteredReady.slice(0, 3).map((r, i) => (
+                              <Avatar
+                                key={i}
+                                src={getAbsoluteUrl(r.avatarUrl)}
+                                sx={{
+                                  width: 36,
+                                  height: 36,
+                                  border: '2px solid #FFF',
+                                  ml: i === 0 ? 0 : -1,
+                                  zIndex: 3 - i,
+                                  fontSize: '0.75rem',
+                                  bgcolor: '#374151'
+                                }}
+                              >
+                                {getInitials(r.name || "User")}
+                              </Avatar>
+                            ))}
+                          </Box>
+                          {filteredReady.length > 3 && (
+                            <Typography sx={{ ml: 1, fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
+                              +{filteredReady.length - 3}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Box>
+                          <Tooltip title="View Student List" arrow>
+                            <IconButton
+                              onClick={() => setStudentListOpen(true)}
+                              sx={{
+                                width: 42,
+                                height: 42,
+                                bgcolor: '#FFF',
+                                borderRadius: '50%',
+                                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.15)',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                '&:hover': { 
+                                  bgcolor: '#F9FAFB',
+                                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.2)',
+                                  transform: 'scale(1.1) translateY(-2px)'
+                                },
+                                '&:active': { transform: 'scale(0.95)' }
+                              }}
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </Box>
                     )}
                   </Box>
+                ))}
+              </Box>
 
-                  {!card.efficiency && (
-                    <IconButton size="small" sx={{ p: 0.5 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></IconButton>
-                  )}
-                </Box>
-                <Box display="flex" alignItems="flex-end" justifyContent="space-between">
-                  {card.isPendingFinal ? (
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#FEF2F2', px: 1, py: 0.5, borderRadius: '8px', width: 'fit-content' }}>
-                        <Box sx={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                        </Box>
-                        <Typography sx={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 700 }}>+18% <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500 }}>last week</Box></Typography>
-                      </Box>
-                    </Box>
-                  ) : card.isTotalStudents ? (
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #22C55E' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                        </Box>
-                        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#22C55E' }}>
-                          {card.trend} <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, ml: 0.5 }}>25 last week</Box>
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ) : (
-                    <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
-                  )}
-
-                  {card.isPendingFinal ? (
-                    <Box sx={{ position: 'relative', width: 120, height: 60, mb: -1 }}>
-                      <svg width="120" height="60" viewBox="0 0 120 60" style={{ overflow: 'visible' }}>
-                        <defs>
-                          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#FACC15" stopOpacity="0.2" />
-                            <stop offset="100%" stopColor="#FACC15" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M0 40 C 20 40, 30 20, 50 20 C 70 20, 80 45, 100 45 C 110 45, 115 35, 120 35"
-                          fill="none"
-                          stroke="#FACC15"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d="M0 40 C 20 40, 30 20, 50 20 C 70 20, 80 45, 100 45 C 110 45, 115 35, 120 35 V 60 H 0 Z"
-                          fill="url(#chartGradient)"
-                        />
-                        <circle cx="100" cy="45" r="4" fill="#FACC15" />
-                        <text x="100" y="32" fontSize="10" fontWeight="700" fill="#111827" textAnchor="middle">18%</text>
-                      </svg>
-                    </Box>
-                  ) : (card.trend && !card.isTotalStudents) && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: card.trendUp ? '#fef08a' : '#FEF2F2', px: 1, py: 0.25, borderRadius: '999px' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={card.trendUp ? '#000000' : '#EF4444'} strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                      <Typography sx={{ color: card.trendUp ? '#000000' : '#DC2626', fontSize: '0.75rem', fontWeight: 700 }}>{card.trend}</Typography>
-                    </Box>
-                  )}
-                </Box>
-                {card.efficiency && (
-                  <Box sx={{ width: '100%', mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <Box display="flex" alignItems="center">
-                      <Box display="flex">
-                        {filteredReady.slice(0, 3).map((r, i) => (
-                          <Avatar
-                            key={i}
-                            src={getAbsoluteUrl(r.avatarUrl)}
-                            sx={{
-                              width: 36,
-                              height: 36,
-                              border: '2px solid #FFF',
-                              ml: i === 0 ? 0 : -1,
-                              zIndex: 3 - i,
-                              fontSize: '0.75rem',
-                              bgcolor: '#374151'
-                            }}
-                          >
-                            {getInitials(r.name || "User")}
-                          </Avatar>
-                        ))}
-                      </Box>
-                      {filteredReady.length > 3 && (
-                        <Typography sx={{ ml: 1, fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
-                          +{filteredReady.length - 3}
-                        </Typography>
-                      )}
+              <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" gap={1.5} mb={3}>
+                  <Box display="flex" alignItems="center" gap={1.5}>
+                    <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </Box>
                     <Box>
-                      <IconButton
-                        onClick={() => setStudentListOpen(true)}
-                        sx={{
-                          bgcolor: '#FFF',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                          border: '1px solid #E5E7EB',
-                          '&:hover': { bgcolor: '#F9FAFB' }
-                        }}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                      </IconButton>
+                      <Typography sx={{ fontWeight: 700, color: '#000', fontSize: '0.95rem' }}>Clearances Overview</Typography>
+                      <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>Manage and execute actions on final clearances</Typography>
                     </Box>
                   </Box>
-                )}
-              </Box>
-            ))}
-          </Box>
-
-          <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={1.5} mb={3}>
-              <Box display="flex" alignItems="center" gap={1.5}>
-                <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </Box>
-                <Box>
-                  <Typography sx={{ fontWeight: 700, color: '#000', fontSize: '0.95rem' }}>Clearances Overview</Typography>
-                  <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>Manage and execute actions on final clearances</Typography>
-                </Box>
-              </Box>
-            </Box>
 
-            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
-              <Box display="flex" gap={1.5} flexWrap="wrap">
-                <Button
-                  variant="outlined"
-                  startIcon={filterDate ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
-                  onClick={() => {
-                    if (filterDate) {
-                      setFilterDate("");
-                      setPage(0);
-                    } else {
-                      dateInputRef.current?.showPicker();
-                    }
-                  }}
-                  sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: filterDate ? '#ecfeff' : 'transparent', color: filterDate ? '#0891b2' : '#64748B', borderColor: filterDate ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36, '&:hover': { bgcolor: filterDate ? '#cffafe' : '#F9FAFB' } }}
-                >
-                  {filterDate || "All time"}
-                  <input
-                    type="date"
-                    ref={dateInputRef}
-                    style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
-                    onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
-                  />
-                </Button>
-                <Select
-                  variant="outlined"
-                  displayEmpty
-                  value={filterCourse}
-                  onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
-                  sx={{
-                    minWidth: 140, height: 36, bgcolor: '#ecfeff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0891b2',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' }
-                  }}
-                >
-                  <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
-                  {availableCourses.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.8125rem' }}>{getCourseLabel(c)}</MenuItem>))}
-                </Select>
-                <Button
-                  variant="outlined"
-                  onClick={(e) => setMoreAnchor(e.currentTarget)}
-                  startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
-                  sx={{ textTransform: 'none', borderRadius: '8px', color: filterYear ? '#0891b2' : '#374151', bgcolor: filterYear ? '#ecfeff' : 'transparent', borderColor: filterYear ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36 }}
-                >
-                  {filterYear || "More filters"}
-                </Button>
-                <Menu
-                  anchorEl={moreAnchor}
-                  open={Boolean(moreAnchor)}
-                  onClose={() => setMoreAnchor(null)}
-                  PaperProps={{ sx: { borderRadius: '12px', mt: 1, minWidth: 180, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' } }}
-                >
-                  <MenuItem disabled sx={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, color: '#64748B' }}>YEAR LEVEL</MenuItem>
-                  <MenuItem
-                    selected={filterYear === ""}
-                    onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
-                    sx={{ fontSize: '0.875rem' }}
-                  >
-                    All Years
-                  </MenuItem>
-                  {YEAR_LEVELS.map(y => (
-                    <MenuItem
-                      key={y}
-                      selected={filterYear === y}
-                      onClick={() => { setFilterYear(y); setPage(0); setMoreAnchor(null); }}
-                      sx={{ fontSize: '0.875rem' }}
+                <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
+                  <Box display="flex" gap={1.5} flexWrap="wrap">
+                    <Button
+                      variant="outlined"
+                      startIcon={filterDate ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
+                      onClick={() => {
+                        if (filterDate) {
+                          setFilterDate("");
+                          setPage(0);
+                        } else {
+                          dateInputRef.current?.showPicker();
+                        }
+                      }}
+                      sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: filterDate ? '#ecfeff' : 'transparent', color: filterDate ? '#0891b2' : '#64748B', borderColor: filterDate ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36, '&:hover': { bgcolor: filterDate ? '#cffafe' : '#F9FAFB' } }}
                     >
-                      {y}
-                    </MenuItem>
-                  ))}
-                  {filterYear && (
-                    <>
-                      <Divider />
+                      {filterDate || "All time"}
+                      <input
+                        type="date"
+                        ref={dateInputRef}
+                        style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                        onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
+                      />
+                    </Button>
+                    <Select
+                      variant="outlined"
+                      displayEmpty
+                      value={filterCourse}
+                      onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
+                      sx={{
+                        minWidth: 140, height: 36, bgcolor: '#ecfeff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0891b2',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#cffafe' }
+                      }}
+                    >
+                      <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
+                      {availableCourses.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.8125rem' }}>{getCourseLabel(c)}</MenuItem>))}
+                    </Select>
+                    <Button
+                      variant="outlined"
+                      onClick={(e) => setMoreAnchor(e.currentTarget)}
+                      startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
+                      sx={{ textTransform: 'none', borderRadius: '8px', color: filterYear ? '#0891b2' : '#374151', bgcolor: filterYear ? '#ecfeff' : 'transparent', borderColor: filterYear ? '#cffafe' : '#D1D5DB', fontWeight: 600, fontSize: '0.8125rem', px: 2, height: 36 }}
+                    >
+                      {filterYear || "More filters"}
+                    </Button>
+                    <Menu
+                      anchorEl={moreAnchor}
+                      open={Boolean(moreAnchor)}
+                      onClose={() => setMoreAnchor(null)}
+                      PaperProps={{ sx: { borderRadius: '12px', mt: 1, minWidth: 180, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' } }}
+                    >
+                      <MenuItem disabled sx={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, color: '#64748B' }}>YEAR LEVEL</MenuItem>
                       <MenuItem
+                        selected={filterYear === ""}
                         onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
-                        sx={{ fontSize: '0.875rem', color: '#EF4444' }}
+                        sx={{ fontSize: '0.875rem' }}
                       >
-                        Clear Year Filter
+                        All Years
                       </MenuItem>
-                    </>
-                  )}
-                </Menu>
-              </Box>
-
-              <TextField
-                variant="outlined"
-                placeholder="Search..."
-                size="small"
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-                sx={{ width: 280, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF', height: 40 } }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    </InputAdornment>
-                  )
-                }}
-              />
-            </Box>
-
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
-              <Table>
-                <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-                  <TableRow sx={{ borderBottom: '1px solid #E5E7EB' }}>
-                    <TableCell padding="checkbox" sx={{ py: 2 }}><Checkbox size="small" /></TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>COURSE & YEAR</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>ORGANIZATION SIGNATURES</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>CLEARANCE PROGRESS</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {paginatedReady.map((r) => (
-                    <TableRow key={r.id} hover sx={{ '& td': { borderBottom: '1px solid #F3F4F6' }, '&:last-child td': { borderBottom: 0 } }}>
-                      <TableCell padding="checkbox"><Checkbox size="small" checked={selected?.id === r.id} /></TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box display="flex" alignItems="center" gap={1.5}>
-                          <Avatar
-                            src={getAbsoluteUrl(r.avatarUrl)}
-                            sx={{ width: 40, height: 40, bgcolor: '#020617', color: '#FFF', fontWeight: 800, fontSize: '0.875rem', textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)' }}
+                      {YEAR_LEVELS.map(y => (
+                        <MenuItem
+                          key={y}
+                          selected={filterYear === y}
+                          onClick={() => { setFilterYear(y); setPage(0); setMoreAnchor(null); }}
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          {y}
+                        </MenuItem>
+                      ))}
+                      {filterYear && (
+                        <>
+                          <Divider />
+                          <MenuItem
+                            onClick={() => { setFilterYear(""); setPage(0); setMoreAnchor(null); }}
+                            sx={{ fontSize: '0.875rem', color: '#EF4444' }}
                           >
-                            {r.name.substring(0, 2).toUpperCase()}
-                          </Avatar>
-                          <Box>
-                            <Typography sx={{ fontWeight: 600, color: "#111827", fontSize: '0.875rem' }}>{r.name}</Typography>
-                            <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.studentId}</Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box sx={{
-                          display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px',
-                          bgcolor: filterStatus === "approved" ? "#ECFDF5" : "#F0F9FF"
-                        }}>
-                          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#10B981" : "#0EA5E9" }} />
-                          <Typography sx={{ color: filterStatus === "approved" ? "#047857" : "#0369A1", fontSize: '0.75rem', fontWeight: 600 }}>
-                            {filterStatus === "approved" ? "Approved" : "Pending Final"}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box>
-                          <Typography sx={{ fontWeight: 500, color: "#111827", fontSize: '0.875rem' }}>{r.course}</Typography>
-                          <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.year}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box display="flex">
-                          {[1, 2, 3].map(n => (
-                            <Avatar
-                              key={n}
-                              sx={{ width: 24, height: 24, ml: n > 1 ? -0.75 : 0, border: '2px solid #FFF', bgcolor: '#F1F5F9', color: '#6B7280', fontSize: '0.65rem' }}
-                            >
-                              {n}+
-                            </Avatar>
-                          ))}
-                          <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', fontWeight: 600, ml: 1, alignSelf: 'center' }}>+2</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ py: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', maxWidth: 120 }}>
-                          <Box sx={{ flex: 1, height: 8, bgcolor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
-                            <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#008080', borderRadius: '4px' }} />
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right" sx={{ py: 2 }}>
-                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
-                          <IconButton
+                            Clear Year Filter
+                          </MenuItem>
+                        </>
+                      )}
+                    </Menu>
+                  </Box>
+
+                  <TextField
+                    variant="outlined"
+                    placeholder="Search..."
+                    size="small"
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setPage(0); }}
+                    sx={{ width: 280, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF', height: 40 } }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+                </Box>
+
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
+                  <Table>
+                    <TableHead sx={{ bgcolor: '#F9FAFB' }}>
+                      <TableRow sx={{ borderBottom: '1px solid #E5E7EB' }}>
+                        <TableCell padding="checkbox" sx={{ py: 2, pl: 2 }}>
+                          <Checkbox
                             size="small"
-                            sx={{ color: '#6B7280' }}
-                            onClick={() => { setStudentToApprove(r); setSignatureModalOpen(true); }}
-                            disabled={actionState !== 'idle' && actionRowId === r.id}
-                          >
-                            {actionState === 'loading' && actionRowId === r.id ?
-                              <CircularProgress size={16} color="inherit" /> :
-                              (actionState === 'success' && actionRowId === r.id ?
-                                <CheckIcon sx={{ fontSize: 18, color: '#10B981' }} /> :
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                              )
+                            checked={paginatedReady.length > 0 && paginatedReady.every(r => selectedIds.includes(r.id))}
+                            indeterminate={selectedIds.length > 0 && !paginatedReady.every(r => selectedIds.includes(r.id))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                const newIds = [...new Set([...selectedIds, ...paginatedReady.map(r => r.id)])];
+                                setSelectedIds(newIds);
+                              } else {
+                                const idsToRemove = paginatedReady.map(r => r.id);
+                                setSelectedIds(selectedIds.filter(id => !idsToRemove.includes(id)));
+                              }
+                            }}
+                            icon={
+                              <Box sx={{
+                                width: 26, height: 26, borderRadius: '8px',
+                                bgcolor: '#EBEBEB',
+                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                              }} />
                             }
-                          </IconButton>
-                          <IconButton size="small" sx={{ color: '#6B7280' }} onClick={() => setSelected(r)}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {paginatedReady.length === 0 && (
-              <EmptyState
-                icon={<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" /><path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
-                title="No students found"
-                description={query || filterCourse || filterYear || filterDate ? "Try adjusting your filters to find what you're looking for." : "There are currently no students ready for final approval."}
-              />
-            )}
-            <Box mt={3} pt={3} display="flex" justifyContent="space-between" alignItems="center" sx={{ borderTop: '1px solid #E5E7EB' }}>
-              <Button
-                variant="outlined"
-                disabled={page === 0}
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                sx={{ textTransform: 'none', borderRadius: '8px', color: '#374151', borderColor: '#D1D5DB', fontWeight: 600, fontSize: '0.875rem', px: 2 }}
-              >
-                Previous
-              </Button>
-              <Typography sx={{ color: "#374151", fontSize: '0.875rem', fontWeight: 500 }}>
-                Page {page + 1} of {Math.ceil(filteredReady.length / rowsPerPage) || 1}
-              </Typography>
-              <Button
-                variant="outlined"
-                disabled={(page + 1) * rowsPerPage >= filteredReady.length}
-                onClick={() => setPage(p => p + 1)}
-                sx={{ textTransform: 'none', borderRadius: '8px', color: '#374151', borderColor: '#D1D5DB', fontWeight: 600, fontSize: '0.875rem', px: 2 }}
-              >
-                Next
-              </Button>
-            </Box>
-          </Box>
+                            checkedIcon={
+                              <Box sx={{
+                                width: 26, height: 26, borderRadius: '8px',
+                                background: 'linear-gradient(160deg, #2D3748 0%, #111827 60%, #0D1117 100%)',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                '&:hover': { transform: 'scale(1.08)' }
+                              }}>
+                                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </Box>
+                            }
+                            indeterminateIcon={
+                              <Box sx={{
+                                width: 26, height: 26, borderRadius: '8px',
+                                background: 'linear-gradient(160deg, #7af0e0 0%, #5eead4 60%, #45d6be 100%)',
+                                boxShadow: '0 4px 10px rgba(94,234,212,0.4), 0 1px 3px rgba(94,234,212,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                              }}>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2.5 6H9.5" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round"/>
+                                </svg>
+                              </Box>
+                            }
+                            sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>TIMESTAMP</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>COURSE & YEAR</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>ORGANIZATION SIGNATURES</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>CLEARANCE PROGRESS</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedReady.map((r) => (
+                        <TableRow key={r.id} hover sx={{ '& td': { borderBottom: '1px solid #F3F4F6' }, '&:last-child td': { borderBottom: 0 } }}>
+                          <TableCell padding="checkbox" sx={{ pl: 2 }}>
+                            <Checkbox
+                              size="small"
+                              checked={selectedIds.includes(r.id)}
+                              onChange={() => {
+                                setSelectedIds(prev =>
+                                  prev.includes(r.id)
+                                    ? prev.filter(id => id !== r.id)
+                                    : [...prev, r.id]
+                                );
+                              }}
+                              icon={
+                                <Box sx={{
+                                  width: 26, height: 26, borderRadius: '8px',
+                                  bgcolor: '#EBEBEB',
+                                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                }} />
+                              }
+                              checkedIcon={
+                                <Box sx={{
+                                  width: 26, height: 26, borderRadius: '8px',
+                                  background: 'linear-gradient(160deg, #2D3748 0%, #111827 60%, #0D1117 100%)',
+                                  boxShadow: '0 4px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                }}>
+                                  <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </Box>
+                              }
+                              sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box display="flex" alignItems="center" gap={1.5}>
+                              <Avatar
+                                src={getAbsoluteUrl(r.avatarUrl)}
+                                sx={{ width: 40, height: 40, bgcolor: '#020617', color: '#FFF', fontWeight: 800, fontSize: '0.875rem', textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)' }}
+                              >
+                                {r.name.substring(0, 2).toUpperCase()}
+                              </Avatar>
+                              <Box>
+                                <Typography sx={{ fontWeight: 600, color: "#111827", fontSize: '0.875rem' }}>{r.name}</Typography>
+                                <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.studentId}</Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box sx={{
+                              display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px',
+                              bgcolor: filterStatus === "approved" ? "rgba(94,234,212,0.15)" : "#F0F9FF"
+                            }}>
+                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#5eead4" : "#0EA5E9" }} />
+                              <Typography sx={{ color: filterStatus === "approved" ? "#0d9488" : "#0369A1", fontSize: '0.75rem', fontWeight: 600 }}>
+                                {filterStatus === "approved" ? "Approved" : "Pending Final"}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Typography sx={{ color: "#64748B", fontSize: '0.75rem', fontWeight: 500 }}>
+                              {new Date(r.dateApproved || r.dateSubmitted).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box>
+                              <Typography sx={{ fontWeight: 500, color: "#111827", fontSize: '0.875rem' }}>{r.course}</Typography>
+                              <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.year}</Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box display="flex" alignItems="center">
+                              {(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').slice(0, 3).map((org: any, idx: number) => (
+                                <Tooltip key={idx} title={org.name} arrow>
+                                  <Avatar
+                                    src={org.signatureUrl}
+                                    sx={{ 
+                                      width: 28, 
+                                      height: 28, 
+                                      ml: idx > 0 ? -1 : 0, 
+                                      border: '2px solid #FFF', 
+                                      bgcolor: '#F1F5F9', 
+                                      color: '#64748B', 
+                                      fontSize: '0.65rem',
+                                      fontWeight: 800,
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                    }}
+                                  >
+                                    {org.name ? org.name[0] : '?'}
+                                  </Avatar>
+                                </Tooltip>
+                              ))}
+                              {(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length > 3 && (
+                                <Typography sx={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 700, ml: 1, letterSpacing: '0.02em' }}>
+                                  +{(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length - 3}
+                                </Typography>
+                              )}
+                              { (r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').length === 0 && (
+                                <Typography sx={{ color: '#94A3B8', fontSize: '0.7rem', fontStyle: 'italic', fontWeight: 500 }}>
+                                  No signatures yet
+                                </Typography>
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Tooltip title={`${Math.round((r.reqCompleted / r.reqTotal) * 100)}% Complete (${r.reqCompleted}/${r.reqTotal})`} arrow>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', maxWidth: 120, cursor: 'pointer' }}>
+                                <Box sx={{ flex: 1, height: 8, bgcolor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
+                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#008080', borderRadius: '4px' }} />
+                                </Box>
+                              </Box>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell align="right" sx={{ py: 2 }}>
+                            <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                              {filterStatus === "approved" ? (
+                                <Tooltip title="Revoke Approval" arrow>
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: '#6B7280', '&:hover': { color: '#EF4444' } }}
+                                    onClick={() => handleRevoke(r)}
+                                    disabled={actionState !== 'idle' && actionRowId === r.id}
+                                  >
+                                    {actionState === 'loading' && actionRowId === r.id ? (
+                                      <CircularProgress size={16} color="inherit" />
+                                    ) : actionState === 'success' && actionRowId === r.id ? (
+                                      <CheckIcon sx={{ fontSize: 18, color: '#10B981' }} />
+                                    ) : (
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                    )}
+                                  </IconButton>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip title="Approve Final" arrow>
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: '#6B7280' }}
+                                    onClick={() => { setStudentToApprove(r); setSignatureModalOpen(true); }}
+                                    disabled={actionState !== 'idle' && actionRowId === r.id}
+                                  >
+                                    {actionState === 'loading' && actionRowId === r.id ? (
+                                      <CircularProgress size={16} color="inherit" />
+                                    ) : actionState === 'success' && actionRowId === r.id ? (
+                                      <CheckIcon sx={{ fontSize: 18, color: '#10B981' }} />
+                                    ) : (
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                    )}
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              <Tooltip title="View Details" arrow>
+                                <IconButton size="small" sx={{ color: '#6B7280' }} onClick={() => setSelected(r)}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                {paginatedReady.length === 0 && (
+                  <EmptyState
+                    icon={<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" /><path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
+                    title="No students found"
+                    description={query || filterCourse || filterYear || filterDate ? "Try adjusting your filters to find what you're looking for." : "There are currently no students ready for final approval."}
+                  />
+                )}
+                <Box mt={3} pt={3} display="flex" justifyContent="center" alignItems="center" sx={{ borderTop: '1px solid #E5E7EB' }}>
+                  <Box sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: '#F3F4F6',
+                    borderRadius: '16px',
+                    p: '6px',
+                  }}>
+                    {/* Previous Arrow */}
+                    <Box
+                      component="button"
+                      onClick={() => setPage(p => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                      sx={{
+                        width: 36, height: 36,
+                        borderRadius: '10px',
+                        border: 'none',
+                        bgcolor: 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: page === 0 ? 'not-allowed' : 'pointer',
+                        color: page === 0 ? '#D1D5DB' : '#374151',
+                        transition: 'all 0.2s ease',
+                        '&:hover': page === 0 ? {} : { bgcolor: '#E5E7EB' }
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </Box>
+
+                    {/* Page Numbers */}
+                    {Array.from({ length: Math.ceil(filteredReady.length / rowsPerPage) || 1 }, (_, i) => i).map((pageNum) => (
+                      <Box
+                        key={pageNum}
+                        component="button"
+                        onClick={() => setPage(pageNum)}
+                        sx={{
+                          width: 36, height: 36,
+                          borderRadius: '10px',
+                          border: 'none',
+                          bgcolor: page === pageNum ? '#111827' : 'transparent',
+                          color: page === pageNum ? '#FFFFFF' : '#6B7280',
+                          fontWeight: page === pageNum ? 700 : 500,
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: page === pageNum ? '0 4px 12px rgba(0,0,0,0.25)' : 'none',
+                          transition: 'all 0.2s ease',
+                          '&:hover': page === pageNum ? {} : { bgcolor: '#E5E7EB', color: '#111827' }
+                        }}
+                      >
+                        {pageNum + 1}
+                      </Box>
+                    ))}
+
+                    {/* Next Arrow */}
+                    <Box
+                      component="button"
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={(page + 1) * rowsPerPage >= filteredReady.length}
+                      sx={{
+                        width: 36, height: 36,
+                        borderRadius: '10px',
+                        border: 'none',
+                        bgcolor: 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: (page + 1) * rowsPerPage >= filteredReady.length ? 'not-allowed' : 'pointer',
+                        color: (page + 1) * rowsPerPage >= filteredReady.length ? '#D1D5DB' : '#374151',
+                        transition: 'all 0.2s ease',
+                        '&:hover': (page + 1) * rowsPerPage >= filteredReady.length ? {} : { bgcolor: '#E5E7EB' }
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </>
+          )}
         </>
-      )}
-    </>
-  ) : active === "approvals" ? (
+      ) : active === "approvals" ? (
         <>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
             <Box>
@@ -1410,75 +1780,289 @@ export default function DeanPage() {
         </SettingsContainer>
       )}
 
-      <Dialog open={!!selected && (isApprovals || isFinal)} onClose={() => setSelected(null)} fullWidth maxWidth="md">
-        <DialogTitle>View Details</DialogTitle>
-        <DialogContent>
-          {selected && (
-            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={3}>
-              <Box>
-                <Typography sx={{ fontWeight: 700, mb: 1 }}>Student Information</Typography>
-                <Box display="flex" flexDirection="column" gap={0.5}>
-                  <Typography>Name: {selected.name}</Typography>
-                  <Typography>ID: {selected.studentId}</Typography>
-                  <Typography>Course/Year: {selected.course} – {selected.year}</Typography>
-                  <Typography>Date submitted: {selected.dateSubmitted}</Typography>
-                  <Typography>Requirements: {(selected.reqCompleted || 0)}/{(selected.reqTotal || 0)}</Typography>
-                </Box>
-              </Box>
-              <Box>
-                <Typography sx={{ fontWeight: 700, mb: 1 }}>Organization Clearances</Typography>
-                <Box display="flex" flexDirection="column" gap={1}>
-                  {selected.organizations && selected.organizations.length > 0 ? (
-                    selected.organizations.map((org: any, idx: number) => (
-                      <Box key={idx} display="flex" flexDirection="column" gap={1} sx={{ border: "1px solid #E5E7EB", borderRadius: 1, p: 1.5 }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem" }}>{org.name}</Typography>
-                          <Chip size="small" label={org.status === 'completed' || org.status === 'officer_cleared' ? 'Cleared' : org.status} sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700, bgcolor: org.status === 'completed' || org.status === 'officer_cleared' ? '#ECFDF5' : '#F1F5F9', color: org.status === 'completed' || org.status === 'officer_cleared' ? '#10B981' : '#64748B' }} />
-                        </Box>
-                        <Divider sx={{ my: 0.5 }} />
-                        {org.signatureUrl ? (
-                          <Box display="flex" alignItems="center" gap={1.5}>
-                            <Typography sx={{ fontSize: '0.75rem', color: '#64748B' }}>Officer Signature:</Typography>
-                            <img src={org.signatureUrl} alt="Signature" style={{ height: 35, objectFit: 'contain' }} />
-                          </Box>
-                        ) : (
-                          <Typography sx={{ fontSize: '0.75rem', color: '#94A3B8', fontStyle: 'italic' }}>No signature provided yet</Typography>
-                        )}
-                      </Box>
-                    ))
-                  ) : (
-                    ["Valid ID", "Adviser form", "Organization form"].map((req, idx) => (
-                      <Box key={idx} display="flex" alignItems="center" justifyContent="space-between" sx={{ border: "1px solid #E5E7EB", borderRadius: 1, p: 1.5 }}>
-                        <Typography>{req}</Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <IconButton size="small">
-                            <Box aria-hidden sx={{ width: 18, height: 18 }}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v8M8 9l4-4 4 4" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" /></svg>
-                            </Box>
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    ))
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setSelected(null)}
+      <Dialog 
+        open={!!selected && (isApprovals || isFinal)} 
+        onClose={() => setSelected(null)} 
+        fullWidth 
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: '32px',
+            padding: '24px',
+            position: 'relative',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+            bgcolor: '#FFF'
+          }
+        }}
+      >
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 0.5 }}>
+              Student Status Overview
+            </Typography>
+            <Typography sx={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.4 }}>
+              Detailed record and organizational <br /> clearance tracking
+            </Typography>
+          </Box>
+          <IconButton 
+            onClick={() => setSelected(null)} 
+            size="small" 
+            sx={{ color: '#94A3B8', '&:hover': { color: '#0F172A', bgcolor: '#F1F5F9' } }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </IconButton>
+        </Box>
+
+        {/* Segmented Control / Toggle */}
+        <Box sx={{ 
+          display: 'flex', 
+          p: '4px', 
+          bgcolor: '#F1F5F9', 
+          borderRadius: '16px', 
+          mb: 3,
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Sliding Indicator - Matched with Dashboard Filter Style */}
+          <Box
             sx={{
-              fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
-              fontWeight: 600,
+              position: 'absolute',
+              top: '4px',
+              bottom: '4px',
+              left: detailsTab === 'info' ? '4px' : 'calc(50% + 2px)',
+              width: 'calc(50% - 6px)',
+              bgcolor: '#FFF',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              zIndex: 1
+            }}
+          />
+          <Button
+            fullWidth
+            onClick={() => setDetailsTab('info')}
+            sx={{
               textTransform: 'none',
-              borderRadius: '999px',
-              color: '#64748B'
+              borderRadius: '12px',
+              py: 1,
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              position: 'relative',
+              zIndex: 2,
+              color: detailsTab === 'info' ? '#0F172A' : '#64748B',
+              bgcolor: 'transparent',
+              transition: 'color 0.4s ease',
+              '&:hover': { bgcolor: 'transparent' }
             }}
           >
-            Close
+            Student Info
           </Button>
-        </DialogActions>
+          <Button
+            fullWidth
+            onClick={() => setDetailsTab('progress')}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '12px',
+              py: 1,
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              position: 'relative',
+              zIndex: 2,
+              color: detailsTab === 'progress' ? '#0F172A' : '#64748B',
+              bgcolor: 'transparent',
+              transition: 'color 0.4s ease',
+              '&:hover': { bgcolor: 'transparent' }
+            }}
+          >
+            Clearance
+          </Button>
+        </Box>
+
+        {/* Content Area */}
+        <Box sx={{ 
+          minHeight: '320px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          overflow: 'hidden',
+          position: 'relative' 
+        }}>
+          <AnimatePresence mode="wait">
+            {selected && (
+              detailsTab === 'info' ? (
+                <motion.div
+                  key="info"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ p: 2, bgcolor: '#FAFAFA', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', mb: 0.5 }}>Full Name</Typography>
+                      <Typography sx={{ fontWeight: 700, color: '#0F172A' }}>{selected.name}</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: '#FAFAFA', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', mb: 0.5 }}>Student ID No.</Typography>
+                      <Typography sx={{ fontWeight: 700, color: '#0F172A' }}>{selected.studentId}</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: '#FAFAFA', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', mb: 0.5 }}>Course & Year</Typography>
+                      <Typography sx={{ fontWeight: 700, color: '#0F172A' }}>{selected.course} — {selected.year}</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: '#FAFAFA', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', mb: 0.5 }}>Submission Status</Typography>
+                      <Typography sx={{ fontWeight: 700, color: '#0F172A' }}>
+                        {filterStatus === 'approved' ? 'Finalized Approval' : 'Pending Dean Signature'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="progress"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {selected.organizations && selected.organizations.length > 0 ? (
+                      selected.organizations.map((org: any, idx: number) => {
+                        const isCleared = org.status === 'completed' || org.status === 'officer_cleared';
+                        const label = isCleared ? 'Cleared' : 'Pending';
+                        
+                        return (
+                          <Box key={idx} sx={{ 
+                            p: 2,
+                            bgcolor: '#FAFAFA',
+                            borderRadius: '16px',
+                            border: '1px solid #F1F5F9',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                          }}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                              <Typography sx={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
+                                {org.name}
+                              </Typography>
+                              <Chip 
+                                size="small" 
+                                label={label} 
+                                sx={{ 
+                                  height: 24, 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: 700,
+                                  bgcolor: isCleared ? '#ECFDF5' : '#FEF2F2',
+                                  color: isCleared ? '#10B981' : '#EF4444',
+                                  borderRadius: '999px'
+                                }} 
+                              />
+                            </Box>
+
+                            {/* Decorative Dashed Divider */}
+                            <Box sx={{ my: 1, borderBottom: '1px dashed #E2E8F0' }} />
+
+                            {/* Signature Display */}
+                            <Box sx={{ mt: 0.5 }}>
+                              <Typography sx={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: 800, mb: 1.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Officer Signature
+                              </Typography>
+                              <Box sx={{ 
+                                bgcolor: '#F8FAFC', 
+                                borderRadius: '12px', 
+                                p: 1.5, 
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minWidth: 120,
+                                minHeight: 60,
+                                border: '1px solid #F1F5F9'
+                              }}>
+                                {org.signatureUrl ? (
+                                  <img 
+                                    src={org.signatureUrl} 
+                                    alt="Signature" 
+                                    onClick={() => setZoomedSignature(org.signatureUrl)}
+                                    style={{ 
+                                      height: 40, 
+                                      maxHeight: 40,
+                                      objectFit: 'contain', 
+                                      filter: 'contrast(1.1) brightness(0.95)',
+                                      opacity: 0.9,
+                                      cursor: 'zoom-in',
+                                      transition: 'all 0.2s ease'
+                                    }} 
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.transform = 'scale(1.05)';
+                                      e.currentTarget.style.opacity = '1';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.transform = 'scale(1)';
+                                      e.currentTarget.style.opacity = '0.9';
+                                    }}
+                                  />
+                                ) : (
+                                  <Typography sx={{ fontSize: '0.7rem', color: '#94A3B8', fontStyle: 'italic' }}>
+                                    Signature Pending
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Box>
+                          </Box>
+                        );
+                      })
+                    ) : (
+                      <Box sx={{ py: 6, textAlign: 'center' }}>
+                        <Typography sx={{ color: '#94A3B8', fontSize: '0.875rem', fontStyle: 'italic' }}>
+                          No organizational clearances found for this student.
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </motion.div>
+              )
+            )}
+          </AnimatePresence>
+        </Box>
+
+        {/* Footer Action */}
+        <Box mt={4}>
+          <Button 
+            fullWidth
+            onClick={() => {
+              if (filterStatus === 'pending' && detailsTab === 'progress') {
+                setStudentToApprove(selected);
+                setSignatureModalOpen(true);
+              } else {
+                setSelected(null);
+              }
+            }}
+            variant="contained"
+            sx={{
+              borderRadius: '20px',
+              py: 2,
+              bgcolor: '#0F172A',
+              color: '#FFF',
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '1rem',
+              boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': { 
+                bgcolor: '#1E293B',
+                boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
+                transform: 'translateY(-2px)'
+              },
+              '&:active': {
+                transform: 'translateY(0)'
+              }
+            }}
+          >
+            {(filterStatus === 'pending' && detailsTab === 'progress') ? 'Finalize Now' : 'Close Details'}
+          </Button>
+        </Box>
       </Dialog>
 
       <SignatureModal
@@ -1493,6 +2077,54 @@ export default function DeanPage() {
         searchQuery={popupSearch}
         onSearchChange={setPopupSearch}
       />
+      {/* Signature Zoom Lightbox */}
+      <Dialog
+        open={!!zoomedSignature}
+        onClose={() => setZoomedSignature(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '24px',
+            p: 4,
+            bgcolor: '#FFF',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+          }
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A' }}>
+            Officer Signature Preview
+          </Typography>
+          <IconButton onClick={() => setZoomedSignature(null)} size="small" sx={{ color: '#94A3B8' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </IconButton>
+        </Box>
+        <Box 
+          sx={{ 
+            bgcolor: '#FAFAFA', 
+            borderRadius: '16px', 
+            p: 4, 
+            display: 'flex', 
+            justifyContent: 'center',
+            border: '1px solid #F1F5F9'
+          }}
+        >
+          {zoomedSignature && (
+            <img 
+              src={zoomedSignature} 
+              alt="Zoomed Signature" 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '400px', 
+                objectFit: 'contain',
+                filter: 'contrast(1.1) brightness(0.95)'
+              }} 
+            />
+          )}
+        </Box>
+      </Dialog>
     </RoleLayout>
   );
 }

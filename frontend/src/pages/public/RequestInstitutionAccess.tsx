@@ -401,10 +401,19 @@ export default function RequestInstitutionAccess() {
                 disabled={isLoading}
                 sx={{
                   color: "#0F172A",
-                  borderColor: "#0F172A",
+                  borderColor: "#E2E8F0",
+                  borderRadius: '999px',
+                  textTransform: 'none',
+                  px: 4,
+                  fontWeight: 700,
+                  boxShadow: '0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)',
+                  backgroundColor: '#FFF',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   "&:hover": {
-                    borderColor: "#111827",
-                    backgroundColor: "#f8fafc"
+                    borderColor: "#D1D5DB",
+                    backgroundColor: "#f8fafc",
+                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)',
+                    transform: 'translateY(-3px)'
                   }
                 }}
               >
@@ -419,10 +428,17 @@ export default function RequestInstitutionAccess() {
                 sx={{
                   backgroundColor: "#0F172A",
                   color: "#FFFFFF",
-                  px: 4,
+                  px: 5,
                   py: 1.5,
+                  borderRadius: '999px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 20px 30px -10px rgba(15,23,42,0.35), 0 10px 15px -5px rgba(15,23,42,0.15)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   "&:hover": {
-                    backgroundColor: "#111827"
+                    backgroundColor: "#1e293b",
+                    boxShadow: '0 30px 45px -12px rgba(15,23,42,0.45), 0 15px 20px -8px rgba(15,23,42,0.25)',
+                    transform: 'translateY(-3px)'
                   },
                   "&:disabled": {
                     backgroundColor: "#94a3b8"

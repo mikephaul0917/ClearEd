@@ -27,7 +27,9 @@ const cardBase = {
 };
 
 // Small circular arrow button (bottom-right corner of interactive cards)
-function ArrowButton({ onClick }: { onClick?: () => void }) {
+function ArrowButton({ onClick, variant = 'black' }: { onClick?: () => void, variant?: 'black' | 'white' }) {
+  const isWhite = variant === 'white';
+  
   return (
     <Box
       component="button"
@@ -36,23 +38,37 @@ function ArrowButton({ onClick }: { onClick?: () => void }) {
         position: "absolute",
         bottom: 20,
         right: 20,
-        width: 36,
-        height: 36,
+        width: 42,
+        height: 42,
         borderRadius: "50%",
-        backgroundColor: C.black,
+        backgroundColor: isWhite ? C.white : C.black,
         border: "none",
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: C.white,
-        fontSize: 18,
+        color: isWhite ? C.black : C.white,
+        fontSize: 20,
         lineHeight: 1,
-        transition: "transform 0.2s ease",
-        "&:hover": { transform: "scale(1.12)" },
+        boxShadow: isWhite 
+          ? '0 10px 25px rgba(255,255,255,0.25), 0 4px 10px rgba(255,255,255,0.1)'
+          : '0 10px 20px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.2)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        "&:hover": { 
+          transform: "scale(1.1) translateY(-2px)",
+          boxShadow: isWhite
+            ? '0 15px 35px rgba(255,255,255,0.4), 0 8px 15px rgba(255,255,255,0.2)'
+            : '0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.3)',
+        },
+        "&:active": {
+          transform: "scale(0.95)",
+        }
       }}
     >
-      →
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
     </Box>
   );
 }
@@ -171,7 +187,7 @@ export default function HowItWorks() {
               platform. Submit requests, monitor their progress in real-time, and
               receive approvals electronically — no more queuing in offices.
             </Typography>
-            <ArrowButton onClick={() => navigate("/register")} />
+            <ArrowButton variant="white" onClick={() => navigate("/register")} />
           </Box>
 
           {/* Card 2 — Teal (Strategic / Institutions) */}
@@ -332,11 +348,17 @@ export default function HowItWorks() {
                   fontSize: "14px",
                   textTransform: "none",
                   borderRadius: C.pillRadius,
-                  px: 4,
-                  py: 1.5,
+                  px: 5,
+                  py: 2,
                   backgroundColor: C.black,
                   color: C.white,
-                  "&:hover": { backgroundColor: "#222" },
+                  boxShadow: '0 20px 30px -10px rgba(0,0,0,0.35), 0 10px 15px -5px rgba(0,0,0,0.15)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  "&:hover": {
+                    backgroundColor: "#111",
+                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.45), 0 15px 20px -8px rgba(0,0,0,0.25)',
+                    transform: 'translateY(-3px)'
+                  },
                 }}
               >
                 Request Institution Access
@@ -350,12 +372,18 @@ export default function HowItWorks() {
                   fontSize: "14px",
                   textTransform: "none",
                   borderRadius: C.pillRadius,
-                  px: 4,
-                  py: 1.5,
+                  px: 5,
+                  py: 2,
                   backgroundColor: C.white,
                   color: C.black,
-                  border: `2px solid ${C.black}`,
-                  "&:hover": { backgroundColor: "#f5f5f5" },
+                  border: '1px solid #E5E7EB',
+                  boxShadow: '0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  "&:hover": {
+                    backgroundColor: "#F9FAFB",
+                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)',
+                    transform: 'translateY(-3px)'
+                  },
                 }}
               >
                 Contact Support

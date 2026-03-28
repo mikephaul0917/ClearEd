@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import { useTheme, useMediaQuery, Divider } from "@mui/material";
+import { useTheme, useMediaQuery, Divider, Skeleton } from "@mui/material";
 
 const FAQ_DATA = {
   general: [
@@ -54,17 +54,55 @@ const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
 export default function DeanFAQPage() {
   const [activeCategory, setActiveCategory] = useState("general");
   const [expanded, setExpanded] = useState<string | false>("panel0");
+  const [isLoading, setIsLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  React.useEffect(() => {
+    setIsLoading(true);
+
+    // Since data is static, "loading" is near-instant.
+    // We implement a minimum 1000ms delay as requested for a premium feel.
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [activeCategory]);
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
   };
 
+  const ContentSkeleton = () => (
+    <Box flex={1}>
+      <Box mb={1}>
+        <Skeleton variant="text" width={60} height={20} />
+      </Box>
+
+      <Box mb={6}>
+        <Skeleton variant="text" width="70%" height={isMobile ? 45 : 60} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width="50%" height={isMobile ? 45 : 60} />
+      </Box>
+
+      <Box>
+        {[1, 2, 3].map((i) => (
+          <Box key={i} mb={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" py={2}>
+              <Skeleton variant="text" width="60%" height={30} />
+              <Skeleton variant="circular" width={24} height={24} />
+            </Box>
+            <Divider sx={{ borderColor: '#F1F5F9' }} />
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+
   return (
     <Box sx={{ maxWidth: 1200, ml: 0, pt: 4, pb: 8, pl: isMobile ? 2 : 0, pr: isMobile ? 2 : 6 }}>
       <Box display="flex" flexDirection={isMobile ? "column" : "row"} gap={isMobile ? 4 : 20}>
-        
+
         {/* Sidebar Nav */}
         <Box sx={{ width: isMobile ? "100%" : 240, flexShrink: 0 }}>
           <Box display="flex" flexDirection={isMobile ? "row" : "column"} gap={1} sx={{ overflowX: isMobile ? 'auto' : 'visible' }}>
@@ -98,75 +136,79 @@ export default function DeanFAQPage() {
         </Box>
 
         {/* Content Area */}
-        <Box flex={1}>
-          {/* Badge */}
-          <Box mb={1}>
-             <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
+        {isLoading ? (
+          <ContentSkeleton />
+        ) : (
+          <Box flex={1}>
+            {/* Badge */}
+            <Box mb={1}>
+              <Typography sx={{ color: "#0891b2", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.05em" }}>
                 / FAQS
-             </Typography>
-          </Box>
-          
-          <Typography
-            variant="h1"
-            sx={{
-              fontWeight: 800,
-              fontSize: isMobile ? "2.5rem" : "3.5rem",
-              color: "#0F172A",
-              fontFamily: fontStack,
-              lineHeight: 1.1,
-              mb: 6,
-              letterSpacing: '-0.04em'
-            }}
-          >
-            Frequently asked<br />question
-          </Typography>
+              </Typography>
+            </Box>
 
-          <Box>
-            {(FAQ_DATA[activeCategory as keyof typeof FAQ_DATA] || []).map((faq, index) => {
-              const panelId = `panel${index}`;
-              const isExpanded = expanded === panelId;
+            <Typography
+              variant="h1"
+              sx={{
+                fontWeight: 800,
+                fontSize: isMobile ? "2.5rem" : "3.5rem",
+                color: "#0F172A",
+                fontFamily: fontStack,
+                lineHeight: 1.1,
+                mb: 6,
+                letterSpacing: '-0.04em'
+              }}
+            >
+              Frequently asked<br />question
+            </Typography>
 
-              return (
-                <Box key={index}>
-                  <Accordion
-                    expanded={isExpanded}
-                    onChange={handleChange(panelId)}
-                    disableGutters
-                    elevation={0}
-                    sx={{
-                      backgroundColor: "transparent",
-                      "&:before": { display: "none" },
-                      py: 1
-                    }}
-                  >
-                    <AccordionSummary
-                      expandIcon={
-                        <Box sx={{ fontSize: '24px', fontWeight: 400, color: '#0F172A', transition: 'all 0.2s' }}>
-                          {isExpanded ? "−" : "+"}
-                        </Box>
-                      }
+            <Box>
+              {(FAQ_DATA[activeCategory as keyof typeof FAQ_DATA] || []).map((faq, index) => {
+                const panelId = `panel${index}`;
+                const isExpanded = expanded === panelId;
+
+                return (
+                  <Box key={index}>
+                    <Accordion
+                      expanded={isExpanded}
+                      onChange={handleChange(panelId)}
+                      disableGutters
+                      elevation={0}
                       sx={{
-                        px: 0,
-                        "& .MuiAccordionSummary-content": { my: 2 },
-                        "& .MuiAccordionSummary-expandIconWrapper": { transform: 'none' }
+                        backgroundColor: "transparent",
+                        "&:before": { display: "none" },
+                        py: 1
                       }}
                     >
-                      <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", fontFamily: fontStack }}>
-                        {faq.question}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
-                      <Typography sx={{ color: "#64748B", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: 700, fontFamily: fontStack }}>
-                        {faq.answer}
-                      </Typography>
-                    </AccordionDetails>
-                  </Accordion>
-                  <Divider sx={{ borderColor: '#F1F5F9' }} />
-                </Box>
-              );
-            })}
+                      <AccordionSummary
+                        expandIcon={
+                          <Box sx={{ fontSize: '24px', fontWeight: 400, color: '#0F172A', transition: 'all 0.2s' }}>
+                            {isExpanded ? "−" : "+"}
+                          </Box>
+                        }
+                        sx={{
+                          px: 0,
+                          "& .MuiAccordionSummary-content": { my: 2 },
+                          "& .MuiAccordionSummary-expandIconWrapper": { transform: 'none' }
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", fontFamily: fontStack }}>
+                          {faq.question}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
+                        <Typography sx={{ color: "#64748B", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: 700, fontFamily: fontStack }}>
+                          {faq.answer}
+                        </Typography>
+                      </AccordionDetails>
+                    </Accordion>
+                    <Divider sx={{ borderColor: '#F1F5F9' }} />
+                  </Box>
+                );
+              })}
+            </Box>
           </Box>
-        </Box>
+        )}
       </Box>
     </Box>
   );
