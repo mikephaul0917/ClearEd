@@ -81,7 +81,7 @@ const HomePage: React.FC = () => {
                     iconBgColor="#F1F5F9"
                     iconColor="#475569"
                     headerAction={
-                        <Box display="flex" gap={2} flexDirection={{ xs: 'column', sm: 'row' }} width={{ xs: '100%', sm: 'auto' }}>
+                        <Box display="flex" gap={1.5} flexDirection="row" alignItems="center" flexWrap="wrap">
                             {isAdmin && (
                                 <Button
                                     variant="outlined"
@@ -103,20 +103,30 @@ const HomePage: React.FC = () => {
                                 <IconButton
                                     onClick={() => setIsJoinModalOpen(true)}
                                     sx={{
-                                        bgcolor: "#FFFFFF",
-                                        color: "#0F172A",
-                                        border: "1px solid #0F172A",
-                                        borderRadius: "10px",
-                                        width: 42,
-                                        height: 42,
+                                        position: { xs: 'fixed', sm: 'relative' },
+                                        bottom: { xs: 24, sm: 'auto' },
+                                        right: { xs: 24, sm: 'auto' },
+                                        zIndex: 1000,
+                                        bgcolor: "#000000",
+                                        color: "#FFFFFF",
+                                        border: "none",
+                                        borderRadius: { xs: "16px", sm: "10px" },
+                                        width: { xs: 56, sm: 42 },
+                                        height: { xs: 56, sm: 42 },
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         p: 0,
-                                        "&:hover": { bgcolor: "#F1F5F9" }
+                                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1)",
+                                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            bgcolor: "#18181B",
+                                            boxShadow: "0 15px 40px rgba(0, 0, 0, 0.35)",
+                                            transform: "translateY(-4px) scale(1.02)"
+                                        }
                                     }}
                                 >
-                                    <AddIcon />
+                                    <AddIcon sx={{ fontSize: { xs: 28, sm: 24 } }} />
                                 </IconButton>
                             </Tooltip>
                         </Box>

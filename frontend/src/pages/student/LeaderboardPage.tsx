@@ -211,7 +211,7 @@ export default function LeaderboardPage() {
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <WorkspacePremiumIcon sx={{ fontSize: 18, color: '#cb9bfb' }} />
+                                            <WorkspacePremiumIcon sx={{ fontSize: 18, color: '#3B82F6' }} />
                                             <Typography sx={{ color: '#374151', fontSize: '0.95rem', fontWeight: 500 }}>
                                                 {row.certifications}
                                             </Typography>

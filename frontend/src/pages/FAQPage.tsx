@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Accordion from "@mui/material/Accordion";
@@ -82,22 +83,45 @@ export default function FAQPage() {
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
                     sx={{
+                      position: 'relative',
                       px: 3,
                       py: 1.5,
-                      borderRadius: "8px",
                       cursor: "pointer",
-                      backgroundColor: isActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                      color: isActive ? "#0E7490" : "#64748B",
-                      fontWeight: isActive ? 700 : 500,
-                      fontSize: "0.95rem",
-                      transition: "all 0.2s ease",
                       whiteSpace: "nowrap",
+                      fontSize: "0.95rem",
+                      borderRadius: "8px",
                       "&:hover": {
-                        backgroundColor: isActive ? "rgba(176, 224, 230, 0.2)" : "#F8FAFC",
+                        backgroundColor: isActive ? "transparent" : "#F8FAFC",
                       }
                     }}
                   >
-                    {cat.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeCategoryIndicator"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          backgroundColor: "rgba(176, 224, 230, 0.2)",
+                          borderRadius: "8px",
+                          zIndex: 0,
+                        }}
+                        transition={{
+                          type: "spring",
+                          bounce: 0.15,
+                          duration: 0.5,
+                        }}
+                      />
+                    )}
+                    <motion.div
+                      style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center" }}
+                      animate={{ 
+                          color: isActive ? "#0E7490" : "#64748B",
+                          fontWeight: isActive ? 700 : 500
+                      }}
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                    >
+                      {cat.label}
+                    </motion.div>
                   </Box>
                 );
               })}

@@ -116,7 +116,14 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                     sx={{
                         "& .MuiOutlinedInput-root": {
                             borderRadius: 2,
-                            bgcolor: "#F8FAFC"
+                            bgcolor: "#F8FAFC",
+                            "&.Mui-focused fieldset": {
+                                borderColor: "#0D9488",
+                                borderWidth: "2px"
+                            }
+                        },
+                        "& .MuiInputLabel-root.Mui-focused": {
+                            color: "#0D9488"
                         }
                     }}
                 />

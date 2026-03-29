@@ -38,8 +38,8 @@ import {
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
-  pageBg: '#FFFFFF',
-  surface: '#FFFFFF',
+  pageBg: '#F9FAFB',
+  surface: '#F9FAFB',
   black: '#0a0a0a',
   textPrimary: '#000000',
   textSecondary: '#64748B',
@@ -331,7 +331,7 @@ export default function StudentPage() {
   const reqOrg = (() => { try { const p = JSON.parse(localStorage.getItem("studentProfile") || "{}"); return !!p.reqOrgForm; } catch { return false; } })();
 
   return (
-    <RoleLayout bgcolor="#f3f3f3">
+    <RoleLayout bgcolor="#F9FAFB">
       {notice && (
         <SuccessMessage
           message={notice.message}
@@ -456,7 +456,7 @@ export default function StudentPage() {
                       bottom: 0,
                       borderRadius: "32px",
                       overflow: "hidden",
-                      bgcolor: "#FFFFFF",
+                      bgcolor: "#F9FAFB",
                       boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
                       border: "1px solid #F1F5F9",
                     }}
@@ -482,7 +482,7 @@ export default function StudentPage() {
                         sx={{
                           width: 60,
                           height: 60,
-                          bgcolor: "#FFFFFF",
+                          bgcolor: "#F9FAFB",
                           borderRadius: "16px",
                           display: 'flex',
                           alignItems: 'center',
@@ -505,7 +505,7 @@ export default function StudentPage() {
                       bottom: 0,
                       left: -6,
                       right: -6,
-                      bgcolor: "#FFFFFF",
+                      bgcolor: "#F9FAFB",
                       p: "20px",
                       borderRadius: "24px",
                       boxShadow: "0 12px 32px rgba(0,0,0,0.12)",

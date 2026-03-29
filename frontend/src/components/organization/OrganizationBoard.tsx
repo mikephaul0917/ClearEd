@@ -61,7 +61,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     <Box sx={{
                                         bgcolor: iconBgColor || '#F1F5F9',
                                         color: iconColor || '#475569',
-                                        p: 1,
+                                        p: { xs: 0.5, sm: 1 },
                                         borderRadius: 2,
                                         display: 'flex',
                                         alignItems: 'center',
@@ -74,7 +74,8 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     fontWeight: 800, 
                                     color: '#000', 
                                     fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", 
-                                    letterSpacing: '-1.5px' 
+                                    letterSpacing: { xs: '-0.5px', sm: '-1.5px' },
+                                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
                                 }}>
                                     {title}
                                 </Typography>
@@ -83,7 +84,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                         {description && (
                             <Typography variant="body1" sx={{ 
                                 color: '#6B7280', 
-                                fontSize: '1.05rem', 
+                                fontSize: { xs: '0.9rem', sm: '1.05rem' },
                                 fontFamily: "'Inter', sans-serif" 
                             }}>
                                 {description}

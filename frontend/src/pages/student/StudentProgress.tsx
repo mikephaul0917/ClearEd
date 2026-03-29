@@ -151,16 +151,6 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
 
   const renderCertificateContent = () => (
     <>
-      {/* Subtle Pattern Background Overlay */}
-      <Box sx={{
-        position: "absolute",
-        inset: 0,
-        opacity: 0.05,
-        pointerEvents: "none",
-        background: "radial-gradient(#000 0.5px, transparent 0.5px)",
-        backgroundSize: "20px 20px"
-      }} />
-
       {/* Left Vertical Banner */}
       <Box sx={{
         width: 70,
@@ -190,7 +180,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
             userSelect: "none"
           }}
         >
-          Certificate
+          Clearance
         </Typography>
       </Box>
 
@@ -307,7 +297,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   );
 
   const renderSkeleton = () => (
-    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#fff", position: "relative" }}>
+    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#F9FAFB", position: "relative" }}>
       {/* Left Skeleton Banner */}
       <Skeleton 
         variant="rectangular" 
@@ -370,13 +360,9 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
         sx={{
           position: "relative",
           minHeight: 600,
-          bgcolor: "#fff",
-          borderRadius: "4px",
-          boxShadow: isOverview ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "none",
+          bgcolor: "#F9FAFB",
           overflow: "hidden",
           display: "flex",
-          border: "12px solid #fff",
-          outline: "1px solid #e2e8f0",
           fontFamily: "'Inter', sans-serif"
         }}
       >
@@ -412,25 +398,47 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
       </Dialog>
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Button
+          variant="contained"
+          onClick={() => window.print()}
+          sx={{
+            bgcolor: '#000',
+            color: '#FFF',
+            borderRadius: '100px',
+            fontWeight: 700,
+            px: 4,
+            py: 1.5,
+            textTransform: 'none',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
+            '&:hover': { bgcolor: '#222', transform: 'translateY(-2px)' },
+            transition: 'all 0.2s'
+          }}
+        >
+          Print Clearance Slip
+        </Button>
         {!readOnly && (
           <Button
             variant="outlined"
             disabled={submittingDean || finalClearance !== null}
             onClick={handleSubmitToDean}
             sx={{
-              borderRadius: '8px',
+              borderRadius: '100px',
               color: '#000',
-              borderColor: '#000',
+              borderColor: '#E2E8F0',
               bgcolor: '#FFF',
               fontWeight: 700,
-              '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
-              '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
+              px: 4,
+              py: 1.5,
+              textTransform: 'none',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+              '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-2px)' },
+              '&.Mui-disabled': { color: '#64748B', borderColor: '#E2E8F0', bgcolor: '#FFF', opacity: 0.8 },
+              transition: 'all 0.2s'
             }}
           >
-            {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'DEAN APPROVED' : finalClearance ? 'SUBMITTED TO DEAN' : 'SUBMIT TO DEAN'}
+            {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'Dean Approved' : finalClearance ? 'Submitted to Dean' : 'Submit to Dean'}
           </Button>
         )}
-        <Button variant="contained" color="inherit" onClick={() => window.print()} sx={{ bgcolor: '#000', color: '#FFF' }}>Print Clearance Slip</Button>
       </Box>
     </Box>
   );
@@ -536,10 +544,10 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
 
   if (loading) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#FFFFFF' }}>
+      <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#F9FAFB' }}>
         {isOverview ? (
           <Box sx={{ maxWidth: 850, mx: "auto", pt: 0, pb: 4 }}>
-            <Paper elevation={0} sx={{ border: "12px solid #fff", outline: "1px solid #e2e8f0", overflow: "hidden", borderRadius: "4px" }}>
+            <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: "4px", bgcolor: "#F9FAFB" }}>
               {renderSkeleton()}
             </Paper>
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
@@ -565,7 +573,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#FFFFFF', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <Box sx={{ p: { xs: 2, md: 4, lg: 6 }, minHeight: '100vh', bgcolor: '#F9FAFB', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       {isOverview ? renderOverview() : renderDetail()}
       {/* Maximized View Dialog */}
       <Dialog
@@ -608,13 +616,9 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
               position: "relative",
               width: 850,
               minHeight: 600,
-              bgcolor: "#fff",
-              borderRadius: "4px",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+              bgcolor: "#F9FAFB",
               overflow: "hidden",
               display: "flex",
-              border: "12px solid #fff",
-              outline: "1px solid #e2e8f0"
             }}
           >
             {renderCertificateContent()}

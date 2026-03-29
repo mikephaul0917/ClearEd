@@ -65,7 +65,7 @@ const GlassButton: React.FC<GlassButtonProps> = ({
                 width: "100%",
                 padding,
                 fontSize,
-                fontWeight: 700,
+                fontWeight: 500,
                 color: "#000000",
                 background: getBaseBackground(),
                 backdropFilter: "blur(8px)",

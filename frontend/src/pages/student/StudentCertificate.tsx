@@ -65,16 +65,6 @@ export default function StudentCertificate() {
 
   const renderCertificateContent = () => (
     <>
-      {/* Subtle Pattern Background Overlay */}
-      <Box sx={{
-        position: "absolute",
-        inset: 0,
-        opacity: 0.05,
-        pointerEvents: "none",
-        background: "radial-gradient(#000 0.5px, transparent 0.5px)",
-        backgroundSize: "20px 20px"
-      }} />
-
       {/* Left Vertical Banner */}
       <Box sx={{
         width: 70,
@@ -104,7 +94,7 @@ export default function StudentCertificate() {
             userSelect: "none"
           }}
         >
-          Certificate
+          Clearance
         </Typography>
       </Box>
 
@@ -192,7 +182,7 @@ export default function StudentCertificate() {
   );
 
   const renderSkeleton = () => (
-    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#fff", position: "relative" }}>
+    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#F9FAFB", position: "relative" }}>
 
       {/* Main Content Skeleton Area */}
       <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -238,6 +228,7 @@ export default function StudentCertificate() {
       alignItems: "center",
       justifyContent: "flex-start",
       overflow: "auto",
+      bgcolor: "#F9FAFB",
       pt: 2,
       pb: 4
     }}>
@@ -270,13 +261,9 @@ export default function StudentCertificate() {
             position: "relative",
             width: 850,
             minHeight: 600,
-            bgcolor: "#fff",
-            borderRadius: "4px",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            bgcolor: "#F9FAFB",
             overflow: "hidden",
             display: "flex",
-            border: "12px solid #fff",
-            outline: "1px solid #e2e8f0"
           }}
         >
           {loading ? renderSkeleton() : renderCertificateContent()}
@@ -293,27 +280,43 @@ export default function StudentCertificate() {
         ) : (
           <>
             <Button
+              variant="contained"
+              onClick={printReceipt}
+              sx={{
+                bgcolor: '#000',
+                color: '#FFF',
+                borderRadius: '100px',
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
+                '&:hover': { bgcolor: '#222', transform: 'translateY(-2px)' },
+                transition: 'all 0.2s'
+              }}
+            >
+              Print Receipt
+            </Button>
+            <Button
               variant="outlined"
               onClick={downloadPdf}
               disabled={downloading}
               sx={{
-                borderRadius: '8px',
+                borderRadius: '100px',
                 color: '#000',
-                borderColor: '#000',
+                borderColor: '#E2E8F0',
                 bgcolor: '#FFF',
                 fontWeight: 700,
-                px: 3,
-                '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' }
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-2px)' },
+                '&.Mui-disabled': { color: '#64748B', borderColor: '#E2E8F0', bgcolor: '#FFF', opacity: 0.8 },
+                transition: 'all 0.2s'
               }}
             >
-              {downloading ? "DOWNLOADING..." : "DOWNLOAD PDF"}
-            </Button>
-            <Button
-              variant="contained"
-              onClick={printReceipt}
-              sx={{ bgcolor: '#000', color: '#FFF', borderRadius: '8px', fontWeight: 700, px: 3, '&:hover': { bgcolor: '#222' } }}
-            >
-              PRINT RECEIPT
+              {downloading ? "Downloading..." : "Download PDF"}
             </Button>
           </>
         )}
@@ -373,13 +376,9 @@ export default function StudentCertificate() {
               position: "relative",
               width: 850,
               minHeight: 600,
-              bgcolor: "#fff",
-              borderRadius: "4px",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+              bgcolor: "#F9FAFB",
               overflow: "hidden",
               display: "flex",
-              border: "12px solid #fff",
-              outline: "1px solid #e2e8f0"
             }}
           >
             {renderCertificateContent()}

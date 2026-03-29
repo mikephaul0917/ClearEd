@@ -263,7 +263,6 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         {/* "As a student" Section */}
                                         {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard')) && (
                                             <Box mt={1} mb={0.5}>
-                                                {officerOrgs.length === 0 && <Divider sx={{ my: 1 }} />}
                                                 <Box 
                                                     display="flex" 
                                                     alignItems="center" 
@@ -367,7 +366,6 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                 </Collapse>
                                             </Box>
                                         )}
-                                        <Divider sx={{ my: 1 }} />
                                     </React.Fragment>
                                 );
                             }

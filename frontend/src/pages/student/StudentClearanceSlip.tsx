@@ -78,16 +78,6 @@ export default function StudentClearanceSlip() {
 
   const renderCertificateContent = () => (
     <>
-      {/* Subtle Pattern Background Overlay */}
-      <Box sx={{
-        position: "absolute",
-        inset: 0,
-        opacity: 0.05,
-        pointerEvents: "none",
-        background: "radial-gradient(#000 0.5px, transparent 0.5px)",
-        backgroundSize: "20px 20px"
-      }} />
-
       {/* Left Vertical Banner */}
       <Box sx={{
         width: 70,
@@ -117,7 +107,7 @@ export default function StudentClearanceSlip() {
             userSelect: "none"
           }}
         >
-          Certificate
+          Clearance
         </Typography>
       </Box>
 
@@ -216,25 +206,25 @@ export default function StudentClearanceSlip() {
       </Box>
     </>
   );
-  
+
   const renderSkeleton = () => (
-    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#fff", position: "relative" }}>
+    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#F9FAFB", position: "relative" }}>
       {/* Left Skeleton Banner */}
-      <Skeleton 
-        variant="rectangular" 
-        width={70} 
-        height="100%" 
-        sx={{ bgcolor: "#f1f5f9", animationDuration: "1.5s" }} 
+      <Skeleton
+        variant="rectangular"
+        width={70}
+        height="100%"
+        sx={{ bgcolor: "#f1f5f9", animationDuration: "1.5s" }}
       />
-      
+
       {/* Main Content Skeleton Area */}
       <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Skeleton width="30%" height={24} sx={{ mb: 2, borderRadius: "4px" }} />
         <Skeleton width="60%" height={80} sx={{ mb: 0.5, borderRadius: "8px" }} />
         <Skeleton width="40%" height={32} sx={{ mb: 2, borderRadius: "6px" }} />
-        
+
         <Skeleton width="85%" height={80} sx={{ mb: 2, borderRadius: "8px" }} />
-        
+
         <Box sx={{ width: "100%", mt: "auto" }}>
           <Skeleton width="20%" height={20} sx={{ mb: 1.5, borderRadius: "4px" }} />
           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, width: "100%" }}>
@@ -266,6 +256,7 @@ export default function StudentClearanceSlip() {
       alignItems: "center",
       justifyContent: "flex-start",
       overflow: "auto",
+      bgcolor: "#F9FAFB",
       pt: 0,
       pb: 4
     }}>
@@ -299,13 +290,9 @@ export default function StudentClearanceSlip() {
             position: "relative",
             width: 850,
             minHeight: 600,
-            bgcolor: "#fff",
-            borderRadius: "4px",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            bgcolor: "#F9FAFB",
             overflow: "hidden",
             display: "flex",
-            border: "12px solid #fff",
-            outline: "1px solid #e2e8f0"
           }}
         >
           {loading ? renderSkeleton() : renderCertificateContent()}
@@ -344,27 +331,43 @@ export default function StudentClearanceSlip() {
         ) : (
           <>
             <Button
+              variant="contained"
+              onClick={printSlip}
+              sx={{
+                bgcolor: '#000',
+                color: '#FFF',
+                borderRadius: '100px',
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
+                '&:hover': { bgcolor: '#222', transform: 'translateY(-2px)' },
+                transition: 'all 0.2s'
+              }}
+            >
+              Print Clearance Slip
+            </Button>
+            <Button
               variant="outlined"
               disabled={submittingDean || finalClearance !== null}
               onClick={handleSubmitToDean}
               sx={{
-                borderRadius: '8px',
+                borderRadius: '100px',
                 color: '#000',
-                borderColor: '#000',
+                borderColor: '#E2E8F0',
                 bgcolor: '#FFF',
                 fontWeight: 700,
-                '&:hover': { bgcolor: '#f5f5f5', borderColor: '#000' },
-                '&.Mui-disabled': { color: '#000', borderColor: '#000', bgcolor: '#FFF', opacity: 0.7 }
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-2px)' },
+                '&.Mui-disabled': { color: '#64748B', borderColor: '#E2E8F0', bgcolor: '#FFF', opacity: 0.8 },
+                transition: 'all 0.2s'
               }}
             >
-              {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'DEAN APPROVED' : finalClearance ? 'SUBMITTED TO DEAN' : 'SUBMIT TO DEAN'}
-            </Button>
-            <Button
-              variant="contained"
-              onClick={printSlip}
-              sx={{ bgcolor: '#000', color: '#FFF', borderRadius: '8px', fontWeight: 700, px: 3, '&:hover': { bgcolor: '#222' } }}
-            >
-              Print Clearance Slip
+              {submittingDean ? 'Submitting...' : finalClearance?.status === 'approved' ? 'Dean Approved' : finalClearance ? 'Submitted to Dean' : 'Submit to Dean'}
             </Button>
           </>
         )}
@@ -422,22 +425,9 @@ export default function StudentClearanceSlip() {
         <Box sx={{ position: "relative", transform: "scale(1.3)", transformOrigin: "center" }}>
           {/* We repeat the slip content here but scaled up. 
               The transform property makes it 30% larger as requested. */}
-          <Box
-            sx={{
-              position: "relative",
-              width: 850,
-              minHeight: 600,
-              bgcolor: "#fff",
-              borderRadius: "4px",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-              overflow: "hidden",
-              display: "flex",
-              border: "12px solid #fff",
-              outline: "1px solid #e2e8f0"
-            }}
-          >
-            {renderCertificateContent()}
-          </Box>
+
+          {renderCertificateContent()}
+
         </Box>
       </Dialog>
     </Box>

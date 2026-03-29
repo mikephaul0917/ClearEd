@@ -62,6 +62,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 sx={{
                     width: "100%",
                     maxWidth: 320,
+                    mx: 'auto',
                     aspectRatio: "1/1",
                     cursor: "pointer",
                     position: "relative",
@@ -206,18 +207,23 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             sx={{
                                 px: 3,
                                 py: 1,
-                                bgcolor: "#F3F4F6",
-                                borderRadius: "20px",
+                                bgcolor: "#FFFFFF",
+                                borderRadius: "100px",
+                                border: "1px solid #E5E7EB",
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                transition: "all 0.2s ease",
+                                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.04)",
+                                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                cursor: "pointer",
                                 "&:hover": {
-                                    bgcolor: "#E5E7EB"
+                                    bgcolor: "#FAFAFA",
+                                    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.08)",
+                                    transform: "translateY(-1px)"
                                 }
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#000000", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
                                 Learn more
                             </Typography>
                         </Box>
@@ -226,14 +232,14 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 px: 3,
                                 py: 1,
                                 flex: 1,
-                                bgcolor: "#F3F4F6",
+                                bgcolor: "rgba(176, 224, 230, 0.2)",
                                 borderRadius: "20px",
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", textTransform: 'capitalize' }}>
+                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#0D9488", fontFamily: "'Inter', sans-serif", textTransform: 'capitalize' }}>
                                 {role}
                             </Typography>
                         </Box>

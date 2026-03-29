@@ -395,7 +395,7 @@ const RegisterPage = () => {
                                     border: "none",
                                     borderRadius: "100px",
                                     fontSize: "15px",
-                                    fontWeight: 700,
+                                    fontWeight: 500,
                                     cursor: isLoading ? "not-allowed" : "pointer",
                                     boxShadow: "0 15px 35px rgba(0, 0, 0, 0.22)",
                                     display: "flex",

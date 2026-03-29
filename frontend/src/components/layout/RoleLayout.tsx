@@ -24,7 +24,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                     isLoading={true}
                     navItems={[]}
                 />
-                <Box flex={1} p={4} sx={{ backgroundColor: "#fbfbfb" }}>
+                <Box flex={1} p={4} sx={{ backgroundColor: "#F9FAFB" }}>
                     {/* Main content loading state could be here */}
                 </Box>
             </Box>
@@ -57,7 +57,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                 component="main"
                 flex={1}
                 sx={{
-                    backgroundColor: bgcolor || "#FBFBFB",
+                    backgroundColor: bgcolor || "#F9FAFB",
                     p: { xs: 2, md: 4 },
                     mt: { xs: "64px", md: 0 }, // Offset for fixed mobile header
                     overflowX: "hidden"
