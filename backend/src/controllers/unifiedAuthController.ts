@@ -94,7 +94,7 @@ export const unifiedLogin = async (req: Request, res: Response) => {
       }
 
       const valid = await bcrypt.compare(password, existingUser.password);
-      if (!valid) return res.status(401).json({ message: "Invalid credentials" });
+      if (!valid) return res.status(401).json({ message: "Invalid email or password" });
 
       const token = jwt.sign(
         {
@@ -137,20 +137,25 @@ export const unifiedLogin = async (req: Request, res: Response) => {
       });
 
     } else {
-      // 6. First-time Student Auto-Enrollment
+      // 6. First-time Student Registration (Explicitly requested)
+      if (!req.body.isRegister) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
       if (!institution.settings?.allowStudentRegistration) {
         return res.status(403).json({ message: "Self-enrollment is disabled for your institution." });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 12);
+      // Model handles password hashing via pre-save hook
       const newUser = await User.create({
         email: email.toLowerCase(),
-        password: hashedPassword,
+        password: password,
         fullName: email.split('@')[0],
         role: 'student',
         institutionId: institution._id,
         status: 'active',
-        enabled: true
+        enabled: true,
+        emailVerified: true // Auto-verified for institutional domains
       });
 
       const token = jwt.sign(

@@ -72,9 +72,9 @@ export const SettingsField: React.FC<SettingsFieldProps> = ({ label, children, f
 
 export const SettingsRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <Grid container spacing={4}>
+    <Grid container spacing={{ xs: 3, md: 4 }}>
       {React.Children.map(children, (child) => (
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} md={6}>
           {child}
         </Grid>
       ))}
@@ -166,21 +166,18 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
 };
 
 export const SettingsContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const theme = useTheme();
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
     <Box sx={{
       maxWidth: '850px',
       mx: 'auto',
-      px: isSmallMobile ? 2 : 4,
-      pt: isSmallMobile ? 2 : 4,
-      pb: isSmallMobile ? 4 : 8,
+      px: { xs: 1.5, sm: 3, md: 4 },
+      pt: { xs: 2, md: 4 },
+      pb: { xs: 4, md: 8 },
     }}>
       <Box sx={{
         bgcolor: '#FFF',
         borderRadius: '24px',
-        p: { xs: 3, md: 4 },
+        p: { xs: 2.5, sm: 3, md: 4 },
         boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
         border: '1px solid #F8FAFC'
       }}>

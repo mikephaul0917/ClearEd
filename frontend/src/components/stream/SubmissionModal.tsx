@@ -245,7 +245,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                     <Button
                         disabled
                         variant="contained"
-                        sx={{ bgcolor: "#10B981 !important", color: "white !important", borderRadius: 2, px: 4, textTransform: "none" }}
+                        sx={{ bgcolor: "rgba(176, 224, 230, 0.4) !important", color: "#0E7490 !important", borderRadius: 2, px: 4, textTransform: "none", fontWeight: 700 }}
                     >
                         Approved
                     </Button>

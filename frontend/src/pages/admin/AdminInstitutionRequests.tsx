@@ -60,7 +60,7 @@ interface RequestStats {
 const STATUS_COLORS = {
   PENDING_VERIFICATION: '#f59e0b',
   PENDING_APPROVAL: '#3b82f6',
-  APPROVED: '#10b981',
+  APPROVED: '#5EEAD4',
   REJECTED: '#ef4444',
   RETURNED_FOR_CLARIFICATION: '#8b5cf6'
 };
@@ -242,7 +242,7 @@ export default function AdminInstitutionRequests({
           { label: 'Total Requests', value: stats.total, color: '#0F172A' },
           { label: 'Pending Verification', value: stats.byStatus.PENDING_VERIFICATION || 0, color: '#f59e0b' },
           { label: 'Pending Approval', value: stats.byStatus.PENDING_APPROVAL || 0, color: '#3b82f6' },
-          { label: 'This Month', value: stats.thisMonth, color: '#10b981' }
+          { label: 'This Month', value: stats.thisMonth, color: '#5EEAD4' }
         ].map((s) => (
           <Paper key={s.label} sx={{ p: 2, textAlign: 'center' }}>
             {loading ? (
@@ -669,9 +669,9 @@ export default function AdminInstitutionRequests({
               transition: 'all 0.2s ease',
               display: 'flex', gap: 1, alignItems: 'center',
               ...(actionType === 'approve' ? {
-                backgroundColor: actionState === 'success' ? '#10b981' : '#0a0a0a',
+                backgroundColor: actionState === 'success' ? '#5EEAD4' : '#0a0a0a',
                 color: '#FFFFFF',
-                '&:hover': { backgroundColor: actionState === 'success' ? '#10b981' : '#222' }
+                '&:hover': { backgroundColor: actionState === 'success' ? '#5EEAD4' : '#222' }
               } : actionType === 'reject' ? {
                 ...(actionState === 'success' ? {
                   backgroundColor: '#EF4444',
@@ -684,12 +684,12 @@ export default function AdminInstitutionRequests({
                   '&:hover': { backgroundColor: '#FEF2F2', borderColor: '#DC2626' }
                 })
               } : {
-                backgroundColor: actionState === 'success' ? '#10b981' : '#0a0a0a',
+                backgroundColor: actionState === 'success' ? '#5EEAD4' : '#0a0a0a',
                 color: '#FFFFFF',
-                '&:hover': { backgroundColor: actionState === 'success' ? '#10b981' : '#222' }
+                '&:hover': { backgroundColor: actionState === 'success' ? '#5EEAD4' : '#222' }
               }),
               '&.Mui-disabled': {
-                backgroundColor: actionState === 'success' ? (actionType === 'reject' ? '#EF4444' : '#10b981') : (actionType === 'approve' || actionType === 'clarify' ? '#E2E8F0' : 'transparent'),
+                backgroundColor: actionState === 'success' ? (actionType === 'reject' ? '#EF4444' : '#5EEAD4') : (actionType === 'approve' || actionType === 'clarify' ? '#E2E8F0' : 'transparent'),
                 color: actionState === 'success' ? '#FFFFFF' : '#94A3B8',
                 border: actionState === 'success' ? 'none' : (actionType === 'reject' ? '1.5px solid #E2E8F0' : 'none')
               }

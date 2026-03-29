@@ -47,21 +47,23 @@ api.interceptors.response.use(
         const status = error.response?.status;
 
         if (status === 401) {
-            console.warn('Unauthorized! Logging out...');
-            // Clear token to prevent loops
-            localStorage.removeItem('token');
-            localStorage.removeItem('authToken');
+            const isLoginRequest = error.config?.url?.includes('/login');
+            
+            if (!isLoginRequest) {
+                console.warn('Unauthorized! Logging out...');
+                // Clear token to prevent loops
+                localStorage.removeItem('token');
+                localStorage.removeItem('authToken');
 
-            Swal.fire({
-                icon: 'error',
-                title: 'Session Expired',
-                text: 'Please log in again to continue.',
-                confirmButtonColor: '#3085d6',
-            }).then(() => {
-                window.dispatchEvent(new Event('auth:unauthorized'));
-                // As a fallback redirect if event listener is missing
-                // window.location.href = '/login'; 
-            });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Session Expired',
+                    text: 'Please log in again to continue.',
+                    confirmButtonColor: '#3085d6',
+                }).then(() => {
+                    window.dispatchEvent(new Event('auth:unauthorized'));
+                });
+            }
         } else if (status === 403) {
             console.error('Forbidden! You do not have permission.');
             Swal.fire({

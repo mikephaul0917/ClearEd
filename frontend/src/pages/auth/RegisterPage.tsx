@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import AuthenticationOverlay from "../../components/AuthenticationOverlay";
 import { InlineSpinner, spinnerStyles } from "../../components/ui/LoadingSpinner";
 import { formatErrorForDisplay } from "../../utils/errorMessages";
+import GlassButton from "./liquid-glass";
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
@@ -41,6 +42,7 @@ const RegisterPage = () => {
     const [showAuthOverlay, setShowAuthOverlay] = useState(false);
     const [quote, setQuote] = useState<Quote | null>(null);
     const [focusField, setFocusField] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const fetchQuote = async () => {
@@ -63,35 +65,40 @@ const RegisterPage = () => {
             ...formData,
             [name]: type === 'checkbox' ? checked : value
         });
+        // Clear errors for this field when typing
+        if (errors[name]) {
+            const newErrors = { ...errors };
+            delete newErrors[name];
+            setErrors(newErrors);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.email || !formData.password) {
-            Swal.fire({
-                icon: "warning",
-                title: "Required Fields",
-                text: "Please enter your email and password.",
-                confirmButtonColor: C.black,
-            });
-            return;
-        }
+        if (!formData.email || !formData.password) return;
 
         setIsLoading(true);
         try {
-            const success = await login(formData.email.toLowerCase(), formData.password);
+            const success = await login(
+                formData.email.toLowerCase(),
+                formData.password,
+                false,
+                false // Registration disabled on this flow
+            );
             if (success) {
                 setShowAuthOverlay(true);
             } else {
-                throw new Error("Login failed. Please check your credentials.");
+                setErrors({
+                    email: "Invalid email or password",
+                    password: "Invalid email or password"
+                });
             }
         } catch (error: any) {
             const errorInfo = formatErrorForDisplay(error);
-            Swal.fire({
-                icon: "error",
-                title: errorInfo.title,
-                text: errorInfo.message,
-                confirmButtonColor: C.black,
+            // Targeted inline errors instead of popups
+            setErrors({
+                email: errorInfo.message,
+                password: errorInfo.message
             });
         } finally {
             setIsLoading(false);
@@ -103,32 +110,65 @@ const RegisterPage = () => {
         navigate("/role-selection");
     };
 
-    const inputContainerStyle = {
-        marginBottom: "32px",
+    const inputContainerStyle: React.CSSProperties = {
+        position: "relative",
+        marginBottom: "36px",
+        width: "100%",
     };
 
-    const labelStyle = (fieldName: string): React.CSSProperties => ({
-        display: "block",
-        fontFamily: C.font,
-        fontSize: "14px",
-        fontWeight: 500,
-        color: C.black,
-        marginBottom: "8px",
-    });
+    const labelStyle = (name: string): React.CSSProperties => {
+        const hasError = !!errors?.[name];
+        const isFocused = focusField === name;
+        const hasValue = !!formData[name as keyof typeof formData];
+        const isFloating = isFocused || hasValue;
 
-    const inputStyle = (fieldName: string): React.CSSProperties => ({
-        width: "100%",
-        fontFamily: C.font,
-        fontSize: "16px",
-        backgroundColor: C.white,
-        border: `1px solid ${focusField === fieldName ? C.black : "#E2E8F0"}`,
-        borderRadius: "12px",
-        padding: "12px 16px",
-        outline: "none",
-        transition: "border-color 0.2s ease",
-        color: C.black,
-        boxSizing: "border-box",
-    });
+        return {
+            position: "absolute",
+            left: "14px",
+            top: isFloating ? "-10px" : "16px",
+            fontSize: isFloating ? "12px" : "15px",
+            color: hasError ? "#DC2626" : (isFocused ? C.black : "#64748B"),
+            backgroundColor: isFloating ? "white" : "transparent",
+            padding: "0 6px",
+            pointerEvents: "none",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            zIndex: 3,
+            fontWeight: isFloating ? 700 : 400,
+            fontFamily: C.font,
+        };
+    };
+
+    const inputStyle = (name: string): React.CSSProperties => {
+        const hasError = !!errors?.[name];
+        const isFocused = focusField === name;
+        const hasValue = !!formData[name as keyof typeof formData];
+
+        return {
+            width: "100%",
+            height: "54px",
+            padding: "16px 20px",
+            fontSize: "15px",
+            fontFamily: C.font,
+            backgroundColor: "white",
+            border: `1.5px solid ${hasError ? "#DC2626" : (isFocused ? C.black : "#E2E8F0")}`,
+            borderRadius: "14px",
+            outline: "none",
+            transition: "all 0.2s ease",
+            color: C.black,
+            boxShadow: (isFocused && !hasError) ? `0 0 0 4px rgba(0, 0, 0, 0.05)` : "none",
+            boxSizing: "border-box",
+        };
+    };
+
+    const errorMsgStyle: React.CSSProperties = {
+        fontSize: "12px",
+        color: "#DC2626",
+        marginTop: "6px",
+        marginLeft: "14px",
+        fontWeight: 500,
+        fontStyle: "italic",
+        display: "block"
+    };
 
     return (
         <motion.div
@@ -154,7 +194,7 @@ const RegisterPage = () => {
             {/* ── Left Side: Inspiration ── */}
             <div className="register-quote-side" style={{
                 flex: 1,
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "#F6F6F6",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -226,122 +266,154 @@ const RegisterPage = () => {
                 backgroundColor: "#F9FAFB",
             }}>
                 <div style={{ width: "100%", maxWidth: "440px" }}>
-                    <div className="register-form-header" style={{ textAlign: "center", marginBottom: "64px" }}>
+                    <div className="register-form-header" style={{ textAlign: "center", marginBottom: "48px" }}>
                         <h1 className="register-welcome-title" style={{
-                            margin: "0 0 0px",
+                            fontSize: "34px",
                             fontWeight: 700,
-                            fontSize: "32px",
-                            letterSpacing: "-0.025em",
-                            color: "#111827",
+                            letterSpacing: "-0.03em",
+                            lineHeight: "1.0",
+                            color: C.black,
+                            marginBottom: "12px"
                         }}>
                             Welcome back
                         </h1>
                         <p className="register-welcome-subtitle" style={{
-                            margin: 0,
                             fontSize: "16px",
-                            color: "#6B7280",
+                            color: "#64748B",
                             fontWeight: 400,
+                            lineHeight: "1.0",
+                            maxWidth: "500px",
+                            margin: "0 auto"
                         }}>
-                            Let's get you back to learning
+                            Access your e-clearance dashboard.
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} noValidate>
-                        <div style={inputContainerStyle}>
-                            <label style={labelStyle("email")}>Email address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                placeholder="Enter your email"
-                                autoComplete="off"
-                                disabled={isLoading}
-                                onChange={handleInputChange}
-                                onFocus={() => setFocusField("email")}
-                                onBlur={() => setFocusField(null)}
-                                style={inputStyle("email")}
-                            />
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ marginBottom: "24px" }}>
+                            <div style={inputContainerStyle}>
+                                <label style={labelStyle("email")}>Email address</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    autoComplete="off"
+                                    disabled={isLoading}
+                                    onChange={handleInputChange}
+                                    onFocus={() => setFocusField("email")}
+                                    onBlur={() => setFocusField(null)}
+                                    style={inputStyle("email")}
+                                    required
+                                />
+                                {errors.email && <span style={errorMsgStyle}>{errors.email}</span>}
+                            </div>
                         </div>
 
-                        <div style={inputContainerStyle}>
-                            <label style={labelStyle("password")}>Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                placeholder="Enter your password"
-                                autoComplete="new-password"
-                                disabled={isLoading}
-                                onChange={handleInputChange}
-                                onFocus={() => setFocusField("password")}
-                                onBlur={() => setFocusField(null)}
-                                style={inputStyle("password")}
-                            />
+                        <div style={{ marginBottom: "24px" }}>
+                            <div style={inputContainerStyle}>
+                                <label style={labelStyle("password")}>Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    autoComplete="new-password"
+                                    disabled={isLoading}
+                                    onChange={handleInputChange}
+                                    onFocus={() => setFocusField("password")}
+                                    onBlur={() => setFocusField(null)}
+                                    style={inputStyle("password")}
+                                    required
+                                />
+                                {errors.password && <span style={errorMsgStyle}>{errors.password}</span>}
+                            </div>
                         </div>
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", color: "#4B5563", fontWeight: 400 }}>
-                                <input
-                                    type="checkbox"
-                                    name="rememberMe"
-                                    checked={formData.rememberMe}
-                                    onChange={handleInputChange}
-                                    style={{ cursor: "pointer" }}
-                                />
-                                Remember me
-                            </label>
-                            <a href="#" style={{ fontSize: "14px", fontWeight: 500, color: C.black, textDecoration: "none" }}>
+                            <div
+                                onClick={() => setFormData(prev => ({ ...prev, rememberMe: !prev.rememberMe }))}
+                                style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none" }}
+                            >
+                                <motion.div
+                                    animate={{
+                                        backgroundColor: formData.rememberMe ? C.black : "transparent",
+                                        borderColor: formData.rememberMe ? C.black : "#E2E8F0"
+                                    }}
+                                    transition={{ duration: 0.2 }}
+                                    style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        border: "2px solid",
+                                        borderRadius: "6px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        overflow: "hidden"
+                                    }}
+                                >
+                                    {formData.rememberMe && (
+                                        <motion.svg
+                                            initial={{ scale: 0.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 12 12"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M2 6L5 9L10 3"
+                                                stroke="white"
+                                                strokeWidth="2.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </motion.svg>
+                                    )}
+                                </motion.div>
+                                <span style={{ fontSize: "14px", color: "#64748B", fontWeight: 500 }}>
+                                    Remember me
+                                </span>
+                            </div>
+                            <a href="#" style={{ fontSize: "14px", color: C.black, fontWeight: 600, textDecoration: "none" }}>
                                 Forgot password?
                             </a>
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            style={{
-                                width: "100%",
-                                fontSize: "15px",
-                                fontWeight: 500,
-                                color: C.white,
-                                backgroundColor: C.black,
-                                border: "1px solid #000000",
-                                borderRadius: "100px",
-                                padding: "14px",
-                                cursor: isLoading ? "not-allowed" : "pointer",
-                                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                                marginBottom: "0px",
-                                boxShadow: "0 8px 16px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)",
-                                transform: "translateY(0)"
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.backgroundColor = "#222";
-                                e.currentTarget.style.transform = "translateY(-1px)";
-                                e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.15)";
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.backgroundColor = C.black;
-                                e.currentTarget.style.transform = "translateY(0)";
-                                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)";
-                            }}
-                        >
-                            {isLoading ? (
-                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span>Signing in</span>
-                                    <motion.span
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                                    >.</motion.span>
-                                    <motion.span
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                                    >.</motion.span>
-                                    <motion.span
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                                    >.</motion.span>
-                                </div>
-                            ) : "Sign in"}
-                        </button>
+                        <div style={{ marginBottom: "24px" }}>
+                            <motion.button
+                                type="submit"
+                                disabled={isLoading}
+                                whileHover={!isLoading ? {
+                                    y: -3,
+                                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)'
+                                } : {}}
+                                whileTap={!isLoading ? { scale: 0.98 } : {}}
+                                style={{
+                                    width: "100%",
+                                    height: "48px",
+                                    backgroundColor: C.black,
+                                    color: C.white,
+                                    border: "none",
+                                    borderRadius: "100px",
+                                    fontSize: "15px",
+                                    fontWeight: 700,
+                                    cursor: isLoading ? "not-allowed" : "pointer",
+                                    boxShadow: "0 15px 35px rgba(0, 0, 0, 0.22)",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                            >
+                                {isLoading ? (
+                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
+                                        <span>Signing in</span>
+                                        <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }}>.</motion.span>
+                                        <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}>.</motion.span>
+                                        <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}>.</motion.span>
+                                    </div>
+                                ) : "Sign in"}
+                            </motion.button>
+                        </div>
                     </form>
 
                     {/* Google Sign In Section */}
@@ -351,46 +423,20 @@ const RegisterPage = () => {
                         <div style={{ flex: 1, height: "1px", backgroundColor: "#E2E8F0" }} />
                     </div>
 
-                    <button
-                        type="button"
-                        style={{
-                            width: "100%",
-                            fontSize: "15px",
-                            fontWeight: 500,
-                            color: C.black,
-                            backgroundColor: C.white,
-                            border: "3px solid #FFFFFF",
-                            borderRadius: "100px",
-                            padding: "11px",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "10px",
-                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                            boxShadow: "0 8px 16px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04)",
-                            transform: "translateY(0)"
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = "#F9FAFB";
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                            e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.08), 0 6px 10px rgba(0,0,0,0.06)";
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = C.white;
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04)";
-                        }}
+                    <GlassButton
+                        variant="default"
+                        size="md"
+                        onClick={() => {/* Google login logic would go here */ }}
                     >
-                        {/* Placeholder for Google Icon */}
+                        {/* Google Icon */}
                         <svg width="20" height="20" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        sign in with google
-                    </button>
+                        Sign in with Google
+                    </GlassButton>
                 </div>
             </div>
 

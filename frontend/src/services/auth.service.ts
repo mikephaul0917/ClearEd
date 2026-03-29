@@ -1,9 +1,9 @@
 import { api } from './api';
 
 export const authService = {
-    login: async (email: string, password: string, isSuperAdmin = false) => {
+    login: async (email: string, password: string, isSuperAdmin = false, isRegister = false) => {
         const endpoint = isSuperAdmin ? '/auth/super-admin/login' : '/auth/login';
-        const response = await api.post(endpoint, { email, password });
+        const response = await api.post(endpoint, { email, password, isRegister });
         return response.data;
     },
 

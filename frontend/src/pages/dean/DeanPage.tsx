@@ -566,18 +566,18 @@ export default function DeanPage() {
       if (isBulk) {
         setActionState('loading');
         setSignatureModalOpen(false);
-        
+
         // Sequential API calls for bulk approval
         const currentSelected = [...selectedIds];
         let processedCount = 0;
-        
+
         for (const id of currentSelected) {
           const student = readyRows.find(r => r.id === id);
           if (student) {
             try {
-              await api.post("/dean/final-approval", { 
-                studentId: student.studentId, 
-                signatureUrl: signatureData 
+              await api.post("/dean/final-approval", {
+                studentId: student.studentId,
+                signatureUrl: signatureData
               });
               processedCount++;
             } catch (e) {
@@ -595,7 +595,7 @@ export default function DeanPage() {
           setSelectedIds([]);
           setActionState('idle');
         }, 800);
-        
+
       } else {
         setActionRowId(studentToApprove.id);
         setActionState('loading');
@@ -726,8 +726,8 @@ export default function DeanPage() {
       )}
       {active === "final" ? (
         <>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
-            <Box sx={{ mb: 2 }}>
+          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between" gap={2} mb={4}>
+            <Box sx={{ mb: { xs: 0, md: 2 }, width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: 'center' }}>
               <Box sx={{
                 position: 'relative',
                 display: 'inline-flex',
@@ -788,7 +788,7 @@ export default function DeanPage() {
                 })}
               </Box>
             </Box>
-            <Box display="flex" gap={1.5}>
+            <Box display="flex" flexWrap="wrap" gap={1.5} justifyContent={{ xs: 'center', md: 'flex-end' }}>
               <Button
                 variant="outlined"
                 onClick={handleExport}
@@ -903,10 +903,10 @@ export default function DeanPage() {
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #10B981', bgcolor: '#ECFDF5' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #0D9488', bgcolor: '#ECFDF5' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             </Box>
-                            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#10B981' }}>
+                            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0D9488' }}>
                               {card.trend} <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, ml: 0.5 }}>{card.lastWeekValue} last week</Box>
                             </Typography>
                           </Box>
@@ -1030,27 +1030,34 @@ export default function DeanPage() {
                           dateInputRef.current?.showPicker();
                         }
                       }}
-                      sx={{ 
-                        textTransform: 'none', 
-                        borderRadius: '8px', 
-                        bgcolor: filterDate ? '#f3e8ff' : 'transparent', 
-                        color: filterDate ? '#7e22ce' : '#64748B', 
-                        borderColor: filterDate ? '#e9d5ff' : '#D1D5DB', 
-                        fontWeight: 600, 
-                        fontSize: '0.8125rem', 
-                        px: 2, 
-                        height: 36, 
-                        '&:hover': { 
-                          bgcolor: filterDate ? '#e9d5ff' : '#F9FAFB',
-                          borderColor: '#e9d5ff'
-                        } 
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        bgcolor: filterDate ? 'rgba(176, 224, 230, 0.2)' : 'transparent',
+                        color: filterDate ? '#0E7490' : '#64748B',
+                        borderColor: filterDate ? '#9cd2d9' : '#D1D5DB',
+                        fontWeight: 600,
+                        fontSize: '0.8125rem',
+                        px: 2,
+                        height: 36,
+                        '&:hover': {
+                          bgcolor: filterDate ? 'rgba(176, 224, 230, 0.35)' : '#F9FAFB',
+                          borderColor: '#9cd2d9'
+                        }
                       }}
                     >
                       {filterDate || "All time"}
                       <input
                         type="date"
                         ref={dateInputRef}
-                        style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                        style={{
+                          opacity: 0,
+                          position: 'absolute',
+                          top: 0, left: 0, right: 0, bottom: 0,
+                          width: '100%', height: '100%',
+                          pointerEvents: 'none',
+                          border: 'none', padding: 0, margin: 0
+                        }}
                         onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
                       />
                     </Button>
@@ -1060,11 +1067,11 @@ export default function DeanPage() {
                       value={filterCourse}
                       onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
                       sx={{
-                        minWidth: 140, height: 36, bgcolor: '#f3e8ff', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#7e22ce',
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' },
-                        '& .MuiSvgIcon-root': { color: '#7e22ce' }
+                        minWidth: 140, height: 36, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0E7490',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
+                        '& .MuiSvgIcon-root': { color: '#0E7490' }
                       }}
                     >
                       <MenuItem value="" sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>All Courses</MenuItem>
@@ -1074,19 +1081,19 @@ export default function DeanPage() {
                       variant="outlined"
                       onClick={(e) => setMoreAnchor(e.currentTarget)}
                       startIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>}
-                      sx={{ 
-                        textTransform: 'none', 
-                        borderRadius: '8px', 
-                        color: filterYear ? '#7e22ce' : '#374151', 
-                        bgcolor: filterYear ? '#f3e8ff' : 'transparent', 
-                        borderColor: filterYear ? '#e9d5ff' : '#D1D5DB', 
-                        fontWeight: 600, 
-                        fontSize: '0.8125rem', 
-                        px: 2, 
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        color: filterYear ? '#0E7490' : '#374151',
+                        bgcolor: filterYear ? 'rgba(176, 224, 230, 0.2)' : 'transparent',
+                        borderColor: filterYear ? '#9cd2d9' : '#D1D5DB',
+                        fontWeight: 600,
+                        fontSize: '0.8125rem',
+                        px: 2,
                         height: 36,
                         '&:hover': {
-                          borderColor: '#e9d5ff',
-                          bgcolor: filterYear ? '#f3e8ff' : '#F9FAFB'
+                          borderColor: '#9cd2d9',
+                          bgcolor: filterYear ? 'rgba(176, 224, 230, 0.35)' : '#F9FAFB'
                         }
                       }}
                     >
@@ -1136,15 +1143,16 @@ export default function DeanPage() {
                     size="small"
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-                    sx={{ 
-                      width: 280, 
-                      '& .MuiOutlinedInput-root': { 
-                        borderRadius: '8px', 
-                        bgcolor: '#FFF', 
+                    sx={{
+                      width: { xs: '100%', sm: 280 },
+                      flexShrink: 0,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px',
+                        bgcolor: '#FFF',
                         height: 40,
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff', borderWidth: '2px' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e9d5ff' }
-                      } 
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9', borderWidth: '2px' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' }
+                      }
                     }}
                     InputProps={{
                       startAdornment: (
@@ -1156,7 +1164,7 @@ export default function DeanPage() {
                   />
                 </Box>
 
-                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflowX: 'auto', bgcolor: '#FFF' }}>
                   <Table>
                     <TableHead sx={{ bgcolor: '#F9FAFB' }}>
                       <TableRow sx={{ borderBottom: '1px solid #E5E7EB' }}>
@@ -1184,11 +1192,9 @@ export default function DeanPage() {
                             checkedIcon={
                               <Box sx={{
                                 width: 26, height: 26, borderRadius: '8px',
-                                background: 'linear-gradient(160deg, #2D3748 0%, #111827 60%, #0D1117 100%)',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+                                bgcolor: '#000',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                                '&:hover': { transform: 'scale(1.08)' }
                               }}>
                                 <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
                                   <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1198,13 +1204,12 @@ export default function DeanPage() {
                             indeterminateIcon={
                               <Box sx={{
                                 width: 26, height: 26, borderRadius: '8px',
-                                background: 'linear-gradient(160deg, #7af0e0 0%, #0d9488 60%, #45d6be 100%)',
-                                boxShadow: '0 4px 10px rgba(94,234,212,0.4), 0 1px 3px rgba(94,234,212,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
+                                bgcolor: '#5eead4',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                               }}>
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2.5 6H9.5" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" />
+                                  <path d="M2.5 6H9.5" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />
                                 </svg>
                               </Box>
                             }
@@ -1244,8 +1249,7 @@ export default function DeanPage() {
                               checkedIcon={
                                 <Box sx={{
                                   width: 26, height: 26, borderRadius: '8px',
-                                  background: 'linear-gradient(160deg, #2D3748 0%, #111827 60%, #0D1117 100%)',
-                                  boxShadow: '0 4px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)',
+                                  bgcolor: '#000',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                                 }}>
@@ -1274,10 +1278,10 @@ export default function DeanPage() {
                           <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box sx={{
                               display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px',
-                              bgcolor: filterStatus === "approved" ? "#F0FDF4" : "#fef08a"
+                              bgcolor: filterStatus === "approved" ? "rgba(176, 224, 230, 0.2)" : "#fef08a"
                             }}>
-                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#22C55E" : "#eab308" }} />
-                              <Typography sx={{ color: filterStatus === "approved" ? "#166534" : "#854d0e", fontSize: '0.75rem', fontWeight: 600 }}>
+                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#0E7490" : "#eab308" }} />
+                              <Typography sx={{ color: filterStatus === "approved" ? "#0E7490" : "#854d0e", fontSize: '0.75rem', fontWeight: 600 }}>
                                 {filterStatus === "approved" ? "Approved" : "Pending"}
                               </Typography>
                             </Box>
@@ -1341,8 +1345,8 @@ export default function DeanPage() {
                           <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Tooltip title={`${Math.round((r.reqCompleted / r.reqTotal) * 100)}% Complete (${r.reqCompleted}/${r.reqTotal})`} arrow>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', cursor: 'pointer' }}>
-                                <Box sx={{ flex: 1, height: 8, bgcolor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
-                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#10B981', borderRadius: '4px' }} />
+                                <Box sx={{ flex: 1, height: 8, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#B0E0E6', borderRadius: '4px' }} />
                                 </Box>
                               </Box>
                             </Tooltip>
@@ -1360,7 +1364,7 @@ export default function DeanPage() {
                                     {actionState === 'loading' && actionRowId === r.id ? (
                                       <CircularProgress size={16} color="inherit" />
                                     ) : actionState === 'success' && actionRowId === r.id ? (
-                                      <CheckIcon sx={{ fontSize: 18, color: '#10B981' }} />
+                                      <CheckIcon sx={{ fontSize: 18, color: '#5EEAD4' }} />
                                     ) : (
                                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                     )}
@@ -1377,7 +1381,7 @@ export default function DeanPage() {
                                     {actionState === 'loading' && actionRowId === r.id ? (
                                       <CircularProgress size={16} color="inherit" />
                                     ) : actionState === 'success' && actionRowId === r.id ? (
-                                      <CheckIcon sx={{ fontSize: 18, color: '#10B981' }} />
+                                      <CheckIcon sx={{ fontSize: 18, color: '#5EEAD4' }} />
                                     ) : (
                                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                                     )}
@@ -1555,7 +1559,7 @@ export default function DeanPage() {
                 value={filterCourse}
                 onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
                 disableUnderline
-                sx={{ minWidth: 200, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
+                sx={{ minWidth: 200, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#0E7490', fontWeight: 600, border: '1px solid #9cd2d9', transition: 'all 0.2s', '&:hover': { borderColor: '#8bcbd4', bgcolor: 'rgba(176, 224, 230, 0.35)' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#0E7490' } }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Courses</em></MenuItem>
                 {COURSES.map(c => (<MenuItem key={c} value={c} sx={{ fontSize: '0.875rem' }}>{getCourseLabel(c)}</MenuItem>))}
@@ -1566,7 +1570,7 @@ export default function DeanPage() {
                 value={filterYear}
                 onChange={(e) => { setFilterYear(e.target.value as string); setPage(0); }}
                 disableUnderline
-                sx={{ minWidth: 160, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
+                sx={{ minWidth: 160, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#0E7490', fontWeight: 600, border: '1px solid #9cd2d9', transition: 'all 0.2s', '&:hover': { borderColor: '#8bcbd4', bgcolor: 'rgba(176, 224, 230, 0.35)' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#0E7490' } }}
               >
                 <MenuItem value="" sx={{ fontSize: '0.875rem' }}><em>All Year Levels</em></MenuItem>
                 {YEAR_LEVELS.map(y => (<MenuItem key={y} value={y} sx={{ fontSize: '0.875rem' }}>{y}</MenuItem>))}
@@ -1579,7 +1583,7 @@ export default function DeanPage() {
                 sx={{ minWidth: 160 }}
                 InputProps={{
                   disableUnderline: true,
-                  sx: { bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' } }
+                  sx: { bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#0E7490', fontWeight: 600, border: '1px solid #9cd2d9', transition: 'all 0.2s', '&:hover': { borderColor: '#8bcbd4', bgcolor: 'rgba(176, 224, 230, 0.35)' } }
                 }}
               />
               <Select
@@ -1587,7 +1591,7 @@ export default function DeanPage() {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
                 disableUnderline
-                sx={{ minWidth: 140, bgcolor: '#f3e8ff', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#7e22ce', fontWeight: 600, border: '1px solid #e9d5ff', transition: 'all 0.2s', '&:hover': { borderColor: '#d8b4fe' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#7e22ce' } }}
+                sx={{ minWidth: 140, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', color: '#0E7490', fontWeight: 600, border: '1px solid #9cd2d9', transition: 'all 0.2s', '&:hover': { borderColor: '#8bcbd4', bgcolor: 'rgba(176, 224, 230, 0.35)' }, '& .MuiSelect-select': { py: 0, '&:focus': { bgcolor: 'transparent' } }, '& .MuiSvgIcon-root': { color: '#0E7490' } }}
               >
                 <MenuItem value="newest" sx={{ fontSize: '0.875rem' }}>Newest First</MenuItem>
                 <MenuItem value="oldest" sx={{ fontSize: '0.875rem' }}>Oldest First</MenuItem>
@@ -1625,7 +1629,7 @@ export default function DeanPage() {
                         size="small"
                         sx={{
                           fontWeight: 700, fontSize: "0.65rem", height: 22,
-                          ...(r.status === "Approved" ? { bgcolor: "#F0FDF4", color: "#166534" } :
+                          ...(r.status === "Approved" ? { bgcolor: "rgba(176, 224, 230, 0.2)", color: "#0E7490" } :
                             r.status === "Rejected" ? { bgcolor: "#FEF2F2", color: "#EF4444" } :
                               { bgcolor: "#F8FAFC", color: "#64748B", border: "1px solid #E2E8F0" })
                         }}
@@ -1673,9 +1677,9 @@ export default function DeanPage() {
         <DeanFAQPage />
       ) : (
         <SettingsContainer>
-          <SettingsHeader 
-            title="Account Information" 
-            subtitle="Manage your administrative account settings" 
+          <SettingsHeader
+            title="Account Information"
+            subtitle="Manage your administrative account settings"
           />
 
           <SettingsSection>
@@ -1700,7 +1704,7 @@ export default function DeanPage() {
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField 
+              <SettingsField
                 label="First Name"
                 labelAction={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', opacity: 0.8, '&:hover': { opacity: 1 } }}>
@@ -1725,11 +1729,11 @@ export default function DeanPage() {
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField 
+              <SettingsField
                 label="Last Name"
                 labelAction={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#64748B' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Save</Typography>
                   </Box>
                 }
@@ -1755,14 +1759,14 @@ export default function DeanPage() {
 
           <SettingsSection>
             <SettingsRow>
-              <SettingsField 
+              <SettingsField
                 label="Email"
                 labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Verified</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Verified</Typography>
                   </Box>
                 }
               >
@@ -1783,13 +1787,13 @@ export default function DeanPage() {
                 />
               </SettingsField>
               <SettingsField label="Role Status" labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Active</Typography>
-                  </Box>
-                }>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Active</Typography>
+                </Box>
+              }>
                 <TextField
                   fullWidth
                   value="Dean of College"
@@ -1848,7 +1852,7 @@ export default function DeanPage() {
             </SettingsRow>
           </SettingsSection>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
             <Button
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
@@ -1902,7 +1906,7 @@ export default function DeanPage() {
               Student Status Overview
             </Typography>
             <Typography sx={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.4 }}>
-              Detailed record and organizational <br /> clearance tracking
+              Detailed record and organizational clearance tracking
             </Typography>
           </Box>
           <IconButton
@@ -2054,8 +2058,8 @@ export default function DeanPage() {
                                   height: 24,
                                   fontSize: '0.75rem',
                                   fontWeight: 700,
-                                  bgcolor: isCleared ? '#ECFDF5' : '#FEF2F2',
-                                  color: isCleared ? '#10B981' : '#EF4444',
+                                  bgcolor: isCleared ? 'rgba(176, 224, 230, 0.2)' : '#FEF2F2',
+                                  color: isCleared ? '#0E7490' : '#EF4444',
                                   borderRadius: '999px'
                                 }}
                               />
@@ -2127,42 +2131,40 @@ export default function DeanPage() {
           </AnimatePresence>
         </Box>
 
-        {/* Footer Action */}
-        <Box mt={4}>
-          <Button
-            fullWidth
-            onClick={() => {
-              if (filterStatus === 'pending' && detailsTab === 'progress') {
+        {/* Footer Action - Only show if it's the 'Finalize Now' button */}
+        {(filterStatus === 'pending' && detailsTab === 'progress') && (
+          <Box mt={4}>
+            <Button
+              fullWidth
+              onClick={() => {
                 setStudentToApprove(selected);
                 setSignatureModalOpen(true);
-              } else {
-                setSelected(null);
-              }
-            }}
-            variant="contained"
-            sx={{
-              borderRadius: '20px',
-              py: 2,
-              bgcolor: '#0F172A',
-              color: '#FFF',
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '1rem',
-              boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': {
-                bgcolor: '#1E293B',
-                boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
-                transform: 'translateY(-2px)'
-              },
-              '&:active': {
-                transform: 'translateY(0)'
-              }
-            }}
-          >
-            {(filterStatus === 'pending' && detailsTab === 'progress') ? 'Finalize Now' : 'Close Details'}
-          </Button>
-        </Box>
+              }}
+              variant="contained"
+              sx={{
+                borderRadius: '20px',
+                py: 2,
+                bgcolor: '#0F172A',
+                color: '#FFF',
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '1rem',
+                boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  bgcolor: '#1E293B',
+                  boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
+                  transform: 'translateY(-2px)'
+                },
+                '&:active': {
+                  transform: 'translateY(0)'
+                }
+              }}
+            >
+              Finalize Now
+            </Button>
+          </Box>
+        )}
       </Dialog>
 
       <SignatureModal

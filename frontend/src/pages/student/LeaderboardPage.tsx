@@ -224,8 +224,8 @@ export default function LeaderboardPage() {
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <Box sx={{
-                                            bgcolor: row.status === 'Cleared' ? '#DCFCE7' : '#FEF3C7',
-                                            color: row.status === 'Cleared' ? '#166534' : '#92400E',
+                                            bgcolor: row.status === 'Cleared' ? 'rgba(176, 224, 230, 0.2)' : '#FEF3C7',
+                                            color: row.status === 'Cleared' ? '#0E7490' : '#92400E',
                                             px: 1.5,
                                             py: 0.5,
                                             borderRadius: 2,

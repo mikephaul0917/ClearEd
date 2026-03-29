@@ -41,11 +41,11 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
               width: '100%',
               height: '100%',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 100%)',
+              background: '#B0E0E6',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(45, 212, 191, 0.4)',
+              boxShadow: '0 10px 30px rgba(176, 224, 230, 0.4)',
               zIndex: 2,
               position: 'relative'
             }}
@@ -79,7 +79,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
                 right: -15,
                 bottom: -15,
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(45, 212, 191, 0.3) 0%, rgba(45, 212, 191, 0) 70%)',
+                background: 'radial-gradient(circle, rgba(176, 224, 230, 0.4) 0%, rgba(176, 224, 230, 0) 70%)',
                 zIndex: 1
               }}
             />

@@ -257,7 +257,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
                         style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
                       />
                     ) : isApproved && (
-                      <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
+                      <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
                         [ DIGITALLY CLEARED ]
                       </Typography>
                     )}
@@ -283,7 +283,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
                     style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
                   />
                 ) : finalClearance?.status === 'approved' && (
-                  <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
+                  <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
                 )}
               </Box>
               <Box sx={{ borderBottom: "1.5px solid #0d9488", mt: 1, mb: 0.5 }} />
@@ -469,8 +469,8 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           </Grid>
           <Grid item xs={6} sm={3}>
             <Typography sx={{ color: COLORS.textSecondary, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', mb: 1 }}>Requirement Progress</Typography>
-            <Box sx={{ mt: 1, backgroundColor: "#F3F4F6", height: 10, borderRadius: 5 }}>
-              <Box sx={{ width: `${stats.percent}%`, height: 10, backgroundColor: COLORS.black, borderRadius: 5 }} />
+            <Box sx={{ mt: 1, backgroundColor: "rgba(176, 224, 230, 0.2)", height: 10, borderRadius: 5 }}>
+              <Box sx={{ width: `${stats.percent}%`, height: 10, backgroundColor: "#B0E0E6", borderRadius: 5 }} />
             </Box>
             <Typography sx={{ fontSize: 12, fontWeight: 700, mt: 1, color: COLORS.textSecondary }}>{stats.percent}% Completed</Typography>
           </Grid>

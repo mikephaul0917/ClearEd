@@ -140,7 +140,7 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                                             <LinearProgress 
                                                 variant="determinate" 
                                                 value={req.progress.total > 0 ? (req.progress.completed / req.progress.total) * 100 : 0} 
-                                                sx={{ height: 8, borderRadius: 4, bgcolor: '#e2e8f0', '& .MuiLinearProgress-bar': { bgcolor: '#10b981' } }}
+                                                sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(176, 224, 230, 0.2)', '& .MuiLinearProgress-bar': { bgcolor: '#B0E0E6' } }}
                                             />
                                         </Box>
                                         <Box sx={{ minWidth: 35 }}>
@@ -152,7 +152,7 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                                 </TableCell>
                                 <TableCell>
                                     {req.status === 'completed' && <Chip label="Finalized (Admin)" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 600 }} />}
-                                    {req.status === 'officer_cleared' && <Chip label="Cleared by Officer" size="small" sx={{ bgcolor: '#e0e7ff', color: '#3730a3', fontWeight: 600 }} />}
+                                    {req.status === 'officer_cleared' && <Chip label="Cleared by Officer" size="small" sx={{ bgcolor: 'rgba(176, 224, 230, 0.2)', color: '#0E7490', fontWeight: 700, fontSize: '0.65rem' }} />}
                                     {req.status === 'in_progress' && <Chip label="In Progress" size="small" sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600 }} />}
                                     {req.status === 'pending' && <Chip label="Pending" size="small" sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 600 }} />}
                                     {req.status === 'rejected' && <Chip label="Rejected" size="small" sx={{ bgcolor: '#fee2e2', color: '#991b1b', fontWeight: 600 }} />}

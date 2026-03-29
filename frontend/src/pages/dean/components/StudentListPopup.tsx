@@ -42,8 +42,8 @@ const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {
-    backgroundColor: '#10B981',
-    color: '#10B981',
+    backgroundColor: '#5EEAD4',
+    color: '#5EEAD4',
     boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
     width: '10px',
     height: '10px',

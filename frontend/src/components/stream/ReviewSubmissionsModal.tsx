@@ -150,7 +150,7 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                                             }}
                                         >
                                             <ListItemAvatar>
-                                                <Avatar sx={{ bgcolor: sub.status === 'approved' ? "#10B981" : "#64748B" }}>
+                                                <Avatar sx={{ bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.4)" : "#64748B" }}>
                                                     <PersonIcon />
                                                 </Avatar>
                                             </ListItemAvatar>
@@ -164,8 +164,8 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                                                             height: 16,
                                                             fontSize: 9,
                                                             mt: 0.5,
-                                                            bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
-                                                            color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
+                                                            bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.2)" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
+                                                            color: sub.status === 'approved' ? "#0E7490" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
                                                         }}
                                                     />
                                                 }

@@ -86,14 +86,14 @@ export default function FAQPage() {
                       py: 1.5,
                       borderRadius: "8px",
                       cursor: "pointer",
-                      backgroundColor: isActive ? "#f3e8ff" : "transparent",
-                      color: isActive ? "#7e22ce" : "#64748B",
+                      backgroundColor: isActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
+                      color: isActive ? "#0E7490" : "#64748B",
                       fontWeight: isActive ? 700 : 500,
                       fontSize: "0.95rem",
                       transition: "all 0.2s ease",
                       whiteSpace: "nowrap",
                       "&:hover": {
-                        backgroundColor: isActive ? "#f3e8ff" : "#F8FAFC",
+                        backgroundColor: isActive ? "rgba(176, 224, 230, 0.2)" : "#F8FAFC",
                       }
                     }}
                   >

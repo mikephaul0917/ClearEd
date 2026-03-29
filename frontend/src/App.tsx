@@ -101,10 +101,7 @@ export default function App() {
           <Route path="/officer/to-review" element={<ProtectedRoute allowedRoles={['officer']}><ToReviewPage /></ProtectedRoute>} />
 
           {/* Dean routes - all handled by DeanPage component with internal routing */}
-          <Route path="/dean" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
-          <Route path="/dean/approvals" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
-          <Route path="/dean/settings" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
-          <Route path="/dean/faqs" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
+          <Route path="/dean/*" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
 
           {/* Super Admin routes - all handled by SuperAdminPage component with internal routing */}
           <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />

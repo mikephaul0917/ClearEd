@@ -7,7 +7,7 @@ const C = {
   white: "#FFFFFF",
   black: "#000000",
   teal: "#5EEAD4",
-  lavender: "#D8B4FE",
+  blue: "#B0E0E6",
   yellow: "#FEF08A",
   cardRadius: "20px",
   pillRadius: "999px",
@@ -29,7 +29,7 @@ const cardBase = {
 // Small circular arrow button (bottom-right corner of interactive cards)
 function ArrowButton({ onClick, variant = 'black' }: { onClick?: () => void, variant?: 'black' | 'white' }) {
   const isWhite = variant === 'white';
-  
+
   return (
     <Box
       component="button"
@@ -50,11 +50,11 @@ function ArrowButton({ onClick, variant = 'black' }: { onClick?: () => void, var
         color: isWhite ? C.black : C.white,
         fontSize: 20,
         lineHeight: 1,
-        boxShadow: isWhite 
+        boxShadow: isWhite
           ? '0 10px 25px rgba(255,255,255,0.25), 0 4px 10px rgba(255,255,255,0.1)'
           : '0 10px 20px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.2)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        "&:hover": { 
+        "&:hover": {
           transform: "scale(1.1) translateY(-2px)",
           boxShadow: isWhite
             ? '0 15px 35px rgba(255,255,255,0.4), 0 8px 15px rgba(255,255,255,0.2)'
@@ -222,8 +222,8 @@ export default function HowItWorks() {
             <ArrowButton />
           </Box>
 
-          {/* Card 3 — Lavender (Approval process) */}
-          <Box sx={{ ...cardBase, backgroundColor: C.lavender, minHeight: 280 }}>
+          {/* Card 3 — Blue (Approval process) */}
+          <Box sx={{ ...cardBase, backgroundColor: C.blue, minHeight: 280 }}>
             <Tag label="Approval Process" />
             <Typography
               sx={{

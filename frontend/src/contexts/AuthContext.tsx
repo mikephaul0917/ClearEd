@@ -8,7 +8,7 @@ export interface AuthContextProps {
     user: AuthUser | null;
     token: string | null;
     loading: boolean;
-    login: (email: string, password: string, isSuperAdmin?: boolean) => Promise<boolean>;
+    login: (email: string, password: string, isSuperAdmin?: boolean, isRegister?: boolean) => Promise<boolean>;
     logout: () => void;
     mockLogin: (userData: any, mockToken: string) => void;
 }
@@ -126,10 +126,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [performLogout]);
 
-    const login = async (email: string, password: string, isSuperAdmin = false): Promise<boolean> => {
-        setLoading(true);
+    const login = async (email: string, password: string, isSuperAdmin = false, isRegister = false): Promise<boolean> => {
         try {
-            const data = await authService.login(email, password, isSuperAdmin);
+            const data = await authService.login(email, password, isSuperAdmin, isRegister);
             const { token: jwt, user: returnedUser } = data;
             const payload = decodeToken(jwt);
             if (!payload) throw new Error('Invalid token');
@@ -158,8 +157,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             console.error('Login failed:', error);
             return false;
-        } finally {
-            setLoading(false);
         }
     };
 

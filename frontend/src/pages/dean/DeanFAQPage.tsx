@@ -120,7 +120,7 @@ export default function DeanFAQPage() {
                       py: 1.5,
                       borderRadius: "8px",
                       cursor: "pointer",
-                      color: isActive ? "#7e22ce" : "#64748B",
+                      color: isActive ? "#0E7490" : "#64748B",
                       fontWeight: isActive ? 700 : 500,
                       fontSize: "0.95rem",
                       transition: "color 0.2s ease",
@@ -137,7 +137,7 @@ export default function DeanFAQPage() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: "#f3e8ff",
+                          backgroundColor: "rgba(176, 224, 230, 0.2)",
                           borderRadius: "8px",
                           zIndex: 0
                         }}
@@ -156,7 +156,7 @@ export default function DeanFAQPage() {
                         fontWeight: isActive ? 700 : 500,
                         fontSize: "0.95rem"
                       }}
-                      animate={{ color: isActive ? "#7e22ce" : "#64748B" }}
+                      animate={{ color: isActive ? "#0E7490" : "#64748B" }}
                       transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                     >
                       {cat.label}

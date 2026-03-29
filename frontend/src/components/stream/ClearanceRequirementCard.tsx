@@ -411,7 +411,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
         // Default requirements behavior
         switch (status) {
             case "approved":
-                return { label: "Approved", color: "#10B981", icon: <CheckCircleIcon sx={{ fontSize: 16 }} />, bgcolor: "#ECFDF5" };
+                return { label: "Approved", color: "#0E7490", icon: <CheckCircleIcon sx={{ fontSize: 16 }} />, bgcolor: "rgba(176, 224, 230, 0.2)" };
             case "pending":
                 return { label: "Pending", color: "#F59E0B", icon: <ScheduleIcon sx={{ fontSize: 16 }} />, bgcolor: "#FFFBEB" };
             case "rejected":

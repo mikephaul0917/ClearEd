@@ -752,7 +752,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                 Your submission
                                             </Typography>
                                             <Typography variant="body2" sx={{ 
-                                                color: requirement?.submission?.status === "approved" ? "#10B981" : 
+                                                color: requirement?.submission?.status === "approved" ? "#0E7490" : 
                                                        requirement?.submission?.status === "pending" ? "#188038" : 
                                                        requirement?.submission?.status === "rejected" ? "#EF4444" : 
                                                        (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "#d93025" : "#188038", 
@@ -1114,7 +1114,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                                             <Avatar 
                                                                                 src={getAbsoluteUrl(avatarSrc)}
                                                                                 sx={{ 
-                                                                                    bgcolor: sub.status === 'approved' ? "#10B981" : "#020617",
+                                                                                    bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.4)" : "#020617",
                                                                                     color: "#FFFFFF",
                                                                                     width: 40,
                                                                                     height: 40,
@@ -1135,8 +1135,8 @@ const RequirementDetailsPage: React.FC = () => {
                                                                                         height: 16,
                                                                                         fontSize: 9,
                                                                                         mt: 0.5,
-                                                                                        bgcolor: sub.status === 'approved' ? "#ECFDF5" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
-                                                                                        color: sub.status === 'approved' ? "#10B981" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
+                                                                                        bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.2)" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
+                                                                                        color: sub.status === 'approved' ? "#0E7490" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
                                                                                     }}
                                                                                 />
                                                                             }

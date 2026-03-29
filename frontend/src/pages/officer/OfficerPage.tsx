@@ -529,7 +529,7 @@ export default function OfficerPage() {
                 label="Last Name"
                 labelAction={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#64748B' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Save</Typography>
                   </Box>
                 }
@@ -558,11 +558,11 @@ export default function OfficerPage() {
               <SettingsField 
                 label="Email"
                 labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Verified</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Verified</Typography>
                   </Box>
                 }
               >
@@ -583,11 +583,11 @@ export default function OfficerPage() {
                 />
               </SettingsField>
               <SettingsField label="Account Type" labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Active</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Active</Typography>
                   </Box>
                 }>
                 <TextField

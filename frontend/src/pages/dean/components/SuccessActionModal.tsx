@@ -51,7 +51,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                       width: 160,
                       height: 160,
                       borderRadius: '50%',
-                      background: 'radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, rgba(20, 184, 166, 0) 70%)',
+                      background: 'radial-gradient(circle, rgba(176, 224, 230, 0.2) 0%, rgba(176, 224, 230, 0) 70%)',
                       filter: 'blur(16px)',
                       zIndex: 1
                     }}
@@ -65,8 +65,8 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                     width: 110,
                     height: 110,
                     borderRadius: '50%',
-                    bgcolor: 'rgba(20, 184, 166, 0.04)',
-                    border: '1px solid rgba(20, 184, 166, 0.08)',
+                    bgcolor: 'rgba(176, 224, 230, 0.1)',
+                    border: '1px solid rgba(176, 224, 230, 0.2)',
                     zIndex: 2
                   }}
                 />
@@ -78,14 +78,14 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                     width: 78,
                     height: 78,
                     borderRadius: '50%',
-                    bgcolor: '#2DD4BF', // Apple-style Teal
+                    bgcolor: '#B0E0E6', // Powder Blue
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '3px solid rgba(255, 255, 255, 0.15)', // Subtle rim
+                    border: '3px solid rgba(255, 255, 255, 0.3)', // Subtle rim
                     boxShadow: `
-                      0 10px 25px rgba(20, 184, 166, 0.35),
-                      inset 0 -4px 6px rgba(0, 0, 0, 0.08)
+                      0 10px 25px rgba(176, 224, 230, 0.4),
+                      inset 0 -4px 6px rgba(0, 0, 0, 0.05)
                     `,
                     zIndex: 3
                   }}

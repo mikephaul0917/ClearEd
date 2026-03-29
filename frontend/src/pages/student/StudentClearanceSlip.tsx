@@ -168,7 +168,7 @@ export default function StudentClearanceSlip() {
                         style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)", cursor: "pointer" }}
                       />
                     ) : isApproved && (
-                      <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
+                      <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
                         [ DIGITALLY CLEARED ]
                       </Typography>
                     )}
@@ -195,7 +195,7 @@ export default function StudentClearanceSlip() {
                   style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)", cursor: "pointer" }}
                 />
               ) : finalClearance?.status === "approved" && (
-                <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
+                <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
               )}
             </Box>
             <Box sx={{ borderBottom: "1.5px solid #0d9488", mt: 1, mb: 0.5 }} />
