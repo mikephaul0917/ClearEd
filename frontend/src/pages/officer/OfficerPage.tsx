@@ -30,7 +30,6 @@ import { api, authService } from '../../services';
 import { getInitials } from "../../utils/avatarUtils";
 import SuccessMessage from "../../components/SuccessMessage";
 import OfficerClassroomView from "../../components/officer/OfficerClassroomView";
-import RoleLayout from "../../components/layout/RoleLayout";
 import TodoPage from "../todo/TodoPage";
 import { EmptyState } from "../../components/layout/EmptyState";
 import { Skeleton, useTheme, useMediaQuery } from "@mui/material";
@@ -454,7 +453,7 @@ export default function OfficerPage() {
   const pendingWaiting = useMemo(() => rows.filter(r => (r.status || "Pending") === "Pending").length, [rows]);
 
   return (
-    <RoleLayout bgcolor="#f3f3f3">
+    <>
       {notice && (
         <SuccessMessage message={notice.message} variant={notice.variant} onClose={() => setNotice(null)} />
       )}
@@ -693,6 +692,6 @@ export default function OfficerPage() {
         onConfirm={handleConfirmPasswordUpdate}
         loading={passwordUpdateLoading}
       />
-    </RoleLayout>
+    </>
   );
 }

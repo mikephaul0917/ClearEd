@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getAbsoluteUrl } from "../../utils/avatarUtils";
 import Box from "@mui/material/Box";
@@ -171,25 +171,33 @@ const Sidebar: React.FC<SidebarProps> = ({
                 setMemberOrgs(members);
             }
         }).catch(err => console.error("Failed to fetch officer orgs for Nav", err));
-    }, []);
+    }, [role]);
 
-    let activeIndex = -1;
-    let maxLen = -1;
+    const { activeIndex } = useMemo(() => {
+        let index = -1;
+        let maxLen = -1;
 
-    navItems.forEach((item, index) => {
-        const isMatch = location.pathname === item.path ||
-            (item.path !== '/' && item.path !== '/home' && location.pathname.startsWith(item.path + '/'));
+        navItems.forEach((item, i) => {
+            const isMatch = location.pathname === item.path ||
+                (item.path !== '/' && item.path !== '/home' && location.pathname.startsWith(item.path + '/'));
 
-        // Prevent matching Home/dashboard for officer sub-routes which handle their own active styling
-        if (item.key === 'dashboard' && (location.pathname.startsWith('/officer/to-review') || location.pathname.startsWith('/organization/'))) {
-            return;
-        }
+            // Prevent matching Home/dashboard for officer sub-routes which handle their own active styling
+            if (item.key === 'dashboard' && (location.pathname.startsWith('/officer/to-review') || location.pathname.startsWith('/organization/'))) {
+                return;
+            }
 
-        if (isMatch && item.path.length > maxLen) {
-            maxLen = item.path.length;
-            activeIndex = index;
-        }
-    });
+            if (isMatch && item.path.length > maxLen) {
+                maxLen = item.path.length;
+                index = i;
+            }
+        });
+        return { activeIndex: index };
+    }, [location.pathname, navItems]);
+
+    const navVariants = {
+        active: { color: "#0E7490" },
+        inactive: { color: "#0F172A" }
+    };
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -378,7 +386,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' fill='%239CA3AF'><path d='M0 0h8l-4 6z'/></svg>")`,
                     },
                 }}>
-                    <LayoutGroup>
+                    <LayoutGroup id="sidebar-main-nav">
                         <Box display="flex" flexDirection="column" gap={0.5}>
                             {navItems.map((item, index) => {
                                 const isActive = index === activeIndex && !location.pathname.startsWith('/officer/to-review') && !location.pathname.startsWith('/organization/');
@@ -419,7 +427,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                         )}
                                         <motion.div
                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                            animate={{ color: isActive ? "#0E7490" : "#0F172A" }}
+                                            variants={navVariants}
+                                            initial={false}
+                                            animate={isActive ? "active" : "inactive"}
+                                            inherit={false}
                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                         >
                                             <Icon color="currentColor" />
@@ -471,7 +482,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 )}
                                                 <motion.div
                                                     style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                    animate={{ color: faqIsActive ? "#0E7490" : "#0F172A" }}
+                                                    variants={navVariants}
+                                                    initial={false}
+                                                    animate={faqIsActive ? "active" : "inactive"}
+                                                    inherit={false}
                                                     transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                 >
                                                     <FaqIcon color="currentColor" />
@@ -540,7 +554,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                 )}
                                                                 <motion.div
                                                                     style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                    animate={{ color: location.pathname === '/officer/to-review' ? "#0E7490" : "#0F172A" }}
+                                                                    variants={navVariants}
+                                                                    initial={false}
+                                                                    animate={location.pathname === '/officer/to-review' ? "active" : "inactive"}
+                                                                    inherit={false}
                                                                     transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                 >
                                                                     <FolderIcon color="currentColor" />
@@ -584,7 +601,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         )}
                                                                         <motion.div
                                                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                            animate={{ color: isOrgActive ? "#0E7490" : "#0F172A" }}
+                                                                            variants={navVariants}
+                                                                            initial={false}
+                                                                            animate={isOrgActive ? "active" : "inactive"}
+                                                                            inherit={false}
                                                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                         >
                                                                             <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: org.color || '#e2e8f0', color: '#1e293b' }}>
@@ -661,7 +681,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         )}
                                                                         <motion.div
                                                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                            animate={{ color: isLeaderboardActive ? "#0E7490" : "#0F172A" }}
+                                                                            variants={navVariants}
+                                                                            initial={false}
+                                                                            animate={isLeaderboardActive ? "active" : "inactive"}
+                                                                            inherit={false}
                                                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                         >
                                                                             {React.createElement(leaderboardNav.icon, { color: "currentColor" })}
@@ -708,7 +731,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         )}
                                                                         <motion.div
                                                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                            animate={{ color: isTodoActive ? "#0E7490" : "#0F172A" }}
+                                                                            variants={navVariants}
+                                                                            initial={false}
+                                                                            animate={isTodoActive ? "active" : "inactive"}
+                                                                            inherit={false}
                                                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                         >
                                                                             {React.createElement(todoNav.icon, { color: "currentColor" })}
@@ -752,7 +778,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         )}
                                                                         <motion.div
                                                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                            animate={{ color: location.pathname === '/student/progress' ? "#0E7490" : "#0F172A" }}
+                                                                            variants={navVariants}
+                                                                            initial={false}
+                                                                            animate={location.pathname === '/student/progress' ? "active" : "inactive"}
+                                                                            inherit={false}
                                                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                         >
                                                                             <IconBase color="currentColor" >
@@ -794,7 +823,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         )}
                                                                         <motion.div
                                                                             style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', width: '100%' }}
-                                                                            animate={{ color: location.pathname === '/student/certificate' ? "#0E7490" : "#0F172A" }}
+                                                                            variants={navVariants}
+                                                                            initial={false}
+                                                                            animate={location.pathname === '/student/certificate' ? "active" : "inactive"}
+                                                                            inherit={false}
                                                                             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                                                         >
                                                                             <IconBase color="currentColor" >

@@ -15,6 +15,7 @@ import AdminPage from "./pages/admin/AdminPage";
 import StudentPage from "./pages/student/StudentPage";
 import OfficerPage from "./pages/officer/OfficerPage";
 import DeanPage from "./pages/dean/DeanPage";
+import RoleLayout from "./components/layout/RoleLayout";
 import SuperAdminPage from "./pages/superadmin/SuperAdminPage";
 import HomePage from "./pages/public/HomePage";
 import ArchivedOrganizationsPage from "./pages/public/ArchivedOrganizationsPage";
@@ -69,54 +70,65 @@ export default function App() {
           <Route path="/verify-institution/:token" element={<VerifyInstitution />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
 
-          {/* Admin routes - all handled by AdminPage component with internal routing */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/organizations" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
+          {/* Admin routes - persistent layout */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']}><RoleLayout /></ProtectedRoute>}>
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/dashboard" element={<AdminPage />} />
+            <Route path="/admin/settings" element={<AdminPage />} />
+            <Route path="/admin/users" element={<AdminPage />} />
+            <Route path="/admin/organizations" element={<AdminPage />} />
+            <Route path="/admin/terms" element={<AdminPage />} />
+            <Route path="/admin/quotes" element={<AdminPage />} />
+            <Route path="/admin/records" element={<AdminPage />} />
+          </Route>
 
-          <Route path="/admin/terms" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/quotes" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/records" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
+          {/* Student routes - persistent layout */}
+          <Route element={<ProtectedRoute allowedRoles={['student', 'officer']}><RoleLayout /></ProtectedRoute>}>
+            <Route path="/student" element={<StudentPage />} />
+            <Route path="/student/dashboard" element={<StudentPage />} />
+            <Route path="/student/leaderboard" element={<StudentPage />} />
+            <Route path="/student/settings" element={<StudentPage />} />
+            <Route path="/student/slip" element={<StudentPage />} />
+            <Route path="/student/todo" element={<StudentPage />} />
+            <Route path="/student/requirements" element={<StudentPage />} />
+            <Route path="/student/progress" element={<StudentPage />} />
+            <Route path="/student/certificate" element={<StudentPage />} />
+            <Route path="/officer/to-review" element={<ToReviewPage />} />
+          </Route>
 
-          {/* Student routes - all handled by StudentPage component with internal routing (now tracking Officers as well!) */}
-          <Route path="/student" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/leaderboard" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/settings" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/slip" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/todo" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/requirements" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/progress" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
-          <Route path="/student/certificate" element={<ProtectedRoute allowedRoles={['student', 'officer']}><StudentPage /></ProtectedRoute>} />
+          {/* Officer/Signatory routes */}
+          <Route element={<ProtectedRoute allowedRoles={['officer']}><RoleLayout /></ProtectedRoute>}>
+            <Route path="/officer" element={<OfficerPage />} />
+            <Route path="/officer/todo" element={<OfficerPage />} />
+            <Route path="/officer/pending" element={<OfficerPage />} />
+            <Route path="/officer/review" element={<OfficerPage />} />
+            <Route path="/officer/remarks" element={<OfficerPage />} />
+            <Route path="/officer/settings" element={<OfficerPage />} />
+          </Route>
 
-          {/* Officer/Signatory routes - all handled by OfficerPage component with internal routing */}
-          <Route path="/officer" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/todo" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/pending" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/review" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/remarks" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/settings" element={<ProtectedRoute allowedRoles={['officer']}><OfficerPage /></ProtectedRoute>} />
-          <Route path="/officer/to-review" element={<ProtectedRoute allowedRoles={['officer']}><ToReviewPage /></ProtectedRoute>} />
+          {/* Dean routes - persistent layout */}
+          <Route element={<ProtectedRoute allowedRoles={['dean']}><RoleLayout /></ProtectedRoute>}>
+            <Route path="/dean/*" element={<DeanPage />} />
+          </Route>
 
-          {/* Dean routes - all handled by DeanPage component with internal routing */}
-          <Route path="/dean/*" element={<ProtectedRoute allowedRoles={['dean']}><DeanPage /></ProtectedRoute>} />
-
-          {/* Super Admin routes - all handled by SuperAdminPage component with internal routing */}
-          <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/dashboard" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/settings" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/institution-requests" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/institution-monitoring" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/institution-monitoring/:institutionId" element={<ProtectedRoute allowedRoles={['super_admin']}><InstitutionUsersPage /></ProtectedRoute>} />
-          <Route path="/super-admin/system-analytics" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/super-admin/announcements" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPage /></ProtectedRoute>} />
-          <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-          <Route path="/archived-organizations" element={<ProtectedRoute><ArchivedOrganizationsPage /></ProtectedRoute>} />
-          <Route path="/organization/:orgId" element={<ProtectedRoute><StreamPage /></ProtectedRoute>} />
-          <Route path="/organization/:orgId/requirement/:reqId" element={<ProtectedRoute><RequirementDetailsPage /></ProtectedRoute>} />
-          <Route path="/faqs" element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
+          {/* Super Admin routes - persistent layout */}
+          <Route element={<ProtectedRoute allowedRoles={['super_admin']}><RoleLayout /></ProtectedRoute>}>
+            <Route path="/super-admin" element={<SuperAdminPage />} />
+            <Route path="/super-admin/dashboard" element={<SuperAdminPage />} />
+            <Route path="/super-admin/settings" element={<SuperAdminPage />} />
+            <Route path="/super-admin/institution-requests" element={<SuperAdminPage />} />
+            <Route path="/super-admin/institution-monitoring" element={<SuperAdminPage />} />
+            <Route path="/super-admin/institution-monitoring/:institutionId" element={<InstitutionUsersPage />} />
+            <Route path="/super-admin/system-analytics" element={<SuperAdminPage />} />
+            <Route path="/super-admin/announcements" element={<SuperAdminPage />} />
+          </Route>
+          <Route element={<ProtectedRoute><RoleLayout /></ProtectedRoute>}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/archived-organizations" element={<ArchivedOrganizationsPage />} />
+            <Route path="/organization/:orgId" element={<StreamPage />} />
+            <Route path="/organization/:orgId/requirement/:reqId" element={<RequirementDetailsPage />} />
+            <Route path="/faqs" element={<FAQPage />} />
+          </Route>
         </Routes>
       </Box>
     </LoadingProvider>

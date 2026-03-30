@@ -33,7 +33,6 @@ import Dialog from "@mui/material/Dialog";
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-import RoleLayout from "../../components/layout/RoleLayout";
 import ClearanceRequirementCard from "../../components/stream/ClearanceRequirementCard";
 import SubmissionModal from "../../components/stream/SubmissionModal";
 import CreateRequirementModal from "../../components/stream/CreateRequirementModal";
@@ -274,27 +273,27 @@ const StreamPage: React.FC = () => {
 
     if (loading) {
         return (
-            <RoleLayout>
+            <>
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
                     <CircularProgress />
                 </Box>
-            </RoleLayout>
+            </>
         );
     }
 
     if (!org) {
         return (
-            <RoleLayout>
+            <>
                 <Container maxWidth="md" sx={{ mt: 8, textAlign: "center" }}>
                     <Typography variant="h5" color="text.secondary">Organization not found.</Typography>
                     <Button onClick={() => navigate("/home")} sx={{ mt: 2 }}>Back to Home</Button>
                 </Container>
-            </RoleLayout>
+            </>
         );
     }
 
     return (
-        <RoleLayout>
+        <>
             <Container maxWidth="lg">
                 {/* Organization Banner */}
                 <Paper
@@ -330,7 +329,7 @@ const StreamPage: React.FC = () => {
                                 )}
                             </Box>
                         </Box>
-                        {(isAdmin || isOfficer || (membership && membership.role === 'member')) && org.status !== 'archived' && (
+                        {(isAdmin || isOfficer) && org.status !== 'archived' && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 {isOfficer && (
                                     <Button
@@ -360,7 +359,7 @@ const StreamPage: React.FC = () => {
                                 </Tooltip>
                             </Box>
                         )}
-                        {(isAdmin || isOfficer || (membership && membership.role === 'member')) && org.status === 'archived' && (
+                        {(isAdmin || isOfficer) && org.status === 'archived' && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 {isOfficer && (
                                     <Button
@@ -785,7 +784,7 @@ const StreamPage: React.FC = () => {
                     </Box>
                 </Dialog>
             </Container>
-        </RoleLayout>
+        </>
     );
 };
 

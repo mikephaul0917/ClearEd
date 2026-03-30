@@ -4,7 +4,6 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
 import OrganizationBoard from "../../components/organization/OrganizationBoard";
 import { ArchiveBoxIcon } from "../../config/navConfig";
-import RoleLayout from "../../components/layout/RoleLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { organizationService } from "../../services";
 import { OrganizationCardProps } from "../../components/organization/OrganizationCard";
@@ -55,7 +54,7 @@ const ArchivedOrganizationsPage: React.FC = () => {
     if (!user) return null;
 
     return (
-        <RoleLayout>
+        <>
             <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 4 } }}>
                 <OrganizationBoard
                     organizations={organizations}
@@ -70,7 +69,7 @@ const ArchivedOrganizationsPage: React.FC = () => {
                     iconColor="#475569"
                 />
             </Box>
-        </RoleLayout>
+        </>
     );
 };
 

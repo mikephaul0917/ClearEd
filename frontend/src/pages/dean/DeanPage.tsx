@@ -19,6 +19,7 @@ import DeanFAQPage from "./DeanFAQPage";
 import SuccessActionModal from "./components/SuccessActionModal";
 import RevokeApprovalModal from "./components/RevokeApprovalModal";
 import StudentListPopup from "./components/StudentListPopup";
+import ExportConfirmModal from "./components/ExportConfirmModal";
 import PasswordConfirmModal from "./components/PasswordConfirmModal";
 import InputAdornment from "@mui/material/InputAdornment";
 import Chip from "@mui/material/Chip";
@@ -41,7 +42,6 @@ import Tooltip from "@mui/material/Tooltip";
 import Menu from "@mui/material/Menu";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import RoleLayout from "../../components/layout/RoleLayout";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import CircularProgress from "@mui/material/CircularProgress";
 import CheckIcon from "@mui/icons-material/Check";
@@ -61,7 +61,6 @@ import {
 } from "../../components/layout/SettingsLayout";
 import SuccessModal from "../../components/SuccessModal";
 import { useTheme, useMediaQuery } from "@mui/material";
-import Swal from "sweetalert2";
 
 const COLORS = {
   black: '#0a0a0a',
@@ -302,6 +301,7 @@ export default function DeanPage() {
   const [popupSearch, setPopupSearch] = useState("");
   const [courseMenuAnchor, setCourseMenuAnchor] = useState<null | HTMLElement>(null);
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [studentToRevoke, setStudentToRevoke] = useState<any>(null);
   const [revokeLoading, setRevokeLoading] = useState(false);
   const [page, setPage] = useState(0);
@@ -455,20 +455,7 @@ export default function DeanPage() {
     }
 
     if (isFiltered) {
-      Swal.fire({
-        title: 'Export all students?',
-        text: `You haven't selected any students. Do you want to export all ${filteredReady.length} students in the current filtered view?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#000000',
-        cancelButtonColor: '#64748B',
-        confirmButtonText: 'Yes, export all',
-        cancelButtonText: 'No, cancel',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          generateCsv(dataToExport);
-        }
-      });
+      setExportModalOpen(true);
     } else {
       generateCsv(dataToExport);
     }
@@ -716,7 +703,7 @@ export default function DeanPage() {
   const studentGrowthPercent = currentTotal > lastWeekTotal ? Math.round(((currentTotal - lastWeekTotal) / lastWeekTotal) * 100) : 0;
 
   return (
-    <RoleLayout bgcolor="#F9FAFB">
+    <Box sx={{ bgcolor: "#F9FAFB", minHeight: '100vh' }}>
       {notice && (
         <Snackbar open={!!notice} autoHideDuration={6000} onClose={() => setNotice(null)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
           <Alert onClose={() => setNotice(null)} severity={notice.variant || 'info'} sx={{ width: '100%' }}>
@@ -2240,12 +2227,21 @@ export default function DeanPage() {
         studentName={studentToRevoke?.name}
         loading={revokeLoading}
       />
+      <ExportConfirmModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onConfirm={() => {
+          setExportModalOpen(false);
+          generateCsv(filteredReady);
+        }}
+        count={filteredReady.length}
+      />
       <PasswordConfirmModal
         open={passwordModalOpen}
         onClose={() => setPasswordModalOpen(false)}
         onConfirm={handleConfirmPasswordUpdate}
         loading={passwordUpdateLoading}
       />
-    </RoleLayout>
+    </Box>
   );
 }

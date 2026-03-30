@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import OrganizationBoard from "../../components/organization/OrganizationBoard";
 import JoinOrganizationModal from "../../components/organization/JoinOrganizationModal";
 import CreateOrganizationModal from "../../components/organization/CreateOrganizationModal";
-import RoleLayout from "../../components/layout/RoleLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { organizationService } from "../../services";
 import { OrganizationCardProps } from "../../components/organization/OrganizationCard";
@@ -67,7 +66,7 @@ const HomePage: React.FC = () => {
     if (!user) return null;
 
     return (
-        <RoleLayout>
+        <>
             <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 4 } }}>
                 <OrganizationBoard
                     organizations={organizations}
@@ -145,7 +144,7 @@ const HomePage: React.FC = () => {
                     onCreated={fetchOrgs}
                 />
             </Box>
-        </RoleLayout>
+        </>
     );
 };
 

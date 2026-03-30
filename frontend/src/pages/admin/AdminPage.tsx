@@ -4,7 +4,6 @@ import AdminTermsPage from "./AdminTermsPage";
 import AdminQuotesPage from "./AdminQuotesPage";
 import AdminRecordsPage from "./AdminRecordsPage";
 import UsersTable from "../../components/UsersTable";
-import RoleLayout from "../../components/layout/RoleLayout";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -311,7 +310,7 @@ export default function AdminPage() {
   };
 
   return (
-    <RoleLayout>
+    <>
       {notice && (
         <SuccessMessage
           message={notice.message}
@@ -954,6 +953,6 @@ export default function AdminPage() {
           {active === "institution-requests" && <AdminInstitutionRequests refreshTrigger={refreshTrigger} onLoadingChange={setChildLoading} />}
         </Box>
       )}
-    </RoleLayout>
+    </>
   );
 }

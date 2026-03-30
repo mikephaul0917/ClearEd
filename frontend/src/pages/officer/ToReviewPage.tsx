@@ -10,7 +10,6 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import LiveHelpIcon from "@mui/icons-material/LiveHelp";
 import BookIcon from "@mui/icons-material/Book";
-import RoleLayout from "../../components/layout/RoleLayout";
 import { api, organizationService } from "../../services";
 
 export default function ToReviewPage() {
@@ -141,7 +140,7 @@ export default function ToReviewPage() {
     };
 
     return (
-        <RoleLayout>
+        <>
             <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
                 <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
                     <Tabs
@@ -302,6 +301,6 @@ export default function ToReviewPage() {
                     ) : null}
                 </Box>
             </Container>
-        </RoleLayout>
+        </>
     );
 }

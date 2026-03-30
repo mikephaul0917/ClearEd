@@ -6,7 +6,6 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Divider from "@mui/material/Divider";
-import RoleLayout from "../components/layout/RoleLayout";
 import { useTheme, useMediaQuery } from "@mui/material";
 
 const FAQ_DATA = {
@@ -69,7 +68,7 @@ export default function FAQPage() {
   };
 
   return (
-    <RoleLayout>
+    <>
       <Box sx={{ maxWidth: 1200, ml: 0, pt: 4, pb: 8, pl: isMobile ? 2 : 0, pr: isMobile ? 2 : 6, mx: isMobile ? "auto" : 0 }}>
         <Box display="flex" flexDirection={isMobile ? "column" : "row"} gap={isMobile ? 4 : 20}>
 
@@ -210,6 +209,6 @@ export default function FAQPage() {
           </Box>
         </Box>
       </Box>
-    </RoleLayout>
+    </>
   );
 }

@@ -14,7 +14,6 @@ import StudentClearanceSlip from "./StudentClearanceSlip";
 import ClearanceRequirements from "../../components/student/ClearanceRequirements";
 import StudentProgress from "./StudentProgress";
 import StudentCertificate from "./StudentCertificate";
-import RoleLayout from "../../components/layout/RoleLayout";
 import TodoPage from "../todo/TodoPage";
 import LeaderboardPage from "./LeaderboardPage";
 import { Skeleton, Card, CardContent, useTheme, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
@@ -331,7 +330,7 @@ export default function StudentPage() {
   const reqOrg = (() => { try { const p = JSON.parse(localStorage.getItem("studentProfile") || "{}"); return !!p.reqOrgForm; } catch { return false; } })();
 
   return (
-    <RoleLayout bgcolor="#F9FAFB">
+    <>
       {notice && (
         <SuccessMessage
           message={notice.message}
@@ -880,6 +879,6 @@ export default function StudentPage() {
       ) : (
         <StudentCertificate />
       )}
-    </RoleLayout>
+    </>
   );
 }

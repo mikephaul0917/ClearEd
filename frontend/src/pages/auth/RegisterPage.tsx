@@ -29,6 +29,21 @@ interface Quote {
     author: string;
 }
 
+const APP_QUOTES: Quote[] = [
+    {
+        text: "The illiterate of the 21st century will not be those who cannot read and write, but those who cannot learn, unlearn, and relearn.",
+        author: "Alvin Toffler"
+    },
+    {
+        text: "Education is not preparation for life; education is life itself.",
+        author: "John Dewey"
+    },
+    {
+        text: "One child, one teacher, one book, one pen can change the world.",
+        author: "Malala Yousafzai"
+    }
+];
+
 const RegisterPage = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -40,7 +55,7 @@ const RegisterPage = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [showAuthOverlay, setShowAuthOverlay] = useState(false);
-    const [quote, setQuote] = useState<Quote | null>(null);
+    const [quote, setQuote] = useState<Quote>(() => APP_QUOTES[Math.floor(Math.random() * APP_QUOTES.length)]);
     const [focusField, setFocusField] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -48,12 +63,15 @@ const RegisterPage = () => {
         const fetchQuote = async () => {
             try {
                 const quotes = await authService.getPublicQuotes("login");
-                if (quotes && quotes.length > 0) {
-                    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                const allQuotes = [...APP_QUOTES, ...(quotes || [])];
+                if (allQuotes.length > 0) {
+                    const randomQuote = allQuotes[Math.floor(Math.random() * allQuotes.length)];
                     setQuote(randomQuote);
                 }
             } catch (error) {
                 console.error("Failed to fetch quotes:", error);
+                const randomQuote = APP_QUOTES[Math.floor(Math.random() * APP_QUOTES.length)];
+                setQuote(randomQuote);
             }
         };
         fetchQuote();
@@ -218,40 +236,23 @@ const RegisterPage = () => {
                         ❝
                     </div>
 
-                    {quote ? (
-                        <>
-                            <h2 className="register-quote-text" style={{
-                                fontSize: "36px",
-                                fontWeight: 700,
-                                lineHeight: 1.25,
-                                color: "#111827",
-                                marginBottom: "28px",
-                                letterSpacing: "-0.02em"
-                            }}>
-                                "{quote.text}"
-                            </h2>
-                            <p className="register-quote-author" style={{
-                                fontSize: "18px",
-                                color: "#4B5563",
-                                fontWeight: 400,
-                            }}>
-                                — {quote.author}
-                            </p>
-                        </>
-                    ) : (
-                        <h2 className="register-quote-text" style={{
-                            fontSize: "24px",
-                            fontWeight: 600,
-                            lineHeight: 1.25,
-                            color: "#111827",
-                            marginBottom: "20px",
-                            letterSpacing: "-0.02em"
-                        }}>
-                            "Programming isn't about what you know; it's about what you can figure out."
-                            <br />
-                            <span className="register-quote-author" style={{ fontSize: "18px", color: "#6B7280", fontWeight: 400, display: "block", marginTop: "16px" }}>— Chris Pine</span>
-                        </h2>
-                    )}
+                    <h2 className="register-quote-text" style={{
+                        fontSize: "24px",
+                        fontWeight: 600,
+                        lineHeight: 1.25,
+                        color: "#111827",
+                        marginBottom: "16px",
+                        letterSpacing: "-0.0125em"
+                    }}>
+                        "{quote.text}"
+                    </h2>
+                    <p className="register-quote-author" style={{
+                        fontSize: "18px",
+                        color: "#4B5563",
+                        fontWeight: 400,
+                    }}>
+                        - {quote.author}
+                    </p>
                 </div>
             </div>
 

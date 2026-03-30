@@ -237,8 +237,8 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-                <MenuItem onClick={handleEditClick}>Edit</MenuItem>
-                <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+                {onEdit && <MenuItem onClick={handleEditClick}>Edit</MenuItem>}
+                {onDelete && <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>}
                 <MenuItem onClick={handleCopyLink}>Copy link</MenuItem>
             </Menu>
             <Snackbar

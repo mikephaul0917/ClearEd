@@ -37,7 +37,6 @@ import Menu from "@mui/material/Menu";
 import Snackbar from "@mui/material/Snackbar";
 import CloseIcon from "@mui/icons-material/Close";
 
-import RoleLayout from "../../components/layout/RoleLayout";
 import CreateRequirementModal from "../../components/stream/CreateRequirementModal";
 import CreateFormModal from "../../components/stream/CreateFormModal";
 import CreatePollModal from "../../components/stream/CreatePollModal";
@@ -365,27 +364,27 @@ const RequirementDetailsPage: React.FC = () => {
 
     if (loading) {
         return (
-            <RoleLayout>
+            <>
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
                     <CircularProgress />
                 </Box>
-            </RoleLayout>
+            </>
         );
     }
 
     if (!requirement) {
         return (
-            <RoleLayout>
+            <>
                 <Container maxWidth="md" sx={{ mt: 8, textAlign: "center" }}>
                     <Typography variant="h5" color="text.secondary">Requirement not found.</Typography>
                     <Button onClick={() => navigate(`/organization/${orgId}`)} sx={{ mt: 2 }}>Back to Stream</Button>
                 </Container>
-            </RoleLayout>
+            </>
         );
     }
 
     return (
-        <RoleLayout>
+        <>
             <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
                 {requirement?.type !== 'material' && isOfficer && (
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -1479,7 +1478,7 @@ const RequirementDetailsPage: React.FC = () => {
                 </Box>
             </Container>
 
-        </RoleLayout>
+        </>
     );
 };
 

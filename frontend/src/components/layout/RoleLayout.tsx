@@ -1,12 +1,13 @@
 import React, { ReactNode } from "react";
 import Box from "@mui/material/Box";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Sidebar from "./Sidebar";
 import { NAV_CONFIG } from "../../config/navConfig";
 import { getInitials } from "../../utils/avatarUtils";
 
 interface RoleLayoutProps {
-    children: ReactNode;
+    children?: ReactNode;
     bgcolor?: string;
 }
 
@@ -63,7 +64,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                     overflowX: "hidden"
                 }}
             >
-                {children}
+                {children || <Outlet />}
             </Box>
         </Box>
     );

@@ -29,7 +29,6 @@ import InstitutionMonitoring from "./InstitutionMonitoring";
 import SystemAnalytics from "./SystemAnalytics";
 import AuditLogs from "./AuditLogs";
 import SuperAdminAnnouncements from "./SuperAdminAnnouncements";
-import RoleLayout from "../../components/layout/RoleLayout";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
@@ -839,8 +838,8 @@ export default function SuperAdminPage() {
   };
 
   return (
-    <RoleLayout>
+    <>
       {renderContent()}
-    </RoleLayout>
+    </>
   );
 }
