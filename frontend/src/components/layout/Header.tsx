@@ -53,15 +53,25 @@ export default function Header() {
       top: 0,
       left: 0,
       right: 0,
+      height: "60px",
+      display: "flex",
+      alignItems: "center",
       zIndex: 1200,
       borderBottom: "1px solid #E2E8F0",
       backgroundColor: "rgba(255,255,255,0.7)",
       backdropFilter: "saturate(180%) blur(8px)",
       boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
     }}>
-      <Container maxWidth="lg" sx={{ py: 1 }}>
+      <Container maxWidth="lg">
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box
+            component={RouterLink}
+            to="/"
+            display="flex"
+            alignItems="center"
+            gap={1.5}
+            sx={{ textDecoration: "none" }}
+          >
             <Box aria-hidden sx={{
               width: 24,
               height: 24,
@@ -70,25 +80,21 @@ export default function Header() {
               alignItems: "center",
               justifyContent: "center"
             }}>
-
               <img
                 src="/logo/logo.png"
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'contain',
-                  transform: 'scale(3)', // 1.4 makes it 40% larger than its natural "contain" size
+                  transform: 'scale(2.8)',
                 }}
                 alt="logo"
               />
-
             </Box>
             <Typography
-              component={RouterLink}
-              to="/register"
-              variant="h5"
+              variant="h6"
               sx={{
-                fontWeight: 700,
+                fontWeight: 600,
                 color: "#0F172A",
                 textDecoration: "none",
                 cursor: "pointer"
@@ -103,19 +109,19 @@ export default function Header() {
                 Logout
               </Button>
             ) : (
-              <Box 
+              <Box
                 onClick={() => {
                   // Small delay to let animation play
                   setTimeout(() => {
                     nav(isToggled ? "/register" : "/how-it-works");
                   }, 400);
                 }}
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 1.5, 
-                  bgcolor: '#F2F4F7', 
-                  borderRadius: '100px', 
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  bgcolor: '#F2F4F7',
+                  borderRadius: '100px',
                   p: '4px',
                   pr: isToggled ? 0.5 : 2.25,
                   pl: isToggled ? 2.25 : 0.5,
@@ -123,22 +129,22 @@ export default function Header() {
                   textDecoration: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': { 
+                  '&:hover': {
                     bgcolor: '#E5E7EB',
                     '& .inner-pill': { boxShadow: '0 4px 6px rgba(0,0,0,0.08)' },
                     '& .arrow-icon': { transform: isToggled ? 'translateX(-2px)' : 'translateX(2px)' }
                   }
                 }}
               >
-                <Box 
+                <Box
                   className="inner-pill"
-                  sx={{ 
-                    bgcolor: isToggled ? '#FFFFFF' : '#000000', 
-                    borderRadius: '100px', 
-                    px: 3, 
-                    py: 1.25, 
-                    color: isToggled ? '#000000' : '#FFFFFF', 
-                    fontWeight: 700, 
+                  sx={{
+                    bgcolor: isToggled ? '#FFFFFF' : '#000000',
+                    borderRadius: '100px',
+                    px: 3,
+                    py: 1.25,
+                    color: isToggled ? '#000000' : '#FFFFFF',
+                    fontWeight: 700,
                     fontSize: '0.875rem',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -146,14 +152,14 @@ export default function Header() {
                 >
                   {isToggled ? "Get Started" : "How It Works"}
                 </Box>
-                <ArrowForwardIcon 
-                  className="arrow-icon" 
-                  sx={{ 
-                    color: '#000000', 
-                    fontSize: '1.2rem', 
+                <ArrowForwardIcon
+                  className="arrow-icon"
+                  sx={{
+                    color: '#000000',
+                    fontSize: '1.2rem',
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     transform: isToggled ? 'rotate(180deg)' : 'none'
-                  }} 
+                  }}
                 />
               </Box>
             )}

@@ -18,6 +18,7 @@ import DeanPage from "./pages/dean/DeanPage";
 import RoleLayout from "./components/layout/RoleLayout";
 import SuperAdminPage from "./pages/superadmin/SuperAdminPage";
 import HomePage from "./pages/public/HomePage";
+import LandingPage from "./pages/public/LandingPage";
 import ArchivedOrganizationsPage from "./pages/public/ArchivedOrganizationsPage";
 import StreamPage from "./pages/stream/StreamPage";
 import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
@@ -37,8 +38,10 @@ import { GlobalLoader } from "./components/layout/GlobalLoader";
 export default function App() {
   const location = useLocation();
 
-  // Hide header for authenticated role-based pages and home page (they have their own navigation)
-  const showHeader = !(location.pathname.startsWith("/student") ||
+  // Hide header for authenticated role-based pages, home page, and landings
+  const showHeader = !(
+    location.pathname === "/" ||
+    location.pathname.startsWith("/student") ||
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/officer") ||
     location.pathname.startsWith("/dean") ||
@@ -48,7 +51,8 @@ export default function App() {
     location.pathname === "/archived-organizations" ||
     location.pathname === "/faqs" ||
     location.pathname === "/role-selection" ||
-    location.pathname === "/super-admin/login");
+    location.pathname === "/super-admin/login"
+  );
 
   return (
     <LoadingProvider>
@@ -59,7 +63,7 @@ export default function App() {
         <Routes>
 
           {/* Public authentication routes */}
-          <Route path="/" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/role-selection" element={<PublicRoute><RoleSelection /></PublicRoute>} />
