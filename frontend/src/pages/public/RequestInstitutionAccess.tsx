@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import SuccessActionModal from "../../components/SuccessActionModal";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -39,6 +40,7 @@ const ACADEMIC_DOMAIN_PATTERNS = [
 export default function RequestInstitutionAccess() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [formData, setFormData] = useState({
     institutionName: "",
     academicDomain: "",
@@ -179,22 +181,7 @@ export default function RequestInstitutionAccess() {
       const response = await publicApi.post('/institution-requests/submit', formData);
 
       if (response.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Request Submitted Successfully!",
-          html: `
-            <div>
-              <p>Thank you for your interest in E-Clearance!</p>
-              <p>We've sent a verification email to <strong>${formData.administratorEmail}</strong></p>
-              <p>Please check your inbox and click the verification link to complete your request.</p>
-              <p><small>Note: The verification link will expire in 24 hours.</small></p>
-            </div>
-          `,
-          confirmButtonText: "Got it!",
-          confirmButtonColor: "#0F172A"
-        }).then(() => {
-          navigate('/');
-        });
+        setIsSuccessOpen(true);
       } else {
         throw new Error(response.data.message || 'Failed to submit request');
       }
@@ -458,6 +445,13 @@ export default function RequestInstitutionAccess() {
           </Box>
         </Paper>
       </Box>
+      
+      <SuccessActionModal 
+        open={isSuccessOpen} 
+        onClose={() => navigate('/')}
+        title="Email Confirmation"
+        description={`We have sent an email to ${formData.administratorEmail} to confirm the validity of your administrative request. Please follow the link provided in that mail to complete your registration.`}
+      />
     </>
   );
 }

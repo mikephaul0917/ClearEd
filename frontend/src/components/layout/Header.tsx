@@ -56,7 +56,7 @@ export default function Header() {
       height: "60px",
       display: "flex",
       alignItems: "center",
-      zIndex: 1200,
+      zIndex: 1100,
       borderBottom: "1px solid #E2E8F0",
       backgroundColor: "rgba(255,255,255,0.7)",
       backdropFilter: "saturate(180%) blur(8px)",

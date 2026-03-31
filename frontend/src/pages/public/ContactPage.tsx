@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import SuccessActionModal from "../../components/SuccessActionModal";
 
 
 const C = {
@@ -23,6 +24,7 @@ const fadeInUp = {
 export default function ContactPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -38,15 +40,6 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.description) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation Error",
-        text: "Please fill out all required fields.",
-      });
-      return;
-    }
-
     if (isLoading) return;
     setIsLoading(true);
 
@@ -54,19 +47,13 @@ export default function ContactPage() {
       const response = await axios.post('http://localhost:5000/api/contact/submit', formData);
 
       if (response.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Message Sent!",
-          text: response.data.message,
-          confirmButtonColor: C.black
-        }).then(() => {
-          setFormData({
-            firstName: "",
-            lastName: "",
-            email: "",
-            service: "",
-            description: ""
-          });
+        setIsSuccessOpen(true);
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          service: "",
+          description: ""
         });
       } else {
         throw new Error(response.data.message);
@@ -131,17 +118,16 @@ export default function ContactPage() {
           {/* Right Column: Form */}
           <Grid item xs={12} md={7}>
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.4 }}>
-              <Box sx={{ mb: 4 }}>
+              <Box component="form" onSubmit={handleSubmit} sx={{ mb: 4 }}>
                 <Typography sx={{ fontSize: "14px", fontWeight: 700, mb: 2 }}>Name (required)</Typography>
                 <Grid container spacing={4}>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="First Name" variant="standard" sx={inputSx} value={formData.firstName} onChange={handleInputChange("firstName")} disabled={isLoading} />
+                    <TextField fullWidth label="First Name" variant="standard" sx={inputSx} value={formData.firstName} onChange={handleInputChange("firstName")} disabled={isLoading} required />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Last Name" variant="standard" sx={inputSx} value={formData.lastName} onChange={handleInputChange("lastName")} disabled={isLoading} />
+                    <TextField fullWidth label="Last Name" variant="standard" sx={inputSx} value={formData.lastName} onChange={handleInputChange("lastName")} disabled={isLoading} required />
                   </Grid>
                 </Grid>
-              </Box>
 
               <TextField
                 fullWidth
@@ -159,7 +145,7 @@ export default function ContactPage() {
                 <MenuItem value="Other">Other</MenuItem>
               </TextField>
 
-              <TextField fullWidth label="Email (required)" variant="standard" sx={inputSx} value={formData.email} onChange={handleInputChange("email")} disabled={isLoading} placeholder="Your institutional email" />
+              <TextField fullWidth label="Email (required)" variant="standard" sx={inputSx} value={formData.email} onChange={handleInputChange("email")} disabled={isLoading} required placeholder="Your institutional email" />
 
               <TextField
                 fullWidth
@@ -171,11 +157,12 @@ export default function ContactPage() {
                 value={formData.description}
                 onChange={handleInputChange("description")}
                 disabled={isLoading}
+                required
               />
 
               <Button
                 variant="contained"
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isLoading}
                 sx={{
                   bgcolor: C.black,
@@ -195,8 +182,8 @@ export default function ContactPage() {
               >
                 {isLoading ? "Sending..." : "Submit"}
               </Button>
-
-            </motion.div>
+            </Box>
+          </motion.div>
           </Grid>
         </Grid>
 
@@ -250,6 +237,13 @@ export default function ContactPage() {
           </Box>
         </Box>
       </Container>
+      
+      <SuccessActionModal 
+        open={isSuccessOpen} 
+        onClose={() => setIsSuccessOpen(false)}
+        title="Message Sent Successfully"
+        description="Thank you for reaching out! We've received your inquiry and will get back to you at your email address shortly."
+      />
     </Box>
   );
 }

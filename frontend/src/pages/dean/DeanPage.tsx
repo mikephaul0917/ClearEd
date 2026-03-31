@@ -16,7 +16,7 @@ import { api, authService } from '../../services';
 import { useEffect, useState, useMemo, useRef } from "react";
 import DeanApprovalsSimple from "../../components/dean/DeanApprovalsSimple";
 import DeanFAQPage from "./DeanFAQPage";
-import SuccessActionModal from "./components/SuccessActionModal";
+import SuccessActionModal from "../../components/SuccessActionModal";
 import RevokeApprovalModal from "./components/RevokeApprovalModal";
 import StudentListPopup from "./components/StudentListPopup";
 import ExportConfirmModal from "./components/ExportConfirmModal";
