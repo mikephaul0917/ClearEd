@@ -404,7 +404,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                             fontSize: 14,
                                             px: 2,
                                             height: 40,
-                                            borderRadius: "10px",
+                                            borderRadius: "12px",
                                             backgroundColor: "transparent",
                                         }}
                                     >
@@ -414,8 +414,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 style={{
                                                     position: 'absolute',
                                                     inset: 0,
-                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                    borderRadius: '10px',
+                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                    backdropFilter: 'blur(4px)',
+                                                    borderRadius: '12px',
+                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                     zIndex: 0
                                                 }}
                                                 transition={{
@@ -458,7 +460,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                     fontSize: 14,
                                                     px: 2,
                                                     height: 40,
-                                                    borderRadius: "10px",
+                                                    borderRadius: "12px",
                                                     backgroundColor: "transparent",
                                                     position: 'relative',
                                                 }}
@@ -469,8 +471,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                         style={{
                                                             position: 'absolute',
                                                             inset: 0,
-                                                            backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                            borderRadius: '10px',
+                                                            backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                            backdropFilter: 'blur(4px)',
+                                                            borderRadius: '12px',
+                                                            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                             zIndex: 0
                                                         }}
                                                         transition={{
@@ -530,7 +534,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                     fontSize: 14,
                                                                     px: 2,
                                                                     height: 40,
-                                                                    borderRadius: "10px",
+                                                                    borderRadius: "12px",
                                                                     backgroundColor: "transparent",
                                                                     position: 'relative',
                                                                 }}
@@ -541,8 +545,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                         style={{
                                                                             position: 'absolute',
                                                                             inset: 0,
-                                                                            backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                            borderRadius: '10px',
+                                                                            backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                            backdropFilter: 'blur(4px)',
+                                                                            borderRadius: '12px',
+                                                                            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                             zIndex: 0
                                                                         }}
                                                                         transition={{
@@ -577,7 +583,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -588,8 +594,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -657,7 +665,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -668,8 +676,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -707,7 +717,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -718,8 +728,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -754,7 +766,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -765,8 +777,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -799,7 +813,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -810,8 +824,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -851,7 +867,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                             fontSize: 14,
                                                                             px: 2,
                                                                             height: 40,
-                                                                            borderRadius: "10px",
+                                                                            borderRadius: "12px",
                                                                             backgroundColor: "transparent",
                                                                             position: 'relative',
                                                                         }}
@@ -862,8 +878,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                                 style={{
                                                                                     position: 'absolute',
                                                                                     inset: 0,
-                                                                                    backgroundColor: 'rgba(176, 224, 230, 0.2)',
-                                                                                    borderRadius: '10px',
+                                                                                    backgroundColor: 'rgba(45, 212, 191, 0.15)',
+                                                                                    backdropFilter: 'blur(4px)',
+                                                                                    borderRadius: '12px',
+                                                                                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.08)',
                                                                                     zIndex: 0
                                                                                 }}
                                                                                 transition={{
@@ -912,7 +930,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     fontWeight: 500,
                                     px: 2,
                                     height: 40,
-                                    borderRadius: "10px",
+                                    borderRadius: "12px",
                                     color: "#0F172A",
                                     "&:hover": { backgroundColor: "#F1F5F9" },
                                 }}

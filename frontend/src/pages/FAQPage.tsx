@@ -88,7 +88,7 @@ export default function FAQPage() {
                       cursor: "pointer",
                       whiteSpace: "nowrap",
                       fontSize: "0.95rem",
-                      borderRadius: "8px",
+                      borderRadius: "12px",
                       "&:hover": {
                         backgroundColor: isActive ? "transparent" : "#F8FAFC",
                       }
@@ -100,8 +100,10 @@ export default function FAQPage() {
                         style={{
                           position: "absolute",
                           inset: 0,
-                          backgroundColor: "rgba(176, 224, 230, 0.2)",
-                          borderRadius: "8px",
+                          backgroundColor: "rgba(45, 212, 191, 0.15)",
+                          backdropFilter: "blur(4px)",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(13, 148, 136, 0.08)",
                           zIndex: 0,
                         }}
                         transition={{

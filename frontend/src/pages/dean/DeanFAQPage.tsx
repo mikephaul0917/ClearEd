@@ -118,7 +118,7 @@ export default function DeanFAQPage() {
                       position: 'relative',
                       px: 3,
                       py: 1.5,
-                      borderRadius: "8px",
+                      borderRadius: "12px",
                       cursor: "pointer",
                       color: isActive ? "#0E7490" : "#64748B",
                       fontWeight: isActive ? 700 : 500,
@@ -137,8 +137,10 @@ export default function DeanFAQPage() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: "rgba(176, 224, 230, 0.2)",
-                          borderRadius: "8px",
+                          backgroundColor: "rgba(45, 212, 191, 0.15)",
+                          backdropFilter: "blur(4px)",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(13, 148, 136, 0.08)",
                           zIndex: 0
                         }}
                         transition={{

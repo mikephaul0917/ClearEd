@@ -39,6 +39,7 @@ export default function LegalPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   const type = pathname.substring(1); // 'terms', 'privacy', or 'cookies'
 
@@ -126,11 +127,47 @@ export default function LegalPage() {
 
         {!isMobile ? (
           <Box display="flex" alignItems="center" gap={5}>
-            {navLinks.map((link) => (
-              <Box key={link.label} onClick={() => handleNav(link)} sx={{ cursor: "pointer" }}>
-                <Typography sx={{ fontWeight: 600, fontSize: "14px", color: C.black, opacity: 0.6, transition: "opacity 0.3s ease", "&:hover": { opacity: 1 } }}>{link.label}</Typography>
-              </Box>
-            ))}
+            {navLinks.map((link) => {
+              const linkId = link.id || link.label;
+              const isIndicatorActive = hoveredTab === linkId;
+
+              return (
+                <Box 
+                  key={link.label} 
+                  onClick={() => handleNav(link)} 
+                  onMouseEnter={() => setHoveredTab(linkId)}
+                  onMouseLeave={() => setHoveredTab(null)}
+                  sx={{ position: "relative", cursor: "pointer", py: 0.5 }}
+                >
+                  <Typography 
+                    sx={{ 
+                      fontWeight: 600, 
+                      fontSize: "14px", 
+                      color: C.black, 
+                      opacity: isIndicatorActive ? 1 : 0.6, 
+                      transition: "opacity 0.3s ease",
+                    }}
+                  >
+                    {link.label}
+                  </Typography>
+                  {isIndicatorActive && (
+                    <motion.div
+                      layoutId="activeUnderline"
+                      style={{
+                        position: "absolute",
+                        bottom: -4,
+                        left: 0,
+                        right: 0,
+                        height: "2px",
+                        backgroundColor: C.black,
+                        borderRadius: "2px"
+                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         ) : (
           <IconButton onClick={() => setMobileOpen(true)}><MenuIcon /></IconButton>

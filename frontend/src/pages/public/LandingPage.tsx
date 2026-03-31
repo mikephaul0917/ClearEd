@@ -53,6 +53,7 @@ export default function LandingPage() {
   });
 
   const [activeTab, setActiveTab] = useState("hero");
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -199,44 +200,51 @@ export default function LandingPage() {
         {/* Desktop Nav */}
         {!isMobile ? (
           <Box display="flex" alignItems="center" gap={5}>
-            {navLinks.map((link) => (
-              <Box
-                key={link.label}
-                onClick={() => handleNav(link)}
-                sx={{
-                  position: "relative",
-                  cursor: "pointer",
-                  py: 0.5
-                }}
-              >
-                <Typography
+            {navLinks.map((link) => {
+              const linkId = link.id || link.label;
+              const isIndicatorActive = (hoveredTab ?? activeTab) === linkId;
+              
+              return (
+                <Box
+                  key={link.label}
+                  onClick={() => handleNav(link)}
+                  onMouseEnter={() => setHoveredTab(linkId)}
+                  onMouseLeave={() => setHoveredTab(null)}
                   sx={{
-                    fontWeight: 600,
-                    fontSize: "14px",
-                    color: C.black,
-                    opacity: activeTab === link.id ? 1 : 0.6,
-                    transition: "opacity 0.3s ease"
+                    position: "relative",
+                    cursor: "pointer",
+                    py: 0.5
                   }}
                 >
-                  {link.label}
-                </Typography>
-                {activeTab === link.id && (
-                  <motion.div
-                    layoutId="activeUnderline"
-                    style={{
-                      position: "absolute",
-                      bottom: -4,
-                      left: 0,
-                      right: 0,
-                      height: "2px",
-                      backgroundColor: C.black,
-                      borderRadius: "2px"
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      color: C.black,
+                      opacity: activeTab === link.id ? 1 : 0.6,
+                      transition: "opacity 0.3s ease"
                     }}
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </Box>
-            ))}
+                  >
+                    {link.label}
+                  </Typography>
+                  {isIndicatorActive && (
+                    <motion.div
+                      layoutId="activeUnderline"
+                      style={{
+                        position: "absolute",
+                        bottom: -4,
+                        left: 0,
+                        right: 0,
+                        height: "2px",
+                        backgroundColor: C.black,
+                        borderRadius: "2px"
+                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         ) : (
           <IconButton 

@@ -12,20 +12,20 @@ import Tooltip from "@mui/material/Tooltip";
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import SuccessMessage from "../../components/SuccessMessage";
-import { api, authService } from '../../services';
+import { api, authService, adminService } from '../../services';
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import { Divider } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
-import { useTheme, useMediaQuery, Skeleton, Card, CardContent } from "@mui/material";
+import { useTheme, useMediaQuery, Skeleton, Card, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
-import { 
-  SettingsContainer, 
-  SettingsSection, 
-  SettingsRow, 
-  SettingsField, 
+import {
+  SettingsContainer,
+  SettingsSection,
+  SettingsRow,
+  SettingsField,
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
@@ -38,15 +38,18 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#0a0a0a',
+  black: '#000000',
   textPrimary: '#000000',
   textSecondary: '#64748B',
-  accent: '#0a0a0a',
-  teal: '#5eead4',
-  lavender: '#d8b4fe',
+  accent: '#000000',
+  teal: '#5EEAD4',
+  tealDark: '#0D9488',
+  blue: '#B0E0E6',
+  blueDark: '#0369A1',
   yellow: '#FEF08A',
+  yellowDark: '#B45309',
   orange: '#ff895d',
   border: '#E2E8F0',
   tableHead: '#F8FAFC',
@@ -114,8 +117,8 @@ export default function AdminPage() {
       const u = JSON.parse(localStorage.getItem("user") || "{}");
       u.avatarUrl = url;
       localStorage.setItem("user", JSON.stringify(u));
-      window.dispatchEvent(new Event("storage")); 
-    } catch {}
+      window.dispatchEvent(new Event("storage"));
+    } catch { }
   };
 
 
@@ -194,8 +197,9 @@ export default function AdminPage() {
   const [volume, setVolume] = useState<{ day: number[]; week: number[]; month: number[] }>({ day: [], week: [], month: [] });
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [childLoading, setChildLoading] = useState(false);
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Dashboard skeleton loader
   useEffect(() => {
@@ -268,6 +272,18 @@ export default function AdminPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await adminService.getAuditLogs({ limit: 10 });
+        if (res.success) {
+          // Filter for clearance or user related logs for the "Activity" table
+          setRecentLogs(res.data.logs || []);
+        }
+      } catch { }
+    })();
+  }, []);
+
   const logout = () => {
     authService.logout();
     nav("/", { state: { banner: { message: "Logged out successfully!", variant: "success" } } });
@@ -336,389 +352,216 @@ export default function AdminPage() {
             </Box>
           </Box>
         ) : (
-          <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-            {/* ── Header ──────────────────────────────────────────────────── */}
-            <Typography
-              sx={{
-                fontFamily: fontStack,
-                fontWeight: 800,
-                fontSize: isSmallMobile ? '1.5rem' : '2.25rem',
-                letterSpacing: '-0.03em',
-                color: COLORS.textPrimary,
-                lineHeight: 1.15,
-              }}
-            >
-              Admin Dashboard
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: fontStack,
-                fontSize: isSmallMobile ? 13 : 16,
-                color: COLORS.textSecondary,
-                mb: 3,
-                mt: 0.5,
-              }}
-            >
-              Institutional overview and administration tools
-            </Typography>
-
-            {/* ── Bento Row 1 — Hero Stats ────────────────────────────────── */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-                gap: 2,
-                mb: 2,
-              }}
-            >
-              {/* Hero Card — Black */}
-              <Box
+          <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+            {/* ── Dashboard Header ────────────────────────────────────────── */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography
                 sx={{
-                  position: 'relative',
-                  backgroundColor: COLORS.black,
-                  borderRadius: COLORS.cardRadius,
-                  p: isSmallMobile ? 3 : 4,
-                  minHeight: isSmallMobile ? 180 : 220,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  overflow: 'hidden',
+                  fontFamily: fontStack,
+                  fontWeight: 800,
+                  fontSize: isSmallMobile ? '1.75rem' : '2.5rem',
+                  letterSpacing: '-0.04em',
+                  color: COLORS.textPrimary,
                 }}
               >
-                {/* Decorative blurred accent circles */}
-                <Box sx={{
-                  position: 'absolute', top: -40, right: -40, width: 160, height: 160,
-                  borderRadius: '50%', backgroundColor: COLORS.teal, opacity: 0.12,
-                  filter: 'blur(50px)', pointerEvents: 'none',
-                }} />
-                <Box sx={{
-                  position: 'absolute', bottom: -30, left: -30, width: 120, height: 120,
-                  borderRadius: '50%', backgroundColor: COLORS.lavender, opacity: 0.10,
-                  filter: 'blur(40px)', pointerEvents: 'none',
-                }} />
-
-                <Box sx={{ position: 'relative', zIndex: 1 }}>
-                  <Box sx={{
-                    display: 'inline-block',
-                    fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.1em', textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.45)', mb: 1.5,
-                  }}>
-                    Overview
-                  </Box>
-                  <Typography sx={{
-                    fontFamily: fontStack, fontWeight: 800,
-                    fontSize: isSmallMobile ? '1.35rem' : '1.75rem',
-                    letterSpacing: '-0.5px', color: '#FFFFFF', lineHeight: 1.2, mb: 1,
-                  }}>
-                    Welcome back, {fullName}
-                  </Typography>
-                  <Typography sx={{
-                    fontFamily: fontStack, fontSize: isSmallMobile ? 13 : 15,
-                    color: 'rgba(255,255,255,0.6)', lineHeight: 1.7,
-                  }}>
-                    Your institution is running smoothly. All services operational.
-                  </Typography>
-                </Box>
-
-                {/* Bottom stats row */}
-                <Box sx={{
-                  position: 'relative', zIndex: 1,
-                  display: 'flex', gap: isSmallMobile ? 3 : 5, mt: 2,
-                  flexWrap: 'wrap',
-                }}>
-                  {[
-                    { label: 'Students', value: studentCount },
-                    { label: 'Officers', value: officerCount },
-                  ].map((s) => (
-                    <Box key={s.label}>
-                      <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                        {s.label}
-                      </Typography>
-                      <Typography sx={{ fontFamily: fontStack, fontSize: isSmallMobile ? 22 : 28, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-1px' }}>
-                        {s.value}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-
-              {/* Right column — two stacked accent cards */}
-              <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
-                {/* System Status — Teal */}
-                <Box
-                  sx={{
-                    backgroundColor: COLORS.teal,
-                    borderRadius: COLORS.cardRadius,
-                    p: isSmallMobile ? 2.5 : 3,
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    position: 'relative', overflow: 'hidden',
-                  }}
-                >
-                  <Box sx={{
-                    display: 'inline-block', fontFamily: fontStack,
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                    textTransform: 'uppercase', color: '#0d9488', mb: 1,
-                  }}>
-                    Requests
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontWeight: 800,
-                      fontSize: isSmallMobile ? 24 : 32, color: COLORS.black,
-                      letterSpacing: '-1px',
-                    }}>
-                      {totalRequests}
-                    </Typography>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontWeight: 600,
-                      fontSize: 12, color: '#0d9488', mt: 1
-                    }}>
-                      Total submissions
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Security — Lavender */}
-                <Box
-                  sx={{
-                    backgroundColor: COLORS.lavender,
-                    borderRadius: COLORS.cardRadius,
-                    p: isSmallMobile ? 2.5 : 3,
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    position: 'relative', overflow: 'hidden',
-                  }}
-                >
-                  <Box sx={{
-                    display: 'inline-block', fontFamily: fontStack,
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                    textTransform: 'uppercase', color: '#7e22ce', mb: 1,
-                  }}>
-                    Pending Issues
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontWeight: 800,
-                      fontSize: isSmallMobile ? 24 : 32, color: COLORS.black,
-                      letterSpacing: '-1px',
-                    }}>
-                      {pendingRequests}
-                    </Typography>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontWeight: 600,
-                      fontSize: 12, color: '#7e22ce', mt: 1
-                    }}>
-                      Requires attention
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
+                Overview
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => nav("/admin/users")}
+                sx={{
+                  backgroundColor: COLORS.black,
+                  color: '#FFFFFF',
+                  borderRadius: COLORS.pillRadius,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: 14,
+                  px: 4,
+                  py: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+                  '&:hover': { 
+                    backgroundColor: '#111',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+                    transform: 'translateY(-1px)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                New student
+              </Button>
             </Box>
 
-            {/* ── Section Label ────────────────────────────────────────────── */}
-            <Box sx={{
-              fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: COLORS.textSecondary, mt: isSmallMobile ? 3 : 4, mb: 2,
-            }}>
-              Quick Access
-            </Box>
-
-            {/* ── Bento Row 2 — Quick Management Cards ────────────────────── */}
+            {/* ── Stat Row (4 Cards) ──────────────────────────────────────── */}
             <Box
               sx={{
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
                 gap: 2,
+                mb: 4,
               }}
             >
               {[
-                { title: "Manage Users", onClick: () => nav("/admin/users"), desc: "Add students and staff", color: COLORS.teal },
-                { title: "Organizations", onClick: () => nav("/admin/organizations"), desc: "Signatory structure & codes", color: COLORS.lavender },
-                { title: "AY & Term", onClick: () => nav("/admin/terms"), desc: "Active configuration", color: COLORS.orange },
-                { title: "System Records", onClick: () => nav("/admin/records"), desc: "View activity logs", color: '#94A3B8' }
-              ].map((tile) => (
+                { label: 'Approved Clearances', value: completedRequests, color: COLORS.tealDark, trend: '+12%' },
+                { label: 'Rejected Clearances', value: rejectedRequests, color: '#000000', trend: '-2%' },
+                { label: 'Pending Clearances', value: pendingRequests, color: COLORS.yellowDark, trend: '+5%' },
+                { label: 'New Students', value: studentCount, color: COLORS.blueDark, trend: '+18%' },
+              ].map((s) => (
                 <Box
-                  key={tile.title}
-                  onClick={tile.onClick}
+                  key={s.label}
                   sx={{
-                    position: 'relative',
-                    p: isSmallMobile ? 2.5 : 3,
-                    borderRadius: COLORS.cardRadius,
-                    backgroundColor: 'rgba(255,255,255,0.65)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(0,0,0,0.06)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    p: 3,
+                    borderRadius: '16px',
+                    border: '1px solid #F1F5F9',
+                    backgroundColor: '#FFFFFF',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    minHeight: isSmallMobile ? 140 : 160,
+                    minHeight: 120,
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02)',
                     '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.95)',
-                      transform: 'translateY(-5px) scale(1.01)',
-                      boxShadow: '0 20px 40px -12px rgba(0,0,0,0.08)',
-                      borderColor: 'rgba(0,0,0,0.12)',
-                      '& .accent-bar': { height: 24 }
-                    }
+                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  <Box sx={{
-                    position: 'absolute', top: 0, left: 0, right: 0, height: 6,
-                    backgroundColor: tile.color, opacity: 0.15,
-                    borderTopLeftRadius: COLORS.cardRadius, borderTopRightRadius: COLORS.cardRadius,
-                  }} />
-
-                  <Box>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontWeight: 800,
-                      fontSize: isSmallMobile ? '1.05rem' : '1.15rem', color: COLORS.textPrimary,
-                      letterSpacing: '-0.3px', mb: 0.5,
-                    }}>
-                      {tile.title}
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary, mb: 1 }}>{s.label}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
+                    <Typography sx={{ fontSize: 28, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
+                      {s.value.toLocaleString()}
                     </Typography>
-                    <Typography sx={{
-                      fontFamily: fontStack, fontSize: isSmallMobile ? 12 : 13,
-                      color: COLORS.textSecondary, fontWeight: 500, lineHeight: 1.5,
-                    }}>
-                      {tile.desc}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-                    <Box className="accent-bar" sx={{
-                      width: 4, height: 16, borderRadius: 2, backgroundColor: tile.color,
-                      transition: 'height 0.3s'
-                    }} />
-                    <Typography sx={{
-                      fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-                      color: COLORS.black, textTransform: 'uppercase', letterSpacing: '0.05em'
-                    }}>
-                      Open Module →
+                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: s.color }}>
+                      ↑ {s.trend}
                     </Typography>
                   </Box>
                 </Box>
               ))}
             </Box>
 
-            {/* ── Analytics Panels Section ────────────────────────────────── */}
-            <Typography sx={{
-              fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: COLORS.textSecondary, mt: isSmallMobile ? 3 : 4, mb: 2,
-            }}>
-              Detailed Analytics
-            </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 3 }}>
-              {/* Dept Approvals Card */}
-              <Box sx={{ ...glassCard, p: 4, backgroundColor: COLORS.teal + '05' }}>
-                <Typography sx={{ fontWeight: 700, mb: 3, fontSize: 18, fontFamily: fontStack }}>Approvals per Organization</Typography>
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {orgApprovals.map((d) => (
-                    <Box key={d.name}>
-                      <Box display="flex" justifyContent="space-between" mb={0.5}>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600, fontFamily: fontStack }}>{d.name}</Typography>
-                        <Typography sx={{ fontSize: 14, fontWeight: 700, fontFamily: fontStack }}>{d.count}</Typography>
+            {/* ── Analytics & Volume ───────────────────────────────────────── */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 4 }}>
+              {/* Clearance Volume Chart */}
+              <Box sx={{ p: 4, borderRadius: '16px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 18 }}>Clearance Volume</Typography>
+                  <Box sx={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: '10px', p: 0.5, bgcolor: '#F8FAFC' }}>
+                    {['day', 'week', 'month'].map(r => (
+                      <Button
+                        key={r}
+                        onClick={() => setRange(r as any)}
+                        sx={{
+                          fontSize: 11, fontWeight: 700, px: 2, py: 0.5, borderRadius: '8px', textTransform: 'none',
+                          color: range === r ? '#FFF' : COLORS.textSecondary,
+                          bgcolor: range === r ? COLORS.black : 'transparent',
+                          '&:hover': { bgcolor: range === r ? COLORS.black : '#F1F5F9' }
+                        }}
+                      >
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </Button>
+                    ))}
+                  </Box>
+                </Box>
+                
+                {/* Volume visualization (True SVG Line Chart) */}
+                <Box sx={{ height: 220, width: '100%', pt: 4, position: 'relative' }}>
+                  {(() => {
+                    const data = volume[range] || [];
+                    if (data.length < 2) return (
+                      <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography sx={{ color: COLORS.textSecondary, fontSize: 13, fontWeight: 500 }}>Gathering data points...</Typography>
                       </Box>
-                      <Box sx={{ width: '100%', height: 6, backgroundColor: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
-                        <Box sx={{ width: `${Math.min(100, (d.count / (totalRequests || 1)) * 100)}%`, height: '100%', backgroundColor: COLORS.teal, borderRadius: 3 }} />
+                    );
+                    
+                    const maxV = Math.max(...data, 10);
+                    const width = 1000;
+                    const height = 180;
+                    const gap = width / (data.length - 1);
+                    
+                    // Generate points for the smooth line
+                    const points = data.map((v, i) => `${i * gap},${height - (v / maxV * height)}`).join(' ');
+                    const areaPoints = `0,${height} ${points} ${width},${height}`;
+
+                    return (
+                      <Box sx={{ width: '100%', height: '100%' }}>
+                        <svg viewBox={`0 0 ${width} ${height + 20}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                          {/* Grid Lines */}
+                          {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
+                            <line key={i} x1="0" y1={height * p} x2={width} y2={height * p} stroke="#F1F5F9" strokeWidth="1" />
+                          ))}
+                          
+                          {/* Gradient Fill */}
+                          <defs>
+                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={COLORS.blue} stopOpacity="0.4" />
+                              <stop offset="100%" stopColor={COLORS.blue} stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Area Fill */}
+                          <polyline points={areaPoints} fill="url(#chartGradient)" />
+                          
+                          {/* Smooth Line */}
+                          <polyline
+                            points={points}
+                            fill="none"
+                            stroke={COLORS.blue}
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{ filter: `drop-shadow(0 4px 8px ${COLORS.blue}88)` }}
+                          />
+
+                          {/* Data Points */}
+                          {data.map((v, i) => (
+                            <circle
+                              key={i}
+                              cx={i * gap}
+                              cy={height - (v / maxV * height)}
+                              r={i === data.length - 1 ? 5 : 0}
+                              fill={COLORS.blue}
+                              stroke="#FFFFFF"
+                              strokeWidth="2"
+                            />
+                          ))}
+                        </svg>
+                        
+                        {/* X-Axis Labels */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 0.5 }}>
+                          {(() => {
+                            const labels: Record<string, string[]> = {
+                              day: ["12am", "6am", "12pm", "6pm", "11pm"],
+                              week: ["Mon", "Wed", "Fri", "Sun"],
+                              month: ["Jan", "Mar", "May", "Jul", "Sep", "Nov"]
+                            };
+                            return (labels[range] || []).map(l => (
+                              <Typography key={l} sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary }}>{l}</Typography>
+                            ));
+                          })()}
+                        </Box>
                       </Box>
-                    </Box>
-                  ))}
+                    );
+                  })()}
                 </Box>
               </Box>
 
-              {/* Speed Metrics Card */}
-              <Box display="flex" flexDirection="column" gap={2}>
-                <Box sx={{ ...glassCard, p: 3, backgroundColor: COLORS.lavender + '08' }}>
-                  <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, textTransform: 'uppercase', mb: 1, fontFamily: fontStack, letterSpacing: '0.05em' }}>Most Delayed</Typography>
-                  <Typography sx={{ fontSize: 20, fontWeight: 800, fontFamily: fontStack }}>{delayedOrg.name}</Typography>
-                  <Typography sx={{ color: COLORS.orange, fontWeight: 700, fontSize: 14, fontFamily: fontStack }}>{delayedOrg.avgDays} days avg</Typography>
+              {/* Response Efficiency Stats */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
+                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
+                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: COLORS.yellowDark, mt: 1 }}>{delayedOrg.avgDays} days average</Typography>
                 </Box>
-                <Box sx={{ ...glassCard, p: 3, backgroundColor: COLORS.teal + '08' }}>
-                  <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, textTransform: 'uppercase', mb: 1, fontFamily: fontStack, letterSpacing: '0.05em' }}>Fastest Response</Typography>
-                  <Typography sx={{ fontSize: 20, fontWeight: 800, fontFamily: fontStack }}>{fastestOrg.name}</Typography>
-                  <Typography sx={{ color: '#059669', fontWeight: 700, fontSize: 14, fontFamily: fontStack }}>{fastestOrg.avgDays} days avg</Typography>
+                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
+                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
+                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: COLORS.tealDark, mt: 1 }}>{fastestOrg.avgDays} days average</Typography>
                 </Box>
               </Box>
             </Box>
 
-            {/* Row 3: Volume Chart */}
-            <Box sx={{ ...glassCard, p: 4, mb: 4 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
-                <Typography sx={{ fontWeight: 800, fontSize: 18, fontFamily: fontStack }}>Clearance Volume Over Time</Typography>
-                <Box sx={{ display: 'inline-flex', borderRadius: 9999, border: "1px solid #E5E7EB", p: 0.5, backgroundColor: '#F8FAFC' }}>
-                  {(["day", "week", "month"] as const).map(r => (
-                    <Button
-                      key={r}
-                      variant={range === r ? "contained" : "text"}
-                      onClick={() => setRange(r)}
-                      sx={{
-                        borderRadius: 9999,
-                        textTransform: 'none',
-                        fontSize: 12,
-                        px: 2,
-                        backgroundColor: range === r ? COLORS.black : 'transparent',
-                        color: range === r ? '#FFF' : COLORS.textSecondary,
-                        fontFamily: fontStack,
-                        fontWeight: 600,
-                        '&:hover': { backgroundColor: range === r ? COLORS.black : '#F1F5F9' }
-                      }}
-                    >
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
-                    </Button>
-                  ))}
-                </Box>
-              </Box>
-              <Box display="flex" alignItems="flex-end" gap={1.5} sx={{ height: 140, px: 2 }}>
-                {(() => {
-                  const labelsByRange = {
-                    day: ["12am", "3am", "6am", "9am", "12pm", "3pm", "6pm", "9pm"],
-                    week: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                    month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-                  };
-                  const currentData = volume[range] || [];
-                  const maxVol = Math.max(...currentData, 1); // Avoid division by zero
 
-                  return currentData.map((v, idx) => (
-                    <Tooltip key={idx} title={`${v} submissions`} arrow placement="top">
-                      <Box sx={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
-                        alignItems: 'center',
-                        height: '100%',
-                        cursor: 'pointer'
-                      }}>
-                        <Box sx={{
-                          width: '100%',
-                          backgroundColor: COLORS.teal,
-                          borderRadius: '4px 4px 0 0',
-                          height: `${Math.max(8, (v / maxVol) * 100)}%`,
-                          opacity: 0.8,
-                          transition: 'height 0.3s',
-                          '&:hover': { opacity: 1 }
-                        }} />
-                        <Typography sx={{
-                          fontFamily: fontStack,
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: COLORS.textSecondary,
-                          mt: 1,
-                          height: 14,
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}>
-                          {labelsByRange[range][idx] || ''}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  ));
-                })()}
-              </Box>
-            </Box>
           </Box>
         )
       ) : active === "settings" ? (
@@ -735,15 +578,15 @@ export default function AdminPage() {
           </Box>
         ) : (
           <SettingsContainer>
-            <SettingsHeader 
-              title="Settings" 
-              subtitle="Manage your administrative account settings" 
+            <SettingsHeader
+              title="Settings"
+              subtitle="Manage your administrative account settings"
             />
 
             <SettingsSection>
-              <ProfilePictureSection 
+              <ProfilePictureSection
                 avatarUrl={getAbsoluteUrl(avatarUrl)}
-                initials={getInitials(draftFullName)} 
+                initials={getInitials(draftFullName)}
                 onFileSelect={async (file) => {
                   try {
                     const formData = new FormData();
@@ -765,7 +608,7 @@ export default function AdminPage() {
                   } catch (err) {
                     console.error("Delete failed:", err);
                   }
-                }} 
+                }}
               />
             </SettingsSection>
 
@@ -796,18 +639,18 @@ export default function AdminPage() {
 
             <SettingsSection>
               <SettingsField label="Email">
-                <TextField 
-                  fullWidth 
-                  name="real-email" 
-                  autoComplete="email" 
-                  value={email} 
-                  disabled 
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { 
-                      borderRadius: '8px', 
-                      backgroundColor: '#F8FAFC' 
-                    } 
-                  }} 
+                <TextField
+                  fullWidth
+                  name="real-email"
+                  autoComplete="email"
+                  value={email}
+                  disabled
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      backgroundColor: '#F8FAFC'
+                    }
+                  }}
                 />
               </SettingsField>
             </SettingsSection>
@@ -864,7 +707,7 @@ export default function AdminPage() {
           </SettingsContainer>
         )
       ) : (
-        <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+        <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
           {(() => {
             const config: Record<string, { title: string; desc: string; }> = {
               users: { title: "User Management", desc: "Manage students and officers" },
@@ -878,7 +721,7 @@ export default function AdminPage() {
             if (!item) return null;
 
             return (
-              <Box mb={4} sx={{
+              <Box mb={3} sx={{
                 p: 0,
                 display: 'flex',
                 flexDirection: isSmallMobile ? 'column' : 'row',

@@ -60,14 +60,14 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
     officerOrgs = [],
     memberOrgs = [],
     isOfficerOpen = false,
-    setIsOfficerOpen = () => {},
+    setIsOfficerOpen = () => { },
     isStudentOpen = false,
-    setIsStudentOpen = () => {},
+    setIsStudentOpen = () => { },
     avatarUrl
 }) => {
     const location = useLocation();
     const isAdmin = role === 'admin' || role === 'super_admin';
-    
+
     return (
         <Box
             sx={{
@@ -135,11 +135,13 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         fontWeight: 500,
                                         px: 2,
                                         height: 40,
-                                        borderRadius: "10px",
+                                        borderRadius: "12px",
                                         color: isActive ? "#0E7490" : "#0F172A",
-                                        backgroundColor: isActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
+                                        backgroundColor: isActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                        backdropFilter: isActive ? "blur(4px)" : "none",
+                                        boxShadow: isActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
                                         "&:hover": {
-                                            backgroundColor: isActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9",
+                                            backgroundColor: isActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9",
                                         },
                                     }}
                                 >
@@ -173,10 +175,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                         fontWeight: 500,
                                                         px: 2,
                                                         height: 40,
-                                                        borderRadius: "10px",
+                                                        borderRadius: "12px",
                                                         color: faqIsActive ? "#0E7490" : "#0F172A",
-                                                        backgroundColor: faqIsActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                        "&:hover": { backgroundColor: faqIsActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                        backgroundColor: faqIsActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                        backdropFilter: faqIsActive ? "blur(4px)" : "none",
+                                                        boxShadow: faqIsActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                        "&:hover": { backgroundColor: faqIsActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                     }}
                                                 >
                                                     <FaqIcon color={faqIsActive ? "#0E7490" : "#0F172A"} />
@@ -184,28 +188,28 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                 </Button>
                                             );
                                         })()}
-                                        
+
                                         {/* "As an officer" Section */}
                                         {officerOrgs.length > 0 && !isAdmin && (
                                             <Box mt={1} mb={0.5}>
                                                 <Divider sx={{ my: 1 }} />
-                                                <Box 
-                                                    display="flex" 
-                                                    alignItems="center" 
-                                                    justifyContent="space-between" 
-                                                    px={2} 
+                                                <Box
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justifyContent="space-between"
+                                                    px={2}
                                                     py={1}
                                                     mb={0.5}
                                                     sx={{ cursor: 'pointer', "&:hover": { opacity: 0.8 } }}
                                                     onClick={() => setIsOfficerOpen(!isOfficerOpen)}
                                                 >
                                                     <Box display="flex" alignItems="center" gap={1.5}>
-                                                        <IconBase color="#64748b"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>
+                                                        <IconBase color="#64748b"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></IconBase>
                                                         <Typography fontSize={14} fontWeight={600} color="#0F172A">As an officer</Typography>
                                                     </Box>
                                                     {isOfficerOpen ? <ChevronUpIcon color="#64748b" /> : <ChevronDownIcon color="#64748b" />}
                                                 </Box>
-                                                
+
                                                 <Collapse in={isOfficerOpen}>
                                                     <Box display="flex" flexDirection="column" gap={0.5} pl={0}>
                                                         <Button
@@ -217,10 +221,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                 fontWeight: 500,
                                                                 px: 2,
                                                                 height: 40,
-                                                                borderRadius: "10px",
+                                                                borderRadius: "12px",
                                                                 color: location.pathname === '/officer/to-review' ? "#0E7490" : "#0F172A",
-                                                                backgroundColor: location.pathname === '/officer/to-review' ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                                "&:hover": { backgroundColor: location.pathname === '/officer/to-review' ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                                backgroundColor: location.pathname === '/officer/to-review' ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                                backdropFilter: location.pathname === '/officer/to-review' ? "blur(4px)" : "none",
+                                                                boxShadow: location.pathname === '/officer/to-review' ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                                "&:hover": { backgroundColor: location.pathname === '/officer/to-review' ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                             }}
                                                         >
                                                             <FolderIcon color={location.pathname === '/officer/to-review' ? "#0E7490" : "#0F172A"} />
@@ -240,10 +246,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         fontWeight: 500,
                                                                         px: 2,
                                                                         height: 40,
-                                                                        borderRadius: "10px",
+                                                                        borderRadius: "12px",
                                                                         color: isOrgActive ? "#0E7490" : "#0F172A",
-                                                                        backgroundColor: isOrgActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                                        "&:hover": { backgroundColor: isOrgActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                                        backgroundColor: isOrgActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                                        backdropFilter: isOrgActive ? "blur(4px)" : "none",
+                                                                        boxShadow: isOrgActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                                        "&:hover": { backgroundColor: isOrgActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: org.color || '#e2e8f0', color: '#1e293b' }}>
@@ -263,23 +271,23 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         {/* "As a student" Section */}
                                         {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard')) && (
                                             <Box mt={1} mb={0.5}>
-                                                <Box 
-                                                    display="flex" 
-                                                    alignItems="center" 
-                                                    justifyContent="space-between" 
-                                                    px={2} 
+                                                <Box
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justifyContent="space-between"
+                                                    px={2}
                                                     py={1}
                                                     mb={0.5}
                                                     sx={{ cursor: 'pointer', "&:hover": { opacity: 0.8 } }}
                                                     onClick={() => setIsStudentOpen(!isStudentOpen)}
                                                 >
                                                     <Box display="flex" alignItems="center" gap={1.5}>
-                                                        <IconBase color="#64748b"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>
+                                                        <IconBase color="#64748b"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></IconBase>
                                                         <Typography fontSize={14} fontWeight={600} color="#0F172A">As a student</Typography>
                                                     </Box>
                                                     {isStudentOpen ? <ChevronUpIcon color="#64748b" /> : <ChevronDownIcon color="#64748b" />}
                                                 </Box>
-                                                
+
                                                 <Collapse in={isStudentOpen}>
                                                     <Box display="flex" flexDirection="column" gap={0.5} pl={0}>
                                                         {navItems.find(i => i.key === 'leaderboard') && (() => {
@@ -296,10 +304,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         fontWeight: 500,
                                                                         px: 2,
                                                                         height: 40,
-                                                                        borderRadius: "10px",
+                                                                        borderRadius: "12px",
                                                                         color: isLeaderboardActive ? "#0E7490" : "#0F172A",
-                                                                        backgroundColor: isLeaderboardActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                                        "&:hover": { backgroundColor: isLeaderboardActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                                        backgroundColor: isLeaderboardActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                                        backdropFilter: isLeaderboardActive ? "blur(4px)" : "none",
+                                                                        boxShadow: isLeaderboardActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                                        "&:hover": { backgroundColor: isLeaderboardActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     {React.createElement(leaderboardNav.icon, { color: isLeaderboardActive ? "#0E7490" : "#0F172A" })}
@@ -322,10 +332,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         fontWeight: 500,
                                                                         px: 2,
                                                                         height: 40,
-                                                                        borderRadius: "10px",
+                                                                        borderRadius: "12px",
                                                                         color: isTodoActive ? "#0E7490" : "#0F172A",
-                                                                        backgroundColor: isTodoActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                                        "&:hover": { backgroundColor: isTodoActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                                        backgroundColor: isTodoActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                                        backdropFilter: isTodoActive ? "blur(4px)" : "none",
+                                                                        boxShadow: isTodoActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                                        "&:hover": { backgroundColor: isTodoActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     {React.createElement(todoNav.icon, { color: isTodoActive ? "#0E7490" : "#0F172A" })}
@@ -347,10 +359,12 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                                         fontWeight: 500,
                                                                         px: 2,
                                                                         height: 40,
-                                                                        borderRadius: "10px",
+                                                                        borderRadius: "12px",
                                                                         color: isOrgActive ? "#0E7490" : "#0F172A",
-                                                                        backgroundColor: isOrgActive ? "rgba(176, 224, 230, 0.2)" : "transparent",
-                                                                        "&:hover": { backgroundColor: isOrgActive ? "rgba(176, 224, 230, 0.35)" : "#F1F5F9" },
+                                                                        backgroundColor: isOrgActive ? "rgba(45, 212, 191, 0.15)" : "transparent",
+                                                                        backdropFilter: isOrgActive ? "blur(4px)" : "none",
+                                                                        boxShadow: isOrgActive ? "0 4px 12px rgba(13, 148, 136, 0.08)" : "none",
+                                                                        "&:hover": { backgroundColor: isOrgActive ? "rgba(45, 212, 191, 0.25)" : "#F1F5F9" },
                                                                     }}
                                                                 >
                                                                     <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: org.color || '#e2e8f0', color: '#1e293b' }}>
@@ -387,7 +401,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                 fontWeight: 500,
                                 px: 2,
                                 height: 40,
-                                borderRadius: "10px",
+                                borderRadius: "12px",
                                 color: "#0F172A",
                                 "&:hover": { backgroundColor: "#F1F5F9" },
                             }}
@@ -408,9 +422,11 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                     sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: "#0F172A",
+                        bgcolor: "#020617",
+                        color: "#FFFFFF",
                         fontSize: 14,
-                        fontWeight: 600
+                        fontWeight: 800,
+                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
                     }}
                 >
                     {initials}
