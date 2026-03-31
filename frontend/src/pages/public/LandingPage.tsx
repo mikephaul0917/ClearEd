@@ -58,8 +58,8 @@ export default function LandingPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const navLinks = [
-    { label: "How it works", id: "how-it-works", icon: QuestionSIcon },
-    { label: "About", id: "about", icon: InfoSIcon },
+    { label: "How it Works", id: "how-it-works", icon: QuestionSIcon },
+    { label: "About us", id: "about", icon: InfoSIcon },
     { label: "Login", path: "/login", icon: LoginSIcon },
   ];
 
@@ -104,6 +104,12 @@ export default function LandingPage() {
     };
     window.addEventListener("scroll", handleScrollTop);
 
+    // Handle initial hash scroll
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      setTimeout(() => handleScroll(id), 100);
+    }
+
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", handleScrollTop);
@@ -111,8 +117,30 @@ export default function LandingPage() {
   }, []);
 
   const handleScroll = (id: string) => {
-    setActiveTab(id); // Immediate UI feedback
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setActiveTab(id);
+    const element = document.getElementById(id);
+    if (element) {
+      const headerOffset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const handleNav = (link: { id?: string, path?: string }) => {
+    if (link.id) {
+      if (window.location.pathname === '/') {
+        handleScroll(link.id);
+      } else {
+        navigate(`/#${link.id}`);
+      }
+    } else if (link.path) {
+      navigate(link.path);
+    }
   };
 
   return (
@@ -174,7 +202,7 @@ export default function LandingPage() {
             {navLinks.map((link) => (
               <Box
                 key={link.label}
-                onClick={() => link.id ? handleScroll(link.id) : navigate(link.path!)}
+                onClick={() => handleNav(link)}
                 sx={{
                   position: "relative",
                   cursor: "pointer",
@@ -267,8 +295,7 @@ export default function LandingPage() {
                   <Button
                     key={link.label}
                     onClick={() => {
-                      if (link.id) handleScroll(link.id);
-                      else navigate(link.path!);
+                      handleNav(link);
                       setMobileOpen(false);
                     }}
                     sx={{
@@ -331,7 +358,7 @@ export default function LandingPage() {
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as const }}
         >
           <Typography
             sx={{
@@ -619,13 +646,13 @@ export default function LandingPage() {
       <Box id="about" sx={{ py: { xs: 10, md: 20 } }}>
         <Container maxWidth="lg">
           <motion.div {...fadeInUp}>
-            <Typography variant="h2" sx={{ fontWeight: 900, mb: 5, letterSpacing: "-0.04em", textAlign: { xs: 'left', md: 'right' }, fontSize: { xs: "36px", md: "60px" } }}>
+            <Typography variant="h2" sx={{ fontWeight: 900, mb: 5, letterSpacing: "-0.04em", textAlign: 'center', fontSize: { xs: "36px", md: "60px" } }}>
               About ClearEd
             </Typography>
           </motion.div>
-          <Box display="flex" justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+          <Box display="flex" justifyContent="center">
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
-              <Typography sx={{ maxWidth: 600, fontSize: "18px", color: C.textSub, textAlign: { xs: 'left', md: 'right' }, lineHeight: 1.8 }}>
+              <Typography sx={{ maxWidth: 700, fontSize: "18px", color: C.textSub, textAlign: 'center', mx: 'auto', lineHeight: 1.8 }}>
                 Born out of necessity, ClearEd re-imagines how institutions manage administrative data.
                 Our mission is to replace manual paper trails with verified digital record-keeping,
                 ensuring compliance while respecting the time of every individual.
@@ -665,21 +692,21 @@ export default function LandingPage() {
             <Grid item xs={12} sm={6} md={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3, color: "#000", textTransform: 'uppercase', letterSpacing: "0.1em" }}>Product</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {['How it Works', 'About us', 'Login'].map((link) => (
+                {navLinks.map((link) => (
                   <Typography
-                    key={link}
-                    component={RouterLink}
-                    to="/"
+                    key={link.label}
+                    onClick={() => handleNav(link)}
                     sx={{
                       color: "#64748B",
                       fontSize: "14px",
                       textDecoration: 'none',
                       fontWeight: 600,
+                      cursor: 'pointer',
                       transition: 'color 0.2s',
                       "&:hover": { color: "#000" }
                     }}
                   >
-                    {link}
+                    {link.label}
                   </Typography>
                 ))}
               </Box>
@@ -689,21 +716,25 @@ export default function LandingPage() {
             <Grid item xs={12} sm={6} md={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3, color: "#000", textTransform: 'uppercase', letterSpacing: "0.1em" }}>Legal</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {['Terms of Service', 'Privacy Policy', 'Cookie Policy'].map((link) => (
+                {[
+                  { label: 'Terms of Service', path: '/terms' },
+                  { label: 'Privacy Policy', path: '/privacy' },
+                  { label: 'Cookie Policy', path: '/cookies' }
+                ].map((link) => (
                   <Typography
-                    key={link}
-                    component="a"
-                    href="#"
+                    key={link.label}
+                    onClick={() => navigate(link.path)}
                     sx={{
                       color: "#64748B",
                       fontSize: "14px",
                       textDecoration: 'none',
                       fontWeight: 600,
+                      cursor: 'pointer',
                       transition: 'color 0.2s',
                       "&:hover": { color: "#000" }
                     }}
                   >
-                    {link}
+                    {link.label}
                   </Typography>
                 ))}
               </Box>

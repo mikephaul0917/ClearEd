@@ -365,7 +365,7 @@ export default function HowItWorks() {
               </Button>
 
               <Button
-                href="mailto:support@eclearance.app"
+                onClick={() => navigate("/contact")}
                 sx={{
                   fontFamily: fontStack,
                   fontWeight: 700,

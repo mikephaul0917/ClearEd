@@ -60,7 +60,7 @@ export default function Header() {
       borderBottom: "1px solid #E2E8F0",
       backgroundColor: "rgba(255,255,255,0.7)",
       backdropFilter: "saturate(180%) blur(8px)",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
+      boxShadow: "none"
     }}>
       <Container maxWidth="lg">
         <Box display="flex" alignItems="center" justifyContent="space-between">

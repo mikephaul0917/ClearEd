@@ -20,6 +20,8 @@ import SuperAdminPage from "./pages/superadmin/SuperAdminPage";
 import HomePage from "./pages/public/HomePage";
 import LandingPage from "./pages/public/LandingPage";
 import ArchivedOrganizationsPage from "./pages/public/ArchivedOrganizationsPage";
+import LegalPage from "./pages/public/LegalPage";
+import ContactPage from "./pages/public/ContactPage";
 import StreamPage from "./pages/stream/StreamPage";
 import RequirementDetailsPage from "./pages/stream/RequirementDetailsPage";
 import TodoPage from "./pages/todo/TodoPage";
@@ -73,6 +75,10 @@ export default function App() {
           <Route path="/request-institution-access" element={<RequestInstitutionAccess />} />
           <Route path="/verify-institution/:token" element={<VerifyInstitution />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/terms" element={<LegalPage />} />
+          <Route path="/privacy" element={<LegalPage />} />
+          <Route path="/cookies" element={<LegalPage />} />
+          <Route path="/contact" element={<ContactPage />} />
 
           {/* Admin routes - persistent layout */}
           <Route element={<ProtectedRoute allowedRoles={['admin']}><RoleLayout /></ProtectedRoute>}>

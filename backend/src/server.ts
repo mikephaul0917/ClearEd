@@ -47,6 +47,8 @@ import organizationRoutes from "./routes/organizationRoutes";
 import pollRoutes from "./routes/pollRoutes";
 import commentRoutes from "./routes/commentRoutes";
 import publicRoutes from "./routes/publicRoutes";
+import contactRoutes from "./routes/contactRoutes";
+
 
 // Load environment variables
 dotenv.config();
@@ -79,6 +81,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/polls", pollRoutes); // Organization Polls
 app.use("/api/comments", commentRoutes); // Comments for posts
+app.use("/api/contact", contactRoutes); // Contact form submissions
 app.use("/api/public", publicRoutes); // Public system statistics
 app.use("/api", quoteRoutes); // Public metadata (quotes)
 
