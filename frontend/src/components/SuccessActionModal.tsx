@@ -1,16 +1,74 @@
 import React from 'react';
 import { Dialog, Box, Typography, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import CheckIcon from '@mui/icons-material/Check';
+
+export type ModalMode = 'success' | 'denied' | 'error';
 
 interface SuccessActionModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
   description: string;
+  mode?: ModalMode;
 }
 
-const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, title, description }) => {
+const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, title, description, mode = 'success' }) => {
+  // Mode-based configurations
+  const config = {
+    success: {
+      color: '#B0E0E6', // Powder Blue
+      glow: 'rgba(176, 224, 230, 0.4)',
+      icon: (
+        <motion.path
+          d="M20 6L9 17L4 12"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+        />
+      )
+    },
+    denied: {
+      color: '#FFB380', // Peach/Orange
+      glow: 'rgba(255, 179, 128, 0.4)',
+      icon: (
+        <>
+          <motion.line
+            x1="12" y1="8" x2="12" y2="15"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          />
+          <motion.circle
+            cx="12" cy="18" r="0.5"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.3 }}
+          />
+        </>
+      )
+    },
+    error: {
+      color: '#FF8989', // Soft Red
+      glow: 'rgba(255, 137, 137, 0.4)',
+      icon: (
+        <>
+          <motion.line
+            x1="18" y1="6" x2="6" y2="18"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          />
+          <motion.line
+            x1="6" y1="6" x2="18" y2="18"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.4 }}
+          />
+        </>
+      )
+    }
+  }[mode];
+
   return (
     <Dialog
       open={open}
@@ -37,10 +95,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
           >
             <Box display="flex" flexDirection="column" alignItems="center" gap={4}>
-              {/* Perfectly Refined 3D Ambient Icon Section */}
               <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                
-                {/* 1. Large Ambient Aura Glow */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -51,40 +106,38 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                       width: 160,
                       height: 160,
                       borderRadius: '50%',
-                      background: 'radial-gradient(circle, rgba(176, 224, 230, 0.2) 0%, rgba(176, 224, 230, 0) 70%)',
+                      background: `radial-gradient(circle, ${config.glow} 0%, rgba(176, 224, 230, 0) 70%)`,
                       filter: 'blur(16px)',
                       zIndex: 1
                     }}
                   />
                 </motion.div>
 
-                {/* 2. Soft Inner Glass Ring */}
                 <Box
                   sx={{
                     position: 'absolute',
                     width: 110,
                     height: 110,
                     borderRadius: '50%',
-                    bgcolor: 'rgba(176, 224, 230, 0.1)',
-                    border: '1px solid rgba(176, 224, 230, 0.2)',
+                    bgcolor: config.glow.replace('0.4', '0.1'),
+                    border: `1px solid ${config.glow.replace('0.4', '0.2')}`,
                     zIndex: 2
                   }}
                 />
 
-                {/* 3. Main Crisp 3D Circle */}
                 <Box
                   sx={{
                     position: 'absolute',
                     width: 78,
                     height: 78,
                     borderRadius: '50%',
-                    bgcolor: '#B0E0E6', // Powder Blue
+                    bgcolor: config.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '3px solid rgba(255, 255, 255, 0.3)', // Subtle rim
+                    border: '3px solid rgba(255, 255, 255, 0.3)',
                     boxShadow: `
-                      0 10px 25px rgba(176, 224, 230, 0.4),
+                      0 10px 25px ${config.glow},
                       inset 0 -4px 6px rgba(0, 0, 0, 0.05)
                     `,
                     zIndex: 3
@@ -101,16 +154,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                     strokeLinejoin="round"
                     style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
                   >
-                    <motion.path
-                      d="M20 6L9 17L4 12"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 1 }}
-                      transition={{ 
-                        delay: 0.5, 
-                        duration: 0.8, 
-                        ease: [0.4, 0, 0.2, 1] 
-                      }}
-                    />
+                    {config.icon}
                   </svg>
                 </Box>
               </Box>

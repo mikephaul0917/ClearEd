@@ -43,12 +43,13 @@ export default function SuperAdminLoginPage() {
     e.preventDefault();
     if (!email || !password) {
       const validationError = ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD;
-      Swal.fire({
-        icon: "warning",
-        title: validationError.title,
-        text: validationError.message,
-        confirmButtonColor: C.black,
-      });
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: validationError.title,
+          description: validationError.message,
+          mode: 'error'
+        }
+      }));
       return;
     }
     setIsLoading(true);
@@ -57,12 +58,13 @@ export default function SuperAdminLoginPage() {
       setShowAuthOverlay(true);
     } catch (error: any) {
       const errorInfo = formatErrorForDisplay(error);
-      Swal.fire({
-        icon: "error",
-        title: errorInfo.title,
-        text: errorInfo.message,
-        confirmButtonColor: C.black,
-      });
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: errorInfo.title,
+          description: errorInfo.message,
+          mode: 'error'
+        }
+      }));
     } finally {
       setIsLoading(false);
     }

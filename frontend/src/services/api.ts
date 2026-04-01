@@ -46,49 +46,48 @@ api.interceptors.response.use(
     (error) => {
         const status = error.response?.status;
 
+        const showModal = (title: string, description: string, mode: 'success' | 'denied' | 'error' = 'success', onClose?: () => void) => {
+            window.dispatchEvent(new CustomEvent('app:show-modal', {
+                detail: { title, description, mode, onClose }
+            }));
+        };
+
         if (status === 401) {
             const isLoginRequest = error.config?.url?.includes('/login');
             
             if (!isLoginRequest) {
                 console.warn('Unauthorized! Logging out...');
-                // Clear token to prevent loops
                 localStorage.removeItem('token');
                 localStorage.removeItem('authToken');
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Session Expired',
-                    text: 'Please log in again to continue.',
-                    confirmButtonColor: '#3085d6',
-                }).then(() => {
-                    window.dispatchEvent(new Event('auth:unauthorized'));
-                });
+                showModal(
+                    'Session Expired', 
+                    'Please log in again to continue.', 
+                    'error', 
+                    () => window.dispatchEvent(new Event('auth:unauthorized'))
+                );
             }
         } else if (status === 403) {
             console.error('Forbidden! You do not have permission.');
-            Swal.fire({
-                icon: 'warning',
-                title: 'Access Denied',
-                text: 'You do not have permission to perform this action.',
-                confirmButtonColor: '#f8bb86',
-            });
+            showModal(
+                'Access Denied', 
+                'You do not have permission to perform this action.', 
+                'denied'
+            );
         } else if (status >= 500) {
             console.error('Server Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Server Error',
-                text: 'Something went wrong on our end. Please try again later.',
-                confirmButtonColor: '#d33',
-            });
+            showModal(
+                'Server Error', 
+                'Something went wrong on our end. Please try again later.', 
+                'error'
+            );
         } else if (!error.response && error.request) {
-            // Network errors or CORS issues (no response)
             console.error('Network Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Network Error',
-                text: 'Could not reach the server. Please check your connection.',
-                confirmButtonColor: '#d33',
-            });
+            showModal(
+                'Network Error', 
+                'Could not reach the server. Please check your connection.', 
+                'error'
+            );
         }
 
         return (Promise as any).reject(error);

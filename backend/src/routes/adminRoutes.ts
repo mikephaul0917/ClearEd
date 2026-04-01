@@ -1,5 +1,5 @@
 import express from "express";
-import { listUsers, getUser, createUser, updateStatus, updateRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile } from "../controllers/admin/userManagementController";
+import { listUsers, getUser, createUser, updateStatus, updateBulkStatus, updateRole, updateBulkRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile } from "../controllers/admin/userManagementController";
 import {
     getInstitutionOrganizations,
     getDeletedOrganizations,
@@ -22,6 +22,8 @@ router.get("/users/:id", auth, admin, getUser);
 router.post("/users", auth, admin, createUser);
 router.put("/users/:id/role", auth, admin, updateRole);
 router.put("/users/:id/status", auth, admin, updateStatus);
+router.post("/users/bulk-status", auth, admin, updateBulkStatus);
+router.post("/users/bulk-role", auth, admin, updateBulkRole);
 router.put("/users/:id/profile", auth, admin, updateProfile);
 // Student Profile routes (assigned courses/years)
 router.get("/users/:id/student-profile", auth, admin, getStudentProfile);

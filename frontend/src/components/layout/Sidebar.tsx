@@ -127,17 +127,43 @@ interface SidebarProps {
     fullName: string;
     initials: string;
     avatarUrl?: string;
+    email?: string;
     role: string;
     logout: () => void;
     isLoading?: boolean;
     navItems: NavItem[];
 }
 
+const VerifiedCheckIcon = ({ size = 14 }: { size?: number }) => (
+    <Box
+        sx={{
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            bgcolor: '#0D9488',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px solid #FFF',
+            position: 'absolute',
+            bottom: -2,
+            right: -2,
+            zIndex: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        }}
+    >
+        <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+    </Box>
+);
+
 const Sidebar: React.FC<SidebarProps> = ({
     systemName,
     fullName,
     initials,
     avatarUrl,
+    email,
     role,
     logout,
     isLoading = false,
@@ -946,26 +972,29 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Divider sx={{ my: 2 }} />
 
             <Box display="flex" alignItems="center" gap={1.5}>
-                <Avatar
-                    src={getAbsoluteUrl(avatarUrl)}
-                    sx={{
-                        width: 36,
-                        height: 36,
-                        bgcolor: "#020617",
-                        color: "#FFFFFF",
-                        fontSize: 14,
-                        fontWeight: 800,
-                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
-                    }}
-                >
-                    {initials}
-                </Avatar>
-                <Box>
-                    <Typography fontSize={14} fontWeight={600}>
+                <Box sx={{ position: 'relative' }}>
+                    <Avatar
+                        src={getAbsoluteUrl(avatarUrl)}
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: "#020617",
+                            color: "#FFFFFF",
+                            fontSize: 14,
+                            fontWeight: 800,
+                            textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                        }}
+                    >
+                        {initials}
+                    </Avatar>
+                    {isAdmin && <VerifiedCheckIcon />}
+                </Box>
+                <Box sx={{ overflow: 'hidden' }}>
+                    <Typography fontSize={14} fontWeight={700} sx={{ color: "#0F172A", lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {fullName}
                     </Typography>
-                    <Typography fontSize={12} color="#6B7280" sx={{ textTransform: 'capitalize' }}>
-                        {role.replace('_', ' ')}
+                    <Typography fontSize={12} color="#64748B" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {email || role.replace('_', ' ')}
                     </Typography>
                 </Box>
             </Box>

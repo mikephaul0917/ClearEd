@@ -156,11 +156,13 @@ export default function RequestInstitutionAccess() {
     e.preventDefault();
 
     if (!validateForm()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation Error",
-        text: "Please fix the errors in the form before submitting.",
-      });
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: "Validation Error",
+          description: "Please fix the errors in the form before submitting.",
+          mode: 'error'
+        }
+      }));
       return;
     }
 
@@ -193,11 +195,13 @@ export default function RequestInstitutionAccess() {
 
       let errorMessage = error.response?.data?.message || 'Failed to submit institution request. Please try again.';
 
-      Swal.fire({
-        icon: "error",
-        title: "Submission Failed",
-        text: errorMessage,
-      });
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: "Submission Failed",
+          description: errorMessage,
+          mode: 'error'
+        }
+      }));
     } finally {
       setIsLoading(false);
     }

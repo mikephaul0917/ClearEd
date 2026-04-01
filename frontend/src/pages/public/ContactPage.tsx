@@ -60,11 +60,13 @@ export default function ContactPage() {
       }
     } catch (error: any) {
       console.error('Submission error:', error);
-      Swal.fire({
-        icon: "error",
-        title: "Submission Failed",
-        text: error.response?.data?.message || 'Failed to send message. Please try again later.',
-      });
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: "Submission Failed",
+          description: error.response?.data?.message || 'Failed to send message. Please try again later.',
+          mode: 'error'
+        }
+      }));
     } finally {
       setIsLoading(false);
     }

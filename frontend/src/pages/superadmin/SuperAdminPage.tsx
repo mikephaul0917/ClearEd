@@ -250,22 +250,23 @@ export default function SuperAdminPage() {
     }
   };
 
+  // Handle unauthorized access with modern modal
+  useEffect(() => {
+    if (!isSuperAdmin && token) {
+      window.dispatchEvent(new CustomEvent('app:show-modal', {
+        detail: {
+          title: 'Access Denied',
+          description: 'Super Admin privileges required. If you believe this is an error, please contact support.',
+          mode: 'denied',
+          onClose: () => nav('/register')
+        }
+      }));
+    }
+  }, [isSuperAdmin, token, nav]);
+
   // Redirect non-super-admin users
   if (!isSuperAdmin) {
-    return (
-      <Box p={3}>
-        <Typography variant="h6" color="error" sx={{ mb: 2 }}>
-          Access Denied: Super Admin privileges required. If you believe this is an error, please contact support.
-        </Typography>
-        <Button
-          variant="outlined"
-          href="mailto:support@eclearance.app"
-          sx={{ borderColor: '#0F172A', color: '#0F172A' }}
-        >
-          Contact Support
-        </Button>
-      </Box>
-    );
+    return null;
   }
 
   const renderContent = () => {

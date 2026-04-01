@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import SuccessMessage from "../../components/SuccessMessage";
 import { api, authService, adminService } from '../../services';
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
@@ -44,13 +45,14 @@ const COLORS = {
   textPrimary: '#000000',
   textSecondary: '#64748B',
   accent: '#000000',
-  teal: '#5EEAD4',
+  teal: '#0D9488',
   tealDark: '#0D9488',
   blue: '#B0E0E6',
   blueDark: '#0369A1',
   yellow: '#FEF08A',
   yellowDark: '#B45309',
-  orange: '#ff895d',
+  orange: '#C2410C',
+  tealLight: '#F0FDFA',
   border: '#E2E8F0',
   tableHead: '#F8FAFC',
   avatarBg: '#0F172A10',
@@ -191,6 +193,7 @@ export default function AdminPage() {
   const [rejectedRequests, setRejectedRequests] = useState(0);
 
   const [range, setRange] = useState<"day" | "week" | "month">("week");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [orgApprovals, setOrgApprovals] = useState<{ name: string; count: number }[]>([]);
   const [delayedOrg, setDelayedOrg] = useState<{ name: string; avgDays: number }>({ name: "—", avgDays: 0 });
   const [fastestOrg, setFastestOrg] = useState<{ name: string; avgDays: number }>({ name: "—", avgDays: 0 });
@@ -224,25 +227,22 @@ export default function AdminPage() {
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // --- Custom Skeleton Component ---
-  const StatCardSkeleton = ({
-    height = 140,
-    titleWidth = "30%", valueWidth = "40%", subWidth = "60%"
-  }: {
-    height?: number | string,
-    titleWidth?: string | number, valueWidth?: string | number, subWidth?: string | number
-  }) => (
+  const StatCardSkeleton = () => (
     <Box sx={{
-      p: 4, borderRadius: COLORS.cardRadius,
+      p: { xs: 2.5, sm: 3 },
+      borderRadius: '16px',
       backgroundColor: 'rgba(0,0,0,0.03)',
-      border: `1px solid ${COLORS.border}`,
-      minHeight: height, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      position: 'relative', overflow: 'hidden',
+      border: '1px solid #E2E8F0',
+      minHeight: { xs: 100, sm: 120 },
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
     }}>
-      <Box>
-        <Skeleton variant="text" width={titleWidth} height={14} sx={{ mb: 1.5, bgcolor: 'rgba(0,0,0,0.05)' }} />
-        <Skeleton variant="text" width={valueWidth} height={42} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />
+      <Skeleton variant="text" width="50%" height={14} sx={{ mb: 1, bgcolor: 'rgba(0,0,0,0.05)' }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Skeleton variant="text" width="30%" height={40} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />
+        <Skeleton variant="rounded" width="20%" height={20} sx={{ borderRadius: '999px', bgcolor: 'rgba(0,0,0,0.03)' }} />
       </Box>
-      <Skeleton variant="text" width={subWidth} height={16} sx={{ bgcolor: 'rgba(0,0,0,0.03)' }} />
     </Box>
   );
 
@@ -336,31 +336,57 @@ export default function AdminPage() {
       )}
       {active === "dashboard" ? (
         loadingDashboard ? (
-          <Box sx={{ p: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-            <Skeleton variant="text" width={240} height={isSmallMobile ? 36 : 48} sx={{ mb: 0.5, borderRadius: '8px' }} />
-            <Skeleton variant="text" width={300} height={isSmallMobile ? 18 : 22} sx={{ mb: 3, borderRadius: '8px' }} />
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 2, mb: 2 }}>
-              <Skeleton variant="rounded" height={isSmallMobile ? 180 : 220} sx={{ borderRadius: COLORS.cardRadius }} />
-              <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
-                <Skeleton variant="rounded" height="100%" sx={{ borderRadius: COLORS.cardRadius }} />
-                <Skeleton variant="rounded" height="100%" sx={{ borderRadius: COLORS.cardRadius }} />
-              </Box>
+          <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+            {/* Header Skeleton */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              justifyContent: 'space-between', 
+              alignItems: { xs: 'flex-start', sm: 'center' }, 
+              gap: 2,
+              mb: 4 
+            }}>
+              <Skeleton variant="text" width={200} height={60} sx={{ borderRadius: '8px' }} />
+              <Skeleton variant="rounded" width={isSmallMobile ? '100%' : 140} height={48} sx={{ borderRadius: COLORS.pillRadius }} />
             </Box>
-            <Skeleton variant="text" width={140} height={20} sx={{ mb: 1.5, mt: 3, borderRadius: '8px' }} />
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 2 }}>
-              {[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={160} sx={{ borderRadius: COLORS.cardRadius }} />)}
+
+            {/* Stat Row Skeleton */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, 
+              gap: 2, 
+              mb: 4 
+            }}>
+              {[1, 2, 3, 4].map((i) => <StatCardSkeleton key={i} />)}
+            </Box>
+
+            {/* Analytics Grid Skeleton */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 4 }}>
+              <Skeleton variant="rounded" height={360} sx={{ borderRadius: '16px', bgcolor: 'rgba(0,0,0,0.03)' }} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Skeleton variant="rounded" height={160} sx={{ borderRadius: '16px', bgcolor: 'rgba(0,0,0,0.03)' }} />
+                <Skeleton variant="rounded" height={160} sx={{ borderRadius: '16px', bgcolor: 'rgba(0,0,0,0.03)' }} />
+              </Box>
             </Box>
           </Box>
         ) : (
           <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
             {/* ── Dashboard Header ────────────────────────────────────────── */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              justifyContent: 'space-between', 
+              alignItems: { xs: 'flex-start', sm: 'center' }, 
+              gap: 2,
+              mb: 4 
+            }}>
               <Typography
                 sx={{
                   fontFamily: fontStack,
-                  fontWeight: 800,
-                  fontSize: isSmallMobile ? '1.75rem' : '2.5rem',
-                  letterSpacing: '-0.04em',
+                  fontWeight: 900,
+                  fontSize: { xs: '2rem', sm: '2.5rem' },
+                  letterSpacing: '-0.06em',
+                  lineHeight: 1,
                   color: COLORS.textPrimary,
                 }}
               >
@@ -376,10 +402,12 @@ export default function AdminPage() {
                   textTransform: 'none',
                   fontWeight: 800,
                   fontSize: 14,
-                  px: 4,
+                  px: { xs: 2, sm: 4 },
                   py: 1.5,
+                  width: { xs: '100%', sm: 'auto' },
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
                   '&:hover': { 
                     backgroundColor: '#111',
@@ -403,61 +431,125 @@ export default function AdminPage() {
               }}
             >
               {[
-                { label: 'Approved Clearances', value: completedRequests, color: COLORS.tealDark, trend: '+12%' },
-                { label: 'Rejected Clearances', value: rejectedRequests, color: '#000000', trend: '-2%' },
-                { label: 'Pending Clearances', value: pendingRequests, color: COLORS.yellowDark, trend: '+5%' },
-                { label: 'New Students', value: studentCount, color: COLORS.blueDark, trend: '+18%' },
-              ].map((s) => (
-                <Box
-                  key={s.label}
-                  sx={{
-                    p: 3,
-                    borderRadius: '16px',
-                    border: '1px solid #F1F5F9',
-                    backgroundColor: '#FFFFFF',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minHeight: 120,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02)',
-                    '&:hover': {
-                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
-                      transform: 'translateY(-2px)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary, mb: 1 }}>{s.label}</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
-                    <Typography sx={{ fontSize: 28, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
-                      {s.value.toLocaleString()}
-                    </Typography>
-                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: s.color }}>
-                      ↑ {s.trend}
-                    </Typography>
+                { label: 'Approved Clearances', value: completedRequests, trend: '+12%' },
+                { label: 'Rejected Clearances', value: rejectedRequests, trend: '-2%' },
+                { label: 'Pending Clearances', value: pendingRequests, trend: '+5%' },
+                { label: 'New Students', value: studentCount, trend: '+18%' },
+              ].map((s) => {
+                const isPositive = s.trend.startsWith('+');
+                const trendColor = isPositive ? COLORS.teal : COLORS.orange;
+                const trendBg = isPositive ? COLORS.tealLight : 'rgba(255, 137, 93, 0.1)';
+                return (
+                  <Box
+                    key={s.label}
+                    sx={{
+                      p: { xs: 2.5, sm: 3 },
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      backgroundColor: '#FFFFFF',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minHeight: { xs: 100, sm: 120 },
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02)',
+                      '&:hover': {
+                        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.08)',
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontWeight: 600, color: COLORS.textSecondary, mb: 1 }}>{s.label}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+                      <Typography sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
+                        {s.value.toLocaleString()}
+                      </Typography>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        px: { xs: 0.75, sm: 1 }, 
+                        py: 0.25, 
+                        borderRadius: '999px', 
+                        backgroundColor: trendBg,
+                        border: isPositive ? 'none' : `1px solid ${COLORS.orange}40`
+                      }}>
+                        <Typography sx={{ fontSize: { xs: 10, sm: 11 }, fontWeight: 700, color: trendColor }}>
+                          {isPositive ? '↑' : '↓'} {s.trend}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                );
+              })}
             </Box>
 
             {/* ── Analytics & Volume ───────────────────────────────────────── */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 4 }}>
               {/* Clearance Volume Chart */}
-              <Box sx={{ p: 4, borderRadius: '16px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 18 }}>Clearance Volume</Typography>
-                  <Box sx={{ display: 'flex', border: '1px solid #E2E8F0', borderRadius: '10px', p: 0.5, bgcolor: '#F8FAFC' }}>
+              <Box sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: '16px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' }, 
+                  justifyContent: 'space-between', 
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  gap: 2,
+                  mb: { xs: 4, sm: 3 } 
+                }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: { xs: 16, sm: 18 } }}>Clearance Volume</Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    border: '1px solid #E2E8F0', 
+                    borderRadius: '10px', 
+                    p: 0.5, 
+                    bgcolor: '#F8FAFC', 
+                    position: 'relative',
+                    width: { xs: '100%', sm: 'auto' }
+                  }}>
                     {['day', 'week', 'month'].map(r => (
                       <Button
                         key={r}
                         onClick={() => setRange(r as any)}
                         sx={{
-                          fontSize: 11, fontWeight: 700, px: 2, py: 0.5, borderRadius: '8px', textTransform: 'none',
+                          fontSize: { xs: 10, sm: 11 },
+                          fontWeight: 700,
+                          px: { xs: 0, sm: 2 },
+                          py: 0.5,
+                          borderRadius: '8px',
+                          textTransform: 'none',
                           color: range === r ? '#FFF' : COLORS.textSecondary,
-                          bgcolor: range === r ? COLORS.black : 'transparent',
-                          '&:hover': { bgcolor: range === r ? COLORS.black : '#F1F5F9' }
+                          position: 'relative',
+                          zIndex: 1,
+                          flex: { xs: 1, sm: 'none' },
+                          minWidth: { xs: 0, sm: 80 },
+                          transition: 'color 0.2s ease',
+                          '&:hover': {
+                            color: range === r ? '#FFF' : COLORS.black,
+                            bgcolor: 'transparent'
+                          },
+                          // Remove default MUI button background
+                          backgroundColor: 'transparent !important',
                         }}
                       >
+                        {range === r && (
+                          <motion.div
+                            layoutId="activeRange"
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              backgroundColor: COLORS.black,
+                              borderRadius: '8px',
+                              zIndex: -1,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 30
+                            }}
+                          />
+                        )}
                         {r.charAt(0).toUpperCase() + r.slice(1)}
                       </Button>
                     ))}
@@ -465,9 +557,39 @@ export default function AdminPage() {
                 </Box>
                 
                 {/* Volume visualization (True SVG Line Chart) */}
-                <Box sx={{ height: 220, width: '100%', pt: 4, position: 'relative' }}>
+                <Box 
+                  sx={{ 
+                    height: { xs: 180, sm: 220 }, 
+                    width: '100%', 
+                    pt: 4, 
+                    position: 'relative',
+                    cursor: 'crosshair'
+                  }}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const dataLen = volume[range]?.length || 0;
+                    if (dataLen < 2) return;
+                    const idx = Math.round((x / rect.width) * (dataLen - 1));
+                    setHoveredIndex(Math.max(0, Math.min(idx, dataLen - 1)));
+                  }}
+                >
                   {(() => {
                     const data = volume[range] || [];
+                    const getTooltipLabel = (idx: number) => {
+                      if (range === 'week') {
+                        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                        return days[idx] || "";
+                      }
+                      if (range === 'month') {
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        return months[idx] || "";
+                      }
+                      // Day range (24 hours)
+                      const hour = idx % 24;
+                      return `${hour}:00`;
+                    };
                     if (data.length < 2) return (
                       <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography sx={{ color: COLORS.textSecondary, fontSize: 13, fontWeight: 500 }}>Gathering data points...</Typography>
@@ -479,9 +601,9 @@ export default function AdminPage() {
                     const height = 180;
                     const gap = width / (data.length - 1);
                     
-                    // Generate points for the smooth line
-                    const points = data.map((v, i) => `${i * gap},${height - (v / maxV * height)}`).join(' ');
-                    const areaPoints = `0,${height} ${points} ${width},${height}`;
+                    // Generate SVG Path for the line
+                    const pathD = data.map((v, i) => `${i === 0 ? 'M' : 'L'} ${i * gap} ${height - (v / maxV * height)}`).join(' ');
+                    const areaPathD = `${pathD} L ${width} ${height} L 0 ${height} Z`;
 
                     return (
                       <Box sx={{ width: '100%', height: '100%' }}>
@@ -500,18 +622,43 @@ export default function AdminPage() {
                           </defs>
 
                           {/* Area Fill */}
-                          <polyline points={areaPoints} fill="url(#chartGradient)" />
+                          <motion.path
+                            key={`area-${range}`}
+                            d={areaPathD}
+                            fill="url(#chartGradient)"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                          />
                           
-                          {/* Smooth Line */}
-                          <polyline
-                            points={points}
+                          {/* Smooth Line (Drawing Animation) */}
+                          <motion.path
+                            key={`line-${range}`}
+                            d={pathD}
                             fill="none"
                             stroke={COLORS.blue}
                             strokeWidth="3"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             style={{ filter: `drop-shadow(0 4px 8px ${COLORS.blue}88)` }}
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 1.5, ease: "easeInOut" }}
                           />
+
+                          {/* Interactive Guideline */}
+                          {hoveredIndex !== null && (
+                            <line
+                              x1={hoveredIndex * gap}
+                              y1="0"
+                              x2={hoveredIndex * gap}
+                              y2={height}
+                              stroke={COLORS.blue}
+                              strokeWidth="1"
+                              strokeDasharray="4 4"
+                              opacity="0.5"
+                            />
+                          )}
 
                           {/* Data Points */}
                           {data.map((v, i) => (
@@ -519,13 +666,71 @@ export default function AdminPage() {
                               key={i}
                               cx={i * gap}
                               cy={height - (v / maxV * height)}
-                              r={i === data.length - 1 ? 5 : 0}
-                              fill={COLORS.blue}
+                              r={i === data.length - 1 || i === hoveredIndex ? 6 : 0}
+                              fill={i === hoveredIndex ? COLORS.blue : COLORS.blue}
                               stroke="#FFFFFF"
-                              strokeWidth="2"
+                              strokeWidth={i === hoveredIndex ? 3 : 2}
+                              style={{ 
+                                transition: 'all 0.2s ease',
+                                filter: i === hoveredIndex ? `drop-shadow(0 0 8px ${COLORS.blue}aa)` : 'none'
+                              }}
                             />
                           ))}
                         </svg>
+
+                        {/* Floating Tooltip */}
+                        <AnimatePresence>
+                          {hoveredIndex !== null && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ 
+                                opacity: 1, 
+                                y: 0, 
+                                scale: 1,
+                                left: `${(hoveredIndex / (data.length - 1)) * 100}%`
+                              }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              style={{
+                                position: 'absolute',
+                                top: -20,
+                                transform: 'translateX(-50%)',
+                                zIndex: 10,
+                                pointerEvents: 'none'
+                              }}
+                            >
+                              <Box sx={{
+                                bgcolor: COLORS.black,
+                                color: '#FFF',
+                                px: 1.5,
+                                py: 1,
+                                borderRadius: '12px',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                minWidth: 100,
+                                position: 'relative',
+                                '&::after': {
+                                  content: '""',
+                                  position: 'absolute',
+                                  bottom: -6,
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  borderLeft: '6px solid transparent',
+                                  borderRight: '6px solid transparent',
+                                  borderTop: `6px solid ${COLORS.black}`
+                                }
+                              }}>
+                                <Typography sx={{ fontSize: 10, fontWeight: 700, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  {getTooltipLabel(hoveredIndex)}
+                                </Typography>
+                                <Typography sx={{ fontSize: 14, fontWeight: 800 }}>
+                                  {data[hoveredIndex]} <Box component="span" sx={{ fontSize: 10, opacity: 0.8 }}>Students</Box>
+                                </Typography>
+                              </Box>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                         
                         {/* X-Axis Labels */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 0.5 }}>
@@ -546,19 +751,27 @@ export default function AdminPage() {
                 </Box>
               </Box>
 
-              {/* Response Efficiency Stats */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1 }}>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
-                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
-                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: COLORS.yellowDark, mt: 1 }}>{delayedOrg.avgDays} days average</Typography>
+                {/* Response Efficiency Stats */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
+                    <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
+                    <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0' }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#000000' }}>
+                        {delayedOrg.avgDays} days average
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
+                    <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
+                    <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#FEF08A' }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#a16207' }}>
+                        {fastestOrg.avgDays} days average
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Box>
-                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1 }}>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
-                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
-                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: COLORS.tealDark, mt: 1 }}>{fastestOrg.avgDays} days average</Typography>
-                </Box>
-              </Box>
             </Box>
 
 
@@ -707,7 +920,7 @@ export default function AdminPage() {
           </SettingsContainer>
         )
       ) : (
-        <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+        <Box sx={{ px: isSmallMobile ? 1 : 2, pt: 0, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
           {(() => {
             const config: Record<string, { title: string; desc: string; }> = {
               users: { title: "User Management", desc: "Manage students and officers" },
@@ -718,7 +931,7 @@ export default function AdminPage() {
               "institution-requests": { title: "Institution Profile", desc: "Manage your institution details" }
             };
             const item = config[active as keyof typeof config];
-            if (!item) return null;
+            if (!item || active === "users" || active === "terms") return null;
 
             return (
               <Box mb={3} sx={{

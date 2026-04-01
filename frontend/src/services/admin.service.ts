@@ -22,6 +22,11 @@ export const adminService = {
         return response.data;
     },
 
+    updateBulkStatus: async (userIds: string[], enabled: boolean) => {
+        const response = await api.post('/admin/users/bulk-status', { userIds, enabled });
+        return response.data;
+    },
+
     updateUserRole: async (userId: string, role: string, organizationIds?: string | string[]) => {
         const payload: any = { role };
         if (Array.isArray(organizationIds)) {
@@ -30,6 +35,12 @@ export const adminService = {
             payload.organizationId = organizationIds;
         }
         const response = await api.put(`/admin/users/${userId}/role`, payload);
+        return response.data;
+    },
+
+    updateBulkRole: async (userIds: string[], role: string, organizationIds?: string[]) => {
+        const payload: any = { userIds, role, organizationIds };
+        const response = await api.post('/admin/users/bulk-role', payload);
         return response.data;
     },
 

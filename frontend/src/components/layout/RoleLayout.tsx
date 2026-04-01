@@ -39,8 +39,8 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
     // Extract initials from fullName or email
     const storedUser = localStorage.getItem('user');
     const fullUser = storedUser ? JSON.parse(storedUser) : null;
-    const fullName = fullUser?.fullName || user.username || (user.email ? user.email.split('@')[0] : "User");
-    const avatarUrl = fullUser?.avatarUrl || "";
+    const fullName = user.fullName || fullUser?.fullName || user.username || (user.email ? user.email.split('@')[0] : "User");
+    const avatarUrl = user.avatarUrl || fullUser?.avatarUrl || "";
 
     const initials = getInitials(fullName);
 
@@ -50,6 +50,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                 fullName={fullName}
                 initials={initials}
                 avatarUrl={avatarUrl}
+                email={user.email || ""}
                 role={user.role}
                 logout={logout}
                 navItems={navItems}

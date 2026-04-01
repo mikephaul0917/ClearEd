@@ -164,6 +164,42 @@ export const updateStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const updateBulkStatus = async (req: Request, res: Response) => {
+  try {
+    const { userIds, enabled } = req.body;
+    const institutionId = resolveInstitutionId(req);
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "No user IDs provided" });
+    }
+
+    const result = await User.updateMany(
+      { _id: { $in: userIds }, institutionId },
+      { $set: { enabled: !!enabled } }
+    );
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'BULK_USER_STATUS_UPDATED',
+      category: 'user_management',
+      resource: 'User',
+      resourceId: null as any,
+      details: {
+        userIdCount: userIds.length,
+        newEnabled: !!enabled,
+        targetUserIds: userIds
+      },
+      severity: 'medium',
+      req
+    });
+
+    res.json({ message: `Successfully updated ${result.modifiedCount} users`, count: result.modifiedCount });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -260,6 +296,110 @@ export const updateRole = async (req: Request, res: Response) => {
     }
 
     res.json({ message: "Role updated", role: user.role });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateBulkRole = async (req: Request, res: Response) => {
+  try {
+    const { userIds, role, organizationIds } = req.body;
+    const institutionId = resolveInstitutionId(req);
+    const adminRole = (req as any).user?.role;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "No user IDs provided" });
+    }
+
+    // 1. Validate role input
+    const validRoles = ["student", "officer", "dean", "admin"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role specified." });
+    }
+
+    // 2. Prevent non-super_admins from assigning super_admin
+    if (role === 'super_admin' && adminRole !== 'super_admin') {
+      return res.status(403).json({ message: "You don't have permission to assign the Super Admin role." });
+    }
+
+    const payload: any = { role };
+    const targetOrgIds = organizationIds || [];
+    
+    if (targetOrgIds.length > 0) {
+      payload.organizationId = targetOrgIds[0];
+    } else {
+      payload.organizationId = null;
+    }
+
+    // Update the basic User record for all
+    const result = await User.updateMany(
+      { _id: { $in: userIds }, institutionId },
+      { $set: payload }
+    );
+
+    // Now handle the complex role synchronization for EACH user
+    // Since this is a bulk operation, we'll iterate through userIds for the relationship sync
+    // This is necessary because of the specialized logic for deans and officers
+    for (const userId of userIds) {
+      // Officer Role Synchronization Logic:
+      if (role === 'officer') {
+        if (targetOrgIds.length > 0) {
+          await OrganizationMember.updateMany(
+            { 
+              userId, 
+              institutionId, 
+              role: 'officer',
+              organizationId: { $nin: targetOrgIds } 
+            },
+            { status: 'removed', role: 'member', statusChangedAt: new Date() }
+          );
+
+          for (const orgId of targetOrgIds) {
+            await OrganizationMember.findOneAndUpdate(
+              { userId, organizationId: orgId, institutionId },
+              { role: 'officer', status: 'active', joinedAt: new Date(), statusChangedAt: new Date() },
+              { upsert: true, new: true }
+            );
+          }
+        } else {
+          await OrganizationMember.updateMany(
+            { userId, institutionId, role: 'officer' },
+            { status: 'removed', role: 'member', statusChangedAt: new Date() }
+          );
+        }
+      }
+      else if (role !== 'officer') {
+        // If they were an officer before, remove it
+        await OrganizationMember.updateMany(
+          { userId, institutionId, role: 'officer' },
+          { status: 'removed', role: 'member', statusChangedAt: new Date() }
+        );
+      }
+
+      // Dean Role Synchronization:
+      if (role !== 'dean') {
+        await DeanAssignment.deleteMany({ deanId: userId, institutionId });
+      }
+    }
+
+    await logAudit({
+      userId: (req as any).user?.id,
+      institutionId,
+      action: 'BULK_USER_ROLE_UPDATED',
+      category: 'user_management',
+      resource: 'User',
+      resourceId: null as any,
+      details: {
+        userIdCount: userIds.length,
+        newRole: role,
+        organizationIds: targetOrgIds,
+        targetUserIds: userIds
+      },
+      severity: 'high',
+      req
+    });
+
+    res.json({ message: `Successfully updated ${result.modifiedCount} users`, count: result.modifiedCount });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

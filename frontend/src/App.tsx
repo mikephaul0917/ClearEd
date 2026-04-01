@@ -36,6 +36,7 @@ import PublicRoute from "./components/auth/PublicRoute";
 
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { GlobalLoader } from "./components/layout/GlobalLoader";
+import GlobalModal from "./components/GlobalModal";
 
 export default function App() {
   const location = useLocation();
@@ -59,6 +60,7 @@ export default function App() {
   return (
     <LoadingProvider>
       <GlobalLoader />
+      <GlobalModal />
       {showHeader && <Header />}
       <Box sx={{ pt: showHeader ? 7 : 0 }}>
         {showHeader && <GlobalAnnouncements />}
