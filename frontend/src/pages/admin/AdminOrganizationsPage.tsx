@@ -2,31 +2,34 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Box, Typography, Card, CardContent, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, FormControl, InputLabel,
-  Select, MenuItem, Chip, Button, Dialog, DialogTitle, DialogContent,
+  Select, Menu, MenuItem, Chip, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, Alert, Grid, IconButton, Tooltip, LinearProgress,
   Pagination, Avatar, SelectChangeEvent, useTheme, useMediaQuery, Skeleton,
-  TextField, InputAdornment, FormLabel
+  TextField, InputAdornment, FormLabel, Switch
 } from "@mui/material";
 import {
-  Visibility, Business, FilterList, Refresh, Search, AddCircle,
-  Delete, RestoreFromTrash, DeleteForever, History
+  Visibility, Business, FilterList, Search, AddCircle,
+  Delete, RestoreFromTrash, DeleteForever, History, Security, CorporateFare,
+  MoreVert, CheckCircleRounded
 } from '@mui/icons-material';
 import { adminService } from "../../services";
 
 // ─── Modern Bento Design System ──────────────────────────────────────────────
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#F8F9FE',
   surface: '#FFFFFF',
-  black: '#0a0a0a',
-  textPrimary: '#000000',
+  black: '#1E293B',
+  textPrimary: '#1E293B',
   textSecondary: '#64748B',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
-  yellow: '#FEF08A',
-  orange: '#ff895d',
-  border: '#E2E8F0',
-  cardRadius: '16px',
+  teal: '#0E7490',      // Deep professional tone
+  lavender: '#818CF8',   // Modern Indigo/Blue
+  orange: '#F59E0B',
+  border: '#F1F5F9',
+  cardRadius: '20px',
   pillRadius: '999px',
+  accentBlue: '#0E7490',
+  accentGreen: '#10B981',
+  tealLight: 'rgba(45, 212, 191, 0.15)',
 };
 
 const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
@@ -35,7 +38,7 @@ interface OrganizationRow {
   _id: string;
   name: string;
   description?: string;
-  joinCode: string; 
+  joinCode: string;
   signatoryName?: string;
   isFinal?: boolean;
 }
@@ -62,8 +65,33 @@ export default function AdminOrganizationsPage({
   const [joinCode, setJoinCode] = useState(""); // Added joinCode state
   const [signatoryName, setSignatoryName] = useState("");
   const [isFinal, setIsFinal] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeMenuOrg, setActiveMenuOrg] = useState<any>(null);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  const [successDialog, setSuccessDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+  });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -143,191 +171,231 @@ export default function AdminOrganizationsPage({
   return (
     <Box sx={{ fontFamily: fontStack }}>
 
+      {/* ── Page Header ────────────────────────────────────────────── */}
+      <Box sx={{ mb: 6 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '2.25rem', color: COLORS.textPrimary, letterSpacing: '-0.05em', lineHeight: 1 }}>
+          Institutional Organizations
+        </Typography>
+        <Typography sx={{ fontSize: 15, color: COLORS.textSecondary, mt: 0.75, fontWeight: 500 }}>
+          Manage institutional departments, signatories, and official access codes.
+        </Typography>
+      </Box>
+
       {/* ── Stats Bento Row ────────────────────────────────────────── */}
       <Box sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(1, 1fr)', md: 'repeat(3, 1fr)' },
-        gap: 2, mb: 3,
+        gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+        gap: 3, mb: 4,
       }}>
         {loading ? (
-          [1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={100} sx={{ borderRadius: COLORS.cardRadius }} />)
+          [1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={110} sx={{ borderRadius: COLORS.cardRadius }} />)
         ) : ([
-          { label: 'Total Organizations', value: stats.total, accent: COLORS.teal },
-          { label: 'Active', value: stats.active, accent: COLORS.lavender },
-          { label: 'In Trash', value: stats.inTrash, accent: COLORS.orange },
+          { label: "Total Organizations", value: stats.total, sub: "Institutional Count", icon: <Business sx={{ fontSize: 18 }} /> },
+          { label: "Active Directory", value: stats.active, sub: "Currently Active", icon: <Visibility sx={{ fontSize: 18 }} /> },
+          { label: "Final Signatories", value: rows.filter(r => r.isFinal).length, sub: "Completion Cycle", icon: <History sx={{ fontSize: 18 }} /> },
+          { label: "Archived Assets", value: stats.inTrash, sub: "In Trash Bin", icon: <RestoreFromTrash sx={{ fontSize: 18 }} /> },
         ].map((stat) => (
           <Box key={stat.label} sx={{
-            borderRadius: COLORS.cardRadius, p: 2.5,
-            backgroundColor: `${stat.accent}${stat.accent === COLORS.yellow ? '30' : '12'}`,
-            border: `1px solid ${stat.accent}20`,
-            position: 'relative',
-            overflow: 'hidden',
+            borderRadius: COLORS.cardRadius, p: 3,
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
+            minHeight: 125,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.03), 0 4px 6px -2px rgba(0,0,0,0.01)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+            }
           }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: stat.accent, mb: 1.5 }} />
-            <Typography sx={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-              color: COLORS.textSecondary, mb: 0.5, letterSpacing: '0.1em'
-            }}>
-              {stat.label}
-            </Typography>
-            <Typography sx={{ fontWeight: 800, fontSize: 28, letterSpacing: '-1px', color: COLORS.textPrimary }}>
-              {stat.value}
-            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, mb: 0.5 }}>
+                  {stat.label}
+                </Typography>
+                <Typography sx={{ fontWeight: 900, fontSize: 28, color: COLORS.textPrimary, letterSpacing: '-1px', lineHeight: 1 }}>
+                  {stat.value}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         )))}
       </Box>
 
-      {/* ── Filters Card ───────────────────────────────────────────── */}
+      {/* ── Notification/Alert Bar ──────────────────────────────────── */}
+
+
+      {/* ── Recent Organizations (Approval Style) ────────────────── */}
+      {!loading && rows.length > 0 && (
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' },
+          gap: 3, mb: 4,
+        }}>
+          {rows.slice(0, 2).map((org, idx) => (
+            <Box key={org._id} sx={{
+              p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+              position: 'relative'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{
+                    width: 44, height: 44, bgcolor: COLORS.tealLight,
+                    color: COLORS.teal,
+                    fontWeight: 800, fontSize: 16, borderRadius: '12px'
+                  }}>
+                    {org.name?.charAt(0)}
+                  </Avatar>
+                  <Box>
+                    <Typography sx={{ fontWeight: 800, fontSize: 15, color: COLORS.textPrimary }}>{org.name}</Typography>
+                    <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>{org.signatoryName || "No Signatory"}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+
+                  <Chip label="Active" size="small" sx={{ fontWeight: 700, fontSize: 10, bgcolor: COLORS.tealLight, color: COLORS.teal }} />
+                </Box>
+              </Box>
+
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 2.5, fontStyle: 'italic' }}>
+                "{org.description || "Institutional organization for official documentation and signatory processes."}"
+              </Typography>
+
+              <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>
+                  Code: <Box component="span" sx={{ fontWeight: 800, color: COLORS.teal }}>{org.joinCode}</Box>
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5 }}>
+                  <Button
+                    onClick={() => setManageOrg(org)}
+                    size="small"
+                    variant="text"
+                    sx={{ textTransform: 'none', fontWeight: 800, color: COLORS.textSecondary, fontSize: 13 }}
+                  >
+                    Details
+                  </Button>
+                  <Button
+                    onClick={() => setManageOrg(org)}
+                    size="small"
+                    variant="contained"
+                    disableElevation
+                    sx={{
+                      textTransform: 'none', fontWeight: 800, borderRadius: '10px',
+                      bgcolor: COLORS.tealLight, color: COLORS.teal, px: 2,
+                      '&:hover': { bgcolor: 'rgba(45, 212, 191, 0.25)' }
+                    }}
+                  >
+                    Modify
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* ── Organization Directory (Team Activity Style) ──────────── */}
       <Box sx={{
-        borderRadius: COLORS.cardRadius, p: isSmallMobile ? 2 : 3,
-        backgroundColor: `${COLORS.lavender}08`,
-        border: `1px solid ${COLORS.lavender}15`, mb: 3,
+        borderRadius: COLORS.cardRadius,
+        backgroundColor: COLORS.surface,
+        border: `1px solid ${COLORS.border}`,
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+        overflow: 'hidden'
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-          <Box sx={{
-            width: 36, height: 36, borderRadius: '10px',
-            backgroundColor: `${COLORS.lavender}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1.5,
-          }}>
-            {loading ? <Skeleton variant="circular" width={18} height={18} /> : <FilterList sx={{ fontSize: 18, color: COLORS.black }} />}
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            {loading ? (
-              <>
-                <Skeleton variant="text" width={160} height={24} sx={{ mb: 0.5 }} />
-                <Skeleton variant="text" width={isSmallMobile ? 240 : 350} height={16} />
-              </>
-            ) : (
-              <>
-                <Typography sx={{ fontFamily: fontStack, fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, mb: 0.25 }}>
-                  Manage & Search
-                </Typography>
-                <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>
-                  Search organizations or switch between active and deleted views
-                </Typography>
-              </>
-            )}
-          </Box>
-          {loading ? (
-            <Skeleton variant="rounded" width={140} height={32} sx={{ borderRadius: 9999 }} />
-          ) : (
-            <Box sx={{ display: "inline-flex", borderRadius: 9999, border: "1px solid #E5E7EB", backgroundColor: "#F9FAFB", p: 0.25 }}>
+        {/* Table Header / Toolbar */}
+        <Box sx={{ p: 4, pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 900, fontSize: 20, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+                Organization Directory
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
+
               <Button
-                variant={view === "active" ? "contained" : "text"}
-                onClick={() => { setView("active"); setPage(1); }}
+                variant="contained"
+                disableElevation
+                startIcon={<AddCircle />}
+                onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
                 sx={{
-                  textTransform: "none", fontSize: 12, px: 2, py: 0.5, borderRadius: 9999, minWidth: 0,
-                  backgroundColor: view === "active" ? "#0F172A" : "transparent",
-                  color: view === "active" ? "#FFFFFF" : "#0F172A",
-                  fontWeight: 600,
-                  '&:hover': { backgroundColor: view === "active" ? "#111827" : "#E5E7EB" },
+                  borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
+                  textTransform: 'none', px: 4, py: 1.2, fontWeight: 800,
+                  fontSize: 13, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                  '&:hover': { 
+                    bgcolor: '#000', 
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 15px 30px -5px rgba(0,0,0,0.4)'
+                  },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}
               >
-                Active
-              </Button>
-              <Button
-                variant={view === "deleted" ? "contained" : "text"}
-                onClick={() => { setView("deleted"); setPage(1); }}
-                sx={{
-                  textTransform: "none", fontSize: 12, px: 2, py: 0.5, borderRadius: 9999, minWidth: 0,
-                  backgroundColor: view === "deleted" ? "#0F172A" : "transparent",
-                  color: view === "deleted" ? "#FFFFFF" : "#0F172A",
-                  fontWeight: 600,
-                  '&:hover': { backgroundColor: view === "deleted" ? "#111827" : "#E5E7EB" },
-                }}
-              >
-                Trash
+                Create New
               </Button>
             </Box>
-          )}
-        </Box>
-
-        {loading ? (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', flexDirection: isSmallMobile ? 'column' : 'row' }}>
-            <Skeleton variant="rounded" height={40} sx={{ flex: 1, minWidth: 200, borderRadius: '12px', width: isSmallMobile ? '100%' : 'auto' }} />
-            <Skeleton variant="rounded" height={40} width={isSmallMobile ? '100%' : 160} sx={{ borderRadius: COLORS.pillRadius }} />
           </Box>
-        ) : (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', flexDirection: isSmallMobile ? 'column' : 'row' }}>
+
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
             <TextField
-              fullWidth={isSmallMobile}
-              placeholder="Search organizations..."
+              placeholder="Search by name, code or signatory..."
               value={query}
-              size="small"
               onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              size="small"
               InputProps={{
                 startAdornment: <InputAdornment position="start"><Search sx={{ fontSize: 20, color: COLORS.textSecondary }} /></InputAdornment>,
-                sx: { borderRadius: '12px', bgcolor: '#F8FAFC', fontSize: 14 }
+                sx: { borderRadius: '12px', bgcolor: '#F8FAFC', border: 'none', height: 44 }
               }}
-              sx={{ flex: 1, minWidth: 200 }}
+              sx={{ flex: 1, minWidth: 260, '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
             />
-            <Button
-              variant="contained"
-              disableElevation
-              fullWidth={isSmallMobile}
-              startIcon={<AddCircle />}
-              onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
-              sx={{
-                borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
-                textTransform: 'none', px: 3, py: 1, fontWeight: 600,
-                fontSize: 13,
-                '&:hover': { bgcolor: '#222' }
-              }}
-            >
-              Create Organization
-            </Button>
-          </Box>
-        )}
-      </Box>
 
-      {/* ── Table Container ────────────────────────────────────────── */}
-      <Box sx={{
-        borderRadius: COLORS.cardRadius, p: isSmallMobile ? 2 : 3,
-        backgroundColor: `${COLORS.teal}06`,
-        border: `1px solid ${COLORS.teal}12`,
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Box sx={{
-            width: 36, height: 36, borderRadius: '10px',
-            backgroundColor: `${COLORS.teal}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1.5,
-          }}>
-            {loading ? <Skeleton variant="circular" width={18} height={18} /> : <Business sx={{ fontSize: 18, color: COLORS.black }} />}
-          </Box>
-          <Box>
-            {loading ? (
-              <>
-                <Skeleton variant="text" width={140} height={24} sx={{ mb: 0.5 }} />
-                <Skeleton variant="text" width={220} height={16} />
-              </>
-            ) : (
-              <>
-                <Typography sx={{ fontFamily: fontStack, fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, mb: 0.25 }}>
-                  {view === 'active' ? 'Active Organizations' : 'Deleted Organizations'}
-                </Typography>
-                <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>
-                  {view === 'active' ? 'Monitor and manage institutional organizations' : 'Restore or permanently delete removed records'}
-                </Typography>
-              </>
-            )}
+            <Box sx={{ display: 'flex', bgcolor: '#F8FAFC', p: 0.5, borderRadius: '12px' }}>
+              <Button
+                onClick={() => { setView('active'); setPage(1); }}
+                sx={{
+                  textTransform: 'none', px: 2, py: 0.5, borderRadius: '10px', fontSize: 13, fontWeight: 700,
+                  bgcolor: view === 'active' ? '#FFF' : 'transparent',
+                  color: view === 'active' ? COLORS.textPrimary : COLORS.textSecondary,
+                  boxShadow: view === 'active' ? '0 4px 6px -1px rgba(0,0,0,0.05)' : 'none',
+                  '&:hover': { bgcolor: view === 'active' ? '#FFF' : '#F1F5F9' }
+                }}
+              >
+                All Organizations
+              </Button>
+              <Button
+                onClick={() => { setView('deleted'); setPage(1); }}
+                sx={{
+                  textTransform: 'none', px: 2, py: 0.5, borderRadius: '10px', fontSize: 13, fontWeight: 700,
+                  bgcolor: view === 'deleted' ? '#FFF' : 'transparent',
+                  color: view === 'deleted' ? COLORS.textPrimary : COLORS.textSecondary,
+                  boxShadow: view === 'deleted' ? '0 4px 6px -1px rgba(0,0,0,0.05)' : 'none',
+                  '&:hover': { bgcolor: view === 'deleted' ? '#FFF' : '#F1F5F9' }
+                }}
+              >
+                Archived
+              </Button>
+            </Box>
           </Box>
         </Box>
+
+
 
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#F8FAFC' }}>
-                {['Organization', 'Description', 'Join Code', 'Signatory', 'Actions'].map((h, i) => (
+              <TableRow sx={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                {['Organization', 'Description', 'Join Code', 'Signatory', ''].map((h, i) => (
                   <TableCell
                     key={h}
                     align={h === 'Actions' ? 'right' : 'left'}
                     sx={{
-                      fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-                      color: COLORS.textSecondary, textTransform: 'uppercase',
-                      letterSpacing: '0.08em', py: 2
+                      fontFamily: fontStack, fontSize: 13, fontWeight: 700,
+                      color: COLORS.textSecondary, py: 2, px: 3, borderBottom: 'none'
                     }}
                   >
-                    {loading ? <Skeleton variant="text" width={h === 'Actions' ? "40%" : "60%"} height={20} sx={{ ml: h === 'Actions' ? 'auto' : 0 }} /> : h}
+                    {loading ? <Skeleton variant="text" width={h === '' ? "40%" : "60%"} height={20} sx={{ ml: h === '' ? 'auto' : 0 }} /> : h}
                   </TableCell>
                 ))}
               </TableRow>
@@ -353,101 +421,68 @@ export default function AdminOrganizationsPage({
                 </TableRow>
               ) : (
                 paginatedRows.map((org) => (
-                  <TableRow key={org._id} hover sx={{ '&:last-child td': { border: 0 } }}>
-                    <TableCell>
+                  <TableRow
+                    key={org._id}
+                    hover
+                    sx={{
+                      '&:last-child td': { border: 0 },
+                      bgcolor: org.isFinal ? '#F0FDFA' : 'transparent',
+                      '&:hover': { bgcolor: org.isFinal ? '#F0FDFA !important' : '#F8FAFC !important' }
+                    }}
+                  >
+                    <TableCell sx={{ px: 3, py: 2.5, borderBottom: `1px solid ${COLORS.border}` }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: `${COLORS.lavender}25`, color: COLORS.black, fontWeight: 700, fontSize: 14 }}>
+                        <Avatar sx={{
+                          width: 32, height: 32, bgcolor: org.isFinal ? '#0D9488' : COLORS.teal,
+                          color: '#FFF', fontWeight: 800, fontSize: 13, borderRadius: '8px'
+                        }}>
                           {org.name?.charAt(0)}
                         </Avatar>
                         <Box>
-                          <Typography sx={{ fontWeight: 700, fontSize: 14 }}>{org.name}</Typography>
-                          {org.isFinal && <Chip label="Final Signatory" size="small" sx={{ height: 16, fontSize: 10, bgcolor: COLORS.orange + '20', color: COLORS.orange, fontWeight: 700 }} />}
+                          <Typography sx={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary }}>{org.name}</Typography>
+                          <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>ID: {org._id.slice(-6).toUpperCase()}</Typography>
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>
-                        {org.description || "—"}
+                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                        {org.description || "Institutional Office"}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.teal, fontStyle: 'italic', letterSpacing: '0.05em' }}>
+                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
+                      <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.5, borderRadius: '6px', bgcolor: '#F1F5F9' }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 800, color: COLORS.accentBlue, fontStyle: 'italic' }}>
                           {org.joinCode || "—"}
                         </Typography>
-                        {org.joinCode && (
-                          <Tooltip title="Copy to Clipboard">
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                navigator.clipboard.writeText(org.joinCode);
-                                // Optional alert could go here
-                              }}
-                              sx={{ ml: 0.5, p: 0.5, color: COLORS.teal }}
-                            >
-                              <History fontSize="inherit" sx={{ transform: 'rotate(90deg)', fontSize: 14 }} />
-                            </IconButton>
-                          </Tooltip>
-                        )}
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Typography sx={{ fontSize: 13, fontWeight: 500, color: COLORS.textSecondary }}>
-                        {org.signatoryName || "—"}
-                      </Typography>
+                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
+                      {org.isFinal ? (
+                        <Chip
+                          label="Final Reviewer"
+                          size="small"
+                          sx={{
+                            height: 24, fontSize: 11, fontWeight: 800,
+                            bgcolor: '#CCFBF1', color: '#0F766E', borderRadius: '6px'
+                          }}
+                        />
+                      ) : (
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>
+                          {org.signatoryName || "No Signatory"}
+                        </Typography>
+                      )}
                     </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                        {view === "active" ? (
-                          <>
-                            <Tooltip title="Edit">
-                              <IconButton size="small" onClick={() => setManageOrg(org)} sx={{ color: COLORS.black, '&:hover': { backgroundColor: `${COLORS.lavender}20` } }}>
-                                <Visibility fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Move to Trash">
-                              <IconButton size="small"
-                                onClick={async () => {
-                                  if (window.confirm("Move this organization to trash?")) {
-                                    await adminService.deleteOrganization(org._id);
-                                    fetchData();
-                                  }
-                                }}
-                                sx={{ color: COLORS.orange, '&:hover': { backgroundColor: `${COLORS.orange}15` } }}
-                              >
-                                <Delete fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        ) : (
-                          <>
-                            <Tooltip title="Restore">
-                              <IconButton size="small"
-                                onClick={async () => {
-                                  await adminService.restoreOrganization(org._id);
-                                  fetchData();
-                                }}
-                                sx={{ color: COLORS.teal, '&:hover': { backgroundColor: `${COLORS.teal}15` } }}
-                              >
-                                <RestoreFromTrash fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete Permanently">
-                              <IconButton size="small"
-                                onClick={async () => {
-                                  if (window.confirm("Permanently delete this organization? This cannot be undone.")) {
-                                    await adminService.permanentDeleteOrganization(org._id);
-                                    fetchData();
-                                  }
-                                }}
-                                sx={{ color: '#EF4444', '&:hover': { backgroundColor: '#FEF2F2' } }}
-                              >
-                                <DeleteForever fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </Box>
+                    <TableCell align="right" sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          setMenuAnchorEl(e.currentTarget);
+                          setActiveMenuOrg(org);
+                        }}
+                        sx={{ color: COLORS.textSecondary, borderRadius: '8px', '&:hover': { bgcolor: '#F1F5F9' } }}
+                      >
+                        <MoreVert sx={{ fontSize: 20 }} />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
@@ -455,14 +490,19 @@ export default function AdminOrganizationsPage({
             </TableBody>
           </Table>
         </TableContainer>
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderTop: `1px solid ${COLORS.border}` }}>
+          <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 600 }}>
+            Showing <Box component="span" sx={{ color: COLORS.textPrimary }}>{paginatedRows.length}</Box> of <Box component="span" sx={{ color: COLORS.textPrimary }}>{filtered.length}</Box> entries
+          </Typography>
           <Pagination
             count={totalPages}
             page={page}
             onChange={(_, v) => setPage(v)}
             sx={{
               '& .MuiPaginationItem-root': {
-                fontFamily: fontStack, borderRadius: '10px', fontWeight: 600,
+                fontFamily: fontStack, borderRadius: '8px', fontWeight: 800, fontSize: 13,
+                color: COLORS.textSecondary,
+                '&.Mui-selected': { bgcolor: COLORS.black, color: '#FFF', '&:hover': { bgcolor: '#000' } }
               }
             }}
           />
@@ -475,92 +515,110 @@ export default function AdminOrganizationsPage({
         onClose={() => setManageOrg(null)}
         fullWidth
         maxWidth="sm"
-        PaperProps={{ sx: { borderRadius: COLORS.cardRadius, p: 1 } }}
+        PaperProps={{
+          sx: {
+            borderRadius: '24px', p: 1, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+            border: `1px solid ${COLORS.border}`
+          }
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 800, fontFamily: fontStack }}>
-          {manageOrg?._id ? "Edit Organization" : "Create New Organization"}
+        <DialogTitle sx={{ p: 4, pb: 1 }}>
+          <Typography sx={{ fontWeight: 900, fontSize: 22, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+            {manageOrg?._id ? "Organization Settings" : "New Organization"}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5 }}>
+            {manageOrg?._id ? "Update department details and signatory configurations." : "Establish a new institutional office for the clearance workflow."}
+          </Typography>
         </DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={3} sx={{ mt: 2 }}>
+        <DialogContent sx={{ p: 4 }}>
+          <Box display="flex" flexDirection="column" gap={3.5}>
             <Box>
-              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'block' }}>
-                Organization Name
+              <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                Full Name
               </FormLabel>
               <TextField
                 fullWidth
-                placeholder="e.g. Registrar"
+                placeholder="e.g. Registrar's Office"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
+                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC', border: 'none', px: 0.5 } }}
+                sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
-            <Grid container spacing={2}>
+            <Box>
+              <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                Internal Description
+              </FormLabel>
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                placeholder="Briefly describe the purpose of this organization..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
+                sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
+              />
+            </Box>
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'block' }}>
-                  Short Description
+                <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                  System Signatory
                 </FormLabel>
                 <TextField
                   fullWidth
-                  placeholder="e.g. Office of the Registrar"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'block' }}>
-                  Join Code (System Generated)
-                </FormLabel>
-                <TextField
-                  fullWidth
-                  value={joinCode}
-                  disabled
-                  InputProps={{
-                    sx: { borderRadius: '12px', bgcolor: '#F1F5F9', fontWeight: 800, color: COLORS.teal, textAlign: 'center' },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={12}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'block' }}>
-                  Signatory Name
-                </FormLabel>
-                <TextField
-                  fullWidth
-                  placeholder="e.g. John Doe"
+                  placeholder="e.g. Juan Dela Cruz"
                   value={signatoryName}
                   onChange={(e) => setSignatoryName(e.target.value)}
                   InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
+                  sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                  Access Code
+                </FormLabel>
+                <TextField
+                  fullWidth
+                  value={joinCode || "AUTO-GEN"}
+                  disabled
+                  InputProps={{
+                    sx: {
+                      borderRadius: '12px', bgcolor: '#F1F5F9', fontWeight: 900,
+                      color: COLORS.accentBlue, textAlign: 'center', fontSize: 14
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, borderRadius: '12px', bgcolor: '#F8FAFC', border: `1px solid ${COLORS.border}` }}>
+            <Box sx={{
+              display: 'flex', alignItems: 'center', gap: 2, p: 2.5, borderRadius: '16px',
+              bgcolor: isFinal ? '#F0FDFA' : '#F8FAFC', border: `1px solid ${isFinal ? '#CCFBF1' : '#E2E8F0'}`,
+              transition: '0.3s'
+            }}>
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Final Signatory</Typography>
-                <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>Is this the last step in the clearance workflow?</Typography>
+                <Typography sx={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary }}>Final Milestone</Typography>
+                <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>
+                  Mark this as the final required signatory in the sequence.
+                </Typography>
               </Box>
-              <Button
-                variant={isFinal ? "contained" : "outlined"}
-                onClick={() => setIsFinal(!isFinal)}
-                size="small"
+              <Switch
+                checked={isFinal}
+                onChange={() => setIsFinal(!isFinal)}
                 sx={{
-                  borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                  bgcolor: isFinal ? COLORS.black : 'transparent',
-                  color: isFinal ? '#FFF' : COLORS.black,
-                  borderColor: COLORS.black,
-                  '&:hover': { bgcolor: isFinal ? '#222' : 'transparent', borderColor: COLORS.black }
+                  '& .MuiSwitch-switchBase.Mui-checked': { color: '#0D9488' },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#0D9488' },
                 }}
-              >
-                {isFinal ? "Enabled" : "Disabled"}
-              </Button>
+              />
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 1 }}>
+        <DialogActions sx={{ p: 4, pt: 1, gap: 1.5 }}>
           <Button
             onClick={() => setManageOrg(null)}
-            sx={{ color: COLORS.textSecondary, textTransform: 'none', fontWeight: 600, fontFamily: fontStack }}
+            sx={{ color: COLORS.textSecondary, textTransform: 'none', fontWeight: 800, fontSize: 14 }}
           >
-            Cancel
+            Go Back
           </Button>
           <Button
             variant="contained"
@@ -573,34 +631,315 @@ export default function AdminOrganizationsPage({
                 } else {
                   const terms = await adminService.getTerms();
                   const activeTerm = terms.data?.find((t: any) => t.isActive) || terms.data?.[0];
-
-                  await adminService.createOrganization({
-                    name,
-                    description,
-                    signatoryName,
-                    isFinal,
-                    termId: activeTerm?._id
-                  });
+                  await adminService.createOrganization({ name, description, signatoryName, isFinal, termId: activeTerm?._id });
                 }
                 fetchData();
                 setManageOrg(null);
+                setSuccessDialog({
+                  open: true,
+                  title: manageOrg?._id ? "Update Successful" : "Creation Successful",
+                  message: manageOrg?._id 
+                    ? `The organization "${name}" has been successfully updated.`
+                    : `The organization "${name}" has been successfully established and added to the directory.`
+                });
                 setName(""); setDescription(""); setSignatoryName(""); setIsFinal(false);
               } catch (err: any) {
                 console.error("Failed to save organization:", err);
-                const msg = err.response?.data?.message || err.message || "An error occurred";
-                alert(msg);
+                alert(err.response?.data?.message || err.message || "An error occurred");
               }
             }}
             sx={{
               borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
-              textTransform: 'none', px: 4, fontWeight: 600,
-              fontFamily: fontStack,
-              '&:hover': { bgcolor: '#222' }
+              textTransform: 'none', px: 4, py: 1.2, fontWeight: 800, fontSize: 14,
+              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+              '&:hover': { 
+                bgcolor: '#000', 
+                transform: 'translateY(-2px)',
+                boxShadow: '0 15px 30px -5px rgba(0,0,0,0.4)'
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
-            {manageOrg?._id ? "Save Changes" : "Create Organization"}
+            {manageOrg?._id ? "Update Changes" : "Confirm Creation"}
           </Button>
         </DialogActions>
+      </Dialog>
+      {/* --- ELLIPSIS MENU --- */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={() => setMenuAnchorEl(null)}
+        PaperProps={{
+          elevation: 2,
+          sx: {
+            borderRadius: '16px',
+            mt: 1.5,
+            minWidth: 160,
+            '& .MuiMenuItem-root': {
+              fontSize: 14,
+              fontWeight: 600,
+              py: 1.2,
+              px: 2,
+              borderRadius: '8px',
+              mx: 1,
+              '&:hover': { bgcolor: '#F1F5F9', color: COLORS.teal }
+            }
+          }
+        }}
+      >
+        <MenuItem onClick={() => {
+          setManageOrg(activeMenuOrg);
+          setMenuAnchorEl(null);
+        }}>
+          <Visibility sx={{ fontSize: 18, mr: 1.5, color: '#64748B' }} />
+          View Details
+        </MenuItem>
+
+        {view === 'deleted' && (
+          <MenuItem
+            onClick={() => {
+              if (activeMenuOrg) {
+                setConfirmDialog({
+                  open: true,
+                  title: "Are You Sure Want To Restore?",
+                  message: `You are about to restore "${activeMenuOrg.name}" to the active organizational directory.`,
+                  confirmText: "Yes, Restore",
+                  onConfirm: () => adminService.restoreOrganization(activeMenuOrg._id).then(() => {
+                    fetchData();
+                    setSuccessDialog({
+                      open: true,
+                      title: "Restoration Successful",
+                      message: `"${activeMenuOrg.name}" has been successfully restored to the active directory.`
+                    });
+                  })
+                });
+              }
+              setMenuAnchorEl(null);
+            }}
+            sx={{ color: COLORS.teal }}
+          >
+            <RestoreFromTrash sx={{ fontSize: 18, mr: 1.5 }} />
+            Restore Organization
+          </MenuItem>
+        )}
+
+        <MenuItem
+          onClick={() => {
+            if (!activeMenuOrg) return;
+            
+            const isTrash = view === 'deleted';
+            const title = isTrash ? "Are You Sure Want To Delete Permanently?" : "Are You Sure Want To Archive?";
+            const message = isTrash 
+              ? `You are about to permanently delete "${activeMenuOrg.name}". This action is irreversible and cannot be undone.`
+              : `You are about to move "${activeMenuOrg.name}" to the archive bin. It can be recovered later if needed.`;
+            const confirmText = isTrash ? "Yes, Delete Forever" : "Yes, Archive";
+            
+            setConfirmDialog({
+              open: true,
+              title,
+              message,
+              confirmText,
+              onConfirm: () => {
+                const action = isTrash 
+                  ? adminService.permanentDeleteOrganization(activeMenuOrg._id)
+                  : adminService.deleteOrganization(activeMenuOrg._id);
+                action.then(() => {
+                  fetchData();
+                  setSuccessDialog({
+                    open: true,
+                    title: isTrash ? "Permanent Deletion Successful" : "Selection Archived Successfully",
+                    message: isTrash 
+                      ? `"${activeMenuOrg.name}" has been permanently removed from the system.`
+                      : `"${activeMenuOrg.name}" has been successfully moved to the archive bin.`
+                  });
+                });
+              }
+            });
+            setMenuAnchorEl(null);
+          }}
+          sx={{ color: '#EF4444' }}
+        >
+          {view === 'deleted' ? (
+            <>
+              <DeleteForever sx={{ fontSize: 18, mr: 1.5 }} />
+              Delete Permanently
+            </>
+          ) : (
+            <>
+              <Delete sx={{ fontSize: 18, mr: 1.5 }} />
+              Delete
+            </>
+          )}
+        </MenuItem>
+      </Menu>
+
+      {/* --- CUSTOM CONFIRMATION DIALOG --- */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+        PaperProps={{
+          sx: {
+            borderRadius: '40px',
+            p: 4,
+            maxWidth: '440px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            textAlign: 'center'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0 }}>
+          <Typography sx={{ 
+            fontWeight: 900, 
+            fontSize: '28px', 
+            color: COLORS.textPrimary, 
+            letterSpacing: '-0.03em',
+            lineHeight: 1.2,
+            mb: 2,
+            px: 2
+          }}>
+            {confirmDialog.title}
+          </Typography>
+          <Typography sx={{ 
+            fontSize: '16px', 
+            color: COLORS.textSecondary, 
+            fontWeight: 500,
+            lineHeight: 1.5,
+            mb: 5,
+            px: 2
+          }}>
+            {confirmDialog.message}
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={() => {
+                confirmDialog.onConfirm();
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+              }}
+              sx={{
+                borderRadius: COLORS.pillRadius,
+                bgcolor: COLORS.black,
+                color: '#FFF',
+                textTransform: 'none',
+                width: '100%',
+                py: 2.2,
+                fontSize: '18px',
+                fontWeight: 900,
+                letterSpacing: '-0.01em',
+                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                '&:hover': {
+                  bgcolor: '#000',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 15px 35px -5px rgba(0,0,0,0.4)',
+                },
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              {confirmDialog.confirmText || "Yes, Confirm"}
+            </Button>
+            <Button
+              onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+              sx={{
+                textTransform: 'none',
+                color: COLORS.textSecondary,
+                fontSize: '16px',
+                fontWeight: 800,
+                py: 1,
+                '&:hover': { color: COLORS.textPrimary, bgcolor: 'transparent' }
+              }}
+            >
+              Not Now
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- CUSTOM SUCCESS ALERT DIALOG --- */}
+      <Dialog
+        open={successDialog.open}
+        onClose={() => setSuccessDialog(prev => ({ ...prev, open: false }))}
+        PaperProps={{
+          sx: {
+            borderRadius: '40px',
+            p: 4,
+            maxWidth: '440px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            textAlign: 'center'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Box sx={{ 
+            width: 100, 
+            height: 100, 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            mb: 3,
+            background: 'radial-gradient(circle, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0) 70%)',
+            border: '1px solid rgba(14, 116, 144, 0.1)'
+          }}>
+            <Box sx={{ 
+              width: 64, 
+              height: 64, 
+              borderRadius: '50%', 
+              bgcolor: 'rgba(14, 116, 144, 0.1)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center'
+            }}>
+              <CheckCircleRounded sx={{ fontSize: 36, color: COLORS.teal }} />
+            </Box>
+          </Box>
+
+          <Typography sx={{ 
+            fontWeight: 900, 
+            fontSize: '28px', 
+            color: COLORS.textPrimary, 
+            letterSpacing: '-0.03em',
+            lineHeight: 1.2,
+            mb: 2,
+            px: 2
+          }}>
+            {successDialog.title}
+          </Typography>
+          <Typography sx={{ 
+            fontSize: '16px', 
+            color: COLORS.textSecondary, 
+            fontWeight: 500,
+            lineHeight: 1.5,
+            mb: 5,
+            px: 2
+          }}>
+            {successDialog.message}
+          </Typography>
+
+          <Button
+            disableElevation
+            onClick={() => setSuccessDialog(prev => ({ ...prev, open: false }))}
+            sx={{
+              borderRadius: COLORS.pillRadius,
+              bgcolor: '#F1F5F9',
+              color: COLORS.textPrimary,
+              textTransform: 'none',
+              width: '100%',
+              py: 2.2,
+              fontSize: '18px',
+              fontWeight: 900,
+              letterSpacing: '-0.01em',
+              '&:hover': {
+                bgcolor: '#E2E8F0',
+                transform: 'translateY(-2px)',
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            Close
+          </Button>
+        </DialogContent>
       </Dialog>
     </Box>
   );

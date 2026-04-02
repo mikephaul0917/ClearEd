@@ -338,24 +338,24 @@ export default function AdminPage() {
         loadingDashboard ? (
           <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
             {/* Header Skeleton */}
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, 
-              justifyContent: 'space-between', 
-              alignItems: { xs: 'flex-start', sm: 'center' }, 
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
               gap: 2,
-              mb: 4 
+              mb: 4
             }}>
               <Skeleton variant="text" width={200} height={60} sx={{ borderRadius: '8px' }} />
               <Skeleton variant="rounded" width={isSmallMobile ? '100%' : 140} height={48} sx={{ borderRadius: COLORS.pillRadius }} />
             </Box>
 
             {/* Stat Row Skeleton */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, 
-              gap: 2, 
-              mb: 4 
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+              gap: 2,
+              mb: 4
             }}>
               {[1, 2, 3, 4].map((i) => <StatCardSkeleton key={i} />)}
             </Box>
@@ -372,26 +372,40 @@ export default function AdminPage() {
         ) : (
           <Box sx={{ px: isSmallMobile ? 2 : 2.5, pt: isSmallMobile ? 2 : 2.5, pb: isSmallMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
             {/* ── Dashboard Header ────────────────────────────────────────── */}
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' }, 
-              justifyContent: 'space-between', 
-              alignItems: { xs: 'flex-start', sm: 'center' }, 
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
               gap: 2,
-              mb: 4 
+              mb: 4
             }}>
-              <Typography
-                sx={{
-                  fontFamily: fontStack,
-                  fontWeight: 900,
-                  fontSize: { xs: '2rem', sm: '2.5rem' },
-                  letterSpacing: '-0.06em',
-                  lineHeight: 1,
-                  color: COLORS.textPrimary,
-                }}
-              >
-                Overview
-              </Typography>
+              <Box>
+                <Typography
+                  sx={{
+                    fontFamily: fontStack,
+                    fontWeight: 900,
+                    fontSize: { xs: '2rem', sm: '2.5rem' },
+                    letterSpacing: '-0.06em',
+                    lineHeight: 1,
+                    color: COLORS.textPrimary,
+                  }}
+                >
+                  Overview
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: fontStack,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: COLORS.textSecondary,
+                    mt: 1,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Get a comprehensive view of clearance progress, trends, and recent activities.
+                </Typography>
+              </Box>
               <Button
                 variant="contained"
                 onClick={() => nav("/admin/users")}
@@ -409,7 +423,7 @@ export default function AdminPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
-                  '&:hover': { 
+                  '&:hover': {
                     backgroundColor: '#111',
                     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
                     transform: 'translateY(-1px)'
@@ -464,12 +478,12 @@ export default function AdminPage() {
                       <Typography sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
                         {s.value.toLocaleString()}
                       </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        px: { xs: 0.75, sm: 1 }, 
-                        py: 0.25, 
-                        borderRadius: '999px', 
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        px: { xs: 0.75, sm: 1 },
+                        py: 0.25,
+                        borderRadius: '999px',
                         backgroundColor: trendBg,
                         border: isPositive ? 'none' : `1px solid ${COLORS.orange}40`
                       }}>
@@ -487,21 +501,21 @@ export default function AdminPage() {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 4 }}>
               {/* Clearance Volume Chart */}
               <Box sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: '16px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' }, 
-                  justifyContent: 'space-between', 
-                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between',
+                  alignItems: { xs: 'flex-start', sm: 'center' },
                   gap: 2,
-                  mb: { xs: 4, sm: 3 } 
+                  mb: { xs: 4, sm: 3 }
                 }}>
                   <Typography sx={{ fontWeight: 800, fontSize: { xs: 16, sm: 18 } }}>Clearance Volume</Typography>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    border: '1px solid #E2E8F0', 
-                    borderRadius: '10px', 
-                    p: 0.5, 
-                    bgcolor: '#F8FAFC', 
+                  <Box sx={{
+                    display: 'flex',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '10px',
+                    p: 0.5,
+                    bgcolor: '#F8FAFC',
                     position: 'relative',
                     width: { xs: '100%', sm: 'auto' }
                   }}>
@@ -555,13 +569,13 @@ export default function AdminPage() {
                     ))}
                   </Box>
                 </Box>
-                
+
                 {/* Volume visualization (True SVG Line Chart) */}
-                <Box 
-                  sx={{ 
-                    height: { xs: 180, sm: 220 }, 
-                    width: '100%', 
-                    pt: 4, 
+                <Box
+                  sx={{
+                    height: { xs: 180, sm: 220 },
+                    width: '100%',
+                    pt: 4,
                     position: 'relative',
                     cursor: 'crosshair'
                   }}
@@ -595,12 +609,12 @@ export default function AdminPage() {
                         <Typography sx={{ color: COLORS.textSecondary, fontSize: 13, fontWeight: 500 }}>Gathering data points...</Typography>
                       </Box>
                     );
-                    
+
                     const maxV = Math.max(...data, 10);
                     const width = 1000;
                     const height = 180;
                     const gap = width / (data.length - 1);
-                    
+
                     // Generate SVG Path for the line
                     const pathD = data.map((v, i) => `${i === 0 ? 'M' : 'L'} ${i * gap} ${height - (v / maxV * height)}`).join(' ');
                     const areaPathD = `${pathD} L ${width} ${height} L 0 ${height} Z`;
@@ -612,7 +626,7 @@ export default function AdminPage() {
                           {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
                             <line key={i} x1="0" y1={height * p} x2={width} y2={height * p} stroke="#F1F5F9" strokeWidth="1" />
                           ))}
-                          
+
                           {/* Gradient Fill */}
                           <defs>
                             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -630,7 +644,7 @@ export default function AdminPage() {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1, delay: 0.5 }}
                           />
-                          
+
                           {/* Smooth Line (Drawing Animation) */}
                           <motion.path
                             key={`line-${range}`}
@@ -670,7 +684,7 @@ export default function AdminPage() {
                               fill={i === hoveredIndex ? COLORS.blue : COLORS.blue}
                               stroke="#FFFFFF"
                               strokeWidth={i === hoveredIndex ? 3 : 2}
-                              style={{ 
+                              style={{
                                 transition: 'all 0.2s ease',
                                 filter: i === hoveredIndex ? `drop-shadow(0 0 8px ${COLORS.blue}aa)` : 'none'
                               }}
@@ -683,9 +697,9 @@ export default function AdminPage() {
                           {hoveredIndex !== null && (
                             <motion.div
                               initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ 
-                                opacity: 1, 
-                                y: 0, 
+                              animate={{
+                                opacity: 1,
+                                y: 0,
                                 scale: 1,
                                 left: `${(hoveredIndex / (data.length - 1)) * 100}%`
                               }}
@@ -731,7 +745,7 @@ export default function AdminPage() {
                             </motion.div>
                           )}
                         </AnimatePresence>
-                        
+
                         {/* X-Axis Labels */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 0.5 }}>
                           {(() => {
@@ -751,27 +765,27 @@ export default function AdminPage() {
                 </Box>
               </Box>
 
-                {/* Response Efficiency Stats */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
-                    <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
-                    <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0' }}>
-                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#000000' }}>
-                        {delayedOrg.avgDays} days average
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
-                    <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
-                    <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#FEF08A' }}>
-                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#a16207' }}>
-                        {fastestOrg.avgDays} days average
-                      </Typography>
-                    </Box>
+              {/* Response Efficiency Stats */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
+                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
+                  <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0' }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#000000' }}>
+                      {delayedOrg.avgDays} days average
+                    </Typography>
                   </Box>
                 </Box>
+                <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
+                  <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
+                  <Box sx={{ display: 'inline-flex', mt: 1.5, px: 1.5, py: 0.5, borderRadius: '999px', backgroundColor: '#FEF08A' }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#a16207' }}>
+                      {fastestOrg.avgDays} days average
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
             </Box>
 
 
@@ -931,7 +945,7 @@ export default function AdminPage() {
               "institution-requests": { title: "Institution Profile", desc: "Manage your institution details" }
             };
             const item = config[active as keyof typeof config];
-            if (!item || active === "users" || active === "terms") return null;
+            if (!item || active === "users" || active === "terms" || active === "organizations") return null;
 
             return (
               <Box mb={3} sx={{

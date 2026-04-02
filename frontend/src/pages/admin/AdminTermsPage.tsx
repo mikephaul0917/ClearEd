@@ -44,13 +44,13 @@ interface Term {
 
 // ─── SKELETON LOADER COMPONENT ──────────────────────────────────────────────
 const AdminTermsPageSkeleton = ({ isMobile }: { isMobile: boolean }) => (
-  <Box sx={{ px: isMobile ? 1 : 4, pt: 2, pb: 8, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+  <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: 2, pb: 8, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
     {/* Header Skeleton */}
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 5, maxWidth: 1000, mx: 'auto' }}>
-      <Skeleton variant="rounded" width={56} height={56} sx={{ borderRadius: '14px' }} />
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2.5 }, mb: 5, maxWidth: 1000, mx: 'auto' }}>
+      <Skeleton variant="rounded" width={isMobile ? 48 : 56} height={isMobile ? 48 : 56} sx={{ borderRadius: '14px' }} />
       <Box sx={{ flex: 1 }}>
-        <Skeleton variant="text" width="40%" height={32} sx={{ mb: 1 }} />
-        <Skeleton variant="text" width="60%" height={20} />
+        <Skeleton variant="text" width={isMobile ? "70%" : "40%"} height={32} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width={isMobile ? "90%" : "60%"} height={20} />
       </Box>
     </Box>
 
@@ -58,7 +58,7 @@ const AdminTermsPageSkeleton = ({ isMobile }: { isMobile: boolean }) => (
     <Box sx={{ maxWidth: 1000, mx: 'auto', borderRadius: COLORS.cardRadius, bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, overflow: 'hidden' }}>
       <Grid container>
         {/* Left: Calendar Skeleton */}
-        <Grid item xs={12} md={6.5} sx={{ p: 4, borderRight: { md: `1px solid ${COLORS.border}` } }}>
+        <Grid item xs={12} md={6.5} sx={{ p: { xs: 2, sm: 4 }, borderRight: { md: `1px solid ${COLORS.border}` } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
             <Skeleton variant="circular" width={32} height={32} />
             <Skeleton variant="text" width="30%" height={32} />
@@ -67,13 +67,13 @@ const AdminTermsPageSkeleton = ({ isMobile }: { isMobile: boolean }) => (
           <Grid container spacing={1}>
             {[...Array(42)].map((_, i) => (
               <Grid item xs={1.7} key={i} sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Skeleton variant="circular" width={36} height={36} />
+                <Skeleton variant="circular" width={isMobile ? 30 : 36} height={isMobile ? 30 : 36} />
               </Grid>
             ))}
           </Grid>
         </Grid>
         {/* Right: Form Skeleton */}
-        <Grid item xs={12} md={5.5} sx={{ p: 4, bgcolor: '#FAFAFA' }}>
+        <Grid item xs={12} md={5.5} sx={{ p: { xs: 2.5, sm: 4 }, bgcolor: '#FAFAFA' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {[1, 2].map(i => (
               <Box key={i}>
@@ -81,39 +81,8 @@ const AdminTermsPageSkeleton = ({ isMobile }: { isMobile: boolean }) => (
                 <Skeleton variant="rounded" height={56} sx={{ borderRadius: '12px' }} />
               </Box>
             ))}
-            <Box>
-              <Skeleton variant="text" width="30%" height={20} sx={{ mb: 1.5 }} />
-              <Skeleton variant="rounded" height={60} sx={{ borderRadius: '12px' }} />
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-              <Skeleton variant="text" width="50%" height={24} />
-              <Skeleton variant="rounded" width={50} height={24} />
-            </Box>
           </Box>
         </Grid>
-      </Grid>
-      {/* Footer Skeleton */}
-      <Box sx={{ p: 3, px: 4, display: 'flex', justifyContent: 'space-between', borderTop: `1px solid ${COLORS.border}`, bgcolor: '#FFF' }}>
-        <Skeleton variant="text" width="40%" height={24} />
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Skeleton variant="rounded" width={100} height={48} sx={{ borderRadius: COLORS.pillRadius }} />
-          <Skeleton variant="rounded" width={160} height={48} sx={{ borderRadius: COLORS.pillRadius }} />
-        </Box>
-      </Box>
-    </Box>
-
-    {/* History Skeleton */}
-    <Box sx={{ mt: 8, maxWidth: 1000, mx: 'auto' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Skeleton variant="text" width="200px" height={28} />
-        <Skeleton variant="text" width="100px" height={24} />
-      </Box>
-      <Grid container spacing={2.5}>
-        {[1, 2, 3].map(i => (
-          <Grid item xs={12} key={i}>
-            <Skeleton variant="rounded" height={100} sx={{ borderRadius: '20px' }} />
-          </Grid>
-        ))}
       </Grid>
     </Box>
   </Box>
@@ -310,13 +279,13 @@ export default function AdminTermsPage({
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const daysInPrevMonth = new Date(year, month, 0).getDate();
-    
+
     const calendar = [];
-    
+
     // 1. Previous month's bleeding days
     for (let i = firstDayOfMonth - 1; i >= 0; i--) {
       const d = daysInPrevMonth - i;
@@ -328,7 +297,7 @@ export default function AdminTermsPage({
         active: false
       });
     }
-    
+
     // 2. Current month's days
     const today = new Date();
     for (let d = 1; d <= daysInMonth; d++) {
@@ -342,7 +311,7 @@ export default function AdminTermsPage({
         event: d % 7 === 0 // Placeholder for deterministic events
       });
     }
-    
+
     // 3. Next month's bleeding days (to fill 6 rows, 42 days)
     const remainingSlots = 42 - calendar.length;
     for (let d = 1; d <= remainingSlots; d++) {
@@ -354,7 +323,7 @@ export default function AdminTermsPage({
         active: false
       });
     }
-    
+
     return calendar;
   }, [currentDate]);
 
@@ -382,20 +351,20 @@ export default function AdminTermsPage({
   }
 
   return (
-    <Box sx={{ px: isMobile ? 1 : 4, pt: 2, pb: 8, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+    <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: 2, pb: 8, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
       {/* ─── Page Header ────────────────────────────────────────────────── */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 5, maxWidth: 1000, mx: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 2.5 }, mb: { xs: 3, sm: 5 }, maxWidth: 1000, mx: 'auto' }}>
         <Box sx={{
-          width: 56, height: 56, borderRadius: '14px', border: `1px solid ${COLORS.border}`,
+          width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, borderRadius: '14px', border: `1px solid ${COLORS.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f1f5f9'
         }}>
-          <CalendarToday sx={{ color: COLORS.textPrimary, fontSize: 24 }} />
+          <CalendarToday sx={{ color: COLORS.textPrimary, fontSize: { xs: 20, sm: 24 } }} />
         </Box>
         <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: 24, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
+          <Typography sx={{ fontWeight: 800, fontSize: { xs: 19, sm: 24 }, color: COLORS.textPrimary, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
             Schedule Academic Term
           </Typography>
-          <Typography sx={{ color: COLORS.textSecondary, fontWeight: 500, fontSize: 15 }}>
+          <Typography sx={{ color: COLORS.textSecondary, fontWeight: 500, fontSize: { xs: 13, sm: 15 }, mt: 0.5 }}>
             Define and activate your next academic period easily.
           </Typography>
         </Box>
@@ -411,12 +380,12 @@ export default function AdminTermsPage({
         <Box sx={cardStyle}>
           <Grid container>
             {/* LEFT: CALENDAR SECTION */}
-            <Grid item xs={12} md={6.5} sx={{ p: 4, borderRight: { md: `1px solid ${COLORS.border}` } }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, px: 1 }}>
+            <Grid item xs={12} md={6.5} sx={{ p: { xs: 2, sm: 4 }, borderRight: { md: `1px solid ${COLORS.border}` }, borderBottom: { xs: `1px solid ${COLORS.border}`, md: 'none' } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 3, sm: 4 }, px: 0.5 }}>
                 <IconButton size="small" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
                   <ChevronLeft />
                 </IconButton>
-                
+
                 {isEditingMonth ? (
                   <ClickAwayListener onClickAway={() => setIsEditingMonth(false)}>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -426,7 +395,7 @@ export default function AdminTermsPage({
                         value={currentDate.getMonth()}
                         onChange={(e) => handleMonthChange(Number(e.target.value))}
                         SelectProps={{ native: true }}
-                        sx={{ 
+                        sx={{
                           '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: 13, fontWeight: 700 },
                           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: COLORS.teal }
                         }}
@@ -441,8 +410,8 @@ export default function AdminTermsPage({
                         value={currentDate.getFullYear()}
                         onChange={(e) => handleYearChange(Number(e.target.value))}
                         onKeyDown={(e) => e.key === 'Enter' && setIsEditingMonth(false)}
-                        sx={{ 
-                          width: 80, 
+                        sx={{
+                          width: 80,
                           '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: 13, fontWeight: 700 },
                           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: COLORS.teal }
                         }}
@@ -450,9 +419,9 @@ export default function AdminTermsPage({
                     </Box>
                   </ClickAwayListener>
                 ) : (
-                  <Typography 
+                  <Typography
                     onClick={() => setIsEditingMonth(true)}
-                    sx={{ fontWeight: 800, fontSize: 17, color: COLORS.textPrimary, cursor: 'pointer', '&:hover': { color: COLORS.teal } }}
+                    sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 17 }, color: COLORS.textPrimary, cursor: 'pointer', '&:hover': { color: COLORS.teal } }}
                   >
                     {currentMonth}
                   </Typography>
@@ -465,7 +434,7 @@ export default function AdminTermsPage({
 
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', mb: 2 }}>
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(d => (
-                  <Typography key={d} align="center" sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>{d}</Typography>
+                  <Typography key={d} align="center" sx={{ fontSize: { xs: 11, sm: 13 }, fontWeight: 600, color: COLORS.textSecondary }}>{d}</Typography>
                 ))}
               </Box>
 
@@ -479,52 +448,51 @@ export default function AdminTermsPage({
                       key={day.dateStr}
                       onClick={() => day.current && onDateClick(day.dateStr)}
                       sx={{
-                        height: 48,
+                        height: { xs: 40, sm: 48 },
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: day.current ? 'pointer' : 'default',
                         position: 'relative',
                         transition: '0.2s',
-                        borderRadius: (selected && day.dateStr === startDate && endDate) ? '50% 0 0 50%' : 
-                                     (selected && day.dateStr === endDate) ? '0 50% 50% 0' : 
-                                     inRange ? '0' : '50%',
+                        borderRadius: (selected && day.dateStr === startDate && endDate) ? '50% 0 0 50%' :
+                          (selected && day.dateStr === endDate) ? '0 50% 50% 0' :
+                            inRange ? '0' : '50%',
                         bgcolor: selected ? COLORS.teal : inRange ? COLORS.tealLight : 'transparent',
                         color: selected ? '#FFF' : inRange ? COLORS.teal : day.current ? COLORS.textPrimary : '#CBD5E1',
                         '&:hover': { bgcolor: selected ? COLORS.teal : day.current ? '#F1F5F9' : 'transparent' }
                       }}
                     >
-                      <Typography sx={{ fontWeight: selected ? 800 : 600, fontSize: 15 }}>{day.d}</Typography>
+                      <Typography sx={{ fontWeight: selected ? 800 : 700, fontSize: { xs: 13, sm: 15 } }}>{day.d}</Typography>
 
                       {day.active && !selected && (
-                        <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: COLORS.textPrimary, position: 'absolute', bottom: 8 }} />
+                        <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: COLORS.textPrimary, position: 'absolute', bottom: { xs: 4, sm: 8 } }} />
                       )}
                     </Box>
                   );
                 })}
               </Box>
-              
-              <Box sx={{ mt: 4, display: 'flex', gap: 3, px: 1 }}>
+
+              <Box sx={{ mt: { xs: 3, sm: 4 }, display: 'flex', gap: 3, px: 0.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: COLORS.teal }} />
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary }}>Selection</Typography>
+                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: COLORS.textSecondary }}>Selection</Typography>
                 </Box>
-
               </Box>
             </Grid>
 
             {/* RIGHT: CONFIGURATION FORM */}
-            <Grid item xs={12} md={5.5} sx={{ p: 4, bgcolor: '#FAFAFA' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Grid item xs={12} md={5.5} sx={{ p: { xs: 2.5, sm: 4 }, bgcolor: '#FAFAFA' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 3, sm: 4 } }}>
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1.2 }}>
                     Academic Year*
                   </Typography>
-                  <TextField 
+                  <TextField
                     fullWidth placeholder="e.g., 2025-2026"
                     value={ay} onChange={(e) => setAy(e.target.value)}
-                    variant="outlined" size="medium"
-                    sx={{ 
+                    variant="outlined" size="small"
+                    sx={{
                       '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#FFF' },
                       '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: COLORS.teal }
                     }}
@@ -532,14 +500,14 @@ export default function AdminTermsPage({
                 </Box>
 
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1.2 }}>
                     Semester*
                   </Typography>
-                  <TextField 
+                  <TextField
                     fullWidth placeholder="e.g., 1st Semester"
                     value={sem} onChange={(e) => setSem(e.target.value)}
-                    variant="outlined" size="medium"
-                    sx={{ 
+                    variant="outlined" size="small"
+                    sx={{
                       '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#FFF' },
                       '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: COLORS.teal }
                     }}
@@ -547,22 +515,22 @@ export default function AdminTermsPage({
                 </Box>
 
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1.2 }}>
                     Start date*
                   </Typography>
-                  <Box sx={{ 
+                  <Box sx={{
                     display: 'flex', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF'
                   }}>
-                    <Box sx={{ flex: 1, p: 2, borderRight: `1px solid ${COLORS.border}` }}>
-                      <Typography sx={{ fontSize: 15, color: startDate ? COLORS.textPrimary : '#94A3B8', fontWeight: 600 }}>
+                    <Box sx={{ flex: 1, p: 1.5, borderRight: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center' }}>
+                      <Typography sx={{ fontSize: { xs: 13, sm: 15 }, color: startDate ? COLORS.textPrimary : '#94A3B8', fontWeight: 600 }}>
                         {formatDate(startDate)}
                       </Typography>
                     </Box>
-                    <Box sx={{ width: 110, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography 
+                    <Box sx={{ width: { xs: 90, sm: 110 }, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography
                         onClick={(e) => setStartAnchorEl(e.currentTarget)}
-                        sx={{ 
-                          fontSize: '14px', fontWeight: 700, color: COLORS.textSecondary,
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px' }, fontWeight: 700, color: COLORS.textSecondary,
                           cursor: 'pointer', '&:hover': { color: COLORS.teal }
                         }}
                       >
@@ -573,22 +541,22 @@ export default function AdminTermsPage({
                 </Box>
 
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1.2 }}>
                     End date*
                   </Typography>
-                  <Box sx={{ 
+                  <Box sx={{
                     display: 'flex', border: `1px solid ${COLORS.border}`, borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF'
                   }}>
-                    <Box sx={{ flex: 1, p: 2, borderRight: `1px solid ${COLORS.border}` }}>
-                      <Typography sx={{ fontSize: 15, color: endDate ? COLORS.textPrimary : '#94A3B8', fontWeight: 600 }}>
+                    <Box sx={{ flex: 1, p: 1.5, borderRight: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center' }}>
+                      <Typography sx={{ fontSize: { xs: 13, sm: 15 }, color: endDate ? COLORS.textPrimary : '#94A3B8', fontWeight: 600 }}>
                         {formatDate(endDate)}
                       </Typography>
                     </Box>
-                    <Box sx={{ width: 110, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography 
+                    <Box sx={{ width: { xs: 90, sm: 110 }, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography
                         onClick={(e) => setEndAnchorEl(e.currentTarget)}
-                        sx={{ 
-                          fontSize: '14px', fontWeight: 700, color: COLORS.textSecondary,
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px' }, fontWeight: 700, color: COLORS.textSecondary,
                           cursor: 'pointer', '&:hover': { color: COLORS.teal }
                         }}
                       >
@@ -600,16 +568,17 @@ export default function AdminTermsPage({
 
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: { xs: 14, sm: 15 }, color: COLORS.textPrimary }}>
                       Activate immediately
                     </Typography>
                     <Tooltip title="If enabled, this will become the active term for all students upon creation.">
                       <InfoOutlined sx={{ fontSize: 18, color: COLORS.textSecondary }} />
                     </Tooltip>
                   </Box>
-                  <Switch 
+                  <Switch
                     checked={activateImmediately}
                     onChange={(e) => setActivateImmediately(e.target.checked)}
+                    size={isMobile ? "small" : "medium"}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': { color: COLORS.teal },
                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: COLORS.teal },
@@ -621,38 +590,41 @@ export default function AdminTermsPage({
           </Grid>
 
           {/* CARD FOOTER */}
-          <Box sx={{ 
-            p: 3, px: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+          <Box sx={{
+            p: { xs: 2.5, sm: 3 }, px: { xs: 2.5, sm: 4 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 3,
             borderTop: `1px solid ${COLORS.border}`, bgcolor: '#FFF'
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography sx={{ fontWeight: 600, color: COLORS.textSecondary, fontSize: 14 }}>
+              <Typography sx={{ fontWeight: 600, color: COLORS.textSecondary, fontSize: { xs: 13, sm: 14 } }}>
                 <Box component="span" sx={{ color: COLORS.textPrimary, fontWeight: 700 }}>Event:</Box> {ay || '...'} {sem || '...'}
               </Typography>
-              {startDate && endDate && (
+              {startDate && endDate && !isMobile && (
                 <Typography sx={{ fontWeight: 600, color: COLORS.textSecondary, fontSize: 14 }}>
                   • {new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Typography>
               )}
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button 
+            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column-reverse', mobile: 'row' } }}>
+              <Button
                 onClick={() => { setAy(""); setSem(""); setStartDate(null); setEndDate(null); }}
-                sx={{ 
-                  textTransform: 'none', px: 4, py: 1.2, borderRadius: COLORS.pillRadius, fontWeight: 700, 
+                fullWidth={isMobile}
+                sx={{
+                  textTransform: 'none', px: 4, py: 1.2, borderRadius: COLORS.pillRadius, fontWeight: 700,
                   color: COLORS.textPrimary, border: `1px solid ${COLORS.border}`,
                   '&:hover': { bgcolor: '#F9FBFF' }
                 }}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 variant="contained"
                 onClick={handleSave}
+                fullWidth={isMobile}
                 disabled={saving || !ay || !sem || !startDate || !endDate}
-                sx={{ 
-                  textTransform: 'none', px: 5, py: 1.5, borderRadius: COLORS.pillRadius, fontWeight: 800, 
-                  bgcolor: COLORS.black, color: '#FFF', 
+                sx={{
+                  textTransform: 'none', px: 5, py: 1.5, borderRadius: COLORS.pillRadius, fontWeight: 800,
+                  bgcolor: COLORS.black, color: '#FFF',
                   boxShadow: '0 10px 20px -5px rgba(0, 0, 0, 0.3)',
                   '&:hover': { bgcolor: '#27272A', transform: 'translateY(-1px)' },
                   '&:disabled': { bgcolor: '#E2E8F0', color: '#94A3B8' },
@@ -673,7 +645,7 @@ export default function AdminTermsPage({
             <Settings sx={{ color: COLORS.textSecondary, fontSize: 20 }} />
             <Typography sx={{ fontWeight: 800, fontSize: 19, color: COLORS.textPrimary }}>Academic Cycle History</Typography>
           </Box>
-            <Button 
+          <Button
             onClick={fetchTerms}
             startIcon={<AccessTime />}
             sx={{ textTransform: 'none', fontWeight: 700, color: COLORS.teal, fontSize: 14 }}
@@ -704,40 +676,41 @@ export default function AdminTermsPage({
                     exit={{ opacity: 0, scale: 0.95 }}
                   >
                     <Box sx={{
-                      p: 3, px: 4, borderRadius: '24px', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      p: { xs: 2, sm: 3 }, px: { xs: 2, sm: 4 }, borderRadius: '24px', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`,
+                      display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: { xs: 2, sm: 0 },
                       '&:hover': { boxShadow: '0 10px 30px rgba(0,0,0,0.03)', borderColor: COLORS.teal + '44' },
                       transition: '0.3s'
                     }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Box sx={{ 
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2.5, sm: 4 } }}>
+                        <Box sx={{
                           width: 50, height: 50, borderRadius: '16px', bgcolor: term.isActive ? COLORS.tealLight : '#F8FAFC',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          display: 'flex', flexShrink: 0, alignItems: 'center', justifyContent: 'center'
                         }}>
                           <Typography sx={{ fontWeight: 800, color: term.isActive ? COLORS.teal : COLORS.textSecondary, fontSize: 18 }}>
                             {term.academicYear.split('-')[0].slice(-2)}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography sx={{ fontWeight: 800, fontSize: 17, mb: 0.5 }}>{term.academicYear} {term.semester}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Chip 
-                              label={term.isActive ? "ACTIVE" : "EXPIRED"} 
-                              size="small" 
-                              sx={{ 
+                          <Typography sx={{ fontWeight: 800, fontSize: { xs: 15.5, sm: 17 }, mb: 0.5 }}>{term.academicYear} {term.semester}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                            <Chip
+                              label={term.isActive ? "ACTIVE" : "EXPIRED"}
+                              size="small"
+                              sx={{
                                 fontWeight: 800, fontSize: 10, borderRadius: '6px',
                                 bgcolor: term.isActive ? COLORS.tealLight : '#F1F5F9',
                                 color: term.isActive ? COLORS.teal : '#64748B',
                                 border: term.isActive ? `1px solid ${COLORS.teal}20` : 'none'
-                              }} 
+                              }}
                             />
-                            <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>
+                            <Typography sx={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary }}>
                               Created on {new Date(term.createdAt).toLocaleDateString()}
                             </Typography>
                           </Box>
                         </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Box sx={{ display: 'flex', gap: 1, alignSelf: { xs: 'flex-end', sm: 'center' } }}>
                         {!term.isActive && (
                           <Tooltip title="Set as Active">
                             <IconButton onClick={() => handleActivate(term._id)} sx={{ color: COLORS.teal }}><CheckCircle /></IconButton>
@@ -795,9 +768,9 @@ export default function AdminTermsPage({
       {/* --- CUSTOM TEAL TIME PICKER POPOVER --- */}
       {(() => {
         const renderTimePicker = (
-          anchorEl: HTMLElement | null, 
-          onClose: () => void, 
-          currentTime: string, 
+          anchorEl: HTMLElement | null,
+          onClose: () => void,
+          currentTime: string,
           onSelect: (newTime: string) => void
         ) => {
           const [h, m] = currentTime.split(':');
@@ -820,7 +793,7 @@ export default function AdminTermsPage({
               anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               transformOrigin={{ vertical: 'top', horizontal: 'center' }}
               PaperProps={{
-                sx: { 
+                sx: {
                   p: 2, borderRadius: '20px', mt: 1.5, boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
                   display: 'flex', gap: 2
                 }
@@ -828,11 +801,11 @@ export default function AdminTermsPage({
             >
               {/* Hours */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 200, overflowY: 'auto', pr: 1, alignItems: 'center' }}>
-                {[1,2,3,4,5,6,7,8,9,10,11,12].map(hNum => (
-                  <Button 
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(hNum => (
+                  <Button
                     key={hNum} size="small"
                     onClick={() => setTime(hNum, currentMin, currentPeriod)}
-                    sx={{ 
+                    sx={{
                       minWidth: 45, fontWeight: 700, borderRadius: '8px',
                       bgcolor: currentHour === hNum ? COLORS.teal : 'transparent',
                       color: currentHour === hNum ? '#FFF' : COLORS.textPrimary,
@@ -845,11 +818,11 @@ export default function AdminTermsPage({
               </Box>
               {/* Minutes */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 200, overflowY: 'auto', pr: 1, alignItems: 'center' }}>
-                {['00','05','10','15','20','25','30','35','40','45','50','55'].map(mVal => (
-                  <Button 
+                {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(mVal => (
+                  <Button
                     key={mVal} size="small"
                     onClick={() => setTime(currentHour, mVal.toString(), currentPeriod)}
-                    sx={{ 
+                    sx={{
                       minWidth: 45, fontWeight: 700, borderRadius: '8px',
                       bgcolor: currentMin === mVal.toString() ? COLORS.teal : 'transparent',
                       color: currentMin === mVal.toString() ? '#FFF' : COLORS.textPrimary,
@@ -863,10 +836,10 @@ export default function AdminTermsPage({
               {/* Period */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
                 {['AM', 'PM'].map(pVal => (
-                  <Button 
+                  <Button
                     key={pVal} size="small"
                     onClick={() => setTime(currentHour, currentMin, pVal)}
-                    sx={{ 
+                    sx={{
                       minWidth: 55, fontWeight: 800, borderRadius: '8px',
                       bgcolor: currentPeriod === pVal ? COLORS.teal : 'transparent',
                       color: currentPeriod === pVal ? '#FFF' : COLORS.textPrimary,

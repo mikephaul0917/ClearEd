@@ -375,58 +375,41 @@ export default function UsersTable({
         gap: 3,
         mb: 4
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
-          <Box sx={{
-            bgcolor: '#F1F5F9',
-            p: 1.8,
-            borderRadius: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
-          }}>
-            {loading ? (
-              <Skeleton variant="circular" width={28} height={28} />
-            ) : (
-              <Security sx={{ fontSize: 28, color: '#0F172A' }} />
-            )}
-          </Box>
-          <Box>
-            {loading ? (
-              <>
-                <Skeleton variant="text" width={250} height={40} sx={{ mb: 1, borderRadius: '4px' }} />
-                <Skeleton variant="text" width={400} height={20} sx={{ borderRadius: '4px' }} />
-              </>
-            ) : (
-              <>
-                <Typography
-                  sx={{
-                    fontFamily: fontStack,
-                    fontWeight: 850,
-                    fontSize: isSmallMobile ? '1.75rem' : '2.1rem',
-                    letterSpacing: '-0.04em',
-                    color: COLORS.textPrimary,
-                    lineHeight: 1,
-                    mb: 0.8
-                  }}
-                >
-                  Account Management
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: fontStack,
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: '#64748B',
-                    maxWidth: 600,
-                    letterSpacing: '-0.01em'
-                  }}
-                >
-                  Centrally manage institutional roles, account status, and platform permissions.
-                </Typography>
-              </>
-            )}
-          </Box>
+        <Box>
+          {loading ? (
+            <>
+              <Skeleton variant="text" width={250} height={40} sx={{ mb: 1, borderRadius: '4px' }} />
+              <Skeleton variant="text" width={400} height={20} sx={{ borderRadius: '4px' }} />
+            </>
+          ) : (
+            <>
+              <Typography
+                sx={{
+                  fontFamily: fontStack,
+                  fontWeight: 850,
+                  fontSize: isSmallMobile ? '1.75rem' : '2.1rem',
+                  letterSpacing: '-0.04em',
+                  color: COLORS.textPrimary,
+                  lineHeight: 1,
+                  mb: 0.8
+                }}
+              >
+                Account Management
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: fontStack,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: '#64748B',
+                  maxWidth: 600,
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Centrally manage institutional roles, account status, and platform permissions.
+              </Typography>
+            </>
+          )}
         </Box>
         {loading ? (
           <Skeleton variant="rounded" width={isSmallMobile ? '100%' : 160} height={48} sx={{ borderRadius: '999px' }} />
@@ -529,17 +512,16 @@ export default function UsersTable({
                         fontSize: 12,
                         fontWeight: 700,
                         color: '#0F172A',
-                        bgcolor: '#FFFFFF',
-                        borderColor: '#E2E8F0',
+                        bgcolor: '#F1F5F9',
                         borderRadius: '8px',
                         px: 1.5,
                         height: 28,
                         minWidth: 'auto',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        boxShadow: 'none',
+                        border: 'none',
                         '&:hover': {
-                          bgcolor: '#F8FAFC',
-                          borderColor: '#CBD5E1',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                          bgcolor: '#E2E8F0',
+                          boxShadow: 'none'
                         }
                       }}
                     >
@@ -552,7 +534,7 @@ export default function UsersTable({
                       <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Box sx={{ position: 'relative' }}>
-                            <Avatar 
+                            <Avatar
                               src={getAbsoluteUrl(u.avatarUrl)}
                               sx={{
                                 width: 40,
@@ -567,7 +549,7 @@ export default function UsersTable({
                               {getInitials(u.fullName || u.username)}
                             </Avatar>
                             {u.enabled && (
-                              <Box sx={{ position: 'absolute', top: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: '2px', zIndex: 2 }}>
+                              <Box sx={{ position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: '2px', zIndex: 2 }}>
                                 <Box sx={{
                                   width: 14,
                                   height: 14,
@@ -603,19 +585,18 @@ export default function UsersTable({
                     }}
                     sx={{
                       mt: 'auto',
-                      bgcolor: '#FFFFFF',
+                      bgcolor: '#F1F5F9',
                       color: '#0F172A',
                       textTransform: 'none',
                       fontSize: 13,
                       fontWeight: 700,
                       borderRadius: '8px',
                       py: 1,
-                      border: '1px solid #E2E8F0',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: 'none',
+                      boxShadow: 'none',
                       '&:hover': {
-                        bgcolor: '#F8FAFC',
-                        borderColor: '#CBD5E1',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                        bgcolor: '#E2E8F0',
+                        boxShadow: 'none'
                       }
                     }}
                   >
@@ -657,7 +638,7 @@ export default function UsersTable({
                 }}
                 sx={{ width: { xs: '100%', sm: 'auto' } }}
               />
-               <Button
+              <Button
                 variant="outlined"
                 endIcon={<FilterList />}
                 onClick={(e) => setSortAnchorEl(e.currentTarget)}
@@ -679,8 +660,8 @@ export default function UsersTable({
                 {sortConfig && !filters.status && ` (${sortConfig.key === 'fullName' ? 'Name' : sortConfig.key === 'enabled' ? 'Status' : 'Email'})`}
               </Button>
               {(sortConfig || filters.status || query) && (
-                <IconButton 
-                  size="small" 
+                <IconButton
+                  size="small"
                   onClick={() => { setSortConfig(null); setFilters({ role: '', status: '' }); setQuery(""); }}
                   sx={{ color: '#EF4444', bgcolor: '#FEF2F2', '&:hover': { bgcolor: '#FEE2E2' } }}
                 >
@@ -694,10 +675,10 @@ export default function UsersTable({
 
       <Box sx={{ backgroundColor: '#FFF', borderRadius: '16px', border: '1px solid #F1F5F9', overflow: 'hidden' }}>
         {/* Tabs */}
-        <Box sx={{ 
-          px: 2, 
-          borderBottom: '1px solid #F1F5F9', 
-          display: 'flex', 
+        <Box sx={{
+          px: 2,
+          borderBottom: '1px solid #F1F5F9',
+          display: 'flex',
           gap: { xs: 2.5, sm: 4 },
           overflowX: 'auto',
           msOverflowStyle: 'none',
@@ -718,27 +699,27 @@ export default function UsersTable({
                 return getRoleDisplay(rName) === tab;
               }).length;
 
-            const active = activeTab === tab;
-            return (
-              <Box
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                sx={{
-                  py: 2,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  '&::after': active ? {
-                    content: '""', position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, bgcolor: COLORS.teal // Thicker teal underline
-                  } : {}
-                }}
-              >
-                <Typography sx={{ fontSize: 13, fontWeight: 700, color: active ? COLORS.textPrimary : COLORS.textSecondary }}>
-                  {tab} <Box component="span" sx={{ opacity: 0.6, ml: 0.5 }}>({count})</Box>
-                </Typography>
-              </Box>
-            );
-          })
-        )}
+              const active = activeTab === tab;
+              return (
+                <Box
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  sx={{
+                    py: 2,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    '&::after': active ? {
+                      content: '""', position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, bgcolor: COLORS.teal // Thicker teal underline
+                    } : {}
+                  }}
+                >
+                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: active ? COLORS.textPrimary : COLORS.textSecondary }}>
+                    {tab} <Box component="span" sx={{ opacity: 0.6, ml: 0.5 }}>({count})</Box>
+                  </Typography>
+                </Box>
+              );
+            })
+          )}
         </Box>
 
         <TableContainer>
@@ -755,13 +736,13 @@ export default function UsersTable({
                   />
                 </TableCell>
                 {['Account', 'Email Address', 'Role', 'Access', 'Status', ''].map((h, i) => (
-                  <TableCell 
-                    key={i} 
-                    sx={{ 
-                      py: 1.5, 
-                      fontSize: 11, 
-                      fontWeight: 800, 
-                      color: COLORS.textSecondary, 
+                  <TableCell
+                    key={i}
+                    sx={{
+                      py: 1.5,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: COLORS.textSecondary,
                       textTransform: 'uppercase',
                       display: (i === 1 || i === 3) ? { xs: 'none', md: 'table-cell' } : 'table-cell'
                     }}
@@ -780,14 +761,14 @@ export default function UsersTable({
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Box sx={{ position: 'relative' }}>
                           <Skeleton variant="circular" width={38} height={38} />
-                          <Skeleton variant="circular" width={14} height={14} 
-                            sx={{ 
-                              position: 'absolute', 
-                              top: -2, 
-                              right: -2, 
-                              bgcolor: '#FFF', 
-                              border: '2px solid #FFF' 
-                            }} 
+                          <Skeleton variant="circular" width={14} height={14}
+                            sx={{
+                              position: 'absolute',
+                              top: -2,
+                              right: -2,
+                              bgcolor: '#FFF',
+                              border: '2px solid #FFF'
+                            }}
                           />
                         </Box>
                         <Skeleton variant="text" width={120} />
@@ -816,7 +797,7 @@ export default function UsersTable({
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Box sx={{ position: 'relative' }}>
-                          <Avatar 
+                          <Avatar
                             src={getAbsoluteUrl(user.avatarUrl)}
                             sx={{
                               width: 38,
@@ -830,7 +811,7 @@ export default function UsersTable({
                             {getInitials(user.fullName || user.username)}
                           </Avatar>
                           {user.enabled && (
-                            <Box sx={{ position: 'absolute', top: -3, right: -3, bgcolor: '#FFF', borderRadius: '50%', p: '2.5px', zIndex: 2 }}>
+                            <Box sx={{ position: 'absolute', bottom: -3, right: -3, bgcolor: '#FFF', borderRadius: '50%', p: '2.5px', zIndex: 2 }}>
                               <Box sx={{
                                 width: 14,
                                 height: 14,
@@ -969,8 +950,8 @@ export default function UsersTable({
               <Typography sx={{ fontWeight: 800, fontSize: 14 }}>
                 {selectedUserIds.length} users selected
               </Typography>
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 onClick={() => setSelectedUserIds([])}
                 sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'none', fontSize: 12, display: { xs: 'block', sm: 'none' } }}
               >
@@ -978,9 +959,9 @@ export default function UsersTable({
               </Button>
             </Box>
             <Divider orientation={isSmallMobile ? "horizontal" : "vertical"} flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)', display: { xs: 'none', sm: 'block' } }} />
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 1, 
+            <Box sx={{
+              display: 'flex',
+              gap: 1,
               width: { xs: '100%', sm: 'auto' },
               overflowX: 'auto',
               pb: { xs: 0.5, sm: 0 },
@@ -1025,8 +1006,8 @@ export default function UsersTable({
         PaperProps={{ sx: { borderRadius: '12px', mt: 1, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' } }}
       >
         {['Student', 'Officer', 'Dean', 'Admin'].map(r => (
-          <MenuItem 
-            key={r} 
+          <MenuItem
+            key={r}
             onClick={(e) => {
               const roleLower = r.toLowerCase();
               if (roleLower === 'officer' || roleLower === 'dean') {
@@ -1038,7 +1019,7 @@ export default function UsersTable({
             }}
             sx={{ fontSize: 13, fontWeight: 600, px: 3, py: 1.2 }}
           >
-            {r} { (r === 'Officer' || r === 'Dean') && "..." }
+            {r} {(r === 'Officer' || r === 'Dean') && "..."}
           </MenuItem>
         ))}
       </Menu>
@@ -1055,8 +1036,8 @@ export default function UsersTable({
           <em>No Organization</em>
         </MenuItem>
         {organizations.map(org => (
-          <MenuItem 
-            key={org._id} 
+          <MenuItem
+            key={org._id}
             onClick={() => handleBulkUpdateRole(selectedUserIds, targetBulkRole!, [org._id])}
             sx={{ fontSize: 13, fontWeight: 600 }}
           >
@@ -1112,7 +1093,7 @@ export default function UsersTable({
         {sortConfig && (
           <>
             <Divider sx={{ borderStyle: 'dashed', my: 0.5 }} />
-            <MenuItem 
+            <MenuItem
               onClick={() => { setSortConfig(null); setSortAnchorEl(null); }}
               sx={{ color: '#EF4444', '&:hover': { bgcolor: '#FEF2F2' } }}
             >
@@ -1125,19 +1106,19 @@ export default function UsersTable({
         <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Filter by Status
         </Typography>
-        <MenuItem 
+        <MenuItem
           onClick={() => { setFilters(prev => ({ ...prev, status: '' })); setSortAnchorEl(null); }}
           selected={filters.status === ''}
         >
           All Statuses
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={() => { setFilters(prev => ({ ...prev, status: 'active' })); setSortAnchorEl(null); }}
           selected={filters.status === 'active'}
         >
           Active Only
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={() => { setFilters(prev => ({ ...prev, status: 'locked' })); setSortAnchorEl(null); }}
           selected={filters.status === 'locked'}
         >

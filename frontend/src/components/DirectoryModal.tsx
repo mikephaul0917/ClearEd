@@ -307,18 +307,17 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                     endIcon={<ArrowDropDown />}
                     disabled={isUpdating}
                     sx={{
-                      bgcolor: '#FFFFFF',
+                      bgcolor: '#F1F5F9',
                       color: '#0F172A',
                       borderRadius: '8px',
                       textTransform: 'none',
                       fontWeight: 700,
                       px: 2,
-                      border: '1px solid #E2E8F0',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: 'none',
+                      boxShadow: 'none',
                       '&:hover': {
-                        bgcolor: '#F8FAFC',
-                        borderColor: '#CBD5E1',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                        bgcolor: '#E2E8F0',
+                        boxShadow: 'none'
                       }
                     }}
                   >
@@ -451,19 +450,18 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               onClick={onExport}
               sx={{
                 borderRadius: '999px',
-                bgcolor: '#FFFFFF',
-                color: '#0F172A',
+                bgcolor: '#0F172A',
+                color: '#FFFFFF',
                 py: 1.5,
                 fontWeight: 800,
                 fontSize: '0.95rem',
                 textTransform: 'none',
-                border: '1px solid #E2E8F0',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                border: 'none',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
                 '&:hover': {
-                  bgcolor: '#F8FAFC',
-                  borderColor: '#CBD5E1',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                  bgcolor: '#1E293B',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
                 },
                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
