@@ -34,7 +34,9 @@ import {
   Avatar,
   useTheme,
   useMediaQuery,
+  Menu,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import {
   Security,
   Refresh,
@@ -49,6 +51,12 @@ import {
   Info,
   History,
   Error as ErrorIcon,
+  ChevronRight,
+  ChevronLeft,
+  LocationOn,
+  AccessTime,
+  MoreHoriz,
+  FilterList as FilterIcon
 } from '@mui/icons-material';
 import { adminService } from '../../services';
 
@@ -62,6 +70,8 @@ const COLORS = {
   lavender: '#d8b4fe',
   yellow: '#FEF08A',
   orange: '#ff895d',
+  yellowDark: '#854d0e',
+  darkTeal: '#0D9488',
   border: '#E2E8F0',
   cardRadius: '16px',
 };
@@ -108,6 +118,16 @@ export default function AdminRecordsPage({
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleFilterOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterClose = () => {
+    setFilterAnchorEl(null);
+  };
 
   const fetchAuditLogs = useCallback(async (isFullLoad: boolean = false) => {
     setLoading(true);
@@ -118,7 +138,7 @@ export default function AdminRecordsPage({
     try {
       const params = {
         page: page.toString(),
-        limit: '50',
+        limit: '10',
         ...(filters.action && { action: filters.action }),
         ...(filters.severity && { severity: filters.severity }),
         ...(filters.category && { category: filters.category }),
@@ -155,12 +175,24 @@ export default function AdminRecordsPage({
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    // Filter categories based on tabs
+    // Filter categories and severities based on tabs
     let category = '';
-    if (newValue === 1) category = 'security';
-    if (newValue === 3) category = 'admin';
+    let severity = '';
+    
+    if (newValue === 1) {
+      category = 'security,auth';
+      severity = 'high,critical';
+    } else if (newValue === 2) {
+      category = 'auth';
+    } else if (newValue === 3) {
+      category = 'user_management,organization_management,institution_management,system';
+    }
 
-    setFilters(prev => ({ ...prev, category }));
+    setFilters(prev => ({
+      ...prev,
+      category,
+      severity
+    }));
     setPage(1);
   };
 
@@ -223,488 +255,645 @@ export default function AdminRecordsPage({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      hour12: false
     });
+  };
+
+  const getDayAndWeekday = (dateString: string) => {
+    const d = new Date(dateString);
+    return {
+      day: d.getDate(),
+      weekday: d.toLocaleDateString('en-US', { weekday: 'short' })
+    };
+  };
+
+  const getMonthHeader = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'long' });
   };
 
   const filterLogsByTab = (logsToFilter: AuditLog[]) => {
     if (tabValue === 0) return logsToFilter;
-    if (tabValue === 1) return logsToFilter.filter(l => l.category === 'security' || l.action.includes('FAILED') || l.severity === 'critical');
+    if (tabValue === 1) {
+      return logsToFilter.filter(l => 
+        l.category === 'security' || 
+        l.action.toUpperCase().includes('FAILED') || 
+        l.severity === 'critical' || 
+        l.severity === 'high'
+      );
+    }
     if (tabValue === 2) return logsToFilter.filter(l => l.action.includes('LOGIN'));
-    if (tabValue === 3) return logsToFilter.filter(l => l.category === 'admin' || l.category === 'user_management');
+    if (tabValue === 3) return logsToFilter.filter(l => 
+      ['user_management', 'organization_management', 'institution_management', 'system'].includes(l.category)
+    );
     return logsToFilter;
   };
 
   const filteredLogs = filterLogsByTab(logs);
 
   // --- Custom Skeleton Components ---
-  const StatCardSkeleton = ({
-    bg, textColor, accentOpacity = 0.6, isDark = false,
-    titleWidth = "40%", valueWidth = "25%", subWidth = "50%",
-    height = 140
-  }: {
-    bg: string, textColor: string, accentOpacity?: number, isDark?: boolean,
-    titleWidth?: string | number, valueWidth?: string | number, subWidth?: string | number,
-    height?: number | string
-  }) => (
-    <Box sx={{
-      p: 3, borderRadius: COLORS.cardRadius, backgroundColor: '#FFFFFF', color: textColor,
-      minHeight: height, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      position: 'relative', overflow: 'hidden', border: `1px solid ${COLORS.border}`
-    }}>
-      {isDark && <Box sx={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', backgroundColor: COLORS.teal, opacity: 0.1, filter: 'blur(30px)' }} />}
-      <Box>
-        <Skeleton
-          variant="text" width={titleWidth} height={14}
-          sx={{ opacity: accentOpacity, bgcolor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }}
-        />
-        <Skeleton
-          variant="text" width={valueWidth} height={48}
-          sx={{ mt: 1, bgcolor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)' }}
-        />
+  const TabSkeleton = () => (
+    <Box sx={{ display: 'flex', gap: 1, mb: 4, bgcolor: '#F1F5F9', p: 0.6, borderRadius: '14px', width: 'fit-content' }}>
+      {[1, 2, 3, 4].map((i) => (
+        <Skeleton key={i} variant="rectangular" width={110} height={36} sx={{ borderRadius: '10px' }} />
+      ))}
+    </Box>
+  );
+
+  const FilterBarSkeleton = () => (
+    <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Skeleton variant="circular" width={20} height={20} />
+        <Skeleton variant="text" width={120} height={24} />
       </Box>
-      <Skeleton
-        variant="text" width={subWidth} height={16}
-        sx={{ opacity: 0.5, bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
-      />
+      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+        <Skeleton variant="rectangular" width={240} height={36} sx={{ borderRadius: '8px' }} />
+        <Skeleton variant="rectangular" width={120} height={36} sx={{ borderRadius: '8px' }} />
+      </Box>
+    </Box>
+  );
+
+  const OverviewSkeleton = () => (
+    <Box sx={{
+      p: 3, borderRadius: COLORS.cardRadius, bgcolor: '#FFFFFF',
+      border: `1px solid ${COLORS.border}`, mb: 4
+    }}>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
+        gap: 1.5, mb: 3 
+      }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Box key={i} sx={{ 
+            p: 2, bgcolor: '#F8FAFC', borderRadius: '12px', minHeight: 80,
+            gridColumn: { xs: i === 5 ? 'span 2' : 'span 1', sm: 'span 1' }
+          }}>
+            <Skeleton variant="text" width="60%" height={24} />
+            <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
+        gap: 3, px: 2 
+      }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Box key={i}>
+            <Skeleton variant="text" width={60} height={12} />
+            <Skeleton variant="text" width={100} height={20} sx={{ mt: 0.5 }} />
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const LogCard = ({ log }: { log: AuditLog }) => {
+  const LogRowSkeleton = () => (
+    <Box sx={{
+      display: 'flex', alignItems: 'center', p: { xs: 1.5, sm: 3 }, mb: 1,
+      bgcolor: '#FFF', borderRadius: '16px', border: '1px solid #F1F5F9',
+      gap: { xs: 1.5, sm: 4 }
+    }}>
+      <Box sx={{ width: { xs: 45, sm: 60 }, textAlign: 'center' }}>
+        <Skeleton variant="text" width={25} height={12} sx={{ mx: 'auto' }} />
+        <Skeleton variant="text" width={35} height={28} sx={{ mx: 'auto' }} />
+      </Box>
+      <Box sx={{ flexDirection: 'column', gap: 1, width: 120, display: { xs: 'none', sm: 'flex' } }}>
+        <Skeleton variant="text" width={80} />
+        <Skeleton variant="text" width={60} />
+      </Box>
+      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
+        <Skeleton variant="circular" width={40} height={40} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="text" width="40%" height={16} />
+        </Box>
+      </Box>
+      <Skeleton variant="rectangular" width={80} height={40} sx={{ borderRadius: '12px', display: { xs: 'none', md: 'block' } }} />
+      <Skeleton variant="circular" width={40} height={40} sx={{ display: { xs: 'block', md: 'none' } }} />
+    </Box>
+  );
+
+  const LogRow = ({ log }: { log: AuditLog }) => {
+    const { day, weekday } = getDayAndWeekday(log.createdAt);
     const s = getSeverityColor(log.severity);
+
     return (
-      <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, mb: 1.5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {getActionIcon(log.action)}
-            <Typography sx={{ fontWeight: 700, fontSize: 13, textTransform: 'lowercase' }}>{log.action.replace(/_/g, ' ')}</Typography>
-          </Box>
-          <Chip
-            label={log.severity}
-            size="small"
-            sx={{
-              height: 18, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', borderRadius: '4px',
-              ...(log.severity === 'low' ? { bgcolor: COLORS.yellow, color: '#854d0e' } : {
-                bgcolor: s === 'error' ? '#fee2e2' : s === 'warning' ? '#ffedd5' : '#f1f5f9',
-                color: s === 'error' ? '#991b1b' : s === 'warning' ? '#9a3412' : '#475569'
-              })
-            }}
-          />
+      <Box sx={{
+        display: 'flex', alignItems: 'center', p: { xs: 1.5, sm: 3 }, mb: 1,
+        bgcolor: '#FFF', borderRadius: '16px', border: '1px solid #F1F5F9',
+        gap: { xs: 1.5, sm: 4 },
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          borderColor: COLORS.black,
+          boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)',
+          transform: 'translateY(-1px)'
+        }
+      }}>
+        {/* Date Column */}
+        <Box sx={{ width: { xs: 45, sm: 60 }, textAlign: 'center' }}>
+          <Typography sx={{ fontSize: { xs: 11, sm: 13 }, fontWeight: 700, color: COLORS.darkTeal, textTransform: 'capitalize' }}>
+            {weekday}
+          </Typography>
+          <Typography sx={{ fontSize: { xs: 22, sm: 28 }, fontWeight: 800, color: '#1E293B', lineHeight: 1 }}>
+            {day}
+          </Typography>
         </Box>
-        <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, mb: 0.5 }}>{log.resource}</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 1 }}>
-          <Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{log.userName || 'System'}</Typography>
-            <Typography sx={{ fontSize: 10, color: COLORS.textSecondary }}>{formatDate(log.createdAt)}</Typography>
+
+        {/* Time Column (Desktop/Tablet Only) */}
+        <Box sx={{ flexDirection: 'column', gap: 0.5, width: { sm: 140 }, display: { xs: 'none', sm: 'flex' } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: COLORS.textSecondary }}>
+            <AccessTime sx={{ fontSize: 16 }} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{formatDate(log.createdAt)}</Typography>
           </Box>
-          <IconButton size="small" onClick={() => { setSelectedLog(log); setDetailsOpen(true); }} sx={{ border: `1px solid ${COLORS.border}`, borderRadius: '6px' }}>
-            <Visibility sx={{ fontSize: 14 }} />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: COLORS.textSecondary }}>
+            <LocationOn sx={{ fontSize: 16 }} />
+            <Typography sx={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {log.ipAddress}
+            </Typography>
+          </Box>
         </Box>
+
+        {/* Action & Participant Column */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
+          <Box sx={{ position: 'relative', flexShrink: 0 }}>
+            <Avatar 
+              sx={{ width: { xs: 38, sm: 44 }, height: { xs: 38, sm: 44 }, bgcolor: COLORS.black, color: '#FFF', fontSize: { xs: 14, sm: 16 }, fontWeight: 800 }}
+              src={log.userName ? undefined : undefined}
+            >
+              {log.userName?.[0] || 'S'}
+            </Avatar>
+            <Box sx={{ 
+              position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: 0.3,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              {getActionIcon(log.action)}
+            </Box>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ 
+              fontWeight: 800, fontSize: { xs: 13, sm: 15 }, color: '#1E293B', lineHeight: 1.2,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+            }}>
+              {log.action.replace(/_/g, ' ').toLowerCase()}
+            </Typography>
+            <Typography sx={{ 
+              fontSize: { xs: 11, sm: 13 }, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+            }}>
+              {log.userName || 'System'} • {log.resource}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Action Button */}
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => { setSelectedLog(log); setDetailsOpen(true); }}
+          endIcon={<ChevronRight />}
+          sx={{
+            bgcolor: '#F1F5F9', color: '#0F172A', borderRadius: '12px',
+            textTransform: 'none', fontWeight: 800, fontSize: 13, px: 3, py: 1,
+            '&:hover': { bgcolor: '#E2E8F0' },
+            display: { xs: 'none', md: 'flex' }
+          }}
+        >
+          Details
+        </Button>
+        <IconButton 
+          sx={{ display: { xs: 'flex', md: 'none' }, bgcolor: '#F1F5F9', p: 1 }} 
+          onClick={() => { setSelectedLog(log); setDetailsOpen(true); }}
+        >
+          <MoreHoriz sx={{ fontSize: 20 }} />
+        </IconButton>
       </Box>
     );
   };
 
-  const LogCardSkeleton = () => (
-    <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, mb: 1.5 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Skeleton variant="rectangular" width={20} height={20} sx={{ borderRadius: '4px', opacity: 0.5 }} />
-          <Skeleton variant="text" width={80} height={14} />
-        </Box>
-        <Skeleton variant="rectangular" width={50} height={18} sx={{ borderRadius: '4px', opacity: 0.4 }} />
-      </Box>
-      <Skeleton variant="text" width="60%" height={12} sx={{ mb: 1.5 }} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <Box>
-          <Skeleton variant="text" width={70} height={14} />
-          <Skeleton variant="text" width={100} height={10} />
-        </Box>
-        <Skeleton variant="circular" width={28} height={28} />
-      </Box>
-    </Box>
-  );
-
   return (
     <Box sx={{ mt: 2 }}>
-
-
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
-      {/* --- Bento Grid Stats --- */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={8}>
-          {loading && isInitialLoad ? (
-            <StatCardSkeleton
-              bg="#FFFFFF" textColor={COLORS.textPrimary}
-              titleWidth={110} valueWidth={210} subWidth={320}
-              height={220}
-            />
-          ) : (
-            <Box sx={{
-              p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.black, color: '#fff',
-              height: '100%', minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-              position: 'relative', overflow: 'hidden'
-            }}>
-              <Box sx={{ position: 'absolute', top: -20, right: -20, width: 140, height: 140, borderRadius: '50%', backgroundColor: COLORS.teal, opacity: 0.15, filter: 'blur(40px)' }} />
-              <Box>
-                <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', opacity: 0.6, textTransform: 'uppercase' }}>System Overview</Typography>
-                <Typography sx={{ fontSize: 32, fontWeight: 800, mt: 1 }}>{totalLogs.toLocaleString()} Records</Typography>
-              </Box>
-              <Typography sx={{ fontSize: 13, opacity: 0.5 }}>Real-time interactions recorded across the entire clearance ecosystem. All systems operational.</Typography>
-            </Box>
-          )}
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2, height: '100%' }}>
-            {loading && isInitialLoad ? (
-              <StatCardSkeleton
-                bg="#FFFFFF" textColor={COLORS.textPrimary}
-                titleWidth={110} valueWidth={60} subWidth={180}
-                height={102}
-              />
-            ) : (
-              <Box sx={{
-                p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.teal, color: COLORS.black,
-                minHeight: 110, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
-              }}>
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#0d9488', textTransform: 'uppercase' }}>Security Events</Typography>
-                  <Typography sx={{ fontSize: 32, fontWeight: 800, color: COLORS.black, mt: 1 }}>{logs.filter(l => l.category === 'security' || l.severity === 'high').length}</Typography>
-                </Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0d9488' }}>Active monitoring enabled</Typography>
-              </Box>
-            )}
 
-            {loading && isInitialLoad ? (
-              <StatCardSkeleton
-                bg="#FFFFFF" textColor={COLORS.textPrimary}
-                titleWidth={100} valueWidth={140} subWidth={100}
-                height={102}
-              />
-            ) : (
-              <Box sx={{
-                p: 3, borderRadius: COLORS.cardRadius, backgroundColor: COLORS.lavender, color: COLORS.black,
-                minHeight: 110, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
-              }}>
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#7e22ce', textTransform: 'uppercase' }}>Last Activity</Typography>
-                  <Typography sx={{ fontSize: 32, fontWeight: 800, color: COLORS.black, mt: 1 }}>{logs[0] ? formatDate(logs[0].createdAt).split(',')[1] : '—'}</Typography>
-                </Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#7e22ce' }}>Real-time trail</Typography>
-              </Box>
-            )}
-          </Box>
-        </Grid>
-      </Grid>
-
-      {/* --- Filter Bar --- */}
-      <Card sx={{ borderRadius: COLORS.cardRadius, border: '1px solid ' + COLORS.border, boxShadow: 'none', mb: 3 }}>
-        <CardContent sx={{ p: 2 }}>
-          {loading && isInitialLoad ? (
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={4}>
-                <Skeleton variant="rectangular" height={40} sx={{ borderRadius: '12px' }} />
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <Skeleton variant="rectangular" height={40} sx={{ borderRadius: '12px' }} />
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <Skeleton variant="rectangular" height={40} sx={{ borderRadius: '12px' }} />
-              </Grid>
-              <Grid item xs={12} md={4} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Skeleton variant="circular" width={40} height={40} />
-                <Skeleton variant="rectangular" width={130} height={40} sx={{ borderRadius: '12px' }} />
-              </Grid>
-            </Grid>
-          ) : (
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search by action, resource, or details..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <Search sx={{ color: COLORS.textSecondary, mr: 1, fontSize: 20 }} />,
-                    sx: { borderRadius: '12px' }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Date Range</InputLabel>
-                  <Select
-                    value={filters.dateRange}
-                    label="Date Range"
-                    onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-                    sx={{ borderRadius: '12px' }}
-                  >
-                    <MenuItem value="1d">Last 24 Hours</MenuItem>
-                    <MenuItem value="7d">Last 7 Days</MenuItem>
-                    <MenuItem value="30d">Last 30 Days</MenuItem>
-                    <MenuItem value="90d">Last 90 Days</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Severity</InputLabel>
-                  <Select
-                    value={filters.severity}
-                    label="Severity"
-                    onChange={(e) => handleFilterChange('severity', e.target.value)}
-                    sx={{ borderRadius: '12px' }}
-                  >
-                    <MenuItem value="">All Severities</MenuItem>
-                    <MenuItem value="critical">Critical</MenuItem>
-                    <MenuItem value="high">High</MenuItem>
-                    <MenuItem value="medium">Medium</MenuItem>
-                    <MenuItem value="low">Low</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Tooltip title="Refresh Logs">
-                  <IconButton
-                    onClick={() => {
-                      setIsInitialLoad(true);
-                      fetchAuditLogs(true);
+      {/* --- Tabs --- */}
+      {loading && isInitialLoad ? (
+        <TabSkeleton />
+      ) : (
+        <Box sx={{ 
+          display: 'flex', 
+          bgcolor: '#F1F5F9', 
+          p: 0.6, 
+          borderRadius: '14px', 
+          width: 'fit-content', 
+          mb: 4,
+          overflowX: 'auto',
+          maxWidth: '100%',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}>
+          {['System Records', 'Security & Alerts', 'Access Logs', 'Admin Actions'].map((label, idx) => {
+            const active = tabValue === idx;
+            return (
+              <Button
+                key={label}
+                onClick={() => handleTabChange({} as any, idx)}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  px: 3,
+                  py: 1,
+                  borderRadius: '10px',
+                  color: active ? '#0F172A' : '#64748B',
+                  bgcolor: 'transparent',
+                  position: 'relative',
+                  zIndex: 1,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  '&:hover': {
+                    color: '#0F172A'
+                  },
+                  transition: 'color 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="activeTabIndicator"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: '10px',
+                      zIndex: -1,
+                      boxShadow: '0 4px 12px -2px rgba(0,0,0,0.08)'
                     }}
-                    sx={{ border: '1px solid ' + COLORS.border }}
-                  >
-                    <Refresh />
-                  </IconButton>
-                </Tooltip>
-                <Button
-                  variant="outlined"
-                  startIcon={<Download />}
-                  onClick={handleExport}
-                  sx={{
-                    borderRadius: '12px', textTransform: 'none', fontWeight: 700,
-                    borderColor: COLORS.yellow, backgroundColor: COLORS.yellow + '15',
-                    color: COLORS.black,
-                    '&:hover': { borderColor: '#EAB308', backgroundColor: COLORS.yellow + '30' }
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                {label}
+              </Button>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* --- Consolidated Overview Card --- */}
+      {loading && isInitialLoad ? (
+        <OverviewSkeleton />
+      ) : (
+        <Card sx={{ 
+          borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`, 
+          boxShadow: 'none', mb: 3, overflow: 'visible'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            {/* Top Row: Metrics */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { 
+                xs: 'repeat(2, 1fr)', 
+                sm: 'repeat(3, 1fr)', 
+                md: 'repeat(5, 1fr)' 
+              },
+              gap: 1.5, 
+              mb: 3
+            }}>
+              {[
+                { label: 'TOTAL RECORDS', value: totalLogs.toLocaleString() },
+                { label: 'SECURITY LOGS', value: logs.filter(l => l.category === 'security' || l.severity === 'high').length },
+                { label: 'ADMIN ACTIVITY', value: logs.filter(l => l.category === 'admin' || l.category === 'user_management').length },
+                { label: 'CRITICAL EVENTS', value: logs.filter(l => l.severity === 'critical').length },
+                { label: 'SYSTEM HEALTH', value: '100%', color: COLORS.darkTeal }
+              ].map((stat, idx, arr) => (
+                <Box 
+                  key={stat.label}
+                  sx={{ 
+                    p: 2.5, bgcolor: '#F8FAFC', borderRadius: '14px',
+                    display: 'flex', flexDirection: 'column', gap: 0.5,
+                    position: 'relative',
+                    border: '1px solid transparent',
+                    transition: 'all 0.2s ease',
+                    '&:hover': { bgcolor: '#F1F5F9', borderColor: COLORS.border },
+                    // On mobile (2-col), the last item (idx 4) should span full width
+                    gridColumn: { xs: idx === 4 ? 'span 2' : 'span 1', sm: 'span 1' }
                   }}
                 >
-                  Export JSON
-                </Button>
-              </Grid>
-            </Grid>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* --- Tabs & Table --- */}
-      <Card sx={{ borderRadius: COLORS.cardRadius, border: '1px solid ' + COLORS.border, boxShadow: 'none', overflow: 'hidden' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2, pt: 1, backgroundColor: '#FAFAFA' }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: 14,
-                minHeight: 48,
-              },
-              '& .Mui-selected': { color: COLORS.black + ' !important' },
-              '& .MuiTabs-indicator': { backgroundColor: (loading && isInitialLoad) ? 'rgba(0,0,0,0.08)' : COLORS.black, height: 3, borderRadius: '3px 3px 0 0' }
-            }}
-          >
-            <Tab label={(loading && isInitialLoad) ? <Skeleton width={100} height={20} /> : "System Records"} />
-            <Tab label={(loading && isInitialLoad) ? <Skeleton width={110} height={20} /> : "Security & Alerts"} />
-            <Tab label={(loading && isInitialLoad) ? <Skeleton width={80} height={20} /> : "Access Logs"} />
-            <Tab label={(loading && isInitialLoad) ? <Skeleton width={100} height={20} /> : "Admin Actions"} />
-          </Tabs>
-        </Box>
-
-        {isSmallMobile ? (
-          <Box sx={{ p: 2, backgroundColor: '#FAFAFA' }}>
-            {loading ? (
-              [...Array(5)].map((_, i) => <LogCardSkeleton key={i} />)
-            ) : filteredLogs.length > 0 ? (
-              filteredLogs.map(log => <LogCard key={log._id} log={log} />)
-            ) : (
-              <Box sx={{ py: 6, textAlign: 'center' }}>
-                <History sx={{ fontSize: 48, color: COLORS.border, mb: 1 }} />
-                <Typography color="textSecondary">No activity records found.</Typography>
-              </Box>
-            )}
-          </Box>
-        ) : (
-          <TableContainer>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead sx={{ backgroundColor: '#F8FAFC' }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={80} /> : "Timestamp"}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={60} /> : "Initiator"}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={60} /> : "Action"}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={70} /> : "Resource"}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={60} /> : "Severity"}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700, color: COLORS.textSecondary, fontSize: 12, textTransform: 'uppercase' }}>
-                    {loading ? <Skeleton width={40} /> : "View"}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  [...Array(6)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Schedule sx={{ fontSize: 16, border: 'none', color: '#E2E8F0' }} />
-                          <Skeleton variant="text" width={140} />
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Skeleton variant="circular" width={32} height={32} />
-                          <Box>
-                            <Skeleton variant="text" width={100} height={20} />
-                            <Skeleton variant="text" width={140} height={16} />
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Skeleton variant="rectangular" width={20} height={20} sx={{ borderRadius: '4px', opacity: 0.5 }} />
-                          <Skeleton variant="text" width={80} />
-                        </Box>
-                      </TableCell>
-                      <TableCell><Skeleton variant="text" width={100} /></TableCell>
-                      <TableCell>
-                        <Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: '6px', opacity: 0.6 }} />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Skeleton variant="circular" width={32} height={32} />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredLogs.length > 0 ? (
-                  filteredLogs.map((log) => (
-                    <TableRow key={log._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                      <TableCell sx={{ fontSize: 13, color: COLORS.textPrimary }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Schedule sx={{ fontSize: 16, color: COLORS.textSecondary }} />
-                          {formatDate(log.createdAt)}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Avatar sx={{ width: 32, height: 32, bgcolor: `${COLORS.lavender}25`, color: '#000', fontSize: 14 }}>{log.userName?.[0] || 'S'}</Avatar>
-                          <Box>
-                            <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{log.userName || 'System'}</Typography>
-                            <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>{log.userEmail}</Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getActionIcon(log.action)}
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, textTransform: 'lowercase' }}>
-                            {log.action.replace(/_/g, ' ')}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ fontSize: 13, fontWeight: 500 }}>{log.resource}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={log.severity}
-                          size="small"
-                          sx={{
-                            fontWeight: 700, fontSize: 10, textTransform: 'uppercase', height: 20, borderRadius: '6px',
-                            ...({
-                              low: { backgroundColor: COLORS.yellow, color: '#854d0e' },
-                              critical: { backgroundColor: '#fee2e2', color: '#991b1b' },
-                              high: { backgroundColor: '#fee2e2', color: '#991b1b' },
-                              medium: { backgroundColor: '#ffedd5', color: '#9a3412' }
-                            }[log.severity] || { backgroundColor: '#f1f5f9', color: '#475569' })
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            setSelectedLog(log);
-                            setDetailsOpen(true);
-                          }}
-                          sx={{ border: '1px solid ' + COLORS.border, borderRadius: '8px' }}
-                        >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                      <History sx={{ fontSize: 48, color: COLORS.border, mb: 1 }} />
-                      <Typography color="textSecondary">No activity records found matching your filters.</Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-
-        {/* --- Pagination --- */}
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', borderTop: '1px solid ' + COLORS.border }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: '8px' }} />
-              <Skeleton variant="text" width={100} height={24} />
-              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: '8px' }} />
+                  <Typography sx={{ fontSize: { xs: 20, sm: 24 }, fontWeight: 800, color: stat.color || '#1E293B' }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: '0.05em' }}>
+                    {stat.label}
+                  </Typography>
+                  {/* Vertical Divider for desktop only */}
+                  {idx < arr.length - 1 && (
+                    <Box sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      position: 'absolute', right: -6, top: '20%', bottom: '20%',
+                      width: '1px', bgcolor: COLORS.border, zIndex: 1
+                    }} />
+                  )}
+                </Box>
+              ))}
             </Box>
-          ) : (
-            <>
-              <Button
-                size="small"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                sx={{ mr: 1, textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
+
+            {/* Bottom Row: Context */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { 
+                xs: '1fr 1fr', 
+                sm: 'repeat(3, 1fr)', 
+                md: 'repeat(5, 1fr)' 
+              },
+              px: { xs: 1, md: 2 }, 
+              gap: 3
+            }}>
+              {[
+                { label: 'START DATE', value: logs.length > 0 ? new Date(logs[logs.length-1].createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
+                { label: 'LAST UPDATED', value: logs[0] ? formatDate(logs[0].createdAt) + ', Today' : '—' },
+                { label: 'MONITORING', value: 'ACTIVE', color: COLORS.darkTeal },
+                { label: 'DATABASE', value: 'MONGODB' },
+                { label: 'ADMINISTRATOR', value: 'SYSTEM ADMIN' }
+              ].map((item) => (
+                <Box key={item.label}>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, mb: 0.5 }}>
+                    {item.label}
+                  </Typography>
+                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: item.color || '#1E293B' }}>
+                    {item.value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* --- Search & Sort/Filter Bar --- */}
+      {loading && isInitialLoad ? (
+        <FilterBarSkeleton />
+      ) : (
+        <Box sx={{ 
+          mb: 3, 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2 
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0, sm: 0 } }}>
+            <History sx={{ fontSize: 20, color: COLORS.textSecondary }} />
+            <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Activity Logs</Typography>
+          </Box>
+
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5, 
+            width: { xs: '100%', sm: 'auto' }, 
+            flexDirection: 'row' // Keep them on the same row on mobile for space efficiency
+          }}>
+            <TextField
+              size="small"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: <Search sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
+                sx: { 
+                  borderRadius: '10px', 
+                  bgcolor: '#FFF', 
+                  fontSize: 13, 
+                  height: 36, 
+                  minWidth: { xs: 'none', sm: 240 },
+                  flex: 1
+                }
+              }}
+              sx={{ 
+                flex: 1,
+                width: 'auto',
+                '& .MuiOutlinedInput-notchedOutline': { 
+                  border: '1px solid transparent',
+                  transition: 'border-color 0.2s',
+                  borderColor: '#E2E8F0'
+                },
+                '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#CBD5E1'
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: COLORS.black,
+                  borderWidth: '1.5px'
+                }
+              }}
+            />
+
+            <Button
+              variant="outlined"
+              onClick={handleFilterOpen}
+              endIcon={<FilterIcon sx={{ fontSize: 18 }} />}
+              sx={{ 
+                height: 36,
+                borderRadius: '10px',
+                px: { xs: 1.5, sm: 2 },
+                fontSize: 13,
+                textTransform: 'none',
+                fontWeight: 800,
+                color: (filters.severity || filters.dateRange !== '7d') ? COLORS.black : COLORS.textPrimary,
+                borderColor: (filters.severity || filters.dateRange !== '7d') ? COLORS.black : '#E2E8F0',
+                bgcolor: (filters.severity || filters.dateRange !== '7d') ? '#F8FAFC' : '#FFF',
+                borderWidth: (filters.severity || filters.dateRange !== '7d') ? '1.5px' : '1px',
+                width: 'auto',
+                minWidth: 'fit-content',
+                '&:hover': { borderColor: COLORS.black, bgcolor: '#F8FAFC' }
+              }}
+            >
+              {isSmallMobile ? null : "Sort & Filter"}
+            </Button>
+
+            {/* --- Sort & Filter Menu --- */}
+            <Menu
+              anchorEl={filterAnchorEl}
+              open={Boolean(filterAnchorEl)}
+              onClose={handleFilterClose}
+              PaperProps={{
+                sx: { 
+                  mt: 1, 
+                  p: 1.5, 
+                  borderRadius: '16px', 
+                  boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)',
+                  minWidth: '240px',
+                  border: '1px solid #F1F5F9'
+                }
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>DATE RANGE</Typography>
+              <MenuItem 
+                onClick={() => { handleFilterChange('dateRange', '1d'); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '1d' ? 800 : 500, bgcolor: filters.dateRange === '1d' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
               >
-                ← Previous
-              </Button>
-              <Typography sx={{ mx: 2, fontSize: 13, color: COLORS.textSecondary, display: 'flex', alignItems: 'center' }}>
-                Page {page} of {totalPages}
-              </Typography>
-              <Button
-                size="small"
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                sx={{ ml: 1, textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
+                Last 24 Hours
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { handleFilterChange('dateRange', '7d'); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '7d' ? 800 : 500, bgcolor: filters.dateRange === '7d' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
               >
-                Next →
-              </Button>
-            </>
-          )}
+                Last 7 Days
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { handleFilterChange('dateRange', '30d'); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '30d' ? 800 : 500, bgcolor: filters.dateRange === '30d' ? '#F1F5F9' : 'transparent' }}
+              >
+                Last 30 Days
+              </MenuItem>
+
+              <Divider sx={{ my: 1.5, opacity: 0.5 }} />
+
+              <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>SEVERITY</Typography>
+              <MenuItem 
+                onClick={() => { handleFilterChange('severity', ''); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.severity === '' ? 800 : 500, bgcolor: filters.severity === '' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
+              >
+                All Severities
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { handleFilterChange('severity', 'critical'); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, color: 'error.main', fontWeight: filters.severity === 'critical' ? 800 : 500, bgcolor: filters.severity === 'critical' ? '#FEE2E2' : 'transparent', mb: 0.5 }}
+              >
+                Critical Only
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { handleFilterChange('severity', 'high'); handleFilterClose(); }}
+                sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.severity === 'high' ? 800 : 500, bgcolor: filters.severity === 'high' ? '#F1F5F9' : 'transparent' }}
+              >
+                High Severity
+              </MenuItem>
+            </Menu>
+          </Box>
         </Box>
-      </Card>
+      )}
+
+      <Box sx={{ mb: 4 }}>
+        {loading ? (
+          [1, 2, 3, 4, 5].map((i) => <LogRowSkeleton key={i} />)
+        ) : filteredLogs.length > 0 ? (
+          (() => {
+            let lastMonth = "";
+            return filteredLogs.map((log) => {
+              const currentMonth = getMonthHeader(log.createdAt);
+              const showMonth = currentMonth !== lastMonth;
+              lastMonth = currentMonth;
+              return (
+                <React.Fragment key={log._id}>
+                  {showMonth && (
+                    <Typography sx={{ 
+                      fontSize: 14, fontWeight: 800, color: COLORS.textSecondary, 
+                      mt: 4, mb: 2, px: 1, textTransform: 'capitalize' 
+                    }}>
+                      {currentMonth}
+                    </Typography>
+                  )}
+                  <LogRow log={log} />
+                </React.Fragment>
+              );
+            });
+          })()
+        ) : (
+          <Box sx={{ py: 10, textAlign: 'center', bgcolor: '#FFF', borderRadius: '24px', border: '1px dashed #E2E8F0' }}>
+            <History sx={{ fontSize: 48, color: '#E2E8F0', mb: 2 }} />
+            <Typography sx={{ fontWeight: 700, color: COLORS.textSecondary }}>No activity records found matching your filters.</Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* --- Pagination --- */}
+      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+        {loading ? (
+          <Skeleton variant="rectangular" width={240} height={44} sx={{ borderRadius: '40px' }} />
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1.5, 
+            alignItems: 'center', 
+            bgcolor: '#F1F5F9', // Light background pill
+            px: 1,
+            py: 0.5, 
+            borderRadius: '40px' 
+          }}>
+            <IconButton 
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
+            >
+              <ChevronLeft sx={{ fontSize: 20 }} />
+            </IconButton>
+
+            {(() => {
+              const range = [];
+              let start = Math.max(1, page - 1);
+              let end = Math.min(totalPages, start + 2);
+
+              if (end - start < 2 && start > 1) {
+                start = Math.max(1, end - 2);
+              }
+
+              for (let i = start; i <= end; i++) {
+                range.push(i);
+              }
+
+              return range.map((p) => {
+                const isActive = p === page;
+                return (
+                  <Box
+                    key={p}
+                    onClick={() => setPage(p)}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      borderRadius: '12px',
+                      bgcolor: isActive ? COLORS.black : 'transparent',
+                      color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                      fontWeight: 800,
+                      fontSize: 14,
+                      transition: 'all 0.2s ease',
+                      boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                      '&:hover': {
+                        bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                      }
+                    }}
+                  >
+                    {p}
+                  </Box>
+                );
+              });
+            })()}
+
+            <IconButton 
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+              sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
+            >
+              <ChevronRight sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Box>
+        )}
+      </Box>
 
       {/* --- Details Dialog --- */}
       <Dialog

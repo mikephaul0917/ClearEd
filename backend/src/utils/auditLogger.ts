@@ -35,10 +35,17 @@ export const logAudit = async (params: AuditParams) => {
         } = params;
 
         // Auto-capture request metadata
-        const ipAddress = (req.ip ||
-            req.headers['x-forwarded-for'] ||
-            req.socket.remoteAddress ||
-            'unknown').toString();
+        let ipAddress = 'unknown';
+        if (req.headers['x-forwarded-for']) {
+            // Handle possibility of multiple IPs in x-forwarded-for
+            const forwarded = req.headers['x-forwarded-for'] as string;
+            ipAddress = forwarded.split(',')[0].trim();
+        } else {
+            ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+        }
+
+        // Beautify localhost IPv6
+        if (ipAddress === '::1') ipAddress = '127.0.0.1';
 
         const userAgent = req.headers['user-agent'];
 

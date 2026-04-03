@@ -3,16 +3,18 @@ import {
   Box, Typography, Card, CardContent, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, FormControl, InputLabel,
   Select, Menu, MenuItem, Chip, Button, Dialog, DialogTitle, DialogContent,
-  DialogActions, Alert, Grid, IconButton, Tooltip, LinearProgress,
+  DialogActions, Alert, Grid, IconButton, Tooltip, LinearProgress, CircularProgress,
   Pagination, Avatar, SelectChangeEvent, useTheme, useMediaQuery, Skeleton,
   TextField, InputAdornment, FormLabel, Switch
 } from "@mui/material";
 import {
   Visibility, Business, FilterList, Search, AddCircle,
   Delete, RestoreFromTrash, DeleteForever, History, Security, CorporateFare,
-  MoreVert, CheckCircleRounded
+  MoreVert, CheckCircleRounded, Close, ChevronRight, ChevronLeft
 } from '@mui/icons-material';
-import { adminService } from "../../services";
+import { adminService, organizationService } from "../../services";
+import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
+import { motion } from "framer-motion";
 
 // ─── Modern Bento Design System ──────────────────────────────────────────────
 const COLORS = {
@@ -42,6 +44,204 @@ interface OrganizationRow {
   signatoryName?: string;
   isFinal?: boolean;
 }
+
+// ─── Bento Organization Card Sub-component ───────────────────────────
+const OrgBentoCard = ({
+  org,
+  onDetails,
+  onRestore,
+  onMenuOpen,
+  isArchived
+}: {
+  org: OrganizationRow;
+  onDetails: (org: OrganizationRow) => void;
+  onRestore?: (org: OrganizationRow) => void;
+  onMenuOpen: (event: React.MouseEvent<HTMLElement>, org: OrganizationRow) => void;
+  isArchived?: boolean;
+}) => {
+  return (
+    <Box sx={{
+      p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+      border: `1px solid ${COLORS.border}`,
+      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+      position: 'relative',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+        borderColor: COLORS.tealLight
+      }
+    }}>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{
+              width: 44, height: 44,
+              bgcolor: org.isFinal ? 'rgba(13, 148, 136, 0.1)' : COLORS.tealLight,
+              color: org.isFinal ? '#0D9488' : COLORS.teal,
+              fontWeight: 800, fontSize: 16, borderRadius: '12px'
+            }}>
+              {org.name?.charAt(0)}
+            </Avatar>
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: 15, color: COLORS.textPrimary }}>{org.name}</Typography>
+              <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>{org.signatoryName || "No Signatory"}</Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Chip
+              label={isArchived ? "Archived" : "Active"}
+              size="small"
+              sx={{
+                fontWeight: 700,
+                fontSize: 10,
+                bgcolor: isArchived ? '#FEE2E2' : COLORS.tealLight,
+                color: isArchived ? '#EF4444' : COLORS.teal,
+                height: 20
+              }}
+            />
+            <IconButton
+              size="small"
+              onClick={(e) => onMenuOpen(e, org)}
+              sx={{ color: COLORS.textSecondary, borderRadius: '8px', '&:hover': { bgcolor: '#F1F5F9' } }}
+            >
+              <MoreVert sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Typography sx={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#334155',
+          mb: 2.5,
+          fontStyle: 'italic',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          minHeight: '3.6em'
+        }}>
+          "{org.description || "Institutional organization for official documentation and signatory processes."}"
+        </Typography>
+      </Box>
+
+      <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>
+          Code: <Box component="span" sx={{ fontWeight: 800, color: COLORS.teal }}>{org.joinCode}</Box>
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            onClick={(e) => { e.stopPropagation(); onDetails(org); }}
+            size="small"
+            variant="text"
+            sx={{
+              textTransform: 'none', fontWeight: 800, color: COLORS.teal,
+              fontSize: 14,
+              '&:hover': {
+                bgcolor: 'transparent',
+                textDecoration: 'underline',
+              },
+              transition: 'all 0.2s'
+            }}
+          >
+            Modify
+          </Button>
+          {isArchived && (
+            <Button
+              onClick={(e) => { e.stopPropagation(); onRestore?.(org); }}
+              size="small"
+              variant="contained"
+              disableElevation
+              sx={{
+                textTransform: 'none', fontWeight: 800, borderRadius: '10px',
+                bgcolor: COLORS.teal, color: '#FFF', px: 2,
+                '&:hover': { bgcolor: '#08657A' }
+              }}
+            >
+              Restore
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+// ─── Bento Skeleton Loaders ──────────────────────────────────────────
+const StatsCardSkeleton = () => (
+  <Box sx={{
+    borderRadius: COLORS.cardRadius, p: 3,
+    backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}`,
+    minHeight: 125, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+  }}>
+    <Box sx={{ mb: 2 }}>
+      <Skeleton variant="text" width={100} height={16} sx={{ mb: 0.5 }} />
+      <Skeleton variant="text" width={60} height={36} />
+    </Box>
+  </Box>
+);
+
+const OrgBentoCardSkeleton = () => (
+  <Box sx={{
+    p: { xs: 2, sm: 3 }, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+    border: `1px solid ${COLORS.border}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+    height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+  }}>
+    <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
+          <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
+          <Box>
+            <Skeleton variant="text" width={100} height={20} />
+            <Skeleton variant="text" width={60} height={16} />
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Skeleton variant="rectangular" width={50} height={20} sx={{ borderRadius: '10px' }} />
+        </Box>
+      </Box>
+      <Skeleton variant="text" width="100%" height={16} />
+      <Skeleton variant="text" width="90%" height={16} />
+      <Skeleton variant="text" width="80%" height={16} />
+    </Box>
+    <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Skeleton variant="text" width={60} height={16} />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Skeleton variant="rectangular" width={60} height={32} sx={{ borderRadius: '10px' }} />
+      </Box>
+    </Box>
+  </Box>
+);
+
+const MemberItemSkeleton = () => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5 }}>
+    <Skeleton variant="circular" width={44} height={44} />
+    <Box sx={{ flex: 1 }}>
+      <Skeleton variant="text" width="60%" height={20} />
+      <Skeleton variant="text" width="40%" height={16} />
+    </Box>
+    <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '8px' }} />
+  </Box>
+);
+
+const ToolbarSkeleton = () => (
+  <Box sx={{ p: { xs: 3, sm: 4 }, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 3 }}>
+      <Skeleton variant="text" width={180} height={32} />
+      <Skeleton variant="rectangular" width={140} height={44} sx={{ borderRadius: COLORS.pillRadius, width: { xs: '100%', sm: 140 } }} />
+    </Box>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 2 }}>
+      <Skeleton variant="rectangular" width="100%" height={44} sx={{ borderRadius: '12px', flex: 1 }} />
+      <Skeleton variant="rectangular" width={200} height={44} sx={{ borderRadius: '12px', alignSelf: { xs: 'center', md: 'auto' } }} />
+    </Box>
+  </Box>
+);
+
 
 export default function AdminOrganizationsPage({
   refreshTrigger = 0,
@@ -80,7 +280,7 @@ export default function AdminOrganizationsPage({
     open: false,
     title: "",
     message: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const [successDialog, setSuccessDialog] = useState<{
@@ -92,6 +292,14 @@ export default function AdminOrganizationsPage({
     title: "",
     message: "",
   });
+
+  // --- Member Directory State ---
+  const [memberListOpen, setMemberListOpen] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [targetOrgName, setTargetOrgName] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -172,13 +380,28 @@ export default function AdminOrganizationsPage({
     <Box sx={{ fontFamily: fontStack }}>
 
       {/* ── Page Header ────────────────────────────────────────────── */}
-      <Box sx={{ mb: 6 }}>
-        <Typography sx={{ fontWeight: 700, fontSize: '2.25rem', color: COLORS.textPrimary, letterSpacing: '-0.05em', lineHeight: 1 }}>
-          Institutional Organizations
-        </Typography>
-        <Typography sx={{ fontSize: 15, color: COLORS.textSecondary, mt: 0.75, fontWeight: 500 }}>
-          Manage institutional departments, signatories, and official access codes.
-        </Typography>
+      <Box sx={{ mb: { xs: 4, sm: 6 } }}>
+        {loading ? (
+          <>
+            <Skeleton variant="text" width={280} height={48} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="100%" height={24} />
+          </>
+        ) : (
+          <>
+            <Typography sx={{
+              fontWeight: 700,
+              fontSize: { xs: '1.75rem', sm: '2.25rem' },
+              color: COLORS.textPrimary,
+              letterSpacing: '-0.05em',
+              lineHeight: 1.1
+            }}>
+              Institutional Organizations
+            </Typography>
+            <Typography sx={{ fontSize: { xs: 13, sm: 15 }, color: COLORS.textSecondary, mt: 1, fontWeight: 500, lineHeight: 1.4 }}>
+              Manage institutional departments, signatories, and official access codes.
+            </Typography>
+          </>
+        )}
       </Box>
 
       {/* ── Stats Bento Row ────────────────────────────────────────── */}
@@ -188,7 +411,7 @@ export default function AdminOrganizationsPage({
         gap: 3, mb: 4,
       }}>
         {loading ? (
-          [1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={110} sx={{ borderRadius: COLORS.cardRadius }} />)
+          [1, 2, 3, 4].map((i) => <StatsCardSkeleton key={i} />)
         ) : ([
           { label: "Total Organizations", value: stats.total, sub: "Institutional Count", icon: <Business sx={{ fontSize: 18 }} /> },
           { label: "Active Directory", value: stats.active, sub: "Currently Active", icon: <Visibility sx={{ fontSize: 18 }} /> },
@@ -227,76 +450,7 @@ export default function AdminOrganizationsPage({
       {/* ── Notification/Alert Bar ──────────────────────────────────── */}
 
 
-      {/* ── Recent Organizations (Approval Style) ────────────────── */}
-      {!loading && rows.length > 0 && (
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' },
-          gap: 3, mb: 4,
-        }}>
-          {rows.slice(0, 2).map((org, idx) => (
-            <Box key={org._id} sx={{
-              p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
-              border: `1px solid ${COLORS.border}`,
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
-              position: 'relative'
-            }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{
-                    width: 44, height: 44, bgcolor: COLORS.tealLight,
-                    color: COLORS.teal,
-                    fontWeight: 800, fontSize: 16, borderRadius: '12px'
-                  }}>
-                    {org.name?.charAt(0)}
-                  </Avatar>
-                  <Box>
-                    <Typography sx={{ fontWeight: 800, fontSize: 15, color: COLORS.textPrimary }}>{org.name}</Typography>
-                    <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>{org.signatoryName || "No Signatory"}</Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
 
-                  <Chip label="Active" size="small" sx={{ fontWeight: 700, fontSize: 10, bgcolor: COLORS.tealLight, color: COLORS.teal }} />
-                </Box>
-              </Box>
-
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155', mb: 2.5, fontStyle: 'italic' }}>
-                "{org.description || "Institutional organization for official documentation and signatory processes."}"
-              </Typography>
-
-              <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>
-                  Code: <Box component="span" sx={{ fontWeight: 800, color: COLORS.teal }}>{org.joinCode}</Box>
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1.5 }}>
-                  <Button
-                    onClick={() => setManageOrg(org)}
-                    size="small"
-                    variant="text"
-                    sx={{ textTransform: 'none', fontWeight: 800, color: COLORS.textSecondary, fontSize: 13 }}
-                  >
-                    Details
-                  </Button>
-                  <Button
-                    onClick={() => setManageOrg(org)}
-                    size="small"
-                    variant="contained"
-                    disableElevation
-                    sx={{
-                      textTransform: 'none', fontWeight: 800, borderRadius: '10px',
-                      bgcolor: COLORS.tealLight, color: COLORS.teal, px: 2,
-                      '&:hover': { bgcolor: 'rgba(45, 212, 191, 0.25)' }
-                    }}
-                  >
-                    Modify
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      )}
 
       {/* ── Organization Directory (Team Activity Style) ──────────── */}
       <Box sx={{
@@ -307,205 +461,288 @@ export default function AdminOrganizationsPage({
         overflow: 'hidden'
       }}>
         {/* Table Header / Toolbar */}
-        <Box sx={{ p: 4, pb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: 20, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
-                Organization Directory
+        {loading ? (
+          <ToolbarSkeleton />
+        ) : (
+          <Box sx={{ p: { xs: 3, sm: 4 }, pb: 2 }}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 2, mb: 3
+            }}>
+              <Box>
+                <Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 20 }, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+                  Organization Directory
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', width: { xs: '100%', sm: 'auto' } }}>
+                <Button
+                  variant="contained"
+                  disableElevation
+                  fullWidth={isSmallMobile}
+                  startIcon={<AddCircle />}
+                  onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
+                  sx={{
+                    borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
+                    textTransform: 'none', px: { xs: 2, sm: 4 }, py: 1.2, fontWeight: 800,
+                    fontSize: 13, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                    '&:hover': {
+                      bgcolor: '#000',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 15px 30px -5px rgba(0,0,0,0.4)'
+                    },
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  Create New
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2, mb: 2,
+              alignItems: 'center'
+            }}>
+              <TextField
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                size="small"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><Search sx={{ fontSize: 20, color: COLORS.textSecondary }} /></InputAdornment>,
+                  sx: {
+                    borderRadius: '12px',
+                    bgcolor: '#F8FAFC',
+                    height: 44,
+                  }
+                }}
+                sx={{
+                  flex: 1,
+                  width: '100%',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    border: '1px solid transparent',
+                    transition: 'border-color 0.2s'
+                  },
+                  '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#E2E8F0'
+                  },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: COLORS.teal,
+                    borderWidth: '1.5px'
+                  }
+                }}
+              />
+
+              <Box sx={{
+                display: 'flex',
+                bgcolor: '#F8FAFC',
+                p: 0.5,
+                borderRadius: '12px',
+                width: { xs: '100%', md: 'auto' },
+                justifyContent: 'center'
+              }}>
+                <Button
+                  onClick={() => { setView('active'); setPage(1); }}
+                  sx={{
+                    flex: { xs: 1, md: 'none' },
+                    textTransform: 'none', px: 2, py: 1, borderRadius: '10px', fontSize: 13, fontWeight: 700,
+                    bgcolor: 'transparent',
+                    color: view === 'active' ? COLORS.textPrimary : COLORS.textSecondary,
+                    position: 'relative',
+                    zIndex: 1,
+                    '&:hover': { bgcolor: 'transparent' }
+                  }}
+                >
+                  {view === 'active' && (
+                    <motion.div
+                      layoutId="activeOrgTab"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#FFF',
+                        borderRadius: '10px',
+                        zIndex: -1,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                      }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  Active
+                </Button>
+                <Button
+                  onClick={() => { setView('deleted'); setPage(1); }}
+                  sx={{
+                    flex: { xs: 1, md: 'none' },
+                    textTransform: 'none', px: 2, py: 1, borderRadius: '10px', fontSize: 13, fontWeight: 700,
+                    bgcolor: 'transparent',
+                    color: view === 'deleted' ? COLORS.textPrimary : COLORS.textSecondary,
+                    position: 'relative',
+                    zIndex: 1,
+                    '&:hover': { bgcolor: 'transparent' }
+                  }}
+                >
+                  {view === 'deleted' && (
+                    <motion.div
+                      layoutId="activeOrgTab"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#FFF',
+                        borderRadius: '10px',
+                        zIndex: -1,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                      }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  Archived
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+
+
+        <Box sx={{ p: 4, pt: 0 }}>
+          {loading ? (
+            <Grid container spacing={3}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Grid item xs={12} sm={6} lg={4} key={i}>
+                  <OrgBentoCardSkeleton />
+                </Grid>
+              ))}
+            </Grid>
+          ) : paginatedRows.length === 0 ? (
+            <Box sx={{ py: 12, textAlign: 'center' }}>
+              <Business sx={{ fontSize: 48, color: '#CBD5E1', mb: 2 }} />
+              <Typography sx={{ color: COLORS.textSecondary, fontFamily: fontStack, fontSize: 16, fontWeight: 600 }}>
+                No organizations found in this directory.
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
-
-              <Button
-                variant="contained"
-                disableElevation
-                startIcon={<AddCircle />}
-                onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
-                sx={{
-                  borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
-                  textTransform: 'none', px: 4, py: 1.2, fontWeight: 800,
-                  fontSize: 13, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
-                  '&:hover': { 
-                    bgcolor: '#000', 
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 15px 30px -5px rgba(0,0,0,0.4)'
-                  },
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-              >
-                Create New
-              </Button>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
-            <TextField
-              placeholder="Search by name, code or signatory..."
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-              size="small"
-              InputProps={{
-                startAdornment: <InputAdornment position="start"><Search sx={{ fontSize: 20, color: COLORS.textSecondary }} /></InputAdornment>,
-                sx: { borderRadius: '12px', bgcolor: '#F8FAFC', border: 'none', height: 44 }
-              }}
-              sx={{ flex: 1, minWidth: 260, '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
-            />
-
-            <Box sx={{ display: 'flex', bgcolor: '#F8FAFC', p: 0.5, borderRadius: '12px' }}>
-              <Button
-                onClick={() => { setView('active'); setPage(1); }}
-                sx={{
-                  textTransform: 'none', px: 2, py: 0.5, borderRadius: '10px', fontSize: 13, fontWeight: 700,
-                  bgcolor: view === 'active' ? '#FFF' : 'transparent',
-                  color: view === 'active' ? COLORS.textPrimary : COLORS.textSecondary,
-                  boxShadow: view === 'active' ? '0 4px 6px -1px rgba(0,0,0,0.05)' : 'none',
-                  '&:hover': { bgcolor: view === 'active' ? '#FFF' : '#F1F5F9' }
-                }}
-              >
-                All Organizations
-              </Button>
-              <Button
-                onClick={() => { setView('deleted'); setPage(1); }}
-                sx={{
-                  textTransform: 'none', px: 2, py: 0.5, borderRadius: '10px', fontSize: 13, fontWeight: 700,
-                  bgcolor: view === 'deleted' ? '#FFF' : 'transparent',
-                  color: view === 'deleted' ? COLORS.textPrimary : COLORS.textSecondary,
-                  boxShadow: view === 'deleted' ? '0 4px 6px -1px rgba(0,0,0,0.05)' : 'none',
-                  '&:hover': { bgcolor: view === 'deleted' ? '#FFF' : '#F1F5F9' }
-                }}
-              >
-                Archived
-              </Button>
-            </Box>
-          </Box>
+          ) : (
+            <Grid container spacing={3}>
+              {paginatedRows.map((org) => (
+                <Grid item xs={12} sm={6} lg={4} key={org._id}>
+                  <OrgBentoCard
+                    org={org}
+                    isArchived={view === 'deleted'}
+                    onDetails={(org) => setManageOrg(org)}
+                    onRestore={(org) => {
+                      setConfirmDialog({
+                        open: true,
+                        title: "Restore Member?",
+                        message: `You are about to restore "${org.name}" to the active directory.`,
+                        confirmText: "Yes, Restore",
+                        onConfirm: () => adminService.restoreOrganization(org._id).then(() => {
+                          fetchData();
+                          setSuccessDialog({
+                            open: true,
+                            title: "Restoration Successful",
+                            message: `"${org.name}" has been successfully restored.`
+                          });
+                        })
+                      });
+                    }}
+                    onMenuOpen={(e, org) => {
+                      setMenuAnchorEl(e.currentTarget);
+                      setActiveMenuOrg(org);
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
         </Box>
-
-
-
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                {['Organization', 'Description', 'Join Code', 'Signatory', ''].map((h, i) => (
-                  <TableCell
-                    key={h}
-                    align={h === 'Actions' ? 'right' : 'left'}
-                    sx={{
-                      fontFamily: fontStack, fontSize: 13, fontWeight: 700,
-                      color: COLORS.textSecondary, py: 2, px: 3, borderBottom: 'none'
-                    }}
-                  >
-                    {loading ? <Skeleton variant="text" width={h === '' ? "40%" : "60%"} height={20} sx={{ ml: h === '' ? 'auto' : 0 }} /> : h}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton variant="text" /></TableCell>
-                    <TableCell><Skeleton variant="text" /></TableCell>
-                    <TableCell><Skeleton variant="text" /></TableCell>
-                    <TableCell><Skeleton variant="text" /></TableCell>
-                    <TableCell align="right"><Skeleton variant="circular" width={32} height={32} sx={{ ml: 'auto' }} /></TableCell>
-                  </TableRow>
-                ))
-              ) : paginatedRows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                    <Typography sx={{ color: COLORS.textSecondary, fontFamily: fontStack, fontSize: 14 }}>
-                      No organizations found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedRows.map((org) => (
-                  <TableRow
-                    key={org._id}
-                    hover
-                    sx={{
-                      '&:last-child td': { border: 0 },
-                      bgcolor: org.isFinal ? '#F0FDFA' : 'transparent',
-                      '&:hover': { bgcolor: org.isFinal ? '#F0FDFA !important' : '#F8FAFC !important' }
-                    }}
-                  >
-                    <TableCell sx={{ px: 3, py: 2.5, borderBottom: `1px solid ${COLORS.border}` }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{
-                          width: 32, height: 32, bgcolor: org.isFinal ? '#0D9488' : COLORS.teal,
-                          color: '#FFF', fontWeight: 800, fontSize: 13, borderRadius: '8px'
-                        }}>
-                          {org.name?.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography sx={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary }}>{org.name}</Typography>
-                          <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>ID: {org._id.slice(-6).toUpperCase()}</Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
-                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
-                        {org.description || "Institutional Office"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
-                      <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.5, borderRadius: '6px', bgcolor: '#F1F5F9' }}>
-                        <Typography sx={{ fontSize: 12, fontWeight: 800, color: COLORS.accentBlue, fontStyle: 'italic' }}>
-                          {org.joinCode || "—"}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
-                      {org.isFinal ? (
-                        <Chip
-                          label="Final Reviewer"
-                          size="small"
-                          sx={{
-                            height: 24, fontSize: 11, fontWeight: 800,
-                            bgcolor: '#CCFBF1', color: '#0F766E', borderRadius: '6px'
-                          }}
-                        />
-                      ) : (
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>
-                          {org.signatoryName || "No Signatory"}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="right" sx={{ px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          setMenuAnchorEl(e.currentTarget);
-                          setActiveMenuOrg(org);
-                        }}
-                        sx={{ color: COLORS.textSecondary, borderRadius: '8px', '&:hover': { bgcolor: '#F1F5F9' } }}
-                      >
-                        <MoreVert sx={{ fontSize: 20 }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderTop: `1px solid ${COLORS.border}` }}>
-          <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 600 }}>
-            Showing <Box component="span" sx={{ color: COLORS.textPrimary }}>{paginatedRows.length}</Box> of <Box component="span" sx={{ color: COLORS.textPrimary }}>{filtered.length}</Box> entries
-          </Typography>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(_, v) => setPage(v)}
-            sx={{
-              '& .MuiPaginationItem-root': {
-                fontFamily: fontStack, borderRadius: '8px', fontWeight: 800, fontSize: 13,
-                color: COLORS.textSecondary,
-                '&.Mui-selected': { bgcolor: COLORS.black, color: '#FFF', '&:hover': { bgcolor: '#000' } }
-              }
-            }}
-          />
+          {loading ? (
+            <Skeleton variant="rounded" width={240} height={44} sx={{ borderRadius: '40px' }} />
+          ) : (
+            <>
+              <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 600, mb: 2 }}>
+                Showing <Box component="span" sx={{ color: COLORS.textPrimary }}>{paginatedRows.length}</Box> of <Box component="span" sx={{ color: COLORS.textPrimary }}>{filtered.length}</Box> entries
+              </Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 1.5, 
+                alignItems: 'center', 
+                bgcolor: '#F1F5F9', 
+                px: 1,
+                py: 0.5, 
+                borderRadius: '40px' 
+              }}>
+                <IconButton 
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
+                >
+                  <ChevronLeft sx={{ fontSize: 20 }} />
+                </IconButton>
+
+                {(() => {
+                  const range = [];
+                  let start = Math.max(1, page - 1);
+                  let end = Math.min(totalPages, start + 2);
+
+                  if (end - start < 2 && start > 1) {
+                    start = Math.max(1, end - 2);
+                  }
+
+                  for (let i = start; i <= end; i++) {
+                    range.push(i);
+                  }
+
+                  return range.map((p) => {
+                    const isActive = p === page;
+                    return (
+                      <Box
+                        key={p}
+                        onClick={() => setPage(p)}
+                        sx={{
+                          width: 36,
+                          height: 36,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          borderRadius: '12px',
+                          bgcolor: isActive ? COLORS.black : 'transparent',
+                          color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                          fontWeight: 800,
+                          fontSize: 14,
+                          transition: 'all 0.2s ease',
+                          boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                          '&:hover': {
+                            bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                          }
+                        }}
+                      >
+                        {p}
+                      </Box>
+                    );
+                  });
+                })()}
+
+                <IconButton 
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                  sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
+                >
+                  <ChevronRight sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
 
@@ -638,7 +875,7 @@ export default function AdminOrganizationsPage({
                 setSuccessDialog({
                   open: true,
                   title: manageOrg?._id ? "Update Successful" : "Creation Successful",
-                  message: manageOrg?._id 
+                  message: manageOrg?._id
                     ? `The organization "${name}" has been successfully updated.`
                     : `The organization "${name}" has been successfully established and added to the directory.`
                 });
@@ -652,8 +889,8 @@ export default function AdminOrganizationsPage({
               borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
               textTransform: 'none', px: 4, py: 1.2, fontWeight: 800, fontSize: 14,
               boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
-              '&:hover': { 
-                bgcolor: '#000', 
+              '&:hover': {
+                bgcolor: '#000',
                 transform: 'translateY(-2px)',
                 boxShadow: '0 15px 30px -5px rgba(0,0,0,0.4)'
               },
@@ -670,29 +907,43 @@ export default function AdminOrganizationsPage({
         open={Boolean(menuAnchorEl)}
         onClose={() => setMenuAnchorEl(null)}
         PaperProps={{
-          elevation: 2,
           sx: {
-            borderRadius: '16px',
+            borderRadius: COLORS.cardRadius,
             mt: 1.5,
-            minWidth: 160,
+            minWidth: 180,
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02)',
+            border: `1px solid ${COLORS.border}`,
             '& .MuiMenuItem-root': {
               fontSize: 14,
-              fontWeight: 600,
-              py: 1.2,
-              px: 2,
-              borderRadius: '8px',
+              fontWeight: 700,
+              py: 1.5,
+              px: 2.5,
+              borderRadius: '12px',
               mx: 1,
-              '&:hover': { bgcolor: '#F1F5F9', color: COLORS.teal }
+              my: 0.5,
+              color: COLORS.textPrimary,
+              '&:hover': { bgcolor: '#F8FAFC' }
             }
           }
         }}
       >
-        <MenuItem onClick={() => {
-          setManageOrg(activeMenuOrg);
+        <MenuItem onClick={async () => {
+          if (!activeMenuOrg) return;
+          setTargetOrgName(activeMenuOrg.name);
+          setMemberListOpen(true);
+          setLoadingMembers(true);
           setMenuAnchorEl(null);
+          try {
+            const data = await organizationService.getMembers(activeMenuOrg._id);
+            setMembers(data.data || []);
+          } catch (error) {
+            console.error("Failed to fetch members:", error);
+          } finally {
+            setLoadingMembers(false);
+          }
         }}>
-          <Visibility sx={{ fontSize: 18, mr: 1.5, color: '#64748B' }} />
-          View Details
+          <Visibility sx={{ fontSize: 18, mr: 1.5, opacity: 0.8 }} />
+          View Members
         </MenuItem>
 
         {view === 'deleted' && (
@@ -716,9 +967,8 @@ export default function AdminOrganizationsPage({
               }
               setMenuAnchorEl(null);
             }}
-            sx={{ color: COLORS.teal }}
           >
-            <RestoreFromTrash sx={{ fontSize: 18, mr: 1.5 }} />
+            <RestoreFromTrash sx={{ fontSize: 18, mr: 1.5, opacity: 0.8 }} />
             Restore Organization
           </MenuItem>
         )}
@@ -726,21 +976,21 @@ export default function AdminOrganizationsPage({
         <MenuItem
           onClick={() => {
             if (!activeMenuOrg) return;
-            
+
             const isTrash = view === 'deleted';
             const title = isTrash ? "Are You Sure Want To Delete Permanently?" : "Are You Sure Want To Archive?";
-            const message = isTrash 
+            const message = isTrash
               ? `You are about to permanently delete "${activeMenuOrg.name}". This action is irreversible and cannot be undone.`
               : `You are about to move "${activeMenuOrg.name}" to the archive bin. It can be recovered later if needed.`;
             const confirmText = isTrash ? "Yes, Delete Forever" : "Yes, Archive";
-            
+
             setConfirmDialog({
               open: true,
               title,
               message,
               confirmText,
               onConfirm: () => {
-                const action = isTrash 
+                const action = isTrash
                   ? adminService.permanentDeleteOrganization(activeMenuOrg._id)
                   : adminService.deleteOrganization(activeMenuOrg._id);
                 action.then(() => {
@@ -748,7 +998,7 @@ export default function AdminOrganizationsPage({
                   setSuccessDialog({
                     open: true,
                     title: isTrash ? "Permanent Deletion Successful" : "Selection Archived Successfully",
-                    message: isTrash 
+                    message: isTrash
                       ? `"${activeMenuOrg.name}" has been permanently removed from the system.`
                       : `"${activeMenuOrg.name}" has been successfully moved to the archive bin.`
                   });
@@ -757,17 +1007,17 @@ export default function AdminOrganizationsPage({
             });
             setMenuAnchorEl(null);
           }}
-          sx={{ color: '#EF4444' }}
+          sx={{ color: '#EF4444 !important' }}
         >
           {view === 'deleted' ? (
             <>
-              <DeleteForever sx={{ fontSize: 18, mr: 1.5 }} />
+              <DeleteForever sx={{ fontSize: 18, mr: 1.5, opacity: 1, color: 'inherit' }} />
               Delete Permanently
             </>
           ) : (
             <>
-              <Delete sx={{ fontSize: 18, mr: 1.5 }} />
-              Delete
+              <Delete sx={{ fontSize: 18, mr: 1.5, opacity: 0.8 }} />
+              Archive
             </>
           )}
         </MenuItem>
@@ -788,10 +1038,10 @@ export default function AdminOrganizationsPage({
         }}
       >
         <DialogContent sx={{ p: 0 }}>
-          <Typography sx={{ 
-            fontWeight: 900, 
-            fontSize: '28px', 
-            color: COLORS.textPrimary, 
+          <Typography sx={{
+            fontWeight: 900,
+            fontSize: '28px',
+            color: COLORS.textPrimary,
             letterSpacing: '-0.03em',
             lineHeight: 1.2,
             mb: 2,
@@ -799,9 +1049,9 @@ export default function AdminOrganizationsPage({
           }}>
             {confirmDialog.title}
           </Typography>
-          <Typography sx={{ 
-            fontSize: '16px', 
-            color: COLORS.textSecondary, 
+          <Typography sx={{
+            fontSize: '16px',
+            color: COLORS.textSecondary,
             fontWeight: 500,
             lineHeight: 1.5,
             mb: 5,
@@ -871,34 +1121,34 @@ export default function AdminOrganizationsPage({
         }}
       >
         <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Box sx={{ 
-            width: 100, 
-            height: 100, 
-            borderRadius: '50%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
+          <Box sx={{
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             mb: 3,
             background: 'radial-gradient(circle, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0) 70%)',
             border: '1px solid rgba(14, 116, 144, 0.1)'
           }}>
-            <Box sx={{ 
-              width: 64, 
-              height: 64, 
-              borderRadius: '50%', 
-              bgcolor: 'rgba(14, 116, 144, 0.1)', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <Box sx={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              bgcolor: 'rgba(14, 116, 144, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center'
             }}>
               <CheckCircleRounded sx={{ fontSize: 36, color: COLORS.teal }} />
             </Box>
           </Box>
 
-          <Typography sx={{ 
-            fontWeight: 900, 
-            fontSize: '28px', 
-            color: COLORS.textPrimary, 
+          <Typography sx={{
+            fontWeight: 900,
+            fontSize: '28px',
+            color: COLORS.textPrimary,
             letterSpacing: '-0.03em',
             lineHeight: 1.2,
             mb: 2,
@@ -906,9 +1156,9 @@ export default function AdminOrganizationsPage({
           }}>
             {successDialog.title}
           </Typography>
-          <Typography sx={{ 
-            fontSize: '16px', 
-            color: COLORS.textSecondary, 
+          <Typography sx={{
+            fontSize: '16px',
+            color: COLORS.textSecondary,
             fontWeight: 500,
             lineHeight: 1.5,
             mb: 5,
@@ -939,6 +1189,261 @@ export default function AdminOrganizationsPage({
           >
             Close
           </Button>
+        </DialogContent>
+      </Dialog>
+      {/* ── Member Directory Modal ─────────────────────────────────────── */}
+      <Dialog
+        open={memberListOpen}
+        onClose={() => setMemberListOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: '24px',
+            p: 0,
+            maxHeight: '90vh',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+          {/* Header Section */}
+          <Box sx={{ p: 3, pt: 4, position: 'relative', bgcolor: '#FFF' }}>
+            <IconButton
+              onClick={() => setMemberListOpen(false)}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                color: '#98A2B3',
+                '&:hover': {
+                  color: '#667085',
+                  bgcolor: '#F9FAFB'
+                }
+              }}
+            >
+              <Close sx={{ fontSize: '1.25rem' }} />
+            </IconButton>
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: '#101828', fontFamily: fontStack, mb: 0.5 }}>
+                {targetOrgName} Member Directory
+              </Typography>
+              <Typography sx={{ fontSize: '0.8125rem', color: '#475467', fontFamily: fontStack, lineHeight: 1.3 }}>
+                View and manage members currently active in this organization. Review their roles and profiles.
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Search Bar Section */}
+          <Box sx={{ px: 3, pb: 1, mt: 1 }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#344054', mb: 1.5 }}>
+              Search for members
+            </Typography>
+            <Box sx={{ display: 'flex' }}>
+              <TextField
+                fullWidth
+                placeholder="Search..."
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: '#667085', fontSize: '1.25rem' }} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: '12px',
+                    bgcolor: '#FFF',
+                    fontFamily: fontStack,
+                    color: '#101828',
+                    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.05)',
+                    '& fieldset': { borderColor: '#D0D5DD' },
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Member List Label */}
+          <Box sx={{ px: 3, py: 2 }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: '#344054' }}>
+              In this directory
+            </Typography>
+          </Box>
+
+          {/* List Section */}
+          <Box sx={{
+            px: 1.5,
+            pb: 2,
+            maxHeight: '400px',
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+            '&::-webkit-scrollbar-thumb': { bgcolor: '#F2F4F7', borderRadius: '10px', border: '2px solid #FFF' }
+          }}>
+            {loadingMembers ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                {[1, 2, 3, 4, 5].map((i) => <MemberItemSkeleton key={i} />)}
+              </Box>
+            ) : (
+              members.filter(m => {
+                const user = m.userId;
+                if (!user) return false;
+                return (user.fullName || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                  (user.email || '').toLowerCase().includes(memberSearch.toLowerCase());
+              }).length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography sx={{ color: '#667085', fontFamily: fontStack }}>No members found</Typography>
+                </Box>
+              ) : (
+                members.filter(m => {
+                  const user = m.userId;
+                  if (!user) return false;
+                  return (user.fullName || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                    (user.email || '').toLowerCase().includes(memberSearch.toLowerCase());
+                }).map((member) => {
+                  const user = member.userId;
+                  if (!user) return null;
+                  return (
+                    <Box
+                      key={member._id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: '#F9FAFB',
+                        }
+                      }}
+                    >
+                      <Avatar
+                        src={getAbsoluteUrl(user.avatarUrl)}
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          bgcolor: COLORS.black,
+                          color: '#FFFFFF',
+                          fontSize: '0.875rem',
+                          fontWeight: 700,
+                          fontFamily: fontStack,
+                          border: 'none'
+                        }}
+                      >
+                        {getInitials(user.fullName || '')}
+                      </Avatar>
+
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography noWrap sx={{ fontWeight: 600, fontSize: '0.925rem', color: '#101828', fontFamily: fontStack }}>
+                          {user.fullName}
+                        </Typography>
+                        <Typography noWrap sx={{ fontSize: '0.875rem', color: '#667085', fontFamily: fontStack }}>
+                          @{user.email?.split('@')[0] || user.fullName.split(' ')[0].toLowerCase()}
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          bgcolor: member.role === 'officer' ? '#E0F2FE' : '#FEF9C3',
+                          color: member.role === 'officer' ? '#0369A1' : '#854D0E',
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: '8px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          fontFamily: fontStack,
+                          letterSpacing: '0.025em',
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {member.role === 'officer' ? 'Officer' : 'Student'}
+                      </Box>
+                    </Box>
+                  );
+                })
+              )
+            )}
+          </Box>
+
+          {/* Footer Section */}
+          <Box sx={{ p: 2, px: 3, borderTop: '1px solid #F2F4F7', display: 'flex', gap: 1.5, bgcolor: '#FFF' }}>
+            <Button
+              fullWidth
+              variant="contained"
+              disabled={isExporting || loadingMembers || members.length === 0}
+              onClick={() => {
+                setIsExporting(true);
+                const headers = ["Full Name", "Email", "Role", "Joined Date"];
+                const csvRows = [
+                  headers.join(","),
+                  ...members.map(m => {
+                    const user = m.userId || {};
+                    return [
+                      `"${user.fullName || ''}"`,
+                      `"${user.email || ''}"`,
+                      `"${m.role || 'Student'}"`,
+                      `"${m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ''}"`
+                    ].join(",");
+                  })
+                ].join("\n");
+
+                try {
+                  const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.body.appendChild(document.createElement("a"));
+                  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                  link.setAttribute("href", url);
+                  link.setAttribute("download", `${targetOrgName.replace(/\s+/g, '_')}_Members_${timestamp}.csv`);
+                  link.style.display = "none";
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                } catch (error) {
+                  console.error("Export failed:", error);
+                } finally {
+                  setTimeout(() => setIsExporting(false), 800);
+                }
+              }}
+              sx={{
+                bgcolor: COLORS.black,
+                color: '#FFFFFF',
+                borderRadius: '100px',
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                fontFamily: fontStack,
+                py: 1.5,
+                px: 4,
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: '#000',
+                  transform: 'translateY(-2px)',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: COLORS.black,
+                  opacity: 0.5,
+                  color: '#FFFFFF'
+                }
+              }}
+            >
+              {isExporting ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <CircularProgress size={18} thickness={6} sx={{ color: '#FFF' }} />
+                  <span>Exporting...</span>
+                </Box>
+              ) : (
+                'Export List'
+              )}
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
     </Box>

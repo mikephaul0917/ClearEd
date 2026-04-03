@@ -94,7 +94,20 @@ export const unifiedLogin = async (req: Request, res: Response) => {
       }
 
       const valid = await bcrypt.compare(password, existingUser.password);
-      if (!valid) return res.status(401).json({ message: "Invalid email or password" });
+      if (!valid) {
+        await logAudit({
+          userId: existingUser._id,
+          institutionId: institution._id,
+          action: 'LOGIN_FAILED',
+          category: 'auth',
+          resource: 'User',
+          resourceId: existingUser._id,
+          details: { email, reason: 'Invalid password' },
+          severity: 'high',
+          req
+        });
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
 
       const token = jwt.sign(
         {
@@ -139,6 +152,15 @@ export const unifiedLogin = async (req: Request, res: Response) => {
     } else {
       // 6. First-time Student Registration (Explicitly requested)
       if (!req.body.isRegister) {
+        await logAudit({
+          institutionId: institution._id,
+          action: 'LOGIN_FAILED',
+          category: 'auth',
+          resource: 'User',
+          details: { email, reason: 'User not found in institution' },
+          severity: 'medium',
+          req
+        });
         return res.status(401).json({ message: "Invalid email or password" });
       }
 

@@ -175,10 +175,18 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               sx: {
                 borderRadius: '12px',
                 bgcolor: '#F8FAFC',
-                '& fieldset': { borderColor: '#E2E8F0' },
-                '&:hover fieldset': { borderColor: '#CBD5E1' },
-                '&.Mui-focused fieldset': { borderColor: '#0F172A' },
-                fontFamily: "'Inter', sans-serif"
+                fontFamily: "'Inter', sans-serif",
+                '& .MuiOutlinedInput-notchedOutline': { 
+                  border: '1px solid transparent',
+                  transition: 'border-color 0.2s'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#E2E8F0'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#0E7490',
+                  borderWidth: '1.5px'
+                }
               }
             }}
           />

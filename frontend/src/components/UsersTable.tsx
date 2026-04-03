@@ -12,8 +12,15 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Visibility, Lock, LockOpen, Email, Business, Person,
-  AdminPanelSettings, School, Security, History, FilterList, Refresh,
-  Search, PersonAdd, Key, People as PeopleIcon, Settings as SettingsIcon, MoreVert as MoreVertIcon, Check
+  AdminPanelSettings, School,  Delete as DeleteIcon,
+  RestoreFromTrash as RestoreIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  ChevronRight,
+  ChevronLeft,
+  PersonAdd,
+  Security, History, Refresh,
+  People as PeopleIcon, Settings as SettingsIcon, MoreVert as MoreVertIcon, Check
 } from '@mui/icons-material';
 import DirectoryModal from "./DirectoryModal";
 import { getInitials, getAbsoluteUrl } from "../utils/avatarUtils";
@@ -633,14 +640,33 @@ export default function UsersTable({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 InputProps={{
-                  startAdornment: <Search sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
-                  sx: { borderRadius: '8px', bgcolor: '#FFF', fontSize: 13, height: 36, minWidth: { xs: '100%', sm: 240 } }
+                  startAdornment: <SearchIcon sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
+                  sx: { 
+                    borderRadius: '8px', 
+                    bgcolor: '#FFF', 
+                    fontSize: 13, 
+                    height: 36, 
+                    minWidth: { xs: '100%', sm: 240 },
+                  }
                 }}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
+                sx={{ 
+                  width: { xs: '100%', sm: 'auto' },
+                  '& .MuiOutlinedInput-notchedOutline': { 
+                    border: '1px solid transparent',
+                    transition: 'border-color 0.2s'
+                  },
+                  '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#E2E8F0'
+                  },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: COLORS.teal,
+                    borderWidth: '1.5px'
+                  }
+                }}
               />
               <Button
                 variant="outlined"
-                endIcon={<FilterList />}
+                endIcon={<FilterIcon />}
                 onClick={(e) => setSortAnchorEl(e.currentTarget)}
                 sx={{
                   borderColor: (sortConfig || filters.status) ? COLORS.teal : '#E2E8F0',
@@ -869,51 +895,77 @@ export default function UsersTable({
         </TableContainer>
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', borderTop: '1px solid #F1F5F9' }}>
           {loading ? (
-            <Skeleton variant="rounded" width={400} height={40} sx={{ borderRadius: '16px' }} />
+            <Skeleton variant="rounded" width={240} height={44} sx={{ borderRadius: '40px' }} />
           ) : (
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(_, v) => setPage(v)}
-              sx={{
-                '& .MuiPagination-ul': {
-                  bgcolor: '#F1F5F9',
-                  borderRadius: '16px',
-                  p: 0.5,
-                  gap: 0.5
-                },
-                '& .MuiPaginationItem-root': {
-                  fontFamily: fontStack,
-                  fontWeight: 800,
-                  fontSize: 14,
-                  borderRadius: '12px',
-                  minWidth: 40,
-                  height: 40,
-                  color: COLORS.textSecondary,
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    bgcolor: '#E2E8F0',
-                    color: COLORS.textPrimary
-                  },
-                  '&.Mui-selected': {
-                    bgcolor: COLORS.black,
-                    color: '#FFF',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-                    '&:hover': {
-                      bgcolor: '#222'
-                    }
-                  },
-                  '&.MuiPaginationItem-previousNext': {
-                    color: '#94A3B8',
-                    '&:hover': {
-                      bgcolor: 'transparent',
-                      color: COLORS.black,
-                      transform: 'scale(1.1)'
-                    }
-                  }
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1.5, 
+              alignItems: 'center', 
+              bgcolor: '#F1F5F9', 
+              px: 1,
+              py: 0.5, 
+              borderRadius: '40px' 
+            }}>
+              <IconButton 
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
+              >
+                <ChevronLeft sx={{ fontSize: 20 }} />
+              </IconButton>
+
+              {(() => {
+                const range = [];
+                let start = Math.max(1, page - 1);
+                let end = Math.min(totalPages, start + 2);
+
+                if (end - start < 2 && start > 1) {
+                  start = Math.max(1, end - 2);
                 }
-              }}
-            />
+
+                for (let i = start; i <= end; i++) {
+                  range.push(i);
+                }
+
+                return range.map((p) => {
+                  const isActive = p === page;
+                  return (
+                    <Box
+                      key={p}
+                      onClick={() => setPage(p)}
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        borderRadius: '12px',
+                        bgcolor: isActive ? COLORS.black : 'transparent',
+                        color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                        fontWeight: 800,
+                        fontSize: 14,
+                        transition: 'all 0.2s ease',
+                        boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                        '&:hover': {
+                          bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                        }
+                      }}
+                    >
+                      {p}
+                    </Box>
+                  );
+                });
+              })()}
+
+              <IconButton 
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
+              >
+                <ChevronRight sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
           )}
         </Box>
       </Box>

@@ -54,11 +54,19 @@ export const getAuditLogs = async (req: Request, res: Response) => {
         }
 
         if (severity) {
-            filter.severity = severity;
+            if (typeof severity === 'string' && severity.includes(',')) {
+                filter.severity = { $in: severity.split(',') };
+            } else {
+                filter.severity = severity;
+            }
         }
 
         if (category) {
-            filter.category = category;
+            if (typeof category === 'string' && category.includes(',')) {
+                filter.category = { $in: category.split(',') };
+            } else {
+                filter.category = category;
+            }
         }
 
         // Search functionality

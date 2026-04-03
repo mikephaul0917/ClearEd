@@ -232,7 +232,13 @@ export const permanentDeleteOrganization = catchAsync(async (req: Request, res: 
 
     if (!organization) throw new AppError("Organization not found.", 404);
 
-    res.json({ status: 'success', message: "Organization permanently deleted." });
+    // Clean up related data to prevent orphaned records/crashes
+    await Promise.all([
+        OrganizationMember.deleteMany({ organizationId }),
+        ClearanceRequest.deleteMany({ organizationId })
+    ]);
+
+    res.json({ status: 'success', message: "Organization and all related records permanently deleted." });
 });
 
 /**
@@ -666,10 +672,11 @@ export const getMyOrganizations = catchAsync(async (req: Request, res: Response)
             populate: { path: 'termId', select: 'name academicYear semester' }
         });
 
-    // Keep all memberships, including those where the underlying organization is archived
-    const activeMemberships = memberships;
+    // CRITICAL FIX: Filter out memberships for organizations that have been deleted.
+    // Prevents 500 error when calling .toObject() on null.
+    const validMemberships = memberships.filter(m => m.organizationId !== null);
 
-    const organizations = activeMemberships.map(m => {
+    const organizations = validMemberships.map(m => {
         const org: any = m.organizationId;
         return {
             ...org.toObject(),
