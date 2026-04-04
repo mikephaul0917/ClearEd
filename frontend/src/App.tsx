@@ -7,6 +7,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 // @ts-ignore
 import RegisterPage from "./pages/auth/RegisterPage";
 import RoleSelection from "./pages/auth/RoleSelection";
+import SetPasswordPage from "./pages/auth/SetPasswordPage";
 import SuperAdminLogin from "./pages/auth/SuperAdminLogin";
 import RequestInstitutionAccess from "./pages/public/RequestInstitutionAccess";
 import VerifyInstitution from "./pages/public/VerifyInstitution";
@@ -54,6 +55,7 @@ export default function App() {
     location.pathname === "/archived-organizations" ||
     location.pathname === "/faqs" ||
     location.pathname === "/role-selection" ||
+    location.pathname === "/set-password" ||
     location.pathname === "/super-admin/login"
   );
 
@@ -71,6 +73,7 @@ export default function App() {
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/role-selection" element={<PublicRoute><RoleSelection /></PublicRoute>} />
+          <Route path="/set-password" element={<ProtectedRoute allowedRoles={['student', 'officer', 'dean', 'admin']}><SetPasswordPage /></ProtectedRoute>} />
           <Route path="/super-admin/login" element={<PublicRoute><SuperAdminLogin /></PublicRoute>} />
 
           {/* Public institution request routes */}
@@ -132,6 +135,7 @@ export default function App() {
             <Route path="/super-admin/institution-monitoring" element={<SuperAdminPage />} />
             <Route path="/super-admin/institution-monitoring/:institutionId" element={<InstitutionUsersPage />} />
             <Route path="/super-admin/system-analytics" element={<SuperAdminPage />} />
+            <Route path="/super-admin/audit-logs" element={<SuperAdminPage />} />
             <Route path="/super-admin/announcements" element={<SuperAdminPage />} />
           </Route>
           <Route element={<ProtectedRoute><RoleLayout /></ProtectedRoute>}>

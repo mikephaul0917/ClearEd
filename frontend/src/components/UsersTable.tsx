@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Visibility, Lock, LockOpen, Email, Business, Person,
-  AdminPanelSettings, School,  Delete as DeleteIcon,
+  AdminPanelSettings, School, Delete as DeleteIcon,
   RestoreFromTrash as RestoreIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
@@ -23,6 +23,8 @@ import {
   People as PeopleIcon, Settings as SettingsIcon, MoreVert as MoreVertIcon, Check
 } from '@mui/icons-material';
 import DirectoryModal from "./DirectoryModal";
+import ConfirmationModal from "./ConfirmationModal";
+import SuccessActionModal from "./SuccessActionModal";
 import { getInitials, getAbsoluteUrl } from "../utils/avatarUtils";
 
 // ─── Modern clean Design System ──────────────────────────────────────────────
@@ -120,6 +122,12 @@ export default function UsersTable({
   const [bulkRoleAnchor, setBulkRoleAnchor] = useState<null | HTMLElement>(null);
   const [targetBulkRole, setTargetBulkRole] = useState<string | null>(null);
   const [orgBulkAnchor, setOrgBulkAnchor] = useState<null | HTMLElement>(null);
+  const [accessRequests, setAccessRequests] = useState<any[]>([]);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [requestToApprove, setRequestToApprove] = useState<any>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
   const rowsPerPage = 10;
 
   const loadData = async () => {
@@ -129,14 +137,16 @@ export default function UsersTable({
       // Add a deliberate 1000ms delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const [userData, instData, orgData] = await Promise.all([
+      const [userData, instData, orgData, requestsData] = await Promise.all([
         adminService.getUsers(),
         adminService.getInstitution(),
-        adminService.getOrganizations()
+        adminService.getOrganizations(),
+        adminService.getAccessRequests().catch(() => [])
       ]);
       setRows(userData || []);
       setInstitution(instData);
       setOrganizations(orgData || []);
+      setAccessRequests(requestsData || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -295,6 +305,24 @@ export default function UsersTable({
   const toggleStatus = async (user: UserRow) => {
     await adminService.updateUserStatus(user._id, !user.enabled);
     loadData();
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!requestToApprove) return;
+    setIsApproving(true);
+    try {
+      await adminService.approveAccessRequest(requestToApprove._id, 'student');
+      setIsApproveModalOpen(false);
+      setSuccessMsg(`Access request for ${requestToApprove.fullName} has been approved. They can now sign in.`);
+      setShowSuccessModal(true);
+      loadData();
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Failed to approve request', 'error');
+    } finally {
+      setIsApproving(false);
+      setRequestToApprove(null);
+    }
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: UserRow) => {
@@ -641,17 +669,17 @@ export default function UsersTable({
                 onChange={(e) => setQuery(e.target.value)}
                 InputProps={{
                   startAdornment: <SearchIcon sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
-                  sx: { 
-                    borderRadius: '8px', 
-                    bgcolor: '#FFF', 
-                    fontSize: 13, 
-                    height: 36, 
+                  sx: {
+                    borderRadius: '8px',
+                    bgcolor: '#FFF',
+                    fontSize: 13,
+                    height: 36,
                     minWidth: { xs: '100%', sm: 240 },
                   }
                 }}
-                sx={{ 
+                sx={{
                   width: { xs: '100%', sm: 'auto' },
-                  '& .MuiOutlinedInput-notchedOutline': { 
+                  '& .MuiOutlinedInput-notchedOutline': {
                     border: '1px solid transparent',
                     transition: 'border-color 0.2s'
                   },
@@ -719,8 +747,9 @@ export default function UsersTable({
               </Box>
             ))
           ) : (
-            ['All', 'Admin', 'Dean', 'Officer', 'Student'].map((tab) => {
-              const count = tab === 'All' ? rows.length : rows.filter(r => {
+            ['All', 'Admin', 'Dean', 'Officer', 'Student', 'Requests'].map((tab) => {
+              const pendingRequestsCount = accessRequests.filter(r => r.status === 'pending').length;
+              const count = tab === 'All' ? rows.length : tab === 'Requests' ? pendingRequestsCount : rows.filter(r => {
                 const rName = r.role || (r.isAdmin ? 'admin' : 'student');
                 return getRoleDisplay(rName) === tab;
               }).length;
@@ -735,12 +764,20 @@ export default function UsersTable({
                     cursor: 'pointer',
                     position: 'relative',
                     '&::after': active ? {
-                      content: '""', position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, bgcolor: COLORS.teal // Thicker teal underline
+                      content: '""', position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, bgcolor: tab === 'Requests' ? COLORS.orange : COLORS.teal
                     } : {}
                   }}
                 >
-                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: active ? COLORS.textPrimary : COLORS.textSecondary }}>
-                    {tab} <Box component="span" sx={{ opacity: 0.6, ml: 0.5 }}>({count})</Box>
+                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: active ? COLORS.textPrimary : COLORS.textSecondary, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {tab}
+                    {tab === 'Requests' && pendingRequestsCount > 0 ? (
+                      <Box component="span" sx={{
+                        bgcolor: COLORS.orange, color: '#FFF', fontSize: 10, fontWeight: 800,
+                        borderRadius: '6px', px: 0.8, py: 0.2, ml: 0.5, minWidth: 18, textAlign: 'center', lineHeight: 1.5
+                      }}>{pendingRequestsCount}</Box>
+                    ) : (
+                      <Box component="span" sx={{ opacity: 0.6, ml: 0.5 }}>({count})</Box>
+                    )}
                   </Typography>
                 </Box>
               );
@@ -748,227 +785,411 @@ export default function UsersTable({
           )}
         </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                <TableCell sx={{ py: 1.5, width: 48 }}>
-                  <Checkbox
-                    size="small"
-                    checked={selectedUserIds.length === paginatedRows.length && paginatedRows.length > 0}
-                    indeterminate={selectedUserIds.length > 0 && selectedUserIds.length < paginatedRows.length}
-                    onChange={toggleSelectAll}
-                    sx={{ color: '#CBD5E1', '&.Mui-checked': { color: COLORS.black } }}
-                  />
-                </TableCell>
-                {['Account', 'Email Address', 'Role', 'Access', 'Status', ''].map((h, i) => (
-                  <TableCell
-                    key={i}
+        {activeTab === 'Requests' ? (
+          /* ── Access Requests Panel ──────────────────────────────── */
+          <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            {accessRequests.filter(r => r.status === 'pending').length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Box sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '20px',
+                  bgcolor: '#F8FAFC',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2.5,
+                  border: '1px solid #E2E8F0'
+                }}>
+                  <PersonAdd sx={{ fontSize: 28, color: '#94A3B8' }} />
+                </Box>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, color: COLORS.textPrimary, mb: 0.5 }}>No pending requests</Typography>
+                <Typography sx={{ fontSize: 14, color: COLORS.textSecondary, maxWidth: 300, mx: 'auto' }}>
+                  New access requests from Google Sign-in will appear here for your approval.
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {accessRequests.filter(r => r.status === 'pending').map((req: any) => (
+                  <Box
+                    key={req._id}
                     sx={{
-                      py: 1.5,
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: COLORS.textSecondary,
-                      textTransform: 'uppercase',
-                      display: (i === 1 || i === 3) ? { xs: 'none', md: 'table-cell' } : 'table-cell'
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' },
+                      justifyContent: 'space-between',
+                      gap: 2,
+                      p: 2.5,
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      bgcolor: '#FAFBFC',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      '&:hover': {
+                        borderColor: '#E2E8F0',
+                        bgcolor: '#FFFFFF',
+                        boxShadow: '0 12px 24px -8px rgba(0,0,0,0.08)',
+                        transform: 'translateY(-2px)'
+                      }
                     }}
                   >
-                    {loading ? <Skeleton variant="text" width={i === 5 ? 0 : 60 + (i * 10)} /> : h}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton variant="rectangular" width={20} height={20} /></TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ position: 'relative' }}>
-                          <Skeleton variant="circular" width={38} height={38} />
-                          <Skeleton variant="circular" width={14} height={14}
-                            sx={{
-                              position: 'absolute',
-                              top: -2,
-                              right: -2,
-                              bgcolor: '#FFF',
-                              border: '2px solid #FFF'
-                            }}
-                          />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar
+                        src={req.avatarUrl}
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          fontSize: 16,
+                          bgcolor: '#020617',
+                          color: '#FFF',
+                          fontWeight: 800,
+                          textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                        }}
+                      >
+                        {getInitials(req.fullName)}
+                      </Avatar>
+                      <Box>
+                        <Typography sx={{ fontSize: 15, fontWeight: 800, color: COLORS.textPrimary, lineHeight: 1.2, mb: 0.3 }}>
+                          {req.fullName}
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: COLORS.textSecondary, mb: 0.5 }}>
+                          {req.email}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography sx={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: '#64748B',
+                            bgcolor: '#F1F5F9',
+                            px: 1,
+                            py: 0.2,
+                            borderRadius: '4px'
+                          }}>
+                            GOOGLE SIGN-IN
+                          </Typography>
+                          <Typography sx={{ fontSize: 11, fontWeight: 500, color: '#94A3B8' }}>
+                            {new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </Typography>
                         </Box>
-                        <Skeleton variant="text" width={120} />
                       </Box>
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" width={150} /></TableCell>
-                    <TableCell><Skeleton variant="text" width={80} /></TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" width={100} /></TableCell>
-                    <TableCell>
-                      <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: '99px' }} />
-                    </TableCell>
-                    <TableCell align="right"><Skeleton variant="circular" width={24} height={24} /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                paginatedRows.length > 0 ? paginatedRows.map((user) => (
-                  <TableRow key={user._id} hover sx={{ '&:last-child td': { border: 0 } }}>
-                    <TableCell>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
+                      <Button
+                        variant="contained"
+                        disableElevation
+                        fullWidth={isSmallMobile}
+                        onClick={() => {
+                          setRequestToApprove(req);
+                          setIsApproveModalOpen(true);
+                        }}
+                        sx={{
+                          bgcolor: COLORS.black,
+                          color: '#FFF',
+                          textTransform: 'none',
+                          fontWeight: 800,
+                          fontSize: 13,
+                          borderRadius: '12px',
+                          px: 3,
+                          py: 1,
+                          '&:hover': { bgcolor: '#222' }
+                        }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        fullWidth={isSmallMobile}
+                        onClick={async () => {
+                          const result = await Swal.fire({
+                            title: 'Reject Request?',
+                            text: 'Are you sure you want to reject this access request?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#DC2626',
+                            confirmButtonText: 'Yes, Reject',
+                            cancelButtonText: 'Cancel'
+                          });
+
+                          if (result.isConfirmed) {
+                            try {
+                              await adminService.rejectAccessRequest(req._id);
+                              loadData();
+                            } catch (err) {
+                              Swal.fire('Error', 'Failed to reject request', 'error');
+                            }
+                          }
+                        }}
+                        sx={{
+                          borderColor: '#E2E8F0',
+                          color: '#DC2626',
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          fontSize: 13,
+                          borderRadius: '12px',
+                          px: 3,
+                          py: 1,
+                          '&:hover': { bgcolor: '#FEF2F2', borderColor: '#FECACA' }
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+                    <TableCell sx={{ py: 1.5, width: 48 }}>
                       <Checkbox
                         size="small"
-                        checked={selectedUserIds.includes(user._id)}
-                        onChange={() => toggleSelectUser(user._id)}
-                        sx={{ color: '#E2E8F0', '&.Mui-checked': { color: COLORS.black } }}
+                        checked={selectedUserIds.length === paginatedRows.length && paginatedRows.length > 0}
+                        indeterminate={selectedUserIds.length > 0 && selectedUserIds.length < paginatedRows.length}
+                        onChange={toggleSelectAll}
+                        sx={{ color: '#CBD5E1', '&.Mui-checked': { color: COLORS.black } }}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ position: 'relative' }}>
-                          <Avatar
-                            src={getAbsoluteUrl(user.avatarUrl)}
-                            sx={{
-                              width: 38,
-                              height: 38,
-                              fontSize: 13,
-                              bgcolor: '#020617',
-                              color: '#FFFFFF',
-                              fontWeight: 800,
-                              textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
-                            }}>
-                            {getInitials(user.fullName || user.username)}
-                          </Avatar>
-                          {user.enabled && (
-                            <Box sx={{ position: 'absolute', bottom: -3, right: -3, bgcolor: '#FFF', borderRadius: '50%', p: '2.5px', zIndex: 2 }}>
-                              <Box sx={{
-                                width: 14,
-                                height: 14,
-                                bgcolor: COLORS.teal,
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                              }}>
-                                <Check sx={{ fontSize: 10, color: '#FFF', fontWeight: 950 }} />
-                              </Box>
+                    {['Account', 'Email Address', 'Role', 'Access', 'Status', ''].map((h, i) => (
+                      <TableCell
+                        key={i}
+                        sx={{
+                          py: 1.5,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: COLORS.textSecondary,
+                          textTransform: 'uppercase',
+                          display: (i === 1 || i === 3) ? { xs: 'none', md: 'table-cell' } : 'table-cell'
+                        }}
+                      >
+                        {loading ? <Skeleton variant="text" width={i === 5 ? 0 : 60 + (i * 10)} /> : h}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    [1, 2, 3, 4, 5].map((i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton variant="rectangular" width={20} height={20} /></TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ position: 'relative' }}>
+                              <Skeleton variant="circular" width={38} height={38} />
+                              <Skeleton variant="circular" width={14} height={14}
+                                sx={{
+                                  position: 'absolute',
+                                  top: -2,
+                                  right: -2,
+                                  bgcolor: '#FFF',
+                                  border: '2px solid #FFF'
+                                }}
+                              />
                             </Box>
-                          )}
+                            <Skeleton variant="text" width={120} />
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" width={150} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}><Skeleton variant="text" width={100} /></TableCell>
+                        <TableCell>
+                          <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: '99px' }} />
+                        </TableCell>
+                        <TableCell align="right"><Skeleton variant="circular" width={24} height={24} /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    paginatedRows.length > 0 ? paginatedRows.map((user) => (
+                      <TableRow key={user._id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                        <TableCell>
+                          <Checkbox
+                            size="small"
+                            checked={selectedUserIds.includes(user._id)}
+                            onChange={() => toggleSelectUser(user._id)}
+                            sx={{ color: '#E2E8F0', '&.Mui-checked': { color: COLORS.black } }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ position: 'relative' }}>
+                              <Avatar
+                                src={getAbsoluteUrl(user.avatarUrl)}
+                                sx={{
+                                  width: 38,
+                                  height: 38,
+                                  fontSize: 13,
+                                  bgcolor: '#020617',
+                                  color: '#FFFFFF',
+                                  fontWeight: 800,
+                                  textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                }}>
+                                {getInitials(user.fullName || user.username)}
+                              </Avatar>
+                              {user.enabled && (
+                                <Box sx={{ position: 'absolute', bottom: -3, right: -3, bgcolor: '#FFF', borderRadius: '50%', p: '2.5px', zIndex: 2 }}>
+                                  <Box sx={{
+                                    width: 14,
+                                    height: 14,
+                                    bgcolor: COLORS.teal,
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                  }}>
+                                    <Check sx={{ fontSize: 10, color: '#FFF', fontWeight: 950 }} />
+                                  </Box>
+                                </Box>
+                              )}
+                            </Box>
+                            <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{maskName(user.fullName || user.username || "")}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ fontSize: 13, color: COLORS.textSecondary, display: { xs: 'none', md: 'table-cell' } }}>{user.email}</TableCell>
+                        <TableCell sx={{ fontSize: 13, fontWeight: 600 }}>{getRoleDisplay(user.role || (user.isAdmin ? 'admin' : 'student'))}</TableCell>
+                        <TableCell sx={{ fontSize: 13, color: COLORS.textSecondary, display: { xs: 'none', md: 'table-cell' } }}>{getAccessLevel(user.role || (user.isAdmin ? 'admin' : 'student'))}</TableCell>
+                        <TableCell>
+                          <Box sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: '99px',
+                            bgcolor: user.enabled ? COLORS.tealLight : '#F1F5F9',
+                            border: user.enabled ? `1px solid ${COLORS.teal}20` : 'none'
+                          }}>
+                            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: user.enabled ? COLORS.teal : '#64748B' }} />
+                            <Typography sx={{ fontSize: 12, fontWeight: 800, color: user.enabled ? COLORS.teal : '#64748B' }}>
+                              {user.enabled ? 'Enabled' : 'Disabled'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={(e) => handleMenuOpen(e, user)}>
+                            <MoreVertIcon sx={{ fontSize: 20, color: COLORS.textSecondary }} />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    )) : (
+                      <TableRow>
+                        <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                          <Typography sx={{ color: COLORS.textSecondary, fontSize: 14 }}>No accounts found in this category</Typography>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', borderTop: '1px solid #F1F5F9' }}>
+              {loading ? (
+                <Skeleton variant="rounded" width={240} height={44} sx={{ borderRadius: '40px' }} />
+              ) : (
+                <Box sx={{
+                  display: 'flex',
+                  gap: 1.5,
+                  alignItems: 'center',
+                  bgcolor: '#F1F5F9',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '40px'
+                }}>
+                  <IconButton
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                    sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
+                  >
+                    <ChevronLeft sx={{ fontSize: 20 }} />
+                  </IconButton>
+
+                  {(() => {
+                    const range = [];
+                    let start = Math.max(1, page - 1);
+                    let end = Math.min(totalPages, start + 2);
+
+                    if (end - start < 2 && start > 1) {
+                      start = Math.max(1, end - 2);
+                    }
+
+                    for (let i = start; i <= end; i++) {
+                      range.push(i);
+                    }
+
+                    return range.map((p) => {
+                      const isActive = p === page;
+                      return (
+                        <Box
+                          key={p}
+                          onClick={() => setPage(p)}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            borderRadius: '12px',
+                            bgcolor: isActive ? COLORS.black : 'transparent',
+                            color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                            fontWeight: 800,
+                            fontSize: 14,
+                            transition: 'all 0.2s ease',
+                            boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                            '&:hover': {
+                              bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                            }
+                          }}
+                        >
+                          {p}
                         </Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{maskName(user.fullName || user.username || "")}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ fontSize: 13, color: COLORS.textSecondary, display: { xs: 'none', md: 'table-cell' } }}>{user.email}</TableCell>
-                    <TableCell sx={{ fontSize: 13, fontWeight: 600 }}>{getRoleDisplay(user.role || (user.isAdmin ? 'admin' : 'student'))}</TableCell>
-                    <TableCell sx={{ fontSize: 13, color: COLORS.textSecondary, display: { xs: 'none', md: 'table-cell' } }}>{getAccessLevel(user.role || (user.isAdmin ? 'admin' : 'student'))}</TableCell>
-                    <TableCell>
-                      <Box sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: '99px',
-                        bgcolor: user.enabled ? COLORS.tealLight : '#F1F5F9',
-                        border: user.enabled ? `1px solid ${COLORS.teal}20` : 'none'
-                      }}>
-                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: user.enabled ? COLORS.teal : '#64748B' }} />
-                        <Typography sx={{ fontSize: 12, fontWeight: 800, color: user.enabled ? COLORS.teal : '#64748B' }}>
-                          {user.enabled ? 'Enabled' : 'Disabled'}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, user)}>
-                        <MoreVertIcon sx={{ fontSize: 20, color: COLORS.textSecondary }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
-                      <Typography sx={{ color: COLORS.textSecondary, fontSize: 14 }}>No accounts found in this category</Typography>
-                    </TableCell>
-                  </TableRow>
-                )
+                      );
+                    });
+                  })()}
+
+                  <IconButton
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                    sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
+                  >
+                    <ChevronRight sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Box>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', borderTop: '1px solid #F1F5F9' }}>
-          {loading ? (
-            <Skeleton variant="rounded" width={240} height={44} sx={{ borderRadius: '40px' }} />
-          ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 1.5, 
-              alignItems: 'center', 
-              bgcolor: '#F1F5F9', 
-              px: 1,
-              py: 0.5, 
-              borderRadius: '40px' 
-            }}>
-              <IconButton 
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
-              >
-                <ChevronLeft sx={{ fontSize: 20 }} />
-              </IconButton>
-
-              {(() => {
-                const range = [];
-                let start = Math.max(1, page - 1);
-                let end = Math.min(totalPages, start + 2);
-
-                if (end - start < 2 && start > 1) {
-                  start = Math.max(1, end - 2);
-                }
-
-                for (let i = start; i <= end; i++) {
-                  range.push(i);
-                }
-
-                return range.map((p) => {
-                  const isActive = p === page;
-                  return (
-                    <Box
-                      key={p}
-                      onClick={() => setPage(p)}
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        borderRadius: '12px',
-                        bgcolor: isActive ? COLORS.black : 'transparent',
-                        color: isActive ? '#FFFFFF' : COLORS.textSecondary,
-                        fontWeight: 800,
-                        fontSize: 14,
-                        transition: 'all 0.2s ease',
-                        boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
-                        '&:hover': {
-                          bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
-                        }
-                      }}
-                    >
-                      {p}
-                    </Box>
-                  );
-                });
-              })()}
-
-              <IconButton 
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
-              >
-                <ChevronRight sx={{ fontSize: 20 }} />
-              </IconButton>
             </Box>
-          )}
-        </Box>
+          </>
+        )}
       </Box>
+
+      {/* Approval Confirmation Modal */}
+      <ConfirmationModal
+        open={isApproveModalOpen}
+        loading={isApproving}
+        onClose={() => setIsApproveModalOpen(false)}
+        onConfirm={handleApproveConfirm}
+        title="Are You Sure Want To Approve?"
+        description={
+          <>
+            You are about to approve the access request for <strong>{requestToApprove?.fullName}</strong>.
+            <br />
+            This user will be registered in the system.
+          </>
+        }
+        confirmText="Yes, Approve"
+        cancelText="Not Now"
+      />
+
+      {/* Success Modal */}
+      <SuccessActionModal
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Approval Success"
+        description={successMsg}
+      />
 
       {/* Main Table Bulk Actions Overlay */}
       <AnimatePresence>

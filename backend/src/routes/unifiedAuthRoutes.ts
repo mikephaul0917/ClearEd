@@ -9,6 +9,7 @@ import {
   getMyProfile,
   updateMyProfile, 
   updateMyPassword,
+  setupPassword,
   uploadAvatar
 } from "../controllers/unifiedAuthController";
 import { avatarUpload } from "../middleware/avatarUpload";
@@ -33,6 +34,7 @@ router.post("/super-admin/login", superAdminLogin);
 router.get("/profile", auth, getMyProfile);
 router.put("/profile", auth, updateMyProfile);
 router.put("/password", auth, updateMyPassword);
+router.put("/setup-password", auth, setupPassword);
 router.post("/avatar", auth, avatarUpload.single('avatar'), uploadAvatar);
 
 // Protected routes (for admin user creation)

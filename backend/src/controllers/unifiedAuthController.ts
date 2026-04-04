@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User";
 import Institution from "../models/Institution";
 import OrganizationMember from "../models/OrganizationMember";
+import AccessRequest from "../models/AccessRequest";
+import Notification from "../models/Notification";
 import { logAudit } from "../utils/auditLogger";
 import crypto from "crypto";
 
@@ -317,8 +319,24 @@ export const googleAuth = async (req: Request, res: Response) => {
         });
       }
 
-      // Update last login
+      // Update last login and sync name/avatar from Google if they are currently generic or empty
       user.lastLoginAt = new Date();
+      
+      const isGenericName = !user.fullName || 
+                           user.fullName.toLowerCase() === 'admin' || 
+                           user.fullName.toLowerCase() === 'user' || 
+                           user.fullName === user.email.split('@')[0];
+
+      if (isGenericName && googleUser.name) {
+          console.log(`[DEBUG] Google OAuth: Syncing generic name "${user.fullName}" to "${googleUser.name}"`);
+          user.fullName = googleUser.name;
+      }
+      
+      if (!user.avatarUrl && googleUser.picture) {
+          console.log(`[DEBUG] Google OAuth: Syncing missing avatar to Google picture`);
+          user.avatarUrl = googleUser.picture;
+      }
+
       await user.save();
 
       // Log successful login
@@ -357,119 +375,94 @@ export const googleAuth = async (req: Request, res: Response) => {
           role: user.role,
           institutionId: user.institutionId,
           lastLoginAt: user.lastLoginAt,
-          isNewUser: false
+          isNewUser: false,
+          requiresPasswordSetup: user.requiresPasswordSetup || false
         }
       });
     } else {
-      // First-time user - auto-create account
-      console.log(`[DEBUG] Google OAuth: Creating new user for email: ${email}, institutionId: ${institution._id}`);
+      // User not found — create an access request for the admin
+      const fullName = googleUser.name || email.split('@')[0] || 'User';
+      const avatarUrl = googleUser.picture || '';
 
-      try {
-        const hashedPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+      // Check if there's already a pending request
+      const existingRequest = await AccessRequest.findOne({
+        email,
+        institutionId: institution._id,
+        status: 'pending'
+      });
 
-        // Validate required fields before creation
-        const fullName = googleUser.name || email.split('@')[0] || 'User';
+      if (existingRequest) {
+        // Update the existing request timestamp
+        existingRequest.fullName = fullName;
+        existingRequest.avatarUrl = avatarUrl;
+        await existingRequest.save();
 
-        console.log(`[DEBUG] Google OAuth: User creation data:`, {
-          email: email,
-          fullName,
-          role: 'student',
-          institutionId: institution._id
-        });
-
-        const newUser = await User.create({
-          email: email,
-          password: hashedPassword,
-          fullName: fullName,
-          role: 'student',
-          institutionId: institution._id,
-          emailVerified: true,
-          status: 'active',
-          enabled: true,
-          failedLoginAttempts: 0,
-          authProvider: 'google'
-        });
-
-        console.log(`[DEBUG] Google OAuth: New user created successfully:`, {
-          id: newUser._id,
-          email: newUser.email,
-          role: newUser.role,
-          institutionId: newUser.institutionId,
-          fullName: newUser.fullName
-        });
-
-        // Verify user was created successfully
-        console.log(`[DEBUG] Google OAuth: Verifying user creation...`);
-        const createdUser = await User.findOne({
-          email: email,
-          institutionId: institution._id
-        });
-
-        if (!createdUser) {
-          console.error(`[DEBUG] Google OAuth: User creation verification failed - user not found after creation`);
-          return res.status(500).json({
-            message: "User creation verification failed"
-          });
-        }
-
-        console.log(`[DEBUG] Google OAuth: User creation verified:`, {
-          id: createdUser._id,
-          email: createdUser.email,
-          role: createdUser.role
-        });
-
-        // Log auto-enrollment
-        await logAudit({
-          userId: createdUser._id,
-          institutionId: institution._id,
-          action: 'GOOGLE_USER_AUTO_ENROLLED',
-          category: 'user_management',
-          resource: 'User',
-          resourceId: createdUser._id,
-          details: { email, method: 'google_oauth' },
-          severity: 'medium',
-          req
-        });
-
-        // Create JWT token
-        const jwtToken = jwt.sign(
-          {
-            id: createdUser._id,
-            role: createdUser.role,
-            institutionId: createdUser.institutionId,
-            email: createdUser.email,
-            isAdmin: false
-          },
-          process.env.JWT_SECRET as string,
-          { expiresIn: '24h' }
-        );
-
-        return res.json({
-          token: jwtToken,
-          user: {
-            id: createdUser._id,
-            email: createdUser.email,
-            fullName: createdUser.fullName,
-            avatarUrl: createdUser.avatarUrl,
-            role: createdUser.role,
-            institutionId: createdUser.institutionId,
-            isNewUser: true,
-            requiresProfileUpdate: true
-          },
-          institution: {
-            id: institution._id,
-            name: institution.name,
-            status: institution.status
-          }
-        });
-
-      } catch (createError: any) {
-        console.error(`[DEBUG] Google OAuth: User creation failed:`, createError);
-        return res.status(500).json({
-          message: "User creation failed",
-          error: createError.message
+        return res.status(403).json({
+          code: 'ACCESS_REQUEST_PENDING',
+          message: "Your access request is still pending. Please wait for your institution's administrator to approve it."
         });
       }
+
+      // Check if there's a previously rejected request
+      const rejectedRequest = await AccessRequest.findOne({
+        email,
+        institutionId: institution._id,
+        status: 'rejected'
+      });
+
+      if (rejectedRequest) {
+        return res.status(403).json({
+          code: 'ACCESS_REQUEST_REJECTED',
+          message: "Your access request was previously declined by your institution's administrator. Please contact them for more information."
+        });
+      }
+
+      // Create new access request
+      const accessRequest = await AccessRequest.create({
+        email,
+        fullName,
+        avatarUrl,
+        institutionId: institution._id,
+        status: 'pending'
+      });
+
+      // Notify all admins in this institution
+      const admins = await User.find({
+        institutionId: institution._id,
+        role: 'admin',
+        enabled: true,
+        status: 'active'
+      });
+
+      for (const admin of admins) {
+        await Notification.create({
+          userId: admin._id,
+          institutionId: institution._id,
+          title: 'New Access Request',
+          message: `${fullName} (${email}) is requesting access to your institution via Google Sign-in.`,
+          type: 'info',
+          category: 'system',
+          isRead: false,
+          actionUrl: '/admin/users'
+        });
+      }
+
+      // Log the access request
+      await logAudit({
+        institutionId: institution._id,
+        action: 'GOOGLE_ACCESS_REQUEST_CREATED',
+        category: 'auth',
+        resource: 'AccessRequest',
+        resourceId: accessRequest._id as any,
+        details: { email, fullName, method: 'google_oauth' },
+        severity: 'medium',
+        req
+      });
+
+      return res.status(403).json({
+        code: 'ACCESS_REQUEST_SENT',
+        message: "Your access request has been sent to your institution's administrator. You'll be able to sign in once they approve your account."
+      });
     }
   } catch (error: any) {
     console.error('Google OAuth authentication error:', error);
@@ -797,6 +790,37 @@ export const updateMyPassword = async (req: Request, res: Response) => {
     await user.save();
 
     res.json({ message: "Password updated successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Setup password for first-time Google OAuth users
+ * Does NOT require current password — only works when requiresPasswordSetup is true
+ */
+export const setupPassword = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.requiresPasswordSetup) {
+      return res.status(400).json({ message: "Password setup is not required for this account. Use the change password option instead." });
+    }
+
+    // Set password (pre-save hook handles hashing)
+    user.password = newPassword;
+    user.requiresPasswordSetup = false;
+    await user.save();
+
+    res.json({ message: "Password set successfully. You can now sign in with email and password." });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

@@ -14,6 +14,7 @@
     "@mui/icons-material": "^5.18.0",
     "@mui/material": "^5.18.0",
     "@mui/x-data-grid": "^6.20.4",
+    "@react-oauth/google": "^0.13.4",
     "axios": "^1.6.7",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",

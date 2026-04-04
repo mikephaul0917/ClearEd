@@ -1,10 +1,6 @@
-/**
- * Super Admin main page with navigation and role-based access control
- * Handles routing for Super Admin specific features
- */
-
 import { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "../../services";
 import Swal from "sweetalert2";
 import Divider from "@mui/material/Divider";
@@ -32,24 +28,185 @@ import SuperAdminAnnouncements from "./SuperAdminAnnouncements";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#FAFAFA',
   surface: '#FFFFFF',
-  black: '#0a0a0a',
+  black: '#000000',
   textPrimary: '#000000',
   textSecondary: '#64748B',
-  accent: '#0a0a0a',
-  teal: '#5eead4',
-  lavender: '#d8b4fe',
+  accent: '#000000',
+  teal: '#5EEAD4',
+  blue: '#B0E0E6',
   yellow: '#FEF08A',
-  orange: '#ff895d',
+  orange: '#FF895D',
+  purple: '#C4B5FD',
   border: '#E2E8F0',
   tableHead: '#F8FAFC',
   avatarBg: '#0F172A10',
-  cardRadius: '16px',
+  cardRadius: '24px',
   pillRadius: '999px',
 };
 
 const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+
+const getGreetingTime = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+// --- GEOMETRIC CARD COMPONENT ---
+const GeometricCard = ({ title, desc, icon, pattern, color, onClick, variant = "standard" }: any) => {
+  const isSolid = variant === "solid";
+
+  return (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        backgroundColor: isSolid ? color : '#FFFFFF',
+        borderRadius: COLORS.cardRadius,
+        padding: '32px',
+        minHeight: '260px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        cursor: 'pointer',
+        boxShadow: isSolid
+          ? `0 20px 40px ${color}33`
+          : '0 4px 20px rgba(0,0,0,0.03)',
+        border: isSolid ? 'none' : '1px solid #F1F5F9',
+        overflow: 'hidden',
+        fontFamily: fontStack,
+      }}
+    >
+      {/* Decorative Pattern Layer */}
+      <Box sx={{
+        position: 'absolute',
+        bottom: -20,
+        right: -20,
+        width: '180px',
+        height: '180px',
+        pointerEvents: 'none',
+        opacity: isSolid ? 0.4 : 1,
+        transition: 'all 0.4s ease'
+      }}>
+        {pattern}
+      </Box>
+
+      {/* Header Layer */}
+      <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
+        <Box sx={{ maxWidth: '70%', flex: 1 }}>
+          <Typography sx={{
+            fontSize: '24px',
+            fontWeight: 800,
+            color: isSolid ? '#FFFFFF' : COLORS.textPrimary,
+            letterSpacing: '-0.03em',
+            mb: 1
+          }}>
+            {title}
+          </Typography>
+          <Typography sx={{
+            fontSize: '14px',
+            fontWeight: 500,
+            color: isSolid ? 'rgba(255,255,255,0.7)' : COLORS.textSecondary,
+            lineHeight: 1.5
+          }}>
+            {desc}
+          </Typography>
+        </Box>
+        <Box sx={{
+          width: 56,
+          height: 56,
+          borderRadius: '16px',
+          backgroundColor: isSolid ? 'rgba(255,255,255,0.15)' : `${color}15`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: isSolid ? '#FFFFFF' : color,
+        }}>
+          {icon}
+        </Box>
+      </Box>
+
+      {/* Footer Arrow */}
+      <Box sx={{
+        position: 'relative',
+        zIndex: 2,
+        mt: 'auto'
+      }}>
+        <Box sx={{
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          border: `1.5px solid ${isSolid ? 'rgba(255,255,255,0.3)' : '#E2E8F0'}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: isSolid ? '#FFFFFF' : COLORS.textPrimary,
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};
+
+const Patterns: any = {
+  Grid: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="140" y="20" width="12" height="12" rx="2" fill={color} opacity="0.3" />
+      <rect x="156" y="20" width="12" height="12" rx="2" fill={color} opacity="0.3" />
+      <rect x="140" y="36" width="12" height="12" rx="2" fill={color} opacity="0.3" />
+      <rect x="156" y="36" width="12" height="12" rx="2" fill={color} opacity="0.3" />
+      <circle cx="150" cy="140" r="40" fill={color} opacity="0.1" />
+      <circle cx="110" cy="160" r="25" fill={color} opacity="0.2" />
+      <rect x="60" y="150" width="40" height="40" rx="4" fill={color} opacity="0.15" transform="rotate(15, 80, 170)" />
+    </svg>
+  ),
+  Curves: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M100 180C100 135.817 135.817 100 180 100" stroke={color} strokeWidth="40" strokeLinecap="round" opacity="0.2" />
+      <path d="M140 180C140 157.909 157.909 140 180 140" stroke={color} strokeWidth="20" strokeLinecap="round" opacity="0.3" />
+      <circle cx="160" cy="160" r="20" fill={color} opacity="0.4" />
+    </svg>
+  ),
+  Arches: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="60" y="100" width="80" height="100" rx="40" fill={color} opacity="0.1" />
+      <rect x="100" y="130" width="60" height="80" rx="30" fill={color} opacity="0.2" />
+      <rect x="140" y="150" width="40" height="60" rx="20" fill={color} opacity="0.3" />
+    </svg>
+  ),
+  Lines: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="80" y="140" width="100" height="12" rx="6" fill={color} opacity="0.1" />
+      <rect x="60" y="160" width="120" height="12" rx="6" fill={color} opacity="0.2" />
+      <rect x="40" y="180" width="140" height="12" rx="6" fill={color} opacity="0.3" />
+      <circle cx="150" cy="110" r="30" fill={color} opacity="0.15" />
+    </svg>
+  ),
+  Waves: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 180 Q80 120 120 180 Q160 120 200 180" stroke={color} strokeWidth="12" fill="none" opacity="0.2" />
+      <path d="M20 200 Q60 140 100 200 Q140 140 180 200" stroke={color} strokeWidth="12" fill="none" opacity="0.3" />
+      <circle cx="160" cy="150" r="20" fill={color} opacity="0.2" />
+    </svg>
+  ),
+  Blocks: (color: string) => (
+    <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="120" y="120" width="60" height="60" rx="12" fill={color} opacity="0.2" />
+      <rect x="80" y="150" width="30" height="30" rx="8" fill={color} opacity="0.3" />
+      <circle cx="150" cy="100" r="20" fill={color} opacity="0.2" />
+      <path d="M100 100 L140 140" stroke={color} strokeWidth="8" strokeLinecap="round" opacity="0.1" />
+    </svg>
+  )
+};
 
 export default function SuperAdminPage() {
   const theme = useTheme();
@@ -75,7 +232,7 @@ export default function SuperAdminPage() {
       u.avatarUrl = url;
       localStorage.setItem("user", JSON.stringify(u));
       window.dispatchEvent(new Event("storage"));
-    } catch {}
+    } catch { }
   };
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -396,18 +553,18 @@ export default function SuperAdminPage() {
 
           <SettingsSection>
             <SettingsField label="Email">
-              <TextField 
-                fullWidth 
-                name="real-email" 
-                autoComplete="email" 
-                value={email} 
-                disabled 
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: '8px', 
-                    backgroundColor: '#F8FAFC' 
-                  } 
-                }} 
+              <TextField
+                fullWidth
+                name="real-email"
+                autoComplete="email"
+                value={email}
+                disabled
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    backgroundColor: '#F8FAFC'
+                  }
+                }}
               />
             </SettingsField>
           </SettingsSection>
@@ -444,8 +601,21 @@ export default function SuperAdminPage() {
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
               sx={{
-                backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { backgroundColor: '#111' }
+                backgroundColor: '#000',
+                color: '#FFF',
+                py: 1.8,
+                px: 4,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '1rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                '&:hover': {
+                  backgroundColor: '#111',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               Save Profile
@@ -454,8 +624,24 @@ export default function SuperAdminPage() {
               variant="outlined"
               onClick={changePassword}
               sx={{
-                color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                color: '#000',
+                borderColor: '#000',
+                borderWidth: '1.2px',
+                py: 1.8,
+                px: 4,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '1rem',
+                backgroundColor: '#FFF',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                '&:hover': {
+                  borderColor: '#000',
+                  bgcolor: '#F8FAFC',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               Update Password
@@ -469,38 +655,35 @@ export default function SuperAdminPage() {
     if (loadingDashboard) {
       return (
         <Box sx={{
-          p: isSmallMobile ? 2 : 4,
+          p: isSmallMobile ? 3 : 5,
           backgroundColor: COLORS.pageBg,
           minHeight: '100vh',
           fontFamily: fontStack,
         }}>
           {/* Header skeleton */}
-          <Skeleton variant="text" width={240} height={isSmallMobile ? 36 : 48} sx={{ mb: 0.5, borderRadius: '8px' }} />
-          <Skeleton variant="text" width={300} height={isSmallMobile ? 18 : 22} sx={{ mb: 3, borderRadius: '8px' }} />
-
-          {/* Bento Row 1 skeleton */}
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-            gap: 2,
-            mb: 2,
-          }}>
-            <Skeleton variant="rounded" height={isSmallMobile ? 180 : 220} sx={{ borderRadius: COLORS.cardRadius }} />
-            <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
-              <Skeleton variant="rounded" height="100%" sx={{ borderRadius: COLORS.cardRadius }} />
-              <Skeleton variant="rounded" height="100%" sx={{ borderRadius: COLORS.cardRadius }} />
-            </Box>
+          <Box sx={{ mb: 4 }}>
+            <Skeleton variant="text" width={280} height={isSmallMobile ? 32 : 44} sx={{ mb: 1, borderRadius: '8px' }} />
           </Box>
 
-          {/* Bento Row 2 skeleton */}
-          <Skeleton variant="text" width={140} height={20} sx={{ mb: 1.5, mt: 3, borderRadius: '8px' }} />
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: 2,
-          }}>
+          {/* Grid skeleton */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(3, 1fr)'
+              },
+              gap: 3,
+            }}
+          >
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} variant="rounded" height={isSmallMobile ? 140 : 160} sx={{ borderRadius: COLORS.cardRadius }} />
+              <Skeleton 
+                key={i} 
+                variant="rounded" 
+                height={260} 
+                sx={{ borderRadius: COLORS.cardRadius, bgcolor: 'rgba(0,0,0,0.03)' }} 
+              />
             ))}
           </Box>
         </Box>
@@ -511,327 +694,110 @@ export default function SuperAdminPage() {
     const navCards = [
       {
         title: 'Institution Requests',
-        desc: 'Review and approve new institution applications',
+        desc: 'Approve or manage new institution applications.',
         path: '/super-admin/institution-requests',
-        accent: COLORS.teal,
-        icon: <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />,
-      },
-      {
-        title: 'Institution Monitoring',
-        desc: 'Track institution activity and manage system tenants',
-        path: '/super-admin/institution-monitoring',
-        accent: COLORS.lavender,
-        icon: <><rect x="2" y="10" width="20" height="12" rx="2" /><path d="M6 10V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6" /><path d="M10 10h4" /></>,
-      },
-      {
-        title: 'System Analytics',
-        desc: 'Performance metrics and usage insights',
-        path: '/super-admin/system-analytics',
         accent: COLORS.yellow,
-        icon: <><path d="M3 3v18h18" /><path d="M7 14v4M12 10v8M17 6v12" /></>,
+        patternColor: '#F59E0B', // Darker yellow/amber
+        patternName: 'Curves',
+        icon: <><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M4 10h16M10 4v16" /></>,
       },
       {
-        title: 'Announcements',
-        desc: 'Publish system-wide updates to all users',
-        path: '/super-admin/announcements',
-        accent: COLORS.orange,
-        icon: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></>,
-      },
-      {
-        title: 'Audit Logs',
-        desc: 'Full administrative activity history',
-        path: '/super-admin/audit-logs',
+        title: 'User Management',
+        desc: 'Monitor user counts and platform engagement.',
+        path: '/super-admin/institution-monitoring',
         accent: COLORS.teal,
-        icon: <><circle cx="12" cy="12" r="9" /><path d="M12 8v4l3 3" /></>,
+        patternColor: '#0D9488', // Darker teal
+        patternName: 'Arches',
+        icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
       },
       {
-        title: 'Settings',
-        desc: 'Account and system preferences',
-        path: '/super-admin/settings',
-        accent: COLORS.lavender,
-        icon: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 3.4 19l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L3.2 6.2A2 2 0 1 1 6.03 3.4l.06.06a1.65 1.65 0 0 0 1.82.33h.01A1.65 1.65 0 0 0 9 2.28V2a2 2 0 1 1 4 0v.09c0 .7.4 1.34 1.03 1.64.63.3 1.37.2 1.88-.3l.06-.06A2 2 0 1 1 20.6 6.03l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01c.3.63.94 1.03 1.64 1.03H22a2 2 0 1 1 0 4h-.09c-.7 0-1.34.4-1.64 1.03z" /></>,
+        title: 'Platform Analytics',
+        desc: 'Deep dive into system performance metrics.',
+        path: '/super-admin/system-analytics',
+        accent: COLORS.blue,
+        patternColor: '#3B82F6', // Darker blue
+        patternName: 'Lines',
+        icon: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+      },
+      {
+        title: 'System Records',
+        desc: 'Review global activity and institutional audit logs.',
+        path: '/super-admin/audit-logs',
+        accent: COLORS.blue,
+        patternColor: '#1D4ED8', // Richer blue
+        patternName: 'Blocks',
+        icon: <><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h8M8 18h4" /></>,
+      },
+      {
+        title: 'Broadcasts',
+        desc: 'Send system notifications and announcements.',
+        path: '/super-admin/announcements',
+        accent: COLORS.yellow,
+        patternColor: '#B45309', // Dark amber/orange version of yellow
+        patternName: 'Waves',
+        icon: <><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></>,
       },
     ];
 
     return (
       <Box sx={{
-        p: isSmallMobile ? 2 : 4,
+        p: isSmallMobile ? 3 : 5,
         backgroundColor: COLORS.pageBg,
         minHeight: '100vh',
         fontFamily: fontStack,
       }}>
         {/* ── Header ──────────────────────────────────────────────────── */}
-        <Typography
-          sx={{
-            fontFamily: fontStack,
-            fontWeight: 800,
-            fontSize: isSmallMobile ? '1.5rem' : '2.25rem',
-            letterSpacing: '-0.03em',
-            color: COLORS.textPrimary,
-            lineHeight: 1.15,
-          }}
-        >
-          Dashboard
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: fontStack,
-            fontSize: isSmallMobile ? 13 : 16,
-            color: COLORS.textSecondary,
-            mb: 3,
-            mt: 0.5,
-          }}
-        >
-          System overview and administration tools
-        </Typography>
-
-        {/* ── Bento Row 1 — Hero Stats ────────────────────────────────── */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          {/* Hero Card — Black */}
-          <Box
+        <Box sx={{ mb: 4 }}>
+          <Typography
             sx={{
-              position: 'relative',
-              backgroundColor: COLORS.black,
-              borderRadius: COLORS.cardRadius,
-              p: isSmallMobile ? 3 : 4,
-              minHeight: isSmallMobile ? 180 : 220,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              overflow: 'hidden',
+              fontFamily: fontStack,
+              fontWeight: 800,
+              fontSize: isSmallMobile ? '1.5rem' : '2.25rem',
+              letterSpacing: '-0.03em',
+              color: COLORS.textPrimary,
+              lineHeight: 1.1,
             }}
           >
-            {/* Decorative blurred accent circles */}
-            <Box sx={{
-              position: 'absolute', top: -40, right: -40, width: 160, height: 160,
-              borderRadius: '50%', backgroundColor: COLORS.teal, opacity: 0.12,
-              filter: 'blur(50px)', pointerEvents: 'none',
-            }} />
-            <Box sx={{
-              position: 'absolute', bottom: -30, left: -30, width: 120, height: 120,
-              borderRadius: '50%', backgroundColor: COLORS.lavender, opacity: 0.10,
-              filter: 'blur(40px)', pointerEvents: 'none',
-            }} />
-
-            <Box sx={{ position: 'relative', zIndex: 1 }}>
-              <Box sx={{
-                display: 'inline-block',
-                fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.45)', mb: 1.5,
-              }}>
-                Overview
-              </Box>
-              <Typography sx={{
-                fontFamily: fontStack, fontWeight: 800,
-                fontSize: isSmallMobile ? '1.35rem' : '1.75rem',
-                letterSpacing: '-0.5px', color: '#FFFFFF', lineHeight: 1.2, mb: 1,
-              }}>
-                Welcome back, {fullName}
-              </Typography>
-              <Typography sx={{
-                fontFamily: fontStack, fontSize: isSmallMobile ? 13 : 15,
-                color: 'rgba(255,255,255,0.6)', lineHeight: 1.7,
-              }}>
-                Your system is running smoothly. All services operational.
-              </Typography>
-            </Box>
-
-            {/* Bottom stats row */}
-            <Box sx={{
-              position: 'relative', zIndex: 1,
-              display: 'flex', gap: isSmallMobile ? 3 : 5, mt: 2,
-              flexWrap: 'wrap',
-            }}>
-              {[
-                { label: 'Institutions', value: '6' },
-                { label: 'Uptime', value: '24/7' },
-              ].map((s) => (
-                <Box key={s.label}>
-                  <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    {s.label}
-                  </Typography>
-                  <Typography sx={{ fontFamily: fontStack, fontSize: isSmallMobile ? 22 : 28, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-1px' }}>
-                    {s.value}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Right column — two stacked accent cards */}
-          <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
-            {/* System Status — Teal */}
-            <Box
-              sx={{
-                backgroundColor: COLORS.teal,
-                borderRadius: COLORS.cardRadius,
-                p: isSmallMobile ? 2.5 : 3,
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                position: 'relative', overflow: 'hidden',
-              }}
-            >
-              <Box sx={{
-                display: 'inline-block', fontFamily: fontStack,
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase', color: '#064E3B', mb: 1,
-              }}>
-                System Status
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {/* Pulse dot */}
-                <Box sx={{
-                  width: 12, height: 12, borderRadius: '50%', backgroundColor: '#064E3B',
-                  opacity: 0.8,
-                  boxShadow: '0 0 0 4px rgba(6,78,59,0.2)',
-                  animation: 'pulse 2s ease-in-out infinite',
-                }} />
-                <Typography sx={{
-                  fontFamily: fontStack, fontWeight: 800,
-                  fontSize: isSmallMobile ? 18 : 22, color: '#000000',
-                  letterSpacing: '-0.5px',
-                }}>
-                  Operational
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Security — Lavender */}
-            <Box
-              sx={{
-                backgroundColor: COLORS.lavender,
-                borderRadius: COLORS.cardRadius,
-                p: isSmallMobile ? 2.5 : 3,
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                position: 'relative', overflow: 'hidden',
-              }}
-            >
-              <Box sx={{
-                display: 'inline-block', fontFamily: fontStack,
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase', color: '#4C1D95', mb: 1,
-              }}>
-                Security
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <Typography sx={{
-                  fontFamily: fontStack, fontWeight: 800,
-                  fontSize: isSmallMobile ? 18 : 22, color: '#000000',
-                  letterSpacing: '-0.5px',
-                }}>
-                  Stable
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
+            {getGreetingTime()}, {profileFirst}!
+          </Typography>
         </Box>
 
-        {/* ── Section Label ────────────────────────────────────────────── */}
-        <Box sx={{
-          fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: COLORS.textSecondary, mt: isSmallMobile ? 3 : 4, mb: 2,
-        }}>
-          Quick Access
-        </Box>
-
-        {/* ── Bento Row 2 — Navigation Cards ──────────────────────────── */}
+        {/* ── Geometric Card Grid ────────────────────────────────────── */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: 2,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)'
+            },
+            gap: 3,
           }}
         >
-          {navCards.map((item) => (
-            <Box
+          {navCards.map((item, idx) => (
+            <GeometricCard
               key={item.title}
+              variant="standard"
+              title={item.title}
+              desc={item.desc}
+              color={item.accent}
               onClick={() => nav(item.path)}
-              sx={{
-                position: 'relative',
-                p: isSmallMobile ? 2.5 : 3,
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D1D5DB',
-                cursor: 'pointer',
-                overflow: 'hidden',
-                transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: 140,
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                  borderColor: '#D1D5DB',
-                },
-              }}
-            >
-              {/* Icon and Title Row */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+              icon={
+                <svg
+                  width={28}
+                  height={28}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <svg
-                    width={isSmallMobile ? 20 : 24}
-                    height={isSmallMobile ? 20 : 24}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={item.accent}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    {item.icon}
-                  </svg>
-                </Box>
-                <Typography sx={{
-                  fontFamily: fontStack,
-                  fontWeight: 600,
-                  fontSize: isSmallMobile ? 14 : 15,
-                  color: '#4B5563',
-                }}>
-                  {item.title}
-                </Typography>
-              </Box>
-
-              {/* Description */}
-              <Typography sx={{
-                fontFamily: fontStack,
-                fontSize: isSmallMobile ? 13 : 14,
-                color: '#9CA3AF',
-                lineHeight: 1.5,
-                mt: 1,
-                pr: 4, // Leave space for arrow
-              }}>
-                {item.desc}
-              </Typography>
-
-              {/* Arrow button */}
-              <Box sx={{
-                position: 'absolute',
-                bottom: isSmallMobile ? 12 : 16,
-                right: isSmallMobile ? 12 : 16,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#000000', fontSize: 24, lineHeight: 1,
-                transition: 'transform 0.2s ease, color 0.2s ease',
-              }}>
-                →
-              </Box>
-            </Box>
+                  {item.icon}
+                </svg>
+              }
+              pattern={Patterns[item.patternName](item.patternColor || item.accent)}
+            />
           ))}
         </Box>
       </Box>

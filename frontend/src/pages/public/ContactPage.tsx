@@ -88,7 +88,7 @@ export default function ContactPage() {
           <Typography
             variant="h1"
             sx={{
-              fontSize: { xs: "72px", md: "300px" },
+              fontSize: { xs: "62px", md: "230px" },
               fontWeight: 620,
               letterSpacing: "-0.06em",
               lineHeight: 0.85,
@@ -131,61 +131,61 @@ export default function ContactPage() {
                   </Grid>
                 </Grid>
 
-              <TextField
-                fullWidth
-                select
-                label="Service (optional)"
-                variant="standard"
-                value={formData.service}
-                onChange={handleInputChange("service")}
-                sx={inputSx}
-                disabled={isLoading}
-              >
-                <MenuItem value="Institutional Access">Institutional Access</MenuItem>
-                <MenuItem value="Support">General Support</MenuItem>
-                <MenuItem value="Partnership">Partnership</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
-              </TextField>
+                <TextField
+                  fullWidth
+                  select
+                  label="Service (optional)"
+                  variant="standard"
+                  value={formData.service}
+                  onChange={handleInputChange("service")}
+                  sx={inputSx}
+                  disabled={isLoading}
+                >
+                  <MenuItem value="Institutional Access">Institutional Access</MenuItem>
+                  <MenuItem value="Support">General Support</MenuItem>
+                  <MenuItem value="Partnership">Partnership</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </TextField>
 
-              <TextField fullWidth label="Email (required)" variant="standard" sx={inputSx} value={formData.email} onChange={handleInputChange("email")} disabled={isLoading} required placeholder="Your institutional email" />
+                <TextField fullWidth label="Email (required)" variant="standard" sx={inputSx} value={formData.email} onChange={handleInputChange("email")} disabled={isLoading} required placeholder="Your institutional email" />
 
-              <TextField
-                fullWidth
-                multiline
-                rows={1}
-                label="Project description"
-                variant="standard"
-                sx={inputSx}
-                value={formData.description}
-                onChange={handleInputChange("description")}
-                disabled={isLoading}
-                required
-              />
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={1}
+                  label="Project description"
+                  variant="standard"
+                  sx={inputSx}
+                  value={formData.description}
+                  onChange={handleInputChange("description")}
+                  disabled={isLoading}
+                  required
+                />
 
-              <Button
-                variant="contained"
-                type="submit"
-                disabled={isLoading}
-                sx={{
-                  bgcolor: C.black,
-                  color: C.white,
-                  borderRadius: "100px",
-                  px: 10,
-                  py: 2.2,
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  textTransform: "none",
-                  mt: 4,
-                  boxShadow: "0 15px 35px rgba(0,0,0,0.25)",
-                  "&:hover": { bgcolor: "#1a1a1a", transform: "translateY(-2px)", boxShadow: "0 20px 45px rgba(0,0,0,0.3)" },
-                  transition: "all 0.3s ease",
-                  "&:disabled": { bgcolor: "#94a3b8" }
-                }}
-              >
-                {isLoading ? "Sending..." : "Submit"}
-              </Button>
-            </Box>
-          </motion.div>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={isLoading}
+                  sx={{
+                    bgcolor: C.black,
+                    color: C.white,
+                    borderRadius: "100px",
+                    px: 10,
+                    py: 2.2,
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    textTransform: "none",
+                    mt: 4,
+                    boxShadow: "0 15px 35px rgba(0,0,0,0.25)",
+                    "&:hover": { bgcolor: "#1a1a1a", transform: "translateY(-2px)", boxShadow: "0 20px 45px rgba(0,0,0,0.3)" },
+                    transition: "all 0.3s ease",
+                    "&:disabled": { bgcolor: "#94a3b8" }
+                  }}
+                >
+                  {isLoading ? "Sending..." : "Submit"}
+                </Button>
+              </Box>
+            </motion.div>
           </Grid>
         </Grid>
 
@@ -195,7 +195,7 @@ export default function ContactPage() {
             <Grid item xs={12} md={7}>
               <Typography
                 sx={{
-                  fontSize: { xs: "32px", md: "80px" },
+                  fontSize: { xs: "24px", md: "56px" },
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
                   color: C.black,
@@ -208,7 +208,7 @@ export default function ContactPage() {
             <Grid item xs={12} md={5} textAlign={{ md: "right" }}>
               <Typography
                 sx={{
-                  fontSize: { xs: "32px", md: "64px" },
+                  fontSize: { xs: "24px", md: "42px" },
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
                   color: C.black
@@ -239,9 +239,9 @@ export default function ContactPage() {
           </Box>
         </Box>
       </Container>
-      
-      <SuccessActionModal 
-        open={isSuccessOpen} 
+
+      <SuccessActionModal
+        open={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
         title="Message Sent Successfully"
         description="Thank you for reaching out! We've received your inquiry and will get back to you at your email address shortly."

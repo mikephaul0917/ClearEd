@@ -104,6 +104,7 @@ export const NAV_CONFIG: Record<string, NavItem[]> = {
         { key: "institution-requests", label: "Institution Requests", path: "/super-admin/institution-requests", icon: FileIcon },
         { key: "institution-monitoring", label: "Institution Monitoring", path: "/super-admin/institution-monitoring", icon: BusinessIcon },
         { key: "system-analytics", label: "System Analytics", path: "/super-admin/system-analytics", icon: ChartIcon },
+        { key: "audit-logs", label: "System Records", path: "/super-admin/audit-logs", icon: HistoryIcon },
         { key: "announcements", label: "Announcements", path: "/super-admin/announcements", icon: BellIcon },
         { key: "settings", label: "Settings", path: "/super-admin/settings", icon: SettingsIcon },
     ],

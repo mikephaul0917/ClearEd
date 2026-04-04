@@ -143,7 +143,7 @@ export default function SuperAdminLoginPage() {
               <input
                 type="email"
                 value={email}
-                placeholder="superadmin@eclearance.system"
+                placeholder="superadmin@email.com"
                 autoComplete="off"
                 disabled={isLoading}
                 onChange={(e) => setEmail(e.target.value)}
@@ -173,31 +173,40 @@ export default function SuperAdminLoginPage() {
               disabled={isLoading}
               style={{
                 width: "100%",
-                fontSize: "16px",
-                fontWeight: 400,
+                fontSize: "14px",
+                fontWeight: 600,
                 color: C.white,
                 backgroundColor: C.black,
                 border: "none",
-                borderRadius: "12px",
-                padding: "16px",
+                borderRadius: "999px",
+                padding: "16px 32px",
                 cursor: isLoading ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 marginBottom: "24px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "10px",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
               }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#222")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.black)}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#1a1a1a";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = C.black;
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
+              }}
             >
               {isLoading ? (
                 <>
                   <InlineSpinner color={C.white} />
-                  Authenticating…
+                  authenticating…
                 </>
               ) : (
-                "Authenticate"
+                "Sign in"
               )}
             </button>
           </form>

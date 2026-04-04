@@ -117,19 +117,35 @@ export default function StudentClearanceSlip() {
           This is to certify that
         </Typography>
 
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 800,
-            color: "#0d9488",
-            mb: 1,
-            textAlign: "center",
-            fontFamily: "'Lora', serif",
-            textTransform: "uppercase"
-          }}
-        >
-          {profile.firstName || ""} {profile.familyName || ""}
-        </Typography>
+        {(() => {
+          const fullName = `${profile.firstName || ""} ${profile.familyName || ""}`.trim();
+          const nameLength = fullName.length;
+          let fontSize = "3rem"; // Default h3-like size
+          
+          if (nameLength > 40) fontSize = "1.4rem";
+          else if (nameLength > 30) fontSize = "1.6rem";
+          else if (nameLength > 20) fontSize = "2.0rem";
+          
+          return (
+            <Typography
+              sx={{
+                fontWeight: 800,
+                color: "#0d9488",
+                mb: 1,
+                textAlign: "center",
+                fontFamily: "'Lora', serif",
+                textTransform: "uppercase",
+                fontSize: fontSize,
+                maxWidth: 580,
+                mx: "auto",
+                lineHeight: 1.1,
+                transition: "font-size 0.2s ease"
+              }}
+            >
+              {fullName || "Student Name"}
+            </Typography>
+          );
+        })()}
 
         <Typography sx={{ fontSize: "1rem", mb: 2, color: "#475569", textAlign: "center", maxWidth: 500 }}>
           {profile.studentNumber || "N/A"} • {profile.course || "General Student"}
@@ -257,8 +273,9 @@ export default function StudentClearanceSlip() {
       justifyContent: "flex-start",
       overflow: "auto",
       bgcolor: "#F9FAFB",
-      pt: 0,
-      pb: 4
+      pt: { xs: 4, md: 0 },
+      pb: 4,
+      px: { xs: 2, md: 0 }
     }}>
       <style>{`
         body { overflow: hidden !important; }
@@ -282,17 +299,39 @@ export default function StudentClearanceSlip() {
         }
       `}</style>
 
-      {/* Standard View */}
-      <Box sx={{ width: "100%", maxWidth: 850, position: "relative", mt: -4 }}>
+      {/* Standard View Container with Scaling for Mobile */}
+      <Box sx={{ 
+        width: "100%", 
+        maxWidth: 850, 
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        // This container will allow the slip to scale down on mobile
+        overflow: { xs: "visible", md: "hidden" },
+        transform: { 
+          xs: "scale(0.85)", 
+          sm: "scale(1)", 
+          md: "scale(1)" 
+        },
+        transformOrigin: "top center",
+        height: { xs: 400, sm: 600, md: 600 }, // Adjust height to compensate for scale
+        mt: { xs: 4, md: -4 },
+        mb: { xs: 15, sm: 0 } // Extra margin because of scaling
+      }}>
         <Box
           id="slip"
           sx={{
             position: "relative",
             width: 850,
+            minWidth: 850,
             minHeight: 600,
             bgcolor: "#F9FAFB",
-            overflow: "hidden",
             display: "flex",
+            boxShadow: { xs: "0 10px 40px rgba(0,0,0,0.1)", md: "none" },
+            borderRadius: { xs: "12px", md: "0" },
+            overflow: "hidden"
           }}
         >
           {loading ? renderSkeleton() : renderCertificateContent()}
@@ -322,7 +361,15 @@ export default function StudentClearanceSlip() {
       </Box>
 
       {/* Bottom Button Group */}
-      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 2 }} className="no-print">
+      <Box sx={{ 
+        mt: { xs: 4, md: 1 }, 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: 2, 
+        width: { xs: "100%", sm: "auto" },
+        maxWidth: { xs: 400, sm: "none" },
+        flexDirection: { xs: 'column', sm: 'row' } 
+      }} className="no-print">
         {loading ? (
           <>
             <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: '8px' }} />
@@ -333,6 +380,7 @@ export default function StudentClearanceSlip() {
             <Button
               variant="contained"
               onClick={printSlip}
+              fullWidth={window.innerWidth < 640}
               sx={{
                 bgcolor: '#000',
                 color: '#FFF',
@@ -352,6 +400,7 @@ export default function StudentClearanceSlip() {
               variant="outlined"
               disabled={submittingDean || finalClearance !== null}
               onClick={handleSubmitToDean}
+              fullWidth={window.innerWidth < 640}
               sx={{
                 borderRadius: '100px',
                 color: '#000',
@@ -422,12 +471,28 @@ export default function StudentClearanceSlip() {
           <CloseIcon fontSize="large" sx={{ fontWeight: 800 }} />
         </IconButton>
 
-        <Box sx={{ position: "relative", transform: "scale(1.3)", transformOrigin: "center" }}>
+        <Box sx={{ 
+          position: "relative", 
+          transform: { xs: "scale(0.4)", sm: "scale(0.7)", md: "scale(1)", lg: "scale(1.3)" }, 
+          transformOrigin: "center" 
+        }}>
           {/* We repeat the slip content here but scaled up. 
-              The transform property makes it 30% larger as requested. */}
+              The transform property makes it 30% larger as requested on desktop. */}
 
-          {renderCertificateContent()}
-
+          <Box
+            sx={{
+              position: "relative",
+              width: 850,
+              minHeight: 600,
+              bgcolor: "#F9FAFB",
+              overflow: "hidden",
+              display: "flex",
+              borderRadius: "8px",
+              boxShadow: "0 30px 60px rgba(0,0,0,0.2)"
+            }}
+          >
+            {renderCertificateContent()}
+          </Box>
         </Box>
       </Dialog>
     </Box>

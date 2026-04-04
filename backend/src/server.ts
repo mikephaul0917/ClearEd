@@ -27,6 +27,7 @@ import "./models/DeanAssignment"; // Dean's jurisdiction management
 import "./models/StudentProfile"; // Student-specific metadata
 import "./models/Poll"; // System polls for organizations
 import "./models/Comment"; // Comments for stream items
+import "./models/AccessRequest"; // Google sign-in access requests
 
 // Import route handlers
 import unifiedAuthRoutes from "./routes/unifiedAuthRoutes";

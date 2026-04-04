@@ -20,6 +20,7 @@ export interface IUser extends Document {
   lockUntil?: Date;
   lastLoginAt?: Date;
   authProvider: 'local' | 'google';
+  requiresPasswordSetup: boolean;
   emailVerified: boolean;
   invitedBy?: mongoose.Types.ObjectId;
   invitedAt?: Date;
@@ -85,6 +86,10 @@ const UserSchema = new Schema<IUser>({
     type: String,
     enum: ['local', 'google'],
     default: 'local'
+  },
+  requiresPasswordSetup: {
+    type: Boolean,
+    default: false
   },
   emailVerified: {
     type: Boolean,

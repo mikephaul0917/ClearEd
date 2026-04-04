@@ -1,5 +1,6 @@
 import express from "express";
 import { listUsers, getUser, createUser, updateStatus, updateBulkStatus, updateRole, updateBulkRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile } from "../controllers/admin/userManagementController";
+import { listAccessRequests, getAccessRequestCount, approveAccessRequest, rejectAccessRequest } from "../controllers/admin/accessRequestController";
 import {
     getInstitutionOrganizations,
     getDeletedOrganizations,
@@ -51,6 +52,12 @@ router.put("/terms/:id/activate", auth, admin, activateTerm);
 router.delete("/terms/:id", auth, admin, deleteTerm);
 router.get("/clearance-stats", auth, admin, getClearanceStats);
 router.get("/institution", auth, admin, getInstitution);
+
+// Access request management (Google Sign-in requests)
+router.get("/access-requests", auth, admin, listAccessRequests);
+router.get("/access-requests/count", auth, admin, getAccessRequestCount);
+router.put("/access-requests/:id/approve", auth, admin, approveAccessRequest);
+router.put("/access-requests/:id/reject", auth, admin, rejectAccessRequest);
 
 // Legacy Department routes for backward compatibility/graceful transition
 router.get("/departments", auth, admin, getInstitutionOrganizations);

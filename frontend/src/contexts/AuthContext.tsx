@@ -9,6 +9,7 @@ export interface AuthContextProps {
     token: string | null;
     loading: boolean;
     login: (email: string, password: string, isSuperAdmin?: boolean, isRegister?: boolean) => Promise<boolean>;
+    loginWithToken: (jwt: string, returnedUser: any) => boolean;
     logout: () => void;
     mockLogin: (userData: any, mockToken: string) => void;
 }
@@ -152,10 +153,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem("user", JSON.stringify(userData));
             localStorage.setItem("role", userData.role);
             localStorage.setItem("email", userData.email || "");
+            localStorage.setItem("username", userData.fullName || "");
 
             return true;
         } catch (error: any) {
             console.error('Login failed:', error);
+            return false;
+        }
+    };
+
+    // Login with an existing JWT token (for Google OAuth)
+    const loginWithToken = (jwt: string, returnedUser: any): boolean => {
+        try {
+            const payload = decodeToken(jwt);
+            if (!payload) throw new Error('Invalid token');
+
+            const userData: AuthUser = {
+                id: payload.id,
+                role: payload.role,
+                institutionId: payload.institutionId,
+                email: payload.email,
+                avatarUrl: returnedUser.avatarUrl,
+                fullName: returnedUser.fullName,
+                username: returnedUser.username
+            };
+
+            persistToken(jwt);
+            setToken(jwt);
+            setUser(userData);
+
+            // Set variables needed by other pages/legacy logic
+            localStorage.setItem("token", jwt);
+            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem("role", userData.role);
+            localStorage.setItem("email", userData.email || "");
+            if (returnedUser.institutionId) {
+                localStorage.setItem("institutionId", returnedUser.institutionId);
+            }
+            localStorage.setItem("username", returnedUser.fullName || "");
+
+            return true;
+        } catch (error) {
+            console.error('loginWithToken failed:', error);
             return false;
         }
     };
@@ -202,7 +241,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout: performLogout, mockLogin }}>
+        <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout: performLogout, mockLogin }}>
             {children}
         </AuthContext.Provider>
     );

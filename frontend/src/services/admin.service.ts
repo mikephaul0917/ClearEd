@@ -160,7 +160,7 @@ export const adminService = {
         const response = await api.delete(`/admin/users/${userId}/dean-assignments/${assignmentId}`);
         return response.data;
     },
-    
+
     // Student Profile (Course and Year Assignment)
     getStudentProfile: async (userId: string) => {
         const response = await api.get(`/admin/users/${userId}/student-profile`);
@@ -246,6 +246,28 @@ export const adminService = {
 
     exportAuditLogs: async (params: any) => {
         const response = await api.get('/admin/audit-logs/export', { params });
+        return response.data;
+    },
+
+    // Access Requests (Google Sign-in)
+    getAccessRequests: async (status?: string) => {
+        const params = status ? `?status=${status}` : '';
+        const response = await api.get(`/admin/access-requests${params}`);
+        return response.data;
+    },
+
+    getAccessRequestCount: async () => {
+        const response = await api.get('/admin/access-requests/count');
+        return response.data;
+    },
+
+    approveAccessRequest: async (id: string, role?: string) => {
+        const response = await api.put(`/admin/access-requests/${id}/approve`, { role });
+        return response.data;
+    },
+
+    rejectAccessRequest: async (id: string, reason?: string) => {
+        const response = await api.put(`/admin/access-requests/${id}/reject`, { reason });
         return response.data;
     }
 };

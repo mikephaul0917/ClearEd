@@ -179,8 +179,8 @@ export default function DeanFAQPage() {
             <Box mb={2}>
               <Typography sx={{
                 display: 'inline-block',
-                bgcolor: "#fef08a",
-                color: "#854d0e",
+                bgcolor: "rgba(45, 212, 191, 0.15)",
+                color: "#0E7490",
                 px: 1.5,
                 py: 0.5,
                 borderRadius: '6px',

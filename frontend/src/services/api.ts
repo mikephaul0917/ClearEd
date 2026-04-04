@@ -68,12 +68,15 @@ api.interceptors.response.use(
                 );
             }
         } else if (status === 403) {
-            console.error('Forbidden! You do not have permission.');
-            showModal(
-                'Access Denied', 
-                'You do not have permission to perform this action.', 
-                'denied'
-            );
+            const isAuthRequest = error.config?.url?.includes('/google-auth') || error.config?.url?.includes('/login');
+            if (!isAuthRequest) {
+                console.error('Forbidden! You do not have permission.');
+                showModal(
+                    'Access Denied', 
+                    'You do not have permission to perform this action.', 
+                    'denied'
+                );
+            }
         } else if (status >= 500) {
             console.error('Server Error:', error);
             showModal(

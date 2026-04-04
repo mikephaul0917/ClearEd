@@ -8,12 +8,12 @@ export const authService = {
     },
 
     googleAuth: async (token: string) => {
-        const response = await api.post('/unified-auth/google-auth', { token });
+        const response = await api.post('/auth/google-auth', { token });
         return response.data;
     },
 
     register: async (userData: any) => {
-        const response = await api.post('/unified-auth/create-user', userData);
+        const response = await api.post('/auth/create-user', userData);
         return response.data;
     },
 
@@ -23,7 +23,7 @@ export const authService = {
     },
 
     getInstitutionByDomain: async (domain: string) => {
-        const response = await api.get(`/unified-auth/institution?domain=${domain}`);
+        const response = await api.get(`/auth/institution?domain=${domain}`);
         return response.data;
     },
 
@@ -34,6 +34,11 @@ export const authService = {
 
     updatePassword: async (passwords: any) => {
         const response = await api.put('/auth/password', passwords);
+        return response.data;
+    },
+
+    setupPassword: async (newPassword: string) => {
+        const response = await api.put('/auth/setup-password', { newPassword });
         return response.data;
     },
 

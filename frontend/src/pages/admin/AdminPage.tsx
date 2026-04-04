@@ -134,7 +134,8 @@ export default function AdminPage() {
     try {
       const storedUserStr = localStorage.getItem("user");
       const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
-      const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
+      // Prioritize the actual user profile data over potentially stale standalone username key
+      const savedUsername = fullUser?.fullName || localStorage.getItem("username") || "";
       const base = savedUsername || (email || "").split("@")[0];
       const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
       const first = parts[0] || "";
@@ -962,8 +963,21 @@ export default function AdminPage() {
                 variant="contained"
                 onClick={(e) => { e.preventDefault(); updateProfile(); }}
                 sx={{
-                  backgroundColor: '#000', color: '#FFF', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                  '&:hover': { backgroundColor: '#111' }
+                  backgroundColor: '#000',
+                  color: '#FFF',
+                  py: 1.8,
+                  px: 4,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  '&:hover': {
+                    backgroundColor: '#111',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
                 Save Profile
@@ -972,8 +986,24 @@ export default function AdminPage() {
                 variant="outlined"
                 onClick={updatePassword}
                 sx={{
-                  color: '#000', borderColor: '#D1D5DB', py: 1.5, px: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 600,
-                  '&:hover': { borderColor: '#9CA3AF', bgcolor: '#F9FAFB' }
+                  color: '#000',
+                  borderColor: '#000',
+                  borderWidth: '1.2px',
+                  py: 1.8,
+                  px: 4,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  backgroundColor: '#FFF',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  '&:hover': {
+                    borderColor: '#CBD5E1',
+                    bgcolor: '#F8FAFC',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
                 Update Password

@@ -1693,12 +1693,6 @@ export default function DeanPage() {
             <SettingsRow>
               <SettingsField
                 label="First Name"
-                labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', opacity: 0.8, '&:hover': { opacity: 1 } }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Edit</Typography>
-                  </Box>
-                }
               >
                 <TextField
                   fullWidth
@@ -1706,24 +1700,11 @@ export default function DeanPage() {
                   autoComplete="given-name"
                   value={draftFirst}
                   onChange={(e) => setDraftFirst(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
               <SettingsField
                 label="Last Name"
-                labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', color: '#64748B' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700 }}>Save</Typography>
-                  </Box>
-                }
               >
                 <TextField
                   fullWidth
@@ -1731,13 +1712,6 @@ export default function DeanPage() {
                   autoComplete="family-name"
                   value={draftLast}
                   onChange={(e) => setDraftLast(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
@@ -1748,14 +1722,6 @@ export default function DeanPage() {
             <SettingsRow>
               <SettingsField
                 label="Email"
-                labelAction={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Verified</Typography>
-                  </Box>
-                }
               >
                 <TextField
                   fullWidth
@@ -1763,35 +1729,14 @@ export default function DeanPage() {
                   autoComplete="email"
                   value={email}
                   disabled
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
-              <SettingsField label="Role Status" labelAction={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(176, 224, 230, 0.2)', px: 1.2, py: 0.5, borderRadius: '999px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0E7490" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#0E7490' }}>Active</Typography>
-                </Box>
-              }>
+              <SettingsField label="Role Status">
                 <TextField
                   fullWidth
                   value="Dean of College"
                   disabled
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
@@ -1808,13 +1753,6 @@ export default function DeanPage() {
                   autoComplete="new-password"
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
@@ -1826,13 +1764,6 @@ export default function DeanPage() {
                   autoComplete="new-password"
                   value={confirmPass}
                   onChange={(e) => setConfirmPass(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <Box sx={{ color: '#94A3B8', display: 'flex' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                      </Box>
-                    )
-                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
                 />
               </SettingsField>
@@ -1843,26 +1774,48 @@ export default function DeanPage() {
             <Button
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
-              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
               sx={{
-                backgroundColor: '#000', color: '#FFF', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
-                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3)',
-                '&:hover': { backgroundColor: '#111', transform: 'translateY(-2px)', boxShadow: '0 12px 24px -5px rgba(0,0,0,0.4)' },
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                backgroundColor: '#000',
+                color: '#FFF',
+                py: 1.8,
+                px: 4,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '1rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                '&:hover': {
+                  backgroundColor: '#111',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                },
+                transition: 'all 0.2s ease'
               }}
             >
-              Update Profile Info
+              Save Profile
             </Button>
             <Button
               variant="outlined"
               onClick={updatePassword}
-              startIcon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"></path></svg>}
               sx={{
-                color: '#0F172A', borderColor: '#E2E8F0', py: 1.2, px: 4, borderRadius: '100px', textTransform: 'none', fontWeight: 800, fontSize: '0.875rem',
-                bgcolor: '#FFF',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' },
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                color: '#000',
+                borderColor: '#000',
+                borderWidth: '1.2px',
+                py: 1.8,
+                px: 4,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '1rem',
+                backgroundColor: '#FFF',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                '&:hover': {
+                  borderColor: '#CBD5E1',
+                  bgcolor: '#F8FAFC',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               Update Password

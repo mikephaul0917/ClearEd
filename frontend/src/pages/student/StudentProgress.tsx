@@ -190,31 +190,51 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           This is to certify that
         </Typography>
 
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 800,
-            color: "#0d9488",
-            mb: 1,
-            textAlign: "center",
-            fontFamily: "'Lora', serif",
-            textTransform: "uppercase"
-          }}
-        >
-          {(() => {
-            const fallbackName = studentInfo?.fullName || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!)?.fullName : "Student Name");
-            if (!profile) return fallbackName;
-            const fName = (profile.firstName || "").trim();
-            const lName = (profile.familyName || "").trim();
-            const mName = (profile.middleName || "").trim();
-            const scrub = (s: string) => s.toLowerCase() === "undefined" ? "" : s;
-            const first = scrub(fName);
-            const last = scrub(lName);
-            const middle = scrub(mName);
-            if (first || last) return `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || fallbackName;
-            return fallbackName;
-          })()}
-        </Typography>
+        {(() => {
+          const fallbackName = studentInfo?.fullName || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!)?.fullName : "Student Name");
+          
+          let fullName = fallbackName;
+          if (profile) {
+            const scrub = (s: any) => {
+              if (!s) return "";
+              const val = String(s).trim();
+              return val.toLowerCase() === "undefined" ? "" : val;
+            };
+            const first = scrub(profile.firstName);
+            const last = scrub(profile.familyName);
+            const middle = scrub(profile.middleName);
+            
+            if (first || last) {
+              fullName = `${first} ${middle ? middle + ' ' : ''}${last}`.trim() || fallbackName;
+            }
+          }
+
+          const nameLength = fullName.length;
+          let fontSize = "3rem";
+          if (nameLength > 40) fontSize = "1.4rem";
+          else if (nameLength > 30) fontSize = "1.6rem";
+          else if (nameLength > 20) fontSize = "2.0rem";
+
+          return (
+            <Typography
+              sx={{
+                fontWeight: 800,
+                color: "#0d9488",
+                mb: 1,
+                textAlign: "center",
+                fontFamily: "'Lora', serif",
+                textTransform: "uppercase",
+                fontSize: fontSize,
+                maxWidth: 580,
+                mx: "auto",
+                lineHeight: 1.1,
+                transition: "font-size 0.2s ease"
+              }}
+            >
+              {fullName}
+            </Typography>
+          );
+        })()}
 
         <Typography sx={{ fontSize: "1rem", mb: 2, color: "#475569", textAlign: "center", maxWidth: 500 }}>
           ID: {profile?.studentNumber || "N/A"} • {profile?.course || "General Student"}
@@ -336,7 +356,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   );
 
   const renderOverview = () => (
-    <Box sx={{ maxWidth: 850, mx: "auto", pt: 0, pb: 4, position: "relative" }}>
+    <Box sx={{ maxWidth: 850, mx: "auto", pt: { xs: 6, md: 0 }, pb: 4, position: "relative" }}>
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -359,37 +379,50 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
         elevation={0}
         sx={{
           position: "relative",
-          minHeight: 600,
+          mt: { xs: 4, sm: 0 },
+          minHeight: { xs: 400, sm: 600 },
           bgcolor: "#F9FAFB",
-          overflow: "hidden",
+          overflow: { xs: "visible", sm: "hidden" },
           display: "flex",
+          justifyContent: "center",
           fontFamily: "'Inter', sans-serif"
         }}
       >
-        {renderCertificateContent()}
+        <Box sx={{
+          width: 850,
+          minWidth: 850,
+          minHeight: 600,
+          display: "flex",
+          position: "relative",
+          transform: { xs: "scale(0.38)", sm: "scale(0.85)", md: "scale(1)" },
+          transformOrigin: "top center",
+        }}>
+          {renderCertificateContent()}
 
-        {/* Maximize Button - ICON ONLY AS REQUESTED */}
-        {!showMaximized && (
-          <IconButton
-            onClick={() => setShowMaximized(true)}
-            data-html2canvas-ignore
-            sx={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              zIndex: 9999,
-              bgcolor: "rgba(255,255,255,0.7)",
-              color: "#000",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.9)", transform: "scale(1.1)" },
-              transition: "all 0.2s"
-            }}
-            className="no-print"
-          >
-            <FullscreenIcon fontSize="large" />
-          </IconButton>
-        )}
+          {/* Maximize Button - ICON ONLY AS REQUESTED */}
+          {!showMaximized && (
+            <IconButton
+              onClick={() => setShowMaximized(true)}
+              data-html2canvas-ignore
+              sx={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                zIndex: 9999,
+                bgcolor: "rgba(255,255,255,0.7)",
+                color: "#000",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.9)", transform: "scale(1.1)" },
+                transition: "all 0.2s"
+              }}
+              className="no-print"
+            >
+              <FullscreenIcon fontSize="large" />
+            </IconButton>
+          )}
+        </Box>
       </Paper>
+
       <Dialog open={!!zoomedSignature} onClose={() => setZoomedSignature(null)} maxWidth="md">
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#FFF' }}>
           <img src={zoomedSignature || ''} alt="Zoomed Signature" style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
@@ -397,10 +430,20 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
         </Box>
       </Dialog>
 
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+      <Box sx={{ 
+        mt: { xs: 20, sm: 2 }, 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: 2,
+        flexDirection: { xs: 'column', sm: 'row' },
+        width: { xs: "100%", sm: "auto" },
+        maxWidth: { xs: 400, sm: "none" },
+        mx: "auto"
+      }}>
         <Button
           variant="contained"
           onClick={() => window.print()}
+          fullWidth={window.innerWidth < 640}
           sx={{
             bgcolor: '#000',
             color: '#FFF',
@@ -610,7 +653,11 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           <CloseIcon fontSize="large" sx={{ fontWeight: 800 }} />
         </IconButton>
 
-        <Box sx={{ position: "relative", transform: "scale(1.3)", transformOrigin: "center" }}>
+        <Box sx={{ 
+          position: "relative", 
+          transform: { xs: "scale(0.4)", sm: "scale(0.7)", md: "scale(1.1)", lg: "scale(1.3)" }, 
+          transformOrigin: "center" 
+        }}>
           <Box
             sx={{
               position: "relative",
@@ -619,6 +666,8 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
               bgcolor: "#F9FAFB",
               overflow: "hidden",
               display: "flex",
+              borderRadius: "8px",
+              boxShadow: "0 30px 60px rgba(0,0,0,0.2)"
             }}
           >
             {renderCertificateContent()}
