@@ -88,14 +88,14 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                 </Typography>
 
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                    <Alert severity="error" sx={{ mb: 2, borderRadius: '14px' }}>
                         {error}
                     </Alert>
                 )
                 }
 
                 {success && (
-                    <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                    <Alert severity="success" sx={{ mb: 2, borderRadius: '14px' }}>
                         Successfully joined! Redirecting...
                     </Alert>
                 )}
@@ -145,7 +145,7 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                 <Button
                     onClick={handleClose}
                     disabled={loading}
-                    sx={{ textTransform: 'none', color: "#64748B", fontWeight: 600 }}
+                    sx={{ textTransform: 'none', color: "#64748B", fontWeight: 600, borderRadius: '8px' }}
                 >
                     Cancel
                 </Button>
@@ -156,7 +156,7 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                     sx={{
                         textTransform: 'none',
                         bgcolor: "#0F172A",
-                        borderRadius: 2,
+                        borderRadius: '8px',
                         px: 4,
                         fontWeight: 600,
                         "&:hover": { bgcolor: "#1E293B" }

@@ -839,7 +839,7 @@ const RequirementDetailsPage: React.FC = () => {
                                     </Paper>
                                     
                                     {studentSubError && (
-                                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{studentSubError}</Alert>
+                                        <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{studentSubError}</Alert>
                                     )}
                                     
                                     {/* Private Comments Card */}
@@ -1169,7 +1169,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                 </Typography>
                                             </Box>
 
-                                            {subError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{subError}</Alert>}
+                                            {subError && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{subError}</Alert>}
 
                                             <Box sx={{ mb: 4 }}>
                                                 <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Student Notes</Typography>

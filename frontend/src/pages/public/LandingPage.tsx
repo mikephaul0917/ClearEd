@@ -61,7 +61,11 @@ export default function LandingPage() {
   const navLinks = [
     { label: "How it Works", id: "how-it-works", icon: QuestionSIcon },
     { label: "About us", id: "about", icon: InfoSIcon },
-    { label: "Login", path: "/login", icon: LoginSIcon },
+    { 
+      label: localStorage.getItem('token') ? "Home" : "Login", 
+      path: localStorage.getItem('token') ? "/home" : "/login", 
+      icon: LoginSIcon 
+    },
   ];
 
 
@@ -203,7 +207,7 @@ export default function LandingPage() {
             {navLinks.map((link) => {
               const linkId = link.id || link.label;
               const isIndicatorActive = (hoveredTab ?? activeTab) === linkId;
-              
+
               return (
                 <Box
                   key={link.label}
@@ -247,7 +251,7 @@ export default function LandingPage() {
             })}
           </Box>
         ) : (
-          <IconButton 
+          <IconButton
             onClick={() => setMobileOpen(true)}
             sx={{ color: C.black, p: 1 }}
           >
@@ -291,7 +295,7 @@ export default function LandingPage() {
             Navigation
           </Typography>
         </Box>
-        
+
         <Box flex={1} sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <LayoutGroup id="mobile-sidebar-nav">
             <Box display="flex" flexDirection="column" gap={0.5} sx={{ px: 1.5 }}>
@@ -425,27 +429,27 @@ export default function LandingPage() {
             </Box>
           </Box>
 
-          <Box sx={{ 
-            position: "absolute", 
-            bottom: { xs: 20, md: 60 }, 
-            left: { xs: 20, md: 60 }, 
+          <Box sx={{
+            position: "absolute",
+            bottom: { xs: 20, md: 60 },
+            left: { xs: 20, md: 60 },
             color: "#0d6b63",
             zIndex: 3
           }}>
-            <Typography variant="h3" sx={{ 
-              fontWeight: 900, 
-              mb: 1, 
+            <Typography variant="h3" sx={{
+              fontWeight: 900,
+              mb: 1,
               letterSpacing: "-0.02em",
               fontSize: { xs: "24px", md: "48px" }
             }}>
               ClearEd
             </Typography>
-            <Typography sx={{ 
-              opacity: 0.8, 
-              maxWidth: { xs: 180, md: 300 }, 
-              fontSize: { xs: "12px", md: "14px" }, 
-              fontWeight: 500, 
-              lineHeight: 1.6 
+            <Typography sx={{
+              opacity: 0.8,
+              maxWidth: { xs: 180, md: 300 },
+              fontSize: { xs: "12px", md: "14px" },
+              fontWeight: 500,
+              lineHeight: 1.6
             }}>
               A digital record-keeping project to support seamless institutional workflows.
             </Typography>

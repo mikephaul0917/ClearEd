@@ -97,7 +97,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
             onClose={onClose}
             maxWidth="sm"
             fullWidth
-            PaperProps={{ sx: { borderRadius: 3 } }}
+            PaperProps={{ sx: { borderRadius: "14px" } }}
         >
             <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800 }}>
                 {requirementTitle}
@@ -108,7 +108,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
 
             <DialogContent dividers>
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                    <Alert severity="error" sx={{ mb: 2, borderRadius: "14px" }}>
                         {error}
                     </Alert>
                 )}
@@ -131,7 +131,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                                             alignItems: "center",
                                             justifyContent: "space-between",
                                             border: "1px solid #E2E8F0",
-                                            borderRadius: 2,
+                                            borderRadius: "6px",
                                             bgcolor: "#F8FAFC"
                                         }}
                                     >
@@ -153,7 +153,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                                             alignItems: "center",
                                             justifyContent: "space-between",
                                             border: "1px dashed #2563EB",
-                                            borderRadius: 2,
+                                            borderRadius: "6px",
                                             bgcolor: "#EFF6FF"
                                         }}
                                     >
@@ -177,7 +177,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                                     flexDirection: "column",
                                     alignItems: "center",
                                     border: "2px dashed #E2E8F0",
-                                    borderRadius: 3,
+                                    borderRadius: "10px",
                                     bgcolor: "#F8FAFC"
                                 }}
                             >
@@ -206,7 +206,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                             sx={{
                                 textTransform: 'none',
                                 borderStyle: 'dashed',
-                                borderRadius: 2,
+                                borderRadius: "8px",
                                 py: 1
                             }}
                         >
@@ -245,7 +245,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                     <Button
                         disabled
                         variant="contained"
-                        sx={{ bgcolor: "rgba(176, 224, 230, 0.4) !important", color: "#0E7490 !important", borderRadius: 2, px: 4, textTransform: "none", fontWeight: 700 }}
+                        sx={{ bgcolor: "rgba(176, 224, 230, 0.4) !important", color: "#0E7490 !important", borderRadius: "8px", px: 4, textTransform: "none", fontWeight: 700 }}
                     >
                         Approved
                     </Button>
@@ -257,7 +257,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                         <Button
                             variant="outlined"
                             disabled={loading}
-                            sx={{ textTransform: "none", borderRadius: 2, borderColor: "#EF4444", color: "#EF4444", "&:hover": { bgcolor: "#FEF2F2", borderColor: "#EF4444" } }}
+                            sx={{ textTransform: "none", borderRadius: "8px", borderColor: "#EF4444", color: "#EF4444", "&:hover": { bgcolor: "#FEF2F2", borderColor: "#EF4444" } }}
                         >
                             Unsubmit
                         </Button>
@@ -272,7 +272,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({
                             fontWeight: 700,
                             bgcolor: "#0F172A",
                             px: 4,
-                            borderRadius: 2,
+                            borderRadius: "8px",
                             "&:hover": { bgcolor: "#1E293B" }
                         }}
                     >

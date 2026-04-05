@@ -87,7 +87,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: "14px" } }}>
             <DialogTitle sx={{ fontWeight: 800 }}>Create New Organization</DialogTitle>
             <DialogContent>
                 <Box display="flex" flexDirection="column" gap={3} mt={1}>
@@ -99,6 +99,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                         fullWidth
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
                         required
                     />
 
@@ -110,6 +111,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                         fullWidth
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
                     />
 
                     <FormControl fullWidth required>
@@ -119,6 +121,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                             label="Academic Term"
                             onChange={(e) => setTermId(e.target.value)}
                             disabled={fetchingTerms}
+                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
                         >
                             {terms.map((term) => (
                                 <MenuItem key={term._id} value={term._id}>
@@ -136,7 +139,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                 </Box>
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-                <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 700 }}>
+                <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 700, borderRadius: "8px" }}>
                     Cancel
                 </Button>
                 <Button
@@ -146,6 +149,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                     sx={{
                         bgcolor: "#0F172A",
                         fontWeight: 700,
+                        borderRadius: "8px",
                         "&:hover": { bgcolor: "#1E293B" }
                     }}
                 >

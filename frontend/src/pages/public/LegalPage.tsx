@@ -50,7 +50,11 @@ export default function LegalPage() {
   const navLinks = [
     { label: "How it Works", id: "how-it-works", icon: QuestionSIcon },
     { label: "About us", id: "about", icon: InfoSIcon },
-    { label: "Login", path: "/login", icon: LoginSIcon },
+    { 
+      label: localStorage.getItem('token') ? "Home" : "Login", 
+      path: localStorage.getItem('token') ? "/home" : "/login", 
+      icon: LoginSIcon 
+    },
   ];
 
   const handleNav = (link: { id?: string, path?: string }) => {

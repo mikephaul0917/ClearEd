@@ -8,6 +8,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { useTheme, useMediaQuery, Box, Typography, Button, TextField, Skeleton } from "@mui/material";
 import { api } from "../../services/api";
+import { showGlobalModal } from "../../components/GlobalModal";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -19,6 +20,8 @@ import {
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
+import SuccessModal from "../../components/SuccessModal";
+import PasswordConfirmModal from "../dean/components/PasswordConfirmModal";
 
 import SuperAdminInstitutionRequests from "./SuperAdminInstitutionRequests";
 import InstitutionMonitoring from "./InstitutionMonitoring";
@@ -220,6 +223,11 @@ export default function SuperAdminPage() {
   const [draftLast, setDraftLast] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(() => {
     try {
       const u = JSON.parse(localStorage.getItem("user") || "{}");
@@ -387,23 +395,34 @@ export default function SuperAdminPage() {
       }
 
       if (newPass !== confirmPass) {
-        Swal.fire("Error", "New password and confirmation do not match", "error");
+        showGlobalModal(
+          "Password Mismatch", 
+          "New password and confirmation do not match. Please ensure both fields are identical.",
+          "error"
+        );
         return;
       }
-
-      await authService.updatePassword({
-        newPassword: newPass
-      });
-      setNewPass("");
-      setConfirmPass("");
-      Swal.fire("Success", "Password updated successfully", "success");
+      setPasswordModalOpen(true);
     } catch (error: any) {
       console.error("Password change failed:", error);
-      Swal.fire(
-        "Error",
-        error?.response?.data?.message || "Failed to change password",
-        "error"
-      );
+    }
+  };
+
+  const handleConfirmPasswordUpdate = async (currentPassword: string) => {
+    setPasswordUpdateLoading(true);
+    try {
+      await api.put("/auth/password", { currentPassword, newPassword: newPass });
+      setSuccessModalTitle("Password Updated Successfully");
+      setSuccessModalDescription("Your super administrative password has been securely updated.");
+      setSuccessModalOpen(true);
+      setNewPass("");
+      setConfirmPass("");
+      setPasswordModalOpen(false);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to update password";
+      Swal.fire("Error", msg, "error");
+    } finally {
+      setPasswordUpdateLoading(false);
     }
   };
 
@@ -603,17 +622,16 @@ export default function SuperAdminPage() {
               sx={{
                 backgroundColor: '#000',
                 color: '#FFF',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   backgroundColor: '#111',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -627,19 +645,18 @@ export default function SuperAdminPage() {
                 color: '#000',
                 borderColor: '#000',
                 borderWidth: '1.2px',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 backgroundColor: '#FFF',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   borderColor: '#000',
                   bgcolor: '#F8FAFC',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -807,6 +824,18 @@ export default function SuperAdminPage() {
   return (
     <>
       {renderContent()}
+      <SuccessModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+      <PasswordConfirmModal
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        onConfirm={handleConfirmPasswordUpdate}
+        loading={passwordUpdateLoading}
+      />
     </>
   );
 }

@@ -14,6 +14,7 @@ import Avatar from "@mui/material/Avatar";
 import TableContainer from "@mui/material/TableContainer";
 import { api, authService } from '../../services';
 import { useEffect, useState, useMemo, useRef } from "react";
+import { showGlobalModal } from "../../components/GlobalModal";
 import DeanApprovalsSimple from "../../components/dean/DeanApprovalsSimple";
 import DeanFAQPage from "./DeanFAQPage";
 import SuccessActionModal from "../../components/SuccessActionModal";
@@ -515,7 +516,11 @@ export default function DeanPage() {
       return;
     }
     if (newPass !== confirmPass) {
-      setNotice({ message: "Passwords do not match", variant: "error" });
+      showGlobalModal(
+        "Password Mismatch", 
+        "New password and confirmation do not match. Please ensure both fields are identical.",
+        "error"
+      );
       return;
     }
     // Instead of direct update, open confirmation modal
@@ -706,7 +711,7 @@ export default function DeanPage() {
     <Box sx={{ bgcolor: "#F9FAFB", minHeight: '100vh' }}>
       {notice && (
         <Snackbar open={!!notice} autoHideDuration={6000} onClose={() => setNotice(null)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
-          <Alert onClose={() => setNotice(null)} severity={notice.variant || 'info'} sx={{ width: '100%' }}>
+          <Alert onClose={() => setNotice(null)} severity={notice.variant || 'info'} sx={{ width: '100%', borderRadius: '14px' }}>
             {notice.message}
           </Alert>
         </Snackbar>
@@ -1777,17 +1782,16 @@ export default function DeanPage() {
               sx={{
                 backgroundColor: '#000',
                 color: '#FFF',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   backgroundColor: '#111',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -1801,19 +1805,18 @@ export default function DeanPage() {
                 color: '#000',
                 borderColor: '#000',
                 borderWidth: '1.2px',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 backgroundColor: '#FFF',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   borderColor: '#CBD5E1',
                   bgcolor: '#F8FAFC',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                 },
                 transition: 'all 0.2s ease'
               }}

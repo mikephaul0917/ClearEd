@@ -145,7 +145,7 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
 
             <DialogContent sx={{ p: 0 }}>
                 {error && (
-                    <Alert severity="error" sx={{ mx: 3, mt: 2, borderRadius: 2 }}>
+                    <Alert severity="error" sx={{ mx: 3, mt: 2, borderRadius: '14px' }}>
                         {error}
                     </Alert>
                 )}
@@ -273,6 +273,7 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                         fontWeight: 500,
                         color: "#1967d2",
                         fontSize: "0.875rem",
+                        borderRadius: '8px',
                         '&:hover': { bgcolor: "#e8f0fe" }
                     }}
                 >
@@ -287,7 +288,7 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                         fontWeight: 500,
                         bgcolor: !content.trim() ? "#dadce0" : "#1967d2",
                         color: !content.trim() ? "#80868b" : "#fff",
-                        borderRadius: 20,
+                        borderRadius: '8px',
                         px: 3,
                         fontSize: "0.875rem",
                         boxShadow: "none",

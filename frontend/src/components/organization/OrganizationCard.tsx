@@ -248,13 +248,13 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
             </Box>
 
             {/* Modal for Full Description */}
-            <Dialog 
-                open={open} 
+            <Dialog
+                open={open}
                 onClose={handleClose}
                 onClick={(e) => e.stopPropagation()}
                 PaperProps={{
                     sx: {
-                        borderRadius: "24px",
+                        borderRadius: "14px",
                         padding: "8px",
                         maxWidth: "500px",
                         width: "100%"
@@ -280,11 +280,11 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         {description || "Join this organization to access exclusive content and tools for your clearance process."}
                     </Typography>
                     <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
                             <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Role</Typography>
                             <Typography sx={{ fontWeight: 700, textTransform: 'capitalize' }}>{role}</Typography>
                         </Box>
-                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
                             <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Term</Typography>
                             <Typography sx={{ fontWeight: 700 }}>{termName}</Typography>
                         </Box>

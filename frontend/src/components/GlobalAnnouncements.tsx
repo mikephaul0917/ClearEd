@@ -194,6 +194,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
             icon={getTypeIcon(announcement.type)}
             sx={{
               mb: 1,
+              borderRadius: '14px',
               '& .MuiAlert-message': {
                 width: '100%'
               }

@@ -343,6 +343,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 flexDirection: "column",
                 position: "sticky",
                 top: 0,
+                pb: { xs: 2, md: 7 }, // Room for the fixed footer only on desktop
             }}
         >
             <Box display="flex" alignItems="center" gap={1} mb={1} mt={1}>

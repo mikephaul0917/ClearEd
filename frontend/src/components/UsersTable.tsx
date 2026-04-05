@@ -1645,7 +1645,7 @@ export default function UsersTable({
             )}
 
             {(!manageUser?._id && role === 'dean') && (
-              <Alert severity="info" sx={{ borderRadius: '12px', mt: 1 }}>
+              <Alert severity="info" sx={{ borderRadius: '14px', mt: 1 }}>
                 You can assign specific courses and year levels to this Dean after creating their account.
               </Alert>
             )}
@@ -1699,7 +1699,15 @@ export default function UsersTable({
                         Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Update failed' });
                       }
                     }}
-                    sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, bgcolor: COLORS.black, '&:hover': { bgcolor: '#222' } }}
+                    sx={{
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      bgcolor: COLORS.black,
+                      padding: '12px 16px',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                      '&:hover': { bgcolor: '#222', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
+                    }}
                   >
                     Save Profile
                   </Button>
@@ -1708,7 +1716,7 @@ export default function UsersTable({
             )}
 
             {(!manageUser?._id && (role === 'student' || role === 'officer')) && (
-              <Alert severity="info" sx={{ borderRadius: '12px', mt: 1 }}>
+              <Alert severity="info" sx={{ borderRadius: '14px', mt: 1 }}>
                 You can assign the specific course for this user after creating their account.
               </Alert>
             )}

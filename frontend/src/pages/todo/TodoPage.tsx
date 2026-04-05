@@ -415,7 +415,7 @@ const TodoPage: React.FC = () => {
                     </FormControl>
                 </Box>
 
-                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{error}</Alert>}
             </Box>
 
             {loading ? (

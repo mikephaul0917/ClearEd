@@ -40,6 +40,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     return (
       <Alert 
         severity={severity}
+        sx={{ borderRadius: '14px' }}
         action={
           (onRetry || onClose) && (
             <Box display="flex" gap={1}>
@@ -74,7 +75,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         sx={{ 
           p: 3, 
           border: `1px solid ${severity === 'error' ? '#FCA5A5' : '#FED7AA'}`,
-          backgroundColor: severity === 'error' ? '#FEF2F2' : '#FFF7ED'
+          backgroundColor: severity === 'error' ? '#FEF2F2' : '#FFF7ED',
+          borderRadius: '14px'
         }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -113,6 +115,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 variant="contained" 
                 startIcon={<RefreshIcon />}
                 onClick={onRetry}
+                sx={{ borderRadius: '8px' }}
               >
                 Try Again
               </Button>
@@ -122,6 +125,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 variant="outlined" 
                 startIcon={<ArrowBackIcon />}
                 onClick={onGoBack}
+                sx={{ borderRadius: '8px' }}
               >
                 Go Back
               </Button>
@@ -150,7 +154,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
           maxWidth: 600,
           width: '100%',
           textAlign: 'center',
-          borderRadius: 2,
+          borderRadius: '14px',
           border: '1px solid #E2E8F0'
         }}
       >
@@ -210,6 +214,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 size="large"
                 startIcon={<RefreshIcon />}
                 onClick={onRetry}
+                sx={{ borderRadius: '8px' }}
               >
                 Try Again
               </Button>
@@ -220,6 +225,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 size="large"
                 startIcon={<ArrowBackIcon />}
                 onClick={onGoBack}
+                sx={{ borderRadius: '8px' }}
               >
                 Go Back
               </Button>

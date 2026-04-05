@@ -277,7 +277,7 @@ export default function DeanApprovalsSimple() {
                   ))}
 
                   {submission.finalApprovalAt && (
-                    <Alert severity="success" sx={{ mt: 2 }}>
+                    <Alert severity="success" sx={{ mt: 2, borderRadius: '14px' }}>
                       <Typography variant="caption">
                         Final approval granted on {new Date(submission.finalApprovalAt).toLocaleDateString()}
                       </Typography>
@@ -291,6 +291,7 @@ export default function DeanApprovalsSimple() {
                       fullWidth
                       variant="contained"
                       onClick={() => setApprovalDialog({ open: true, submission })}
+                      sx={{ borderRadius: '8px' }}
                     >
                       Review Final Approval
                     </Button>
@@ -342,7 +343,7 @@ export default function DeanApprovalsSimple() {
         </DialogContent>
         
         <DialogActions>
-          <Button onClick={() => setApprovalDialog({ open: false, submission: null })}>
+          <Button onClick={() => setApprovalDialog({ open: false, submission: null })} sx={{ borderRadius: '8px' }}>
             Cancel
           </Button>
           <Button 
@@ -350,6 +351,7 @@ export default function DeanApprovalsSimple() {
             variant="outlined"
             color="error"
             disabled={approving}
+            sx={{ borderRadius: '8px' }}
           >
             Reject
           </Button>
@@ -358,6 +360,7 @@ export default function DeanApprovalsSimple() {
             variant="contained"
             color="success"
             disabled={approving}
+            sx={{ borderRadius: '8px' }}
           >
             Approve
           </Button>
@@ -373,7 +376,7 @@ export default function DeanApprovalsSimple() {
         <Alert 
           onClose={handleCloseNotification} 
           severity={notification.severity}
-          sx={{ width: '100%' }}
+          sx={{ width: '100%', borderRadius: '14px' }}
         >
           {notification.message}
         </Alert>

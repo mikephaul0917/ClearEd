@@ -479,7 +479,7 @@ export default function AdminRecordsPage({
   return (
     <Box sx={{ mt: 2 }}>
       {error && (
-        <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}

@@ -445,21 +445,21 @@ const RegisterPage = () => {
                                 type="submit"
                                 disabled={isLoading}
                                 whileHover={!isLoading ? {
-                                    y: -3,
-                                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)'
+                                    y: -2,
+                                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                                 } : {}}
                                 whileTap={!isLoading ? { scale: 0.98 } : {}}
                                 style={{
                                     width: "100%",
-                                    height: "48px",
+                                    padding: "12px 16px",
                                     backgroundColor: C.black,
                                     color: C.white,
                                     border: "none",
                                     borderRadius: "100px",
                                     fontSize: "15px",
-                                    fontWeight: 500,
+                                    fontWeight: 600,
                                     cursor: isLoading ? "not-allowed" : "pointer",
-                                    boxShadow: "0 15px 35px rgba(0, 0, 0, 0.22)",
+                                    boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
@@ -536,6 +536,7 @@ const RegisterPage = () => {
                         size="md"
                         onClick={() => googleLogin()}
                         disabled={googleLoading}
+                        style={{ padding: "12px 16px", boxShadow: "0 4px 10px rgba(0,0,0,0.15)" }}
                     >
                         {googleLoading ? (
                             <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>

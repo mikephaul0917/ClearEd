@@ -7,6 +7,7 @@ import FormLabel from "@mui/material/FormLabel";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import SuccessMessage from "../../components/SuccessMessage";
+import { showGlobalModal } from "../../components/GlobalModal";
 import { api, authService } from '../../services';
 import { Divider } from "@mui/material";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
@@ -34,6 +35,8 @@ import {
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
+import Footer from "../../components/layout/Footer";
+import SuccessModal from "../../components/SuccessModal";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
@@ -98,6 +101,11 @@ export default function StudentPage() {
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(() => {
     try {
       const u = JSON.parse(localStorage.getItem("user") || "{}");
@@ -224,23 +232,36 @@ export default function StudentPage() {
   };
 
   const updatePassword = async () => {
-    if (!currentPass || !newPass || !confirmPass) {
+    if (!newPass || !confirmPass) {
       setNotice({ message: "Please fill all password fields", variant: "error" });
       return;
     }
     if (newPass !== confirmPass) {
-      setNotice({ message: "Passwords do not match", variant: "error" });
+      showGlobalModal(
+        "Password Mismatch", 
+        "New password and confirmation do not match. Please ensure both fields are identical.",
+        "error"
+      );
       return;
     }
+    setPasswordModalOpen(true);
+  };
+
+  const handleConfirmPasswordUpdate = async (currentPassword: string) => {
+    setPasswordUpdateLoading(true);
     try {
-      await api.put("/auth/password", { currentPassword: currentPass, newPassword: newPass });
-      setNotice({ message: "Password updated", variant: "success" });
-      setCurrentPass("");
+      await api.put("/auth/password", { currentPassword, newPassword: newPass });
+      setSuccessModalTitle("Password Updated Successfully");
+      setSuccessModalDescription("Your personal account password has been securely updated.");
+      setSuccessModalOpen(true);
       setNewPass("");
       setConfirmPass("");
+      setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
       setNotice({ message: msg, variant: "error" });
+    } finally {
+      setPasswordUpdateLoading(false);
     }
   };
 
@@ -612,7 +633,7 @@ export default function StudentPage() {
               onClick={(e) => e.stopPropagation()}
               PaperProps={{
                 sx: {
-                  borderRadius: "24px",
+                  borderRadius: "14px",
                   padding: "8px",
                   maxWidth: "500px",
                   width: "100%"
@@ -638,11 +659,11 @@ export default function StudentPage() {
                   {viewingOrg?.description || viewingOrg?.signatoryName || "Join this organization to access exclusive content and tools for your clearance process."}
                 </Typography>
                 <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
                     <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Signatory</Typography>
                     <Typography sx={{ fontWeight: 700 }}>{viewingOrg?.signatoryName || 'Representative'}</Typography>
                   </Box>
-                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                  <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
                     <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Status</Typography>
                     <Typography sx={{ fontWeight: 700, textTransform: 'capitalize' }}>
                       {viewingOrg?.status === 'completed' ? 'Cleared' : viewingOrg?.status === 'not_started' ? 'Pending' : 'Reviewing'}
@@ -656,7 +677,7 @@ export default function StudentPage() {
                   onClick={() => setViewingOrg(null)}
                   variant="contained"
                   sx={{
-                    borderRadius: "12px",
+                    borderRadius: "8px",
                     bgcolor: COLORS.black,
                     textTransform: "none",
                     fontWeight: 700,
@@ -851,17 +872,16 @@ export default function StudentPage() {
               sx={{
                 backgroundColor: '#000',
                 color: '#FFF',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   backgroundColor: '#111',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -875,19 +895,18 @@ export default function StudentPage() {
                 color: '#000',
                 borderColor: '#000',
                 borderWidth: '1.2px',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 backgroundColor: '#FFF',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   borderColor: '#000',
                   bgcolor: '#F8FAFC',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -909,6 +928,18 @@ export default function StudentPage() {
       ) : (
         <StudentCertificate />
       )}
+      <SuccessModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+      <PasswordConfirmModal
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        onConfirm={handleConfirmPasswordUpdate}
+        loading={passwordUpdateLoading}
+      />
     </>
   );
 }

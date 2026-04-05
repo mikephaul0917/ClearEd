@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SuccessMessage from "../../components/SuccessMessage";
+import { showGlobalModal } from "../../components/GlobalModal";
 import { api, authService, adminService } from '../../services';
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import { Divider } from "@mui/material";
@@ -30,6 +31,8 @@ import {
   ProfilePictureSection,
   SettingsHeader
 } from "../../components/layout/SettingsLayout";
+import SuccessModal from "../../components/SuccessModal";
+import PasswordConfirmModal from "../dean/components/PasswordConfirmModal";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
@@ -113,6 +116,11 @@ export default function AdminPage() {
   const [draftLast, setDraftLast] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordUpdateLoading, setPasswordUpdateLoading] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const updateLocalAvatar = (url: string) => {
     try {
@@ -312,17 +320,31 @@ export default function AdminPage() {
       return;
     }
     if (newPass !== confirmPass) {
-      setNotice({ message: "Passwords do not match", variant: "error" });
+      showGlobalModal(
+        "Password Mismatch", 
+        "New password and confirmation do not match. Please ensure both fields are identical.",
+        "error"
+      );
       return;
     }
+    setPasswordModalOpen(true);
+  };
+
+  const handleConfirmPasswordUpdate = async (currentPassword: string) => {
+    setPasswordUpdateLoading(true);
     try {
-      await api.put("/auth/password", { newPassword: newPass });
-      setNotice({ message: "Password updated", variant: "success" });
+      await api.put("/auth/password", { currentPassword, newPassword: newPass });
+      setSuccessModalTitle("Password Updated Successfully");
+      setSuccessModalDescription("Your administrative password has been securely updated.");
+      setSuccessModalOpen(true);
       setNewPass("");
       setConfirmPass("");
+      setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
       setNotice({ message: msg, variant: "error" });
+    } finally {
+      setPasswordUpdateLoading(false);
     }
   };
 
@@ -965,17 +987,16 @@ export default function AdminPage() {
                 sx={{
                   backgroundColor: '#000',
                   color: '#FFF',
-                  py: 1.8,
-                  px: 4,
-                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
                   textTransform: 'none',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '1rem',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                   '&:hover': {
                     backgroundColor: '#111',
                     transform: 'translateY(-1px)',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                   },
                   transition: 'all 0.2s ease'
                 }}
@@ -989,19 +1010,18 @@ export default function AdminPage() {
                   color: '#000',
                   borderColor: '#000',
                   borderWidth: '1.2px',
-                  py: 1.8,
-                  px: 4,
-                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
                   textTransform: 'none',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '1rem',
                   backgroundColor: '#FFF',
-                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                   '&:hover': {
                     borderColor: '#CBD5E1',
                     bgcolor: '#F8FAFC',
                     transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                   },
                   transition: 'all 0.2s ease'
                 }}
@@ -1076,6 +1096,18 @@ export default function AdminPage() {
           {active === "institution-requests" && <AdminInstitutionRequests refreshTrigger={refreshTrigger} onLoadingChange={setChildLoading} />}
         </Box>
       )}
+      <SuccessModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+      <PasswordConfirmModal
+        open={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        onConfirm={handleConfirmPasswordUpdate}
+        loading={passwordUpdateLoading}
+      />
     </>
   );
 }

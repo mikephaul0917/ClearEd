@@ -323,7 +323,7 @@ export default function ClearanceRequirements() {
                     )}
 
                     {item.submission.rejectionReason && (
-                      <Alert severity="error" sx={{ mt: 1 }}>
+                      <Alert severity="error" sx={{ mt: 1, borderRadius: '14px' }}>
                         <Typography variant="caption">
                           {item.submission.rejectionReason}
                         </Typography>
@@ -346,6 +346,7 @@ export default function ClearanceRequirements() {
                   startIcon={<CloudUploadIcon />}
                   onClick={() => setUploadDialog({ open: true, item })}
                   disabled={item.submission?.status === 'approved'}
+                  sx={{ borderRadius: '8px' }}
                 >
                   {item.submission ? 'Resubmit Documents' : 'Submit Documents'}
                 </Button>
@@ -388,7 +389,7 @@ export default function ClearanceRequirements() {
             variant="outlined"
             component="label"
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, borderRadius: '8px' }}
           >
             Select Files
             <input
@@ -436,7 +437,7 @@ export default function ClearanceRequirements() {
         <Alert 
           onClose={handleCloseNotification} 
           severity={notification.severity}
-          sx={{ width: '100%' }}
+          sx={{ width: '100%', borderRadius: '14px' }}
         >
           {notification.message}
         </Alert>

@@ -77,7 +77,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '32px',
+          borderRadius: '14px',
           padding: '48px 32px 32px 32px',
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -192,7 +192,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                 onClick={onClose}
                 sx={{
                   mt: 1,
-                  borderRadius: '16px',
+                  borderRadius: '8px',
                   py: 1.8,
                   bgcolor: 'rgba(241, 245, 249, 0.7)',
                   color: '#64748B',

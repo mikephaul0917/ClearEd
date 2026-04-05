@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Dialog, Box, Typography, TextField, InputAdornment, IconButton,
-  Avatar, Chip, Button, IconButton as MuiIconButton, Checkbox, 
+  Avatar, Chip, Button, IconButton as MuiIconButton, Checkbox,
   FormControlLabel, Menu, MenuItem, Divider, CircularProgress
 } from '@mui/material';
 import {
@@ -132,7 +132,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '24px',
+          borderRadius: '14px',
           padding: 0,
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -173,10 +173,10 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 </InputAdornment>
               ),
               sx: {
-                borderRadius: '12px',
+                borderRadius: '6px',
                 bgcolor: '#F8FAFC',
                 fontFamily: "'Inter', sans-serif",
-                '& .MuiOutlinedInput-notchedOutline': { 
+                '& .MuiOutlinedInput-notchedOutline': {
                   border: '1px solid transparent',
                   transition: 'border-color 0.2s'
                 },
@@ -211,7 +211,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                   )}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Box sx={{ position: 'relative' }}>
-                      <Avatar 
+                      <Avatar
                         src={getAbsoluteUrl(user.avatarUrl)}
                         sx={{
                           width: 44,
@@ -258,7 +258,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                     color: roleColors.text,
                     fontWeight: 700,
                     fontSize: '0.75rem',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     height: '24px'
                   }}
                 />
@@ -273,14 +273,14 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
 
         {/* Bulk Selection Header */}
         {isManageMode && filteredUsers.length > 0 && (
-          <Box sx={{ 
-            mb: 2, 
-            display: 'flex', 
-            alignItems: 'center', 
+          <Box sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
             bgcolor: '#F8FAFC',
             p: 1.5,
-            borderRadius: '12px',
+            borderRadius: '6px',
             border: '1px solid #F1F5F9'
           }}>
             <FormControlLabel
@@ -299,7 +299,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 </Typography>
               }
             />
-            
+
             <AnimatePresence>
               {selectedIds.length > 0 && (
                 <motion.div
@@ -344,7 +344,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
           PaperProps={{
             sx: {
               mt: 1,
-              borderRadius: '12px',
+              borderRadius: '6px',
               minWidth: 180,
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
               '& .MuiMenuItem-root': {
@@ -380,7 +380,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
           PaperProps={{
             sx: {
               ml: 1,
-              borderRadius: '12px',
+              borderRadius: '6px',
               minWidth: 160,
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
               '& .MuiMenuItem-root': {
@@ -392,8 +392,8 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
           }}
         >
           {['Student', 'Officer', 'Dean', 'Admin'].map(r => (
-            <MenuItem 
-              key={r} 
+            <MenuItem
+              key={r}
               onClick={(e) => {
                 const roleLower = r.toLowerCase();
                 if (roleLower === 'officer' || roleLower === 'dean') {
@@ -404,7 +404,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 }
               }}
             >
-              {r} { (r === 'Officer' || r === 'Dean') && "..." }
+              {r} {(r === 'Officer' || r === 'Dean') && "..."}
             </MenuItem>
           ))}
         </Menu>
@@ -418,7 +418,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
           PaperProps={{
             sx: {
               ml: 1,
-              borderRadius: '12px',
+              borderRadius: '6px',
               minWidth: 200,
               maxHeight: 300,
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
@@ -445,7 +445,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         </Menu>
 
         {isUpdating && (
-          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '24px' }}>
+          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '10px' }}>
             <CircularProgress size={32} color="inherit" />
           </Box>
         )}
@@ -457,7 +457,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               fullWidth
               onClick={onExport}
               sx={{
-                borderRadius: '999px',
+                borderRadius: '8px',
                 bgcolor: '#0F172A',
                 color: '#FFFFFF',
                 py: 1.5,

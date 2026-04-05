@@ -76,7 +76,7 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getInstitutions = async (req: Request, res: Response) => {
   try {
     const institutions = await Institution.find({ status: 'approved' })
-      .select('name domain _id')
+      .select('name domain status email administratorName administratorPosition address contactNumber createdAt _id')
       .sort({ name: 1 })
       .lean();
 

@@ -550,7 +550,7 @@ export default function SystemAnalytics() {
         <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: '2.25rem', color: COLORS.textPrimary, mb: 3 }}>
           System Analytics
         </Typography>
-        <Alert severity="info" sx={{ fontFamily: fontStack, borderRadius: '12px' }}>No analytics data available</Alert>
+        <Alert severity="info" sx={{ fontFamily: fontStack, borderRadius: '14px' }}>No analytics data available</Alert>
       </Box>
     );
   }

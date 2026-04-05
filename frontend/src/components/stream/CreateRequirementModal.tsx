@@ -300,7 +300,7 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
                             color: "white",
                             textTransform: "none",
                             fontWeight: 500,
-                            borderRadius: 1,
+                            borderRadius: '8px',
                             px: 3,
                             boxShadow: "none",
                             "&:hover": { bgcolor: "#1557b0", boxShadow: "0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)" },
@@ -318,7 +318,7 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
                     <Box sx={{ maxWidth: 800, width: "100%", display: "flex", flexDirection: "column", gap: 3 }}>
                         
                         {error && (
-                            <Alert severity="error" sx={{ borderRadius: 2 }}>
+                            <Alert severity="error" sx={{ borderRadius: '14px' }}>
                                 {error}
                             </Alert>
                         )}
@@ -460,7 +460,7 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
                                 color: "#1967d2",
                                 textTransform: "none",
                                 fontWeight: 500,
-                                borderRadius: 10,
+                                borderRadius: '8px',
                                 py: 1
                             }}
                         >

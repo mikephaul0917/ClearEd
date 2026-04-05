@@ -29,6 +29,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api, authService } from '../../services';
 import { getInitials } from "../../utils/avatarUtils";
 import SuccessMessage from "../../components/SuccessMessage";
+import { showGlobalModal } from "../../components/GlobalModal";
 import OfficerClassroomView from "../../components/officer/OfficerClassroomView";
 import TodoPage from "../todo/TodoPage";
 import { EmptyState } from "../../components/layout/EmptyState";
@@ -403,7 +404,11 @@ export default function OfficerPage() {
       return;
     }
     if (newPass !== confirmPass) {
-      setNotice({ message: "Passwords do not match", variant: "error" });
+      showGlobalModal(
+        "Password Mismatch", 
+        "New password and confirmation do not match. Please ensure both fields are identical.",
+        "error"
+      );
       return;
     }
     setPasswordModalOpen(true);
@@ -587,17 +592,16 @@ export default function OfficerPage() {
               sx={{
                 backgroundColor: '#000',
                 color: '#FFF',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   backgroundColor: '#111',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                 },
                 transition: 'all 0.2s ease'
               }}
@@ -611,19 +615,18 @@ export default function OfficerPage() {
                 color: '#000',
                 borderColor: '#000',
                 borderWidth: '1.2px',
-                py: 1.8,
-                px: 4,
-                borderRadius: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 backgroundColor: '#FFF',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
                   borderColor: '#000',
                   bgcolor: '#F8FAFC',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
                 },
                 transition: 'all 0.2s ease'
               }}

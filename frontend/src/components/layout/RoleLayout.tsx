@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Sidebar from "./Sidebar";
+import Footer from "./Footer";
 import { NAV_CONFIG } from "../../config/navConfig";
 import { getInitials } from "../../utils/avatarUtils";
 
@@ -61,12 +62,14 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                 sx={{
                     backgroundColor: bgcolor || "#F9FAFB",
                     p: { xs: 2, md: 4 },
+                    pb: { xs: 2, md: 8 }, // Removed large padding on mobile as footer is hidden
                     mt: { xs: "64px", md: 0 }, // Offset for fixed mobile header
                     overflowX: "hidden"
                 }}
             >
                 {children || <Outlet />}
             </Box>
+            <Footer />
         </Box>
     );
 };

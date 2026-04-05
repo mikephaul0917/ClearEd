@@ -10,12 +10,12 @@ interface RevokeApprovalModalProps {
   loading?: boolean;
 }
 
-const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({ 
-  open, 
-  onClose, 
-  onConfirm, 
+const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
+  open,
+  onClose,
+  onConfirm,
   studentName = "this student",
-  loading = false 
+  loading = false
 }) => {
   return (
     <Dialog
@@ -25,7 +25,7 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '32px',
+          borderRadius: '14px',
           padding: '40px 32px',
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -44,11 +44,11 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
           >
             <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
               {/* Header Context */}
-              <Typography 
-                variant="h4" 
-                sx={{ 
-                  fontWeight: 800, 
-                  color: '#0F172A', 
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  color: '#0F172A',
                   fontSize: '1.75rem',
                   lineHeight: 1.2,
                   mb: 1
@@ -57,10 +57,10 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                 Are You Sure <br /> Want To Revoke?
               </Typography>
 
-              <Typography 
-                sx={{ 
-                  color: '#64748B', 
-                  fontSize: '0.95rem', 
+              <Typography
+                sx={{
+                  color: '#64748B',
+                  fontSize: '0.95rem',
                   lineHeight: 1.5,
                   mb: 3,
                   px: 1
@@ -76,7 +76,7 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                   disabled={loading}
                   variant="contained"
                   sx={{
-                    borderRadius: '999px',
+                    borderRadius: '8px',
                     py: 2,
                     bgcolor: '#0F172A', // Premium Black/Slate
                     color: '#FFF',

@@ -21,7 +21,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
       maxWidth="xs"
       PaperProps={{
         sx: {
-          borderRadius: '32px',
+          borderRadius: '14px',
           padding: '40px',
           textAlign: 'center',
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
@@ -66,7 +66,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
               <polyline points="20 6 9 17 4 12" />
             </motion.svg>
           </motion.div>
-          
+
           {/* Pulsing Glow Effect */}
           {open && (
             <motion.div
@@ -89,7 +89,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
         <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 1.5 }}>
           {title}
         </Typography>
-        
+
         <Typography sx={{ color: '#64748B', fontSize: '1rem', lineHeight: 1.5, mb: 4, px: 1, fontWeight: 500 }}>
           {description}
         </Typography>
@@ -99,7 +99,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
           onClick={onClose}
           sx={{
             py: 2,
-            borderRadius: '16px',
+            borderRadius: '8px',
             bgcolor: '#F1F5F9',
             color: '#475569',
             textTransform: 'none',

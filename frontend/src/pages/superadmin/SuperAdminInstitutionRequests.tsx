@@ -4,7 +4,7 @@
  * Modern Bento Theme
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { superAdminService } from "../../services";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -26,14 +26,29 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
-import { useTheme, useMediaQuery, Skeleton, CircularProgress, Grid } from "@mui/material";
+import { 
+  useTheme, useMediaQuery, Skeleton, CircularProgress, Grid, 
+  InputAdornment, Menu, MenuItem, Divider, ListItemText, ListItemIcon, 
+  IconButton, Tooltip 
+} from "@mui/material";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import CheckIcon from '@mui/icons-material/Check';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import SortIcon from '@mui/icons-material/Sort';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AbcIcon from '@mui/icons-material/Abc';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // ─── Modern Bento Design System ──────────────────────────────────────────────
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#0a0a0a',
   textPrimary: '#000000',
@@ -72,8 +87,10 @@ export default function SuperAdminInstitutionRequests() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [requests, setRequests] = useState<InstitutionRequest[]>([]);
+  const [approvedInstitutions, setApprovedInstitutions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<InstitutionRequest | null>(null);
@@ -81,23 +98,113 @@ export default function SuperAdminInstitutionRequests() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionState, setActionState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+
+  // ─── Filter & Sort Logic ──────────────────────────────────────────────
+  const displayedData = useMemo(() => {
+    let result = activeTab === 'pending' ? [...requests] : [...approvedInstitutions];
+
+    // 1. Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(r => 
+        r.institutionName.toLowerCase().includes(q) ||
+        r.academicDomain.toLowerCase().includes(q) ||
+        r.administratorName.toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Status Filter (Only for Pending tab)
+    if (activeTab === 'pending' && statusFilter !== 'ALL') {
+      result = result.filter(r => r.status === statusFilter);
+    }
+
+    // 3. Sorting
+    if (sortConfig) {
+      result.sort((a, b) => {
+        let aVal = a[sortConfig.key as keyof typeof a] || '';
+        let bVal = b[sortConfig.key as keyof typeof b] || '';
+
+        if (sortConfig.key === 'createdAt') {
+          return sortConfig.direction === 'asc' 
+            ? new Date(aVal as string).getTime() - new Date(bVal as string).getTime()
+            : new Date(bVal as string).getTime() - new Date(aVal as string).getTime();
+        }
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        }
+        return 0;
+      });
+    }
+
+    return result;
+  }, [requests, approvedInstitutions, activeTab, searchQuery, statusFilter, sortConfig]);
+
+  const paginatedData = useMemo(() => {
+    return displayedData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  }, [displayedData, page]);
+
+  const totalPages = Math.ceil(displayedData.length / rowsPerPage);
+
+  // Reset to first page when filtering
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, activeTab, sortConfig]);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("ALL");
+    setSortConfig(null);
+  };
+
+  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    setSortAnchorEl(event.currentTarget);
+  };
+
+  const handleSortClose = () => {
+    setSortAnchorEl(null);
+  };
 
   useEffect(() => {
     // Simulate initial loading delay for better UX
     setTimeout(() => {
-      fetchPendingRequests();
+      fetchData();
     }, 1000);
   }, []);
 
-  const fetchPendingRequests = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await superAdminService.getPendingInstitutionRequests();
-      setRequests(response || []);
+      const [pendingRes, approvedRes] = await Promise.all([
+        superAdminService.getPendingInstitutionRequests(),
+        superAdminService.getInstitutions()
+      ]);
+      
+      setRequests(Array.isArray(pendingRes) ? pendingRes : (pendingRes?.requests || []));
+      setApprovedInstitutions(((approvedRes.institutions || []) as any[]).map(inst => ({
+        _id: inst._id,
+        institutionName: inst.name,
+        academicDomain: inst.domain,
+        physicalAddress: inst.address,
+        contactNumber: inst.contactNumber,
+        administratorName: inst.administratorName,
+        administratorPosition: inst.administratorPosition,
+        administratorEmail: inst.email,
+        status: (inst.status || "approved").toUpperCase(),
+        createdAt: inst.createdAt
+      })));
       setError(null);
     } catch (err: any) {
-      console.error("Error fetching pending requests:", err);
-      setError(err.response?.data?.message || "Failed to fetch pending requests");
+      console.error("Error fetching data:", err);
+      setError(err.response?.data?.message || "Failed to fetch data");
       if (err.response?.status === 403) {
         setError("Access denied. Super Admin privileges required. If you believe this is an error, please contact support.");
       }
@@ -129,7 +236,7 @@ export default function SuperAdminInstitutionRequests() {
         setNotes("");
         setSelectedRequest(null);
         setActionState('idle');
-        fetchPendingRequests();
+        fetchData();
       }, 800);
 
     } catch (err: any) {
@@ -165,7 +272,7 @@ export default function SuperAdminInstitutionRequests() {
         setRejectionReason("");
         setSelectedRequest(null);
         setActionState('idle');
-        fetchPendingRequests();
+        fetchData();
       }, 800);
 
     } catch (err: any) {
@@ -219,7 +326,7 @@ export default function SuperAdminInstitutionRequests() {
       case 'REJECTED':
         return { backgroundColor: `${COLORS.orange}25`, color: '#9a3412' };
       case 'PENDING_VERIFICATION':
-        return { backgroundColor: `${COLORS.lavender}30`, color: '#6b21a8' };
+        return { backgroundColor: COLORS.yellow, color: '#854d0e' };
       default:
         return { backgroundColor: '#F1F5F9', color: '#475569' };
     }
@@ -350,7 +457,7 @@ export default function SuperAdminInstitutionRequests() {
           </Typography>
           <Box display="flex" gap={1.5} justifyContent="center" flexWrap="wrap">
             <Button
-              onClick={fetchPendingRequests}
+              onClick={fetchData}
               sx={{
                 fontFamily: fontStack, fontWeight: 600, fontSize: 14,
                 textTransform: 'none', borderRadius: COLORS.pillRadius,
@@ -383,119 +490,386 @@ export default function SuperAdminInstitutionRequests() {
   // ── Main Content ─────────────────────────────────────────────────────────
   return (
     <Box sx={{
-      p: isSmallMobile ? 2 : 4,
+      px: isSmallMobile ? 2 : 4,
+      pb: isSmallMobile ? 2 : 4,
+      pt: 0,
       backgroundColor: COLORS.pageBg,
       minHeight: '100vh',
       fontFamily: fontStack,
     }}>
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <Typography
-        sx={{
-          fontFamily: fontStack,
-          fontWeight: 800,
-          fontSize: isSmallMobile ? '1.5rem' : '2.25rem',
-          letterSpacing: '-0.03em',
-          color: COLORS.textPrimary,
-          lineHeight: 1.15,
-        }}
-      >
-        Institution Requests
-      </Typography>
-      <Typography
-        sx={{
-          fontFamily: fontStack,
-          fontSize: isSmallMobile ? 13 : 16,
-          color: COLORS.textSecondary,
-          mb: 3,
-          mt: 0.5,
-        }}
-      >
-        Review and approve institution access requests. Only pending requests are shown.
-      </Typography>
+      {/* ── Toggle Switch ─────────────────────────────────────────── */}
+      <Box sx={{ 
+        display: 'inline-flex', 
+        bgcolor: '#FFFFFF', 
+        p: 0.5, 
+        borderRadius: COLORS.pillRadius,
+        border: '1px solid rgba(0,0,0,0.08)',
+        mb: 4,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+      }}>
+        <Button
+          onClick={() => setActiveTab('pending')}
+          sx={{
+            px: 3,
+            py: 1,
+            borderRadius: COLORS.pillRadius,
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '14px',
+            color: activeTab === 'pending' ? '#FFFFFF' : '#64748B',
+            bgcolor: activeTab === 'pending' ? '#1E1E1E' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'pending' ? '#1E1E1E' : 'rgba(0,0,0,0.04)',
+            },
+            transition: 'all 0.2s',
+          }}
+        >
+          Pending
+        </Button>
+        <Button
+          onClick={() => setActiveTab('approved')}
+          sx={{
+            px: 3,
+            py: 1,
+            borderRadius: COLORS.pillRadius,
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: '14px',
+            color: activeTab === 'approved' ? '#FFFFFF' : '#64748B',
+            bgcolor: activeTab === 'approved' ? '#1E1E1E' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'approved' ? '#1E1E1E' : 'rgba(0,0,0,0.04)',
+            },
+            transition: 'all 0.2s',
+          }}
+        >
+          Approved
+        </Button>
+      </Box>
 
       {/* ── Stats Row ──────────────────────────────────────────────── */}
       <Box sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-        gap: 2,
-        mb: 3,
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+        gap: 2.5,
+        mb: 4,
       }}>
         {/* Total Pending */}
         <Box sx={{
-          backgroundColor: `${COLORS.teal}18`,
+          backgroundColor: '#FFFFFF',
           borderRadius: COLORS.cardRadius,
-          p: isSmallMobile ? 2 : 2.5,
-          border: `1px solid ${COLORS.teal}25`,
+          p: 3,
+          border: '1px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
         }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: COLORS.teal, mb: 1.5 }} />
-          <Box sx={{
-            fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: COLORS.textSecondary, mb: 0.5,
-          }}>
-            Total Pending
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{
+                width: 40, height: 40, borderRadius: '12px',
+                backgroundColor: '#F1F5F9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: COLORS.black
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </Box>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                Total Pending
+              </Typography>
+            </Box>
           </Box>
-          <Typography sx={{
-            fontFamily: fontStack, fontWeight: 800,
-            fontSize: isSmallMobile ? 24 : 32, color: COLORS.textPrimary,
-            letterSpacing: '-1px',
-          }}>
-            {requests.length}
+
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography sx={{
+              fontFamily: fontStack, fontWeight: 800,
+              fontSize: isSmallMobile ? 28 : 34, color: COLORS.textPrimary,
+              letterSpacing: '-1px',
+            }}>
+              {requests.length}
+            </Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+              Real-time
+            </Typography>
+          </Box>
+
+          <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+            Applications submitted but not yet reviewed.
           </Typography>
         </Box>
 
-        {/* Awaiting Approval */}
+        {/* Ready to Review */}
         <Box sx={{
-          backgroundColor: `${COLORS.lavender}18`,
+          backgroundColor: '#FFFFFF',
           borderRadius: COLORS.cardRadius,
-          p: isSmallMobile ? 2 : 2.5,
-          border: `1px solid ${COLORS.lavender}25`,
+          p: 3,
+          border: '1px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
         }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: COLORS.lavender, mb: 1.5 }} />
-          <Box sx={{
-            fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: COLORS.textSecondary, mb: 0.5,
-          }}>
-            Ready to Review
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{
+                width: 40, height: 40, borderRadius: '12px',
+                backgroundColor: '#F1F5F9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: COLORS.black
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                  <path d="M9 14l2 2 4-4" />
+                </svg>
+              </Box>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                Ready to Review
+              </Typography>
+            </Box>
           </Box>
-          <Typography sx={{
-            fontFamily: fontStack, fontWeight: 800,
-            fontSize: isSmallMobile ? 24 : 32, color: COLORS.textPrimary,
-            letterSpacing: '-1px',
-          }}>
-            {requests.filter(r => r.status === 'PENDING_APPROVAL').length}
+
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography sx={{
+              fontFamily: fontStack, fontWeight: 800,
+              fontSize: isSmallMobile ? 28 : 34, color: COLORS.textPrimary,
+              letterSpacing: '-1px',
+            }}>
+              {requests.filter(r => r.status === 'PENDING_APPROVAL').length}
+            </Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+              Active
+            </Typography>
+          </Box>
+
+          <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+            Verified applications waiting for approval.
           </Typography>
         </Box>
 
         {/* Awaiting Verification */}
         <Box sx={{
-          backgroundColor: `${COLORS.yellow}40`,
+          backgroundColor: '#FFFFFF',
           borderRadius: COLORS.cardRadius,
-          p: isSmallMobile ? 2 : 2.5,
-          gridColumn: { xs: 'span 2', md: 'auto' },
-          border: `1px solid ${COLORS.yellow}60`,
+          p: 3,
+          border: '1px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          gridColumn: { xs: 'auto', sm: 'span 2', md: 'auto' }
         }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#d97706', mb: 1.5 }} />
-          <Box sx={{
-            fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: COLORS.textSecondary, mb: 0.5,
-          }}>
-            Awaiting Verification
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{
+                width: 40, height: 40, borderRadius: '12px',
+                backgroundColor: '#F1F5F9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: COLORS.black
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              </Box>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                Awaiting Verification
+              </Typography>
+            </Box>
           </Box>
-          <Typography sx={{
-            fontFamily: fontStack, fontWeight: 800,
-            fontSize: isSmallMobile ? 24 : 32, color: COLORS.textPrimary,
-            letterSpacing: '-1px',
-          }}>
-            {requests.filter(r => r.status === 'PENDING_VERIFICATION').length}
+
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography sx={{
+              fontFamily: fontStack, fontWeight: 800,
+              fontSize: isSmallMobile ? 28 : 34, color: COLORS.textPrimary,
+              letterSpacing: '-1px',
+            }}>
+              {requests.filter(r => r.status === 'PENDING_VERIFICATION').length}
+            </Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              Action Required
+            </Typography>
+          </Box>
+
+          <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+             Institutions that need to confirm their email access.
           </Typography>
         </Box>
       </Box>
 
+      {/* ── Toolbar (Institution, Search, Filter) ────────────────────────── */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        gap: 2,
+        mb: 3,
+        px: 0.5,
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <PeopleAltIcon sx={{ color: COLORS.textSecondary, fontSize: 20 }} />
+          <Typography sx={{ 
+            fontFamily: fontStack, 
+            fontWeight: 800, 
+            fontSize: 16, 
+            color: COLORS.textPrimary,
+          }}>
+            Institution
+          </Typography>
+        </Box>
+
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          width: isMobile ? '100%' : 'auto' 
+        }}>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search institutions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: COLORS.textSecondary, fontSize: 18 }} />
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: '8px',
+                bgcolor: '#FFFFFF',
+                fontSize: 13,
+                height: 36,
+              }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: 'rgba(0,0,0,0.08)' },
+                '&:hover fieldset': { borderColor: 'rgba(0,0,0,0.12)' },
+                '&.Mui-focused fieldset': { borderColor: COLORS.black, borderWidth: '1px' },
+              },
+              width: isMobile ? '100%' : 240
+            }}
+          />
+          <Button
+            variant="outlined"
+            endIcon={<FilterListIcon />}
+            onClick={handleSortClick}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '10px',
+              borderColor: (statusFilter !== 'ALL' || sortConfig) ? COLORS.black : 'rgba(0,0,0,0.08)',
+              color: COLORS.textPrimary,
+              fontWeight: 700,
+              fontSize: 13,
+              px: 2,
+              height: 36,
+              whiteSpace: 'nowrap',
+              backgroundColor: (statusFilter !== 'ALL' || sortConfig) ? '#F1F5F9' : '#FFFFFF',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+              '&:hover': {
+                borderColor: 'rgba(0,0,0,0.15)',
+                backgroundColor: '#F8FAFC',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Sort & Filter
+          </Button>
+
+          {(searchQuery || statusFilter !== 'ALL' || sortConfig) && (
+            <Tooltip title="Clear all filters">
+              <IconButton 
+                onClick={clearFilters}
+                size="small"
+                sx={{ 
+                  bgcolor: '#FEE2E2', 
+                  color: '#EF4444',
+                  '&:hover': { bgcolor: '#FECACA' }
+                }}
+              >
+                <RefreshIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      </Box>
+
+      {/* ── Filter Menu ──────────────────────────────────────────── */}
+      <Menu
+        anchorEl={sortAnchorEl}
+        open={Boolean(sortAnchorEl)}
+        onClose={handleSortClose}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            mt: 1,
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+            minWidth: 200,
+          }
+        }}
+      >
+        <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Sort By
+        </Typography>
+        <MenuItem onClick={() => { setSortConfig({ key: 'createdAt', direction: 'desc' }); handleSortClose(); }}>
+          <ListItemIcon><CalendarTodayIcon fontSize="small" /></ListItemIcon>
+          <ListItemText primary="Newest First" primaryTypographyProps={{ fontSize: 14 }} />
+        </MenuItem>
+        <MenuItem onClick={() => { setSortConfig({ key: 'createdAt', direction: 'asc' }); handleSortClose(); }}>
+          <ListItemIcon><CalendarTodayIcon fontSize="small" /></ListItemIcon>
+          <ListItemText primary="Oldest First" primaryTypographyProps={{ fontSize: 14 }} />
+        </MenuItem>
+        <MenuItem onClick={() => { setSortConfig({ key: 'institutionName', direction: 'asc' }); handleSortClose(); }}>
+          <ListItemIcon><AbcIcon fontSize="small" /></ListItemIcon>
+          <ListItemText primary="Institution Name (A-Z)" primaryTypographyProps={{ fontSize: 14 }} />
+        </MenuItem>
+
+        {activeTab === 'pending' && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Filter Status
+            </Typography>
+            <MenuItem onClick={() => { setStatusFilter('ALL'); handleSortClose(); }} selected={statusFilter === 'ALL'}>
+              <ListItemIcon><FilterListIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Show All" primaryTypographyProps={{ fontSize: 14 }} />
+            </MenuItem>
+            <MenuItem onClick={() => { setStatusFilter('PENDING_VERIFICATION'); handleSortClose(); }} selected={statusFilter === 'PENDING_VERIFICATION'}>
+              <ListItemIcon><HourglassEmptyIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Pending Verification" primaryTypographyProps={{ fontSize: 14 }} />
+            </MenuItem>
+            <MenuItem onClick={() => { setStatusFilter('PENDING_APPROVAL'); handleSortClose(); }} selected={statusFilter === 'PENDING_APPROVAL'}>
+              <ListItemIcon><CheckCircleOutlineIcon fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Ready for Review" primaryTypographyProps={{ fontSize: 14 }} />
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+
       {/* ── Empty State ──────────────────────────────────────────── */}
-      {requests.length === 0 ? (
+      {displayedData.length === 0 ? (
         <Box sx={{
           borderRadius: COLORS.cardRadius,
           border: `2px dashed ${COLORS.border}`,
@@ -522,21 +896,24 @@ export default function SuperAdminInstitutionRequests() {
             fontFamily: fontStack, fontWeight: 700,
             fontSize: 18, color: COLORS.textPrimary, mb: 0.5,
           }}>
-            All caught up!
+            {activeTab === 'pending' ? "All caught up!" : "No institutions yet"}
           </Typography>
           <Typography sx={{
             fontFamily: fontStack, fontSize: 14,
             color: COLORS.textSecondary, lineHeight: 1.6,
           }}>
-            No pending institution requests. Check back later for new applications.
+            {activeTab === 'pending' 
+              ? "No pending institution requests. Check back later for new applications."
+              : "There are currently no approved institutions in the system."}
           </Typography>
         </Box>
       ) : (
-        /* ── Request Cards (Mobile) / Table (Desktop) ──────────────── */
-        isMobile ? (
+        <>
+          {/* ── Request Cards (Mobile) / Table (Desktop) ──────────────── */}
+          {isMobile ? (
           // Mobile: card-based layout
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {requests.map((request) => (
+            {paginatedData.map((request) => (
               <Box
                 key={request._id}
                 sx={{
@@ -595,37 +972,55 @@ export default function SuperAdminInstitutionRequests() {
                 </Box>
 
                 <Box display="flex" gap={1}>
-                  <Button
-                    fullWidth
-                    onClick={() => openApproveDialog(request)}
-                    disabled={request.status === "PENDING_VERIFICATION"}
-                    sx={{
-                      fontFamily: fontStack, fontWeight: 600, fontSize: 13,
-                      textTransform: 'none', borderRadius: '10px',
-                      py: 1.2,
-                      backgroundColor: COLORS.black, color: '#FFFFFF',
-                      '&:hover': { backgroundColor: '#222' },
-                      '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' },
-                    }}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    fullWidth
-                    onClick={() => openRejectDialog(request)}
-                    disabled={request.status === "PENDING_VERIFICATION"}
-                    sx={{
-                      fontFamily: fontStack, fontWeight: 600, fontSize: 13,
-                      textTransform: 'none', borderRadius: '10px',
-                      py: 1.2,
-                      border: `1.5px solid ${COLORS.black}`, color: COLORS.black,
-                      backgroundColor: 'transparent',
-                      '&:hover': { backgroundColor: '#f5f5f5' },
-                      '&.Mui-disabled': { borderColor: '#E2E8F0', color: '#94A3B8' },
-                    }}
-                  >
-                    Reject
-                  </Button>
+                  {activeTab === 'pending' ? (
+                    <>
+                      <Button
+                        fullWidth
+                        onClick={() => openApproveDialog(request)}
+                        disabled={request.status === "PENDING_VERIFICATION"}
+                        sx={{
+                          fontFamily: fontStack, fontWeight: 600, fontSize: 13,
+                          textTransform: 'none', borderRadius: '10px',
+                          py: 1.2,
+                          backgroundColor: COLORS.black, color: '#FFFFFF',
+                          '&:hover': { backgroundColor: '#222' },
+                          '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' },
+                        }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        fullWidth
+                        onClick={() => openRejectDialog(request)}
+                        disabled={request.status === "PENDING_VERIFICATION"}
+                        sx={{
+                          fontFamily: fontStack, fontWeight: 600, fontSize: 13,
+                          textTransform: 'none', borderRadius: '10px',
+                          py: 1.2,
+                          border: `1.5px solid ${COLORS.black}`, color: COLORS.black,
+                          backgroundColor: 'transparent',
+                          '&:hover': { backgroundColor: '#f5f5f5' },
+                          '&.Mui-disabled': { borderColor: '#E2E8F0', color: '#94A3B8' },
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      fullWidth
+                      sx={{
+                        fontFamily: fontStack, fontWeight: 600, fontSize: 13,
+                        textTransform: 'none', borderRadius: '10px',
+                        py: 1.2,
+                        backgroundColor: COLORS.black, color: '#FFFFFF',
+                        '&:hover': { backgroundColor: '#222' },
+                      }}
+                      onClick={() => window.location.href = `/super-admin/institution-monitoring/${request._id}`}
+                    >
+                      View Analytics
+                    </Button>
+                  )}
                 </Box>
               </Box>
             ))}
@@ -676,7 +1071,7 @@ export default function SuperAdminInstitutionRequests() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {requests.map((request) => (
+                {paginatedData.map((request) => (
                   <TableRow
                     key={request._id}
                     sx={{
@@ -714,37 +1109,55 @@ export default function SuperAdminInstitutionRequests() {
                     </TableCell>
                     <TableCell align="right">
                       <Box display="flex" gap={1} justifyContent="flex-end">
-                        <Button
-                          size="small"
-                          onClick={() => openApproveDialog(request)}
-                          disabled={request.status === "PENDING_VERIFICATION"}
-                          sx={{
-                            fontFamily: fontStack, fontWeight: 600, fontSize: 12,
-                            textTransform: 'none', borderRadius: '8px',
-                            px: 2, py: 0.6,
-                            backgroundColor: COLORS.black, color: '#FFFFFF',
-                            '&:hover': { backgroundColor: '#222' },
-                            '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' },
-                          }}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => openRejectDialog(request)}
-                          disabled={request.status === "PENDING_VERIFICATION"}
-                          sx={{
-                            fontFamily: fontStack, fontWeight: 600, fontSize: 12,
-                            textTransform: 'none', borderRadius: '8px',
-                            px: 2, py: 0.6,
-                            border: `1.5px solid ${COLORS.black}`, color: COLORS.black,
-                            backgroundColor: 'transparent',
-                            '&:hover': { backgroundColor: '#f5f5f5' },
-                            '&.Mui-disabled': { borderColor: '#E2E8F0', color: '#94A3B8' },
-                          }}
-                        >
-                          Reject
-                        </Button>
+                        {activeTab === 'pending' ? (
+                          <>
+                            <Button
+                              size="small"
+                              onClick={() => openApproveDialog(request)}
+                              disabled={request.status === "PENDING_VERIFICATION"}
+                              sx={{
+                                fontFamily: fontStack, fontWeight: 600, fontSize: 12,
+                                textTransform: 'none', borderRadius: '8px',
+                                px: 2, py: 0.6,
+                                backgroundColor: COLORS.black, color: '#FFFFFF',
+                                '&:hover': { backgroundColor: '#222' },
+                                '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' },
+                              }}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => openRejectDialog(request)}
+                              disabled={request.status === "PENDING_VERIFICATION"}
+                              sx={{
+                                fontFamily: fontStack, fontWeight: 600, fontSize: 12,
+                                textTransform: 'none', borderRadius: '8px',
+                                px: 2, py: 0.6,
+                                border: `1.5px solid ${COLORS.black}`, color: COLORS.black,
+                                backgroundColor: 'transparent',
+                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                '&.Mui-disabled': { borderColor: '#E2E8F0', color: '#94A3B8' },
+                              }}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="small"
+                            sx={{
+                              fontFamily: fontStack, fontWeight: 600, fontSize: 12,
+                              textTransform: 'none', borderRadius: '8px',
+                              px: 2, py: 0.6,
+                              backgroundColor: COLORS.black, color: '#FFFFFF',
+                              '&:hover': { backgroundColor: '#222' },
+                            }}
+                            onClick={() => window.location.href = `/super-admin/institution-monitoring/${request._id}`}
+                          >
+                            View Analytics
+                          </Button>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -752,7 +1165,87 @@ export default function SuperAdminInstitutionRequests() {
               </TableBody>
             </Table>
           </TableContainer>
-        )
+          )}
+
+          {/* ── Custom Pill Pagination ────────────────────────────────── */}
+          {totalPages > 1 && (
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', mt: 1 }}>
+              {loading ? (
+                <Skeleton variant="rounded" width={240} height={44} sx={{ borderRadius: '40px' }} />
+              ) : (
+                <Box sx={{
+                  display: 'flex',
+                  gap: 1.5,
+                  alignItems: 'center',
+                  bgcolor: '#F1F5F9',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '40px'
+                }}>
+                  <IconButton
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                    sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
+                  >
+                    <ChevronLeftIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+
+                  {(() => {
+                    const range = [];
+                    let start = Math.max(1, page - 1);
+                    let end = Math.min(totalPages, start + 2);
+
+                    if (end - start < 2 && start > 1) {
+                      start = Math.max(1, end - 2);
+                    }
+
+                    for (let i = start; i <= end; i++) {
+                      range.push(i);
+                    }
+
+                    return range.map((p) => {
+                      const isActive = p === page;
+                      return (
+                        <Box
+                          key={p}
+                          onClick={() => setPage(p)}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            borderRadius: '12px',
+                            bgcolor: isActive ? COLORS.black : 'transparent',
+                            color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                            fontWeight: 800,
+                            fontSize: 14,
+                            transition: 'all 0.2s ease',
+                            boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                            '&:hover': {
+                              bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                            }
+                          }}
+                        >
+                          {p}
+                        </Box>
+                      );
+                    });
+                  })()}
+
+                  <IconButton
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                    sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
+                  >
+                    <ChevronRightIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
+          )}
+        </>
       )}
 
       {/* ── Approve Dialog ─────────────────────────────────────────── */}

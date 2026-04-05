@@ -155,7 +155,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
         const str = localStorage.getItem("user");
         return str ? JSON.parse(str) : null;
     });
-    
+
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'user' && e.newValue) {
@@ -232,7 +232,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                 onClick={(e) => e.stopPropagation()}
                 PaperProps={{
                     elevation: 2,
-                    sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
+                    sx: { minWidth: 160, borderRadius: '14px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
                 }}
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
@@ -290,8 +290,8 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
 
                                 return (
                                     <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                        <Avatar 
-                                            src={getAbsoluteUrl(avatarSrc)} 
+                                        <Avatar
+                                            src={getAbsoluteUrl(avatarSrc)}
                                             sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}
                                         >
                                             {getInitials(commentUser?.fullName, commentUser?.email)}
