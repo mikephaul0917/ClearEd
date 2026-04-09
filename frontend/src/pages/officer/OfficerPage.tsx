@@ -71,7 +71,7 @@ type PendingRow = {
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#0a0a0a',
   textPrimary: '#000000',

@@ -16,7 +16,7 @@ export interface IInstitution extends Document {
   email: string; // Official contact email
   administratorName: string;
   administratorPosition: string;
-  status: "pending" | "approved" | "rejected" | "suspended";
+  status: "pending" | "approved" | "rejected" | "suspended" | "deleted";
   settings?: {
     allowStudentRegistration: boolean;
     requireEmailVerification: boolean;
@@ -24,6 +24,8 @@ export interface IInstitution extends Document {
   };
   approvedAt?: Date;
   approvedBy?: mongoose.Types.ObjectId;
+  suspendedAt?: Date;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,7 +49,7 @@ const InstitutionSchema = new Schema<IInstitution>({
   administratorPosition: { type: String, required: true, trim: true },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected", "suspended"],
+    enum: ["pending", "approved", "rejected", "suspended", "deleted"],
     default: "pending"
   },
   settings: {
@@ -56,7 +58,9 @@ const InstitutionSchema = new Schema<IInstitution>({
     maxUsers: { type: Number }
   },
   approvedAt: { type: Date },
-  approvedBy: { type: Schema.Types.ObjectId, ref: "User" }
+  approvedBy: { type: Schema.Types.ObjectId, ref: "User" },
+  suspendedAt: { type: Date },
+  deletedAt: { type: Date }
 }, {
   timestamps: true // Audit-friendly: automatically adds createdAt and updatedAt
 });

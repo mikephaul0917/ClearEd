@@ -5,27 +5,30 @@ import {
   Select, MenuItem, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, Tooltip, IconButton, LinearProgress,
   Pagination, Avatar, useTheme, useMediaQuery, Skeleton,
-  InputAdornment, TextField
+  InputAdornment, TextField, Grid, Chip
 } from '@mui/material';
 import {
-  Visibility, Business, FilterList, Refresh, Search, 
-  LocationOn, Phone, Email, Language, Domain, AdminPanelSettings
+  Visibility, Business, Search,
+  LocationOn, Phone, Email, Language, AdminPanelSettings,
+  ChevronLeft, ChevronRight, History, Domain
 } from '@mui/icons-material';
 import { superAdminService } from '../../services';
+import { motion } from "framer-motion";
+import { getInitials } from "../../utils/avatarUtils";
 
 const COLORS = {
-  pageBg: '#ffffff',
-  surface: '#ffffff',
-  black: '#0a0a0a',
-  textPrimary: '#1a1a1a',
+  pageBg: '#F9FAFB',
+  surface: '#FFFFFF',
+  black: '#1E293B',
+  textPrimary: '#1E293B',
   textSecondary: '#64748B',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
-  yellow: '#fde047',
-  orange: '#fb923c',
-  border: '#f1f5f9',
-  cardRadius: '16px',
+  teal: '#0E7490',
+  lavender: '#818CF8',
+  orange: '#F59E0B',
+  border: '#F1F5F9',
+  cardRadius: '20px',
   pillRadius: '999px',
+  tealLight: 'rgba(14, 116, 144, 0.15)',
 };
 
 const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
@@ -49,6 +52,216 @@ interface InstitutionStats {
   pendingInstitutions: number;
   suspendedInstitutions: number;
 }
+
+// ─── Bento Institution Card Sub-component ───────────────────────────
+const InstitutionBentoCard = ({
+  inst,
+  onDetails,
+  onManageUsers
+}: {
+  inst: Institution;
+  onDetails: (inst: Institution) => void;
+  onManageUsers: (inst: Institution) => void;
+}) => {
+  const statusStyle = (s: string) => {
+    switch (s?.toLowerCase()) {
+      case 'approved': return { color: '#0D9488', bg: 'rgba(13, 148, 136, 0.1)' };
+      case 'pending': return { color: '#D97706', bg: 'rgba(217, 119, 6, 0.1)' };
+      case 'suspended': return { color: '#DC2626', bg: 'rgba(220, 38, 38, 0.1)' };
+      default: return { color: '#64748B', bg: '#F1F5F9' };
+    }
+  };
+
+  const currentStatus = statusStyle(inst.status);
+
+  return (
+    <Box sx={{
+      p: { xs: 2.5, sm: 3 }, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+      border: `1px solid ${COLORS.border}`,
+      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+      position: 'relative',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+        borderColor: 'rgba(14, 116, 144, 0.3)'
+      }
+    }}>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{
+              width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 },
+              bgcolor: currentStatus.bg,
+              color: currentStatus.color,
+              fontWeight: 800, fontSize: { xs: 14, sm: 16 }, borderRadius: '12px'
+            }}>
+              {getInitials(inst.name)}
+            </Avatar>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography sx={{
+                fontWeight: 800,
+                fontSize: { xs: 14, sm: 15 },
+                color: COLORS.textPrimary,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                lineHeight: 1.2,
+                mb: 0.2
+              }}>
+                {inst.name}
+              </Typography>
+              <Typography sx={{
+                fontSize: { xs: 11, sm: 12 },
+                color: COLORS.textSecondary,
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {inst.administratorName}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', alignSelf: { xs: 'flex-end', md: 'center' }, flexShrink: 0 }}>
+            <Chip
+              label={inst.status.charAt(0).toUpperCase() + inst.status.slice(1)}
+              size="small"
+              sx={{
+                fontWeight: 700,
+                fontSize: 10,
+                bgcolor: currentStatus.bg,
+                color: currentStatus.color,
+                height: 20,
+                textTransform: 'uppercase',
+                maxWidth: 'fit-content'
+              }}
+            />
+          </Box>
+        </Box>
+
+
+        <Typography sx={{
+          fontSize: { xs: 12, sm: 13 },
+          fontWeight: 600,
+          color: '#334155',
+          mb: 2.5,
+          fontStyle: 'italic',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          minHeight: '3.6em'
+        }}>
+          "{inst.address || "Institutional academic domain providing higher education services and integrated clearance workflows."}"
+        </Typography>
+      </Box>
+
+      <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: { xs: 'column', xl: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', xl: 'center' }, gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden', width: '100%' }}>
+          <Language sx={{ fontSize: 14, color: COLORS.teal, flexShrink: 0 }} />
+          <Typography noWrap sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 700 }}>
+            {inst.domain}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', xl: 'auto' }, justifyContent: { xs: 'space-between', xl: 'flex-end' } }}>
+          <Button
+            onClick={() => onDetails(inst)}
+            size="small"
+            variant="text"
+            sx={{
+              textTransform: 'none', fontWeight: 800, color: COLORS.teal,
+              fontSize: 12,
+              minWidth: 'auto',
+              '&:hover': {
+                bgcolor: 'transparent',
+                textDecoration: 'underline',
+              },
+              transition: 'all 0.2s'
+            }}
+          >
+            Details
+          </Button>
+          <Button
+            onClick={() => onManageUsers(inst)}
+            size="small"
+            variant="contained"
+            disableElevation
+            fullWidth={false}
+            sx={{
+              textTransform: 'none', fontWeight: 800, borderRadius: '10px',
+              bgcolor: COLORS.black, color: '#FFF', px: { xs: 1.5, sm: 2 },
+              fontSize: 11,
+              flexGrow: { xs: 1, xl: 0 },
+              '&:hover': { bgcolor: '#000' }
+            }}
+          >
+            Manage
+          </Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+const CardSkeleton = () => (
+  <Box sx={{
+    p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+    border: `1px solid ${COLORS.border}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+    height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+  }}>
+    <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
+          <Box>
+            <Skeleton variant="text" width={100} height={20} />
+            <Skeleton variant="text" width={60} height={16} />
+          </Box>
+        </Box>
+        <Skeleton variant="rectangular" width={50} height={20} sx={{ borderRadius: '10px' }} />
+      </Box>
+      <Skeleton variant="text" width="100%" height={16} />
+      <Skeleton variant="text" width="90%" height={16} />
+    </Box>
+    <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Skeleton variant="text" width={60} height={16} />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Skeleton variant="rectangular" width={60} height={32} sx={{ borderRadius: '10px' }} />
+      </Box>
+    </Box>
+  </Box>
+);
+
+const StatsCardSkeleton = () => (
+  <Box sx={{
+    borderRadius: COLORS.cardRadius, p: 3,
+    backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}`,
+    minHeight: 125, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+  }}>
+    <Box sx={{ mb: 2 }}>
+      <Skeleton variant="text" width={100} height={16} sx={{ mb: 0.5 }} />
+      <Skeleton variant="text" width={60} height={36} />
+    </Box>
+  </Box>
+);
+
+const ToolbarSkeleton = () => (
+  <Box sx={{ p: { xs: 3, sm: 4 }, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 3 }}>
+      <Skeleton variant="text" width={180} height={32} />
+    </Box>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 2 }}>
+      <Skeleton variant="rectangular" width="100%" height={44} sx={{ borderRadius: '12px', flex: 1 }} />
+      <Skeleton variant="rectangular" width={200} height={44} sx={{ borderRadius: '12px', alignSelf: { xs: 'center', md: 'auto' } }} />
+    </Box>
+  </Box>
+);
 
 export default function InstitutionMonitoring() {
   const theme = useTheme();
@@ -75,7 +288,7 @@ export default function InstitutionMonitoring() {
       // For now we use getInstitutions which returns all
       const iRes = await superAdminService.getInstitutions();
       const allInstitutions = iRes.institutions || [];
-      
+
       // Calculate local stats since we don't have a dedicated endpoint yet
       const calculatedStats = {
         totalInstitutions: allInstitutions.length,
@@ -89,8 +302,8 @@ export default function InstitutionMonitoring() {
       let filtered = allInstitutions;
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        filtered = filtered.filter((i: any) => 
-          i.name.toLowerCase().includes(s) || 
+        filtered = filtered.filter((i: any) =>
+          i.name.toLowerCase().includes(s) ||
           i.domain.toLowerCase().includes(s) ||
           i.email.toLowerCase().includes(s)
         );
@@ -102,7 +315,7 @@ export default function InstitutionMonitoring() {
       const limit = 20;
       setTotalPages(Math.ceil(filtered.length / limit) || 1);
       setInstitutions(filtered.slice((page - 1) * limit, page * limit));
-      
+
       // Artificial delay for better UX if initial
       if (initial) await new Promise(resolve => setTimeout(resolve, 800));
     } catch (e) { console.error(e); }
@@ -129,237 +342,481 @@ export default function InstitutionMonitoring() {
 
   if (loading) {
     return (
-      <Box sx={{ p: isSmallMobile ? 2 : 5, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-        <Skeleton variant="rounded" width={250} height={38} sx={{ mb: 4 }} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2.5, mb: 4 }}>
-          {[1, 2, 3, 4].map((_, i) => (
-            <Skeleton key={i} variant="rounded" height={100} sx={{ borderRadius: COLORS.cardRadius }} />
-          ))}
+      <Box sx={{ px: isSmallMobile ? 3 : 5, py: isSmallMobile ? 3 : 5, pt: 0, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+        {/* Header Skeleton */}
+        <Box sx={{ mb: { xs: 4, sm: 6 } }}>
+          <Skeleton variant="text" width={320} height={48} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width="60%" height={24} />
         </Box>
-        <Skeleton variant="rounded" height={400} sx={{ borderRadius: COLORS.cardRadius }} />
+
+        {/* Stats Skeleton */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gap: 3, mb: 4,
+        }}>
+          {[1, 2, 3, 4].map((i) => <StatsCardSkeleton key={i} />)}
+        </Box>
+
+        {/* Directory Skeleton */}
+        <Box sx={{
+          borderRadius: COLORS.cardRadius,
+          backgroundColor: COLORS.surface,
+          border: `1px solid ${COLORS.border}`,
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+          overflow: 'hidden'
+        }}>
+          <ToolbarSkeleton />
+          <Box sx={{ p: 4, pt: 0 }}>
+            <Grid container spacing={3}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Grid item xs={12} sm={6} lg={4} key={i}>
+                  <CardSkeleton />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: isSmallMobile ? 2 : 5, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-      
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexDirection: isSmallMobile ? 'column' : 'row', gap: 2 }}>
-        <Box>
-          <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isSmallMobile ? '28px' : '32px', color: COLORS.black, letterSpacing: '-1px' }}>
-            Institution Monitoring
-          </Typography>
-          <Typography sx={{ fontFamily: fontStack, color: COLORS.textSecondary, fontSize: '15px', mt: 0.5 }}>
-            Overview of all academic institutions in the system
-          </Typography>
-        </Box>
-        <Button 
-          startIcon={<Refresh sx={{ fontSize: 18 }} />} 
-          onClick={() => fetchData(true)} 
-          sx={{ 
-            borderRadius: COLORS.pillRadius, 
-            bgcolor: COLORS.black, 
-            color: '#ffffff',
-            textTransform: 'none',
-            fontFamily: fontStack,
-            fontWeight: 600,
-            px: 3,
-            py: 1,
-            '&:hover': { bgcolor: '#333333' }
-          }}
-        >
-          Refresh
-        </Button>
+    <Box sx={{
+      px: { xs: 2.5, sm: 4, md: 5 },
+      py: { xs: 4, sm: 5, md: 6 },
+      pt: 0,
+      bgcolor: COLORS.pageBg,
+      minHeight: '100vh',
+      fontFamily: fontStack
+    }}>
+
+      {/* ── Page Header ────────────────────────────────────────────── */}
+      <Box sx={{ mb: { xs: 4, md: 6 } }}>
+        <Typography sx={{
+          fontWeight: 800,
+          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+          color: COLORS.textPrimary,
+          letterSpacing: '-0.06em',
+          lineHeight: 1.1
+        }}>
+          Institution Monitoring
+        </Typography>
+        <Typography sx={{
+          fontSize: { xs: 12, sm: 14, md: 15 },
+          color: COLORS.textSecondary,
+          mt: 1.5,
+          fontWeight: 500,
+          lineHeight: 1.5,
+          maxWidth: '800px'
+        }}>
+          Comprehensive oversight and administrative management of all integrated academic domains.
+        </Typography>
       </Box>
 
-      {/* Stat Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2.5, mb: 4 }}>
+      {/* ── Stats Bento Row ────────────────────────────────────────── */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+        gap: 3, mb: 4,
+      }}>
         {[
-          { label: 'TOTAL INSTITUTIONS', value: stats.totalInstitutions, accent: COLORS.black, bg: '#f8fafc' },
-          { label: 'APPROVED', value: stats.approvedInstitutions, accent: COLORS.teal, bg: '#f0fdf4' },
-          { label: 'PENDING', value: stats.pendingInstitutions, accent: COLORS.yellow, bg: '#fefce8' },
-          { label: 'SUSPENDED', value: stats.suspendedInstitutions, accent: COLORS.orange, bg: '#fff7ed' },
-        ].map(s => (
-          <Box key={s.label} sx={{ p: 3, borderRadius: COLORS.cardRadius, bgcolor: s.bg, display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: s.accent }} />
-              <Typography sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: '0.5px' }}>
-                {s.label}
-              </Typography>
+          { label: "Total Institutions", value: stats.totalInstitutions, sub: "System Count", icon: <Business sx={{ fontSize: 18 }} /> },
+          { label: "Approved Access", value: stats.approvedInstitutions, sub: "Active Domains", icon: <Visibility sx={{ fontSize: 18 }} /> },
+          { label: "Pending Review", value: stats.pendingInstitutions, sub: "Awaiting Action", icon: <History sx={{ fontSize: 18 }} /> },
+          { label: "Suspended Status", value: stats.suspendedInstitutions, sub: "Inactive Access", icon: <Domain sx={{ fontSize: 18 }} /> },
+        ].map((stat) => (
+          <Box key={stat.label} sx={{
+            borderRadius: COLORS.cardRadius,
+            p: { xs: 2.5, sm: 3 },
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
+            minHeight: { xs: 110, sm: 125 },
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.03), 0 4px 6px -2px rgba(0,0,0,0.01)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+            }
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Box>
+                <Typography sx={{ fontSize: { xs: 11, sm: 12, md: 13 }, fontWeight: 700, color: COLORS.textSecondary, mb: 0.5 }}>
+                  {stat.label}
+                </Typography>
+                <Typography sx={{
+                  fontWeight: 900,
+                  fontSize: { xs: 24, sm: 28, md: 32 },
+                  color: COLORS.textPrimary,
+                  letterSpacing: '-1.5px',
+                  lineHeight: 1
+                }}>
+                  {stat.value}
+                </Typography>
+              </Box>
+              <Box sx={{
+                p: { xs: 0.75, sm: 1 },
+                borderRadius: '10px',
+                bgcolor: 'rgba(14, 116, 144, 0.08)',
+                color: COLORS.teal,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                {stat.icon}
+              </Box>
             </Box>
-            <Typography sx={{ fontWeight: 800, fontSize: '32px', color: COLORS.black, lineHeight: 1 }}>
-              {s.value}
+            <Typography sx={{ fontSize: { xs: 10, sm: 11, md: 12 }, color: COLORS.textSecondary, fontWeight: 600, mt: 1.5 }}>
+              {stat.sub}
             </Typography>
           </Box>
         ))}
       </Box>
 
-      {/* Filter Bar */}
-      <Box sx={{ p: 3, bgcolor: '#fafafa', borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
-          <TextField
-            fullWidth
-            placeholder="Search name, domain, or email..."
-            variant="outlined"
-            size="small"
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: COLORS.textSecondary, fontSize: 20 }} />
-                </InputAdornment>
-              ),
-              sx: { bgcolor: '#ffffff', borderRadius: '8px', '& fieldset': { borderColor: COLORS.border } }
-            }}
-          />
-          
-          <Select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            size="small"
-            sx={{ width: isMobile ? '100%' : '200px', bgcolor: '#ffffff', borderRadius: '8px', '& fieldset': { borderColor: COLORS.border } }}
-            displayEmpty
-          >
-            <MenuItem value="">All Status</MenuItem>
-            <MenuItem value="approved">Approved</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="suspended">Suspended</MenuItem>
-          </Select>
+      {/* ── Institution Directory (Card View) ─────────────────────────── */}
+      <Box sx={{
+        borderRadius: COLORS.cardRadius,
+        backgroundColor: COLORS.surface,
+        border: `1px solid ${COLORS.border}`,
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+        overflow: 'hidden'
+      }}>
+        {/* Toolbar Section */}
+        <Box sx={{ p: { xs: 3, sm: 4 }, pb: 2 }}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2.5, mb: 4
+          }}>
+            <Box>
+              <Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.75px' }}>
+                Institution Directory
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 2, mb: 2,
+            alignItems: 'center'
+          }}>
+            <TextField
+              placeholder="Search name, domain, or email..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><Search sx={{ fontSize: 20, color: COLORS.textSecondary }} /></InputAdornment>,
+                sx: {
+                  borderRadius: '12px',
+                  bgcolor: '#F8FAFC',
+                  height: 44,
+                }
+              }}
+              sx={{
+                flex: 1,
+                width: '100%',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: '1px solid transparent',
+                  transition: 'border-color 0.2s'
+                },
+                '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#E2E8F0'
+                },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: COLORS.teal,
+                  borderWidth: '1.5px'
+                }
+              }}
+            />
+
+            <Box sx={{
+              display: 'flex',
+              bgcolor: '#F8FAFC',
+              p: 0.75,
+              borderRadius: '14px',
+              width: { xs: '100%', md: 'auto' },
+              justifyContent: { xs: 'flex-start', md: 'center' },
+              overflowX: 'auto',
+              msOverflowStyle: 'none',  /* IE and Edge */
+              scrollbarWidth: 'none',  /* Firefox */
+              '&::-webkit-scrollbar': { display: 'none' }, /* Chrome, Safari and Opera */
+              gap: 0.5
+            }}>
+              {(['', 'approved', 'pending', 'suspended'] as const).map((status) => (
+                <Button
+                  key={status}
+                  onClick={() => handleFilterChange('status', status)}
+                  sx={{
+                    flex: { xs: '1 0 100px', md: 'none' },
+                    textTransform: 'none', px: 2.5, py: 1.25, borderRadius: '12px', fontSize: 13, fontWeight: 700,
+                    bgcolor: 'transparent',
+                    color: filters.status === status ? COLORS.textPrimary : COLORS.textSecondary,
+                    whiteSpace: 'nowrap',
+                    position: 'relative',
+                    zIndex: 1,
+                    minWidth: 'max-content',
+                    '&:hover': { bgcolor: 'transparent' }
+                  }}
+                >
+                  {filters.status === status && (
+                    <motion.div
+                      layoutId="activeStatusTab"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#FFF',
+                        borderRadius: '10px',
+                        zIndex: -1,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                      }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  {status === '' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+
+        <Box sx={{ p: { xs: 2, sm: 4 }, pt: 0 }}>
+          {filterLoading ? (
+            <Grid container spacing={{ xs: 2.5, sm: 3 }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Grid item xs={12} sm={6} lg={4} key={i}>
+                  <CardSkeleton />
+                </Grid>
+              ))}
+            </Grid>
+          ) : institutions.length === 0 ? (
+            <Box sx={{ py: 12, textAlign: 'center' }}>
+              <Business sx={{ fontSize: 48, color: '#CBD5E1', mb: 2 }} />
+              <Typography sx={{ color: COLORS.textSecondary, fontFamily: fontStack, fontSize: 16, fontWeight: 600 }}>
+                No institutions found matching your criteria.
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <Grid container spacing={{ xs: 2.5, sm: 3 }}>
+                {institutions.map((inst) => (
+                  <Grid item xs={12} sm={6} lg={4} key={inst._id}>
+                    <InstitutionBentoCard
+                      inst={inst}
+                      onDetails={(i) => { setSelectedInstitution(i); setShowDetails(true); }}
+                      onManageUsers={(i) => { window.location.href = `/super-admin/institution-monitoring/${i._id}`; }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+
+              {totalPages > 1 && (
+                <Box sx={{ mt: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 4, borderTop: `1px solid ${COLORS.border}` }}>
+                  <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 600 }}>
+                    Showing page <Box component="span" sx={{ color: COLORS.textPrimary }}>{page}</Box> of <Box component="span" sx={{ color: COLORS.textPrimary }}>{totalPages}</Box>
+                  </Typography>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: { xs: 0.5, sm: 1.5 },
+                    alignItems: 'center',
+                    bgcolor: '#F1F5F9',
+                    px: { xs: 0.5, sm: 1 },
+                    py: 0.5,
+                    borderRadius: '40px'
+                  }}>
+                    <IconButton
+                      disabled={page === 1}
+                      onClick={() => setPage(page - 1)}
+                      sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary, p: { xs: 0.75, sm: 1 } }}
+                    >
+                      <ChevronLeft sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                    </IconButton>
+
+                    {(() => {
+                      const range = [];
+                      let start = Math.max(1, page - 1);
+                      let end = Math.min(totalPages, start + 2);
+
+                      if (end - start < 2 && start > 1) {
+                        start = Math.max(1, end - 2);
+                      }
+
+                      for (let i = start; i <= end; i++) {
+                        range.push(i);
+                      }
+
+                      return range.map((p) => {
+                        const isActive = p === page;
+                        return (
+                          <Box
+                            key={p}
+                            onClick={() => setPage(p)}
+                            sx={{
+                              width: { xs: 32, sm: 36 },
+                              height: { xs: 32, sm: 36 },
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              borderRadius: '12px',
+                              bgcolor: isActive ? COLORS.black : 'transparent',
+                              color: isActive ? '#FFFFFF' : COLORS.textSecondary,
+                              fontWeight: 800,
+                              fontSize: { xs: 13, sm: 14 },
+                              transition: 'all 0.2s ease',
+                              boxShadow: isActive ? '0 8px 16px -4px rgba(0,0,0,0.2)' : 'none',
+                              '&:hover': {
+                                bgcolor: isActive ? COLORS.black : 'rgba(0,0,0,0.04)'
+                              }
+                            }}
+                          >
+                            {p}
+                          </Box>
+                        );
+                      });
+                    })()}
+
+                    <IconButton
+                      disabled={page === totalPages}
+                      onClick={() => setPage(page + 1)}
+                      sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary, p: { xs: 0.75, sm: 1 } }}
+                    >
+                      <ChevronRight sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+              )}
+            </>
+          )}
         </Box>
       </Box>
 
-      {/* Table */}
-      <Box sx={{ bgcolor: '#fafafa', borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none', overflow: 'hidden', mb: 8 }}>
-        {filterLoading && <LinearProgress sx={{ height: 2, bgcolor: 'transparent', '& .MuiLinearProgress-bar': { bgcolor: COLORS.black } }} />}
-        <TableContainer sx={{ px: 2, pb: 2 }}>
-          <Table sx={{ minWidth: 800 }}>
-            <TableHead>
-              <TableRow sx={{ '& th': { borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textSecondary, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', py: 2 } }}>
-                <TableCell>Institution</TableCell>
-                <TableCell>Domain & Contact</TableCell>
-                <TableCell>Admin</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {institutions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: COLORS.textSecondary }}>No institutions found.</TableCell>
-                </TableRow>
-              ) : institutions.map(i => (
-                <TableRow key={i._id} sx={{ '& td': { borderBottom: `1px solid ${COLORS.border}`, py: 1.5 }, '&:last-child td': { borderBottom: 'none' } }}>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: '#f1f5f9', color: COLORS.black, fontWeight: 700 }} variant="rounded">
-                        <Business />
-                      </Avatar>
-                      <Box>
-                        <Typography sx={{ fontWeight: 700, fontSize: '14px', color: COLORS.black }}>{i.name}</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt:0.2 }}>
-                          <LocationOn sx={{ fontSize: 14, color: COLORS.textSecondary }} />
-                          <Typography sx={{ fontSize: '12px', color: COLORS.textSecondary }}>{i.address}</Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Language sx={{ fontSize: 13, color: COLORS.teal }} />
-                        <Typography sx={{ fontSize: '13px', fontWeight: 600 }}>{i.domain}</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Email sx={{ fontSize: 13, color: COLORS.textSecondary }} />
-                        <Typography sx={{ fontSize: '12px', color: COLORS.textSecondary }}>{i.email}</Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-
-                  <TableCell>
-                    <Box>
-                      <Typography sx={{ fontWeight: 600, fontSize: '13px' }}>{i.administratorName}</Typography>
-                      <Typography sx={{ fontSize: '11px', color: COLORS.textSecondary }}>{i.administratorPosition}</Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box sx={{
-                      display: 'inline-flex', px: 1.5, py: 0.5, borderRadius: COLORS.pillRadius,
-                      ...getStatusStyle(i.status), fontSize: '10px', fontWeight: 800, textTransform: 'uppercase'
-                    }}>
-                      {i.status}
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell align="right">
-                    <Tooltip title="View Details">
-                      <IconButton onClick={() => { setSelectedInstitution(i); setShowDetails(true); }}>
-                        <Visibility sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Manage Users">
-                      <IconButton onClick={() => window.location.href = `/super-admin/institution-monitoring/${i._id}`}>
-                        <AdminPanelSettings sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {totalPages > 1 && (
-          <Box sx={{ p: 2, borderTop: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'center' }}>
-            <Pagination count={totalPages} page={page} onChange={(_, v) => setPage(v)} shape="rounded" />
-          </Box>
-        )}
-      </Box>
-
-      {/* Details Dialog */}
-      <Dialog open={showDetails} onClose={() => setShowDetails(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-        <DialogTitle sx={{ fontWeight: 800 }}>Institution Profile</DialogTitle>
-        <DialogContent dividers>
+      <Dialog
+        open={showDetails}
+        onClose={() => setShowDetails(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '24px',
+            p: { xs: 0.5, sm: 1 },
+            margin: { xs: 2, sm: 4 }
+          }
+        }}
+      >
+        <DialogTitle sx={{ p: { xs: 3, sm: 4 }, pb: 1 }}>
+          <Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+            Institution Profile
+          </Typography>
+          <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5 }}>
+            Detailed overview of organizational and administrative information.
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: { xs: 3, sm: 4 } }}>
           {selectedInstitution && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 3, sm: 3.5 } }}>
               <Box>
-                <Typography variant="overline" color="text.secondary">Basic Information</Typography>
-                <Typography variant="h6" fontWeight={700}>{selectedInstitution.name}</Typography>
-                <Typography variant="body2">{selectedInstitution.address}</Typography>
-              </Box>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <Box>
-                  <Typography variant="overline" color="text.secondary">Contact Number</Typography>
-                  <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Phone sx={{ fontSize: 16 }} /> {selectedInstitution.contactNumber}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="overline" color="text.secondary">Official Email</Typography>
-                  <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Email sx={{ fontSize: 16 }} /> {selectedInstitution.email}
+                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  School Information
+                </Typography>
+                <Typography sx={{ fontWeight: 800, fontSize: { xs: 16, sm: 20 }, color: COLORS.textPrimary, mb: 0.5 }}>
+                  {selectedInstitution.name}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LocationOn sx={{ fontSize: 16, color: COLORS.teal }} />
+                  <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 500 }}>
+                    {selectedInstitution.address}
                   </Typography>
                 </Box>
               </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">System Administrator</Typography>
-                <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: COLORS.black }}><AdminPanelSettings/></Avatar>
-                  <Box>
-                    <Typography fontWeight={700}>{selectedInstitution.administratorName}</Typography>
-                    <Typography variant="caption">{selectedInstitution.administratorPosition}</Typography>
+
+              <Grid container spacing={{ xs: 2.5, sm: 3 }}>
+                <Grid item xs={12} sm={6}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Access Domain
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Language sx={{ fontSize: 16, color: COLORS.teal }} />
+                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{selectedInstitution.domain}</Typography>
                   </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Contact Number
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Phone sx={{ fontSize: 16, color: COLORS.teal }} />
+                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{selectedInstitution.contactNumber}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Box>
+                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1.5, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Administrative Authority
+                </Typography>
+                <Box sx={{ p: 2.5, bgcolor: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{
+                    bgcolor: COLORS.black,
+                    width: { xs: 40, sm: 48 },
+                    height: { xs: 40, sm: 48 },
+                    fontSize: { xs: 14, sm: 16 },
+                    fontWeight: 800,
+                    borderRadius: '12px'
+                  }}>
+                    {getInitials(selectedInstitution.administratorName)}
+                  </Avatar>
+                  <Box>
+                    <Typography sx={{ fontWeight: 800, fontSize: { xs: 14, sm: 15 }, color: COLORS.textPrimary }}>
+                      {selectedInstitution.administratorName}
+                    </Typography>
+                    <Typography sx={{ fontSize: { xs: 11, sm: 12 }, color: COLORS.textSecondary, fontWeight: 600 }}>
+                      {selectedInstitution.administratorPosition}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              <Box sx={{ mt: 1 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1.5, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Official Email
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, bgcolor: '#F0FDF4', borderRadius: '12px', border: '1px solid #DCFCE7' }}>
+                  <Email sx={{ fontSize: 20, color: '#16A34A' }} />
+                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#166534' }}>
+                    {selectedInstitution.email}
+                  </Typography>
                 </Box>
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={() => setShowDetails(false)} sx={{ textTransform: 'none', fontWeight: 700, color: COLORS.black }}>Close</Button>
+        <DialogActions sx={{ p: { xs: 3, sm: 4 }, pt: 1 }}>
+          <Button
+            onClick={() => setShowDetails(false)}
+            fullWidth
+            sx={{
+              textTransform: 'none',
+              fontWeight: 800,
+              color: '#FFF',
+              bgcolor: COLORS.black,
+              borderRadius: '12px',
+              py: 1.5,
+              '&:hover': { bgcolor: '#000' }
+            }}
+          >
+            Close Profile
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

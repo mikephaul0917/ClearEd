@@ -29,8 +29,29 @@ export const superAdminService = {
         return response.data;
     },
 
-    getInstitutions: async () => {
-        const response = await api.get('/super-admin/institutions');
+    getInstitutions: async (status?: string) => {
+        const params = status ? { status } : undefined;
+        const response = await api.get('/super-admin/institutions', { params });
+        return response.data;
+    },
+
+    revokeInstitution: async (id: string, data: { reason: string }) => {
+        const response = await api.post(`/super-admin/institutions/${id}/revoke`, data);
+        return response.data;
+    },
+
+    reactivateInstitution: async (id: string) => {
+        const response = await api.post(`/super-admin/institutions/${id}/reactivate`);
+        return response.data;
+    },
+
+    deleteInstitution: async (id: string) => {
+        const response = await api.delete(`/super-admin/institutions/${id}`);
+        return response.data;
+    },
+
+    permanentDeleteInstitution: async (id: string) => {
+        const response = await api.delete(`/super-admin/institutions/${id}/permanent`);
         return response.data;
     },
 

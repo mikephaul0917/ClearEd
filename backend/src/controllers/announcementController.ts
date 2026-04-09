@@ -3,6 +3,8 @@ import { Announcement, IAnnouncement } from '../models/Announcement';
 import { AnnouncementAcknowledgment } from '../models/AnnouncementAcknowledgment';
 import { AuditLog } from '../models/AuditLog';
 import { Institution } from '../models/Institution';
+import User from '../models/User';
+import { sendAnnouncementEmail } from '../utils/emailService';
 
 // Get all announcements for Super Admin
 export const getAnnouncements = async (req: Request, res: Response) => {
@@ -213,7 +215,50 @@ export const createAnnouncement = async (req: Request, res: Response) => {
       severity: priority === 'critical' || priority === 'high' ? 'high' : 'medium',
       category: 'announcement_management'
     });
-    
+
+    // Handle Email Delivery if requested
+    const sendEmail = req.body.sendEmail === 'true' || req.body.sendEmail === true;
+    if (sendEmail) {
+      // Broadcast asynchronously
+      setImmediate(async () => {
+        try {
+          console.log(`📣 BROADCAST: Starting email broadcast for: ${title}`);
+          const userFilters: any = { isActive: true, role: { $ne: 'super_admin' } };
+          
+          if (targetAudience !== 'all') {
+            if (targetAudience === 'institutions' || targetAudience === 'admins') {
+              userFilters.role = { $in: ['admin', 'dean', 'officer'] };
+            } else if (targetAudience === 'students') {
+              userFilters.role = 'student';
+            }
+          }
+          
+          if (targetInstitutions && targetInstitutions.length > 0) {
+            userFilters.institutionId = { $in: targetInstitutions };
+          }
+          
+          const targetUsers = await User.find(userFilters).select('email');
+          console.log(`👥 BROADCAST: Found ${targetUsers.length} target users.`);
+          
+          for (const user of targetUsers) {
+            try {
+              await sendAnnouncementEmail(user.email, {
+                title,
+                content,
+                type: type || 'general',
+                priority: priority || 'medium',
+                attachments: attachments
+              });
+            } catch (err) {
+              console.error(`❌ BROADCAST ERROR: Failed to send to ${user.email}:`, err);
+            }
+          }
+        } catch (err) {
+          console.error(`❌ BROADCAST ERROR:`, err);
+        }
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Announcement created successfully',

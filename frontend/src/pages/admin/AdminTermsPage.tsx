@@ -17,7 +17,7 @@ import { Switch, Menu, MenuItem } from "@mui/material";
 
 // ─── Modern Dashboard Design System ──────────────────────────────────────────
 const COLORS = {
-  pageBg: '#F8F9FA',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#1E293B',
   textPrimary: '#1E293B',

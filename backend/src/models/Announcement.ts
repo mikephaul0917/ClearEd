@@ -4,7 +4,7 @@ export interface IAnnouncement extends Document {
   title: string;
   content: string;
   type: 'maintenance' | 'policy' | 'security' | 'general' | 'urgent';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent';
   targetAudience: 'all' | 'institutions' | 'students' | 'admins' | 'super_admin';
   targetInstitutions?: mongoose.Types.ObjectId[];
   isActive: boolean;
@@ -42,7 +42,7 @@ const AnnouncementSchema: Schema = new Schema({
   priority: {
     type: String,
     required: true,
-    enum: ['low', 'medium', 'high', 'critical'],
+    enum: ['low', 'medium', 'high', 'critical', 'urgent'],
     default: 'medium'
   },
   targetAudience: {

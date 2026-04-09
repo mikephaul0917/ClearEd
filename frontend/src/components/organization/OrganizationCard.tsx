@@ -61,7 +61,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 onClick={() => onClick?.(id)}
                 sx={{
                     width: "100%",
-                    maxWidth: 320,
+                    maxWidth: { xs: 280, sm: 320 },
                     mx: 'auto',
                     aspectRatio: "1/1",
                     cursor: "pointer",
@@ -150,7 +150,8 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         left: -6,
                         right: -6,
                         bgcolor: "#FFFFFF",
-                        p: "20px",
+                        p: { xs: "28px 20px 32px", sm: "20px" },
+                        minHeight: { xs: "140px", sm: "auto" },
                         borderRadius: "24px",
                         boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
                         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",

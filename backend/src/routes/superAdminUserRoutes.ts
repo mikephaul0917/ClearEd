@@ -7,6 +7,10 @@ import {
   getUserStats,
   getUserDetails,
   disableUser,
+  revokeInstitution,
+  reactivateInstitution,
+  deleteInstitution,
+  permanentDeleteInstitution,
   getInvitationHistory,
   getUserActivity
 } from '../controllers/superAdminUserController';
@@ -20,6 +24,10 @@ router.use(superAdmin);
 // User monitoring endpoints
 router.get('/users', getUsers);
 router.get('/institutions', getInstitutions);
+router.post('/institutions/:institutionId/revoke', revokeInstitution);
+router.post('/institutions/:institutionId/reactivate', reactivateInstitution);
+router.delete('/institutions/:institutionId', deleteInstitution);
+router.delete('/institutions/:institutionId/permanent', permanentDeleteInstitution);
 router.get('/user-stats', getUserStats);
 router.get('/users/:userId', getUserDetails);
 router.post('/users/:userId/disable', disableUser);

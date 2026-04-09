@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import Institution from '../models/Institution';
 import AuditLog from '../models/AuditLog';
+import { InstitutionRequest } from '../models/InstitutionRequest';
 
 // Get users with filtering and pagination
 export const getUsers = async (req: Request, res: Response) => {
@@ -75,8 +76,14 @@ export const getUsers = async (req: Request, res: Response) => {
 // Get institutions for filter dropdown
 export const getInstitutions = async (req: Request, res: Response) => {
   try {
-    const institutions = await Institution.find({ status: 'approved' })
-      .select('name domain status email administratorName administratorPosition address contactNumber createdAt _id')
+    const { status = 'approved' } = req.query;
+    
+    // Build filter
+    const filter: any = { status };
+    
+    // Skip deleted institutions unless specifically requested
+    const institutions = await Institution.find(filter)
+      .select('name domain status email administratorName administratorPosition address contactNumber createdAt suspendedAt _id')
       .sort({ name: 1 })
       .lean();
 
@@ -338,5 +345,156 @@ export const getUserActivity = async (req: Request, res: Response) => {
       message: 'Failed to fetch user activity',
       error: error.message
     });
+  }
+};
+
+/**
+ * Institution Management
+ */
+
+// Revoke institution access (Suspend)
+export const revokeInstitution = async (req: Request, res: Response) => {
+  try {
+    const { institutionId } = req.params;
+    const { reason } = req.body;
+    const adminId = (req as any).user.id;
+
+    const revocationReason = reason?.trim() || 'No reason provided';
+
+    const institution = await Institution.findById(institutionId);
+    if (!institution) {
+      return res.status(404).json({ success: false, message: 'Institution not found' });
+    }
+
+    institution.status = 'suspended';
+    institution.suspendedAt = new Date();
+    await institution.save();
+
+    await AuditLog.create({
+      userId: adminId,
+      institutionId: null,
+      action: 'REVOKE_INSTITUTION_ACCESS',
+      resource: 'Institution',
+      details: `Revoked access for institution: ${institution.name}. Reason: ${revocationReason}`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent'),
+      severity: 'high',
+      category: 'institution_management'
+    });
+
+    res.json({ success: true, message: 'Institution access revoked successfully' });
+  } catch (error: any) {
+    console.error('Error revoking institution:', error);
+    res.status(500).json({ success: false, message: 'Failed to revoke institution access', error: error.message });
+  }
+};
+
+// Reactivate institution access
+export const reactivateInstitution = async (req: Request, res: Response) => {
+  try {
+    const { institutionId } = req.params;
+    const adminId = (req as any).user.id;
+
+    const institution = await Institution.findById(institutionId);
+    if (!institution) {
+      return res.status(404).json({ success: false, message: 'Institution not found' });
+    }
+
+    institution.status = 'approved';
+    institution.suspendedAt = undefined;
+    await institution.save();
+
+    await AuditLog.create({
+      userId: adminId,
+      institutionId: null,
+      action: 'REACTIVATE_INSTITUTION_ACCESS',
+      resource: 'Institution',
+      details: `Reactivated access for institution: ${institution.name}`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent'),
+      severity: 'high',
+      category: 'institution_management'
+    });
+
+    res.json({ success: true, message: 'Institution access reactivated successfully' });
+  } catch (error: any) {
+    console.error('Error reactivating institution:', error);
+    res.status(500).json({ success: false, message: 'Failed to reactivate institution access', error: error.message });
+  }
+};
+
+// Delete institution (Soft delete with 30-day window)
+export const deleteInstitution = async (req: Request, res: Response) => {
+  try {
+    const { institutionId } = req.params;
+    const adminId = (req as any).user.id;
+
+    const institution = await Institution.findById(institutionId);
+    if (!institution) {
+      return res.status(404).json({ success: false, message: 'Institution not found' });
+    }
+
+    institution.status = 'deleted';
+    institution.deletedAt = new Date();
+    await institution.save();
+
+    await AuditLog.create({
+      userId: adminId,
+      institutionId: null,
+      action: 'DELETE_INSTITUTION',
+      resource: 'Institution',
+      details: `Marked institution for deletion: ${institution.name}. Deletion will be permanent in 30 days.`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent'),
+      severity: 'critical',
+      category: 'institution_management'
+    });
+
+    res.json({ success: true, message: 'Institution marked for deletion. It will be permanently removed in 30 days.' });
+  } catch (error: any) {
+    console.error('Error deleting institution:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete institution', error: error.message });
+  }
+};
+
+// Permanent Delete Institution (Hard delete cascade)
+export const permanentDeleteInstitution = async (req: Request, res: Response) => {
+  try {
+    const { institutionId } = req.params;
+    const adminId = (req as any).user.id;
+
+    const institution = await Institution.findById(institutionId);
+    if (!institution) {
+      return res.status(404).json({ success: false, message: 'Institution not found' });
+    }
+
+    const institutionName = institution.name;
+
+    // Delete all users associated with this institution
+    await User.deleteMany({ institutionId: institution._id });
+
+    // Delete the accompanying InstitutionRequest document so the domain can be registered again in the future
+    await InstitutionRequest.deleteMany({ academicDomain: institution.domain });
+
+    // Delete the institution itself
+    await Institution.findByIdAndDelete(institution._id);
+
+    // Ensure this incredibly destructive action is logged carefully
+    await AuditLog.create({
+      userId: adminId,
+      institutionId: institution._id,
+      action: 'PERMANENTLY_DELETE_INSTITUTION',
+      resource: 'Institution',
+      details: `Permanently destroyed institution: ${institutionName} and all associated users/staff data.`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent'),
+      severity: 'critical',
+      category: 'institution_management'
+    });
+
+    res.json({ success: true, message: `Institution ${institutionName} permanently deleted` });
+  } catch (error: any) {
+    console.error('Error permanently deleting institution:', error);
+    res.status(500).json({ success: false, message: 'Failed to permanently delete institution', error: error.message });
   }
 };

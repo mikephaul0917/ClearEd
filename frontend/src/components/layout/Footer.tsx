@@ -21,7 +21,7 @@ const Footer = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 3000,
+        zIndex: 1000,
         height: isMobile ? 'auto' : '48px',
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(12px)',

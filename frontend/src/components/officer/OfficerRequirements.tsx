@@ -50,7 +50,7 @@ export default function OfficerRequirements() {
         textSecondary: '#64748B',
         border: '#E2E8F0',
         cardRadius: '16px',
-        pageBg: '#FFFFFF',
+        pageBg: '#F9FAFB',
         teal: '#5fcca0',
     };
     const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";

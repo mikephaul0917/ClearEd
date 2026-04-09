@@ -56,7 +56,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                 <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={4} flexWrap="wrap" gap={2}>
                     <Box>
                         {title && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: description ? 1 : 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: description ? 0.5 : 0 }}>
                                 {icon && (
                                     <Box sx={{
                                         bgcolor: iconBgColor || '#F1F5F9',
@@ -71,11 +71,12 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     </Box>
                                 )}
                                 <Typography variant="h4" sx={{ 
-                                    fontWeight: 800, 
+                                    fontWeight: 600, 
                                     color: '#000', 
-                                    fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", 
+                                    fontFamily: "'Poppins', sans-serif", 
                                     letterSpacing: { xs: '-0.5px', sm: '-1.5px' },
-                                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                                    fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                                    lineHeight: 1.2
                                 }}>
                                     {title}
                                 </Typography>
@@ -84,8 +85,8 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                         {description && (
                             <Typography variant="body1" sx={{ 
                                 color: '#6B7280', 
-                                fontSize: { xs: '0.9rem', sm: '1.05rem' },
-                                fontFamily: "'Inter', sans-serif" 
+                                fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                                fontFamily: "'Poppins', sans-serif" 
                             }}>
                                 {description}
                             </Typography>

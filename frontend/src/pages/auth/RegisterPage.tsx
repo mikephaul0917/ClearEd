@@ -446,7 +446,8 @@ const RegisterPage = () => {
                                 disabled={isLoading}
                                 whileHover={!isLoading ? {
                                     y: -2,
-                                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
+                                    scale: 1.01,
+                                    boxShadow: '0 20px 45px rgba(0,0,0,0.18)'
                                 } : {}}
                                 whileTap={!isLoading ? { scale: 0.98 } : {}}
                                 style={{
@@ -457,9 +458,9 @@ const RegisterPage = () => {
                                     border: "none",
                                     borderRadius: "100px",
                                     fontSize: "15px",
-                                    fontWeight: 600,
+                                    fontWeight: 500,
                                     cursor: isLoading ? "not-allowed" : "pointer",
-                                    boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                                    boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",

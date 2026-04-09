@@ -1043,7 +1043,7 @@ export default function AdminPage() {
               "institution-requests": { title: "Institution Profile", desc: "Manage your institution details" }
             };
             const item = config[active as keyof typeof config];
-            if (!item || active === "users" || active === "terms" || active === "organizations") return null;
+            if (!item || active === "users" || active === "terms" || active === "organizations" || active === "records") return null;
 
             return (
               <Box mb={3} sx={{

@@ -101,6 +101,7 @@ export default function AdminRecordsPage({
   onLoadingChange?: (loading: boolean) => void;
 }) {
   const theme = useTheme();
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -290,27 +291,51 @@ export default function AdminRecordsPage({
     );
     return logsToFilter;
   };
-
   const filteredLogs = filterLogsByTab(logs);
 
   // --- Custom Skeleton Components ---
   const TabSkeleton = () => (
-    <Box sx={{ display: 'flex', gap: 1, mb: 4, bgcolor: '#F1F5F9', p: 0.6, borderRadius: '14px', width: 'fit-content' }}>
-      {[1, 2, 3, 4].map((i) => (
-        <Skeleton key={i} variant="rectangular" width={110} height={36} sx={{ borderRadius: '10px' }} />
-      ))}
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      width: '100%',
+      mb: 4
+    }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 1, 
+        bgcolor: '#FFFFFF', 
+        p: 0.8, 
+        borderRadius: '100px', 
+        border: '1px solid #E2E8F0',
+        width: 'fit-content',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+      }}>
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} variant="rectangular" width={110} height={40} sx={{ borderRadius: '100px' }} />
+        ))}
+      </Box>
+      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px' }} />
     </Box>
   );
 
   const FilterBarSkeleton = () => (
-    <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Skeleton variant="circular" width={20} height={20} />
-        <Skeleton variant="text" width={120} height={24} />
+    <Box sx={{ 
+      mb: 3, 
+      display: 'flex', 
+      flexDirection: { xs: 'column', sm: 'row' },
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      gap: 2 
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Skeleton variant="circular" width={24} height={24} />
+        <Skeleton variant="text" width={140} height={28} />
       </Box>
-      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-        <Skeleton variant="rectangular" width={240} height={36} sx={{ borderRadius: '8px' }} />
-        <Skeleton variant="rectangular" width={120} height={36} sx={{ borderRadius: '8px' }} />
+      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', width: { xs: '100%', sm: 'auto' } }}>
+        <Skeleton variant="rectangular" width={240} height={44} sx={{ borderRadius: '12px', flex: 1 }} />
+        <Skeleton variant="rectangular" width={140} height={44} sx={{ borderRadius: '12px' }} />
       </Box>
     </Box>
   );
@@ -318,7 +343,7 @@ export default function AdminRecordsPage({
   const OverviewSkeleton = () => (
     <Box sx={{
       p: 3, borderRadius: COLORS.cardRadius, bgcolor: '#FFFFFF',
-      border: `1px solid ${COLORS.border}`, mb: 4
+      border: `1px solid ${COLORS.border}`, mb: 3
     }}>
       <Box sx={{ 
         display: 'grid', 
@@ -327,10 +352,10 @@ export default function AdminRecordsPage({
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
           <Box key={i} sx={{ 
-            p: 2, bgcolor: '#F8FAFC', borderRadius: '12px', minHeight: 80,
+            p: 2.5, bgcolor: '#F8FAFC', borderRadius: '14px', minHeight: 85,
             gridColumn: { xs: i === 5 ? 'span 2' : 'span 1', sm: 'span 1' }
           }}>
-            <Skeleton variant="text" width="60%" height={24} />
+            <Skeleton variant="text" width="60%" height={28} />
             <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
           </Box>
         ))}
@@ -342,38 +367,36 @@ export default function AdminRecordsPage({
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
           <Box key={i}>
-            <Skeleton variant="text" width={60} height={12} />
-            <Skeleton variant="text" width={100} height={20} sx={{ mt: 0.5 }} />
+            <Skeleton variant="text" width={60} height={14} />
+            <Skeleton variant="text" width={100} height={22} sx={{ mt: 0.5 }} />
           </Box>
         ))}
       </Box>
     </Box>
   );
 
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   const LogRowSkeleton = () => (
     <Box sx={{
-      display: 'flex', alignItems: 'center', p: { xs: 1.5, sm: 3 }, mb: 1,
+      display: 'flex', alignItems: 'center', p: { xs: 1.5, sm: 3 }, mb: 1.5,
       bgcolor: '#FFF', borderRadius: '16px', border: '1px solid #F1F5F9',
       gap: { xs: 1.5, sm: 4 }
     }}>
       <Box sx={{ width: { xs: 45, sm: 60 }, textAlign: 'center' }}>
-        <Skeleton variant="text" width={25} height={12} sx={{ mx: 'auto' }} />
-        <Skeleton variant="text" width={35} height={28} sx={{ mx: 'auto' }} />
+        <Skeleton variant="text" width={25} height={14} sx={{ mx: 'auto' }} />
+        <Skeleton variant="text" width={35} height={32} sx={{ mx: 'auto' }} />
       </Box>
-      <Box sx={{ flexDirection: 'column', gap: 1, width: 120, display: { xs: 'none', sm: 'flex' } }}>
-        <Skeleton variant="text" width={80} />
-        <Skeleton variant="text" width={60} />
+      <Box sx={{ flexDirection: 'column', gap: 1, width: 140, display: { xs: 'none', sm: 'flex' } }}>
+        <Skeleton variant="text" width={100} height={20} />
+        <Skeleton variant="text" width={80} height={16} />
       </Box>
       <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
-        <Skeleton variant="circular" width={40} height={40} />
+        <Skeleton variant="circular" width={44} height={44} />
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="60%" height={20} />
-          <Skeleton variant="text" width="40%" height={16} />
+          <Skeleton variant="text" width="60%" height={22} />
+          <Skeleton variant="text" width="40%" height={18} />
         </Box>
       </Box>
-      <Skeleton variant="rectangular" width={80} height={40} sx={{ borderRadius: '12px', display: { xs: 'none', md: 'block' } }} />
+      <Skeleton variant="rectangular" width={100} height={42} sx={{ borderRadius: '12px', display: { xs: 'none', md: 'block' } }} />
       <Skeleton variant="circular" width={40} height={40} sx={{ display: { xs: 'block', md: 'none' } }} />
     </Box>
   );
@@ -477,81 +500,110 @@ export default function AdminRecordsPage({
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 0 }}>
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-      {/* --- Tabs --- */}
+      {/* --- Tabs & Actions --- */}
       {loading && isInitialLoad ? (
         <TabSkeleton />
       ) : (
         <Box sx={{ 
           display: 'flex', 
-          bgcolor: '#F1F5F9', 
-          p: 0.6, 
-          borderRadius: '14px', 
-          width: 'fit-content', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
           mb: 4,
-          overflowX: 'auto',
-          maxWidth: '100%',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' }
+          gap: { xs: 1.5, sm: 2 },
+          width: '100%'
         }}>
-          {['System Records', 'Security & Alerts', 'Access Logs', 'Admin Actions'].map((label, idx) => {
-            const active = tabValue === idx;
-            return (
-              <Button
-                key={label}
-                onClick={() => handleTabChange({} as any, idx)}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: 13,
-                  px: 3,
-                  py: 1,
-                  borderRadius: '10px',
-                  color: active ? '#0F172A' : '#64748B',
-                  bgcolor: 'transparent',
-                  position: 'relative',
-                  zIndex: 1,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  '&:hover': {
-                    color: '#0F172A'
-                  },
-                  transition: 'color 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-              >
-                {active && (
-                  <motion.div
-                    layoutId="activeTabIndicator"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: '10px',
-                      zIndex: -1,
-                      boxShadow: '0 4px 12px -2px rgba(0,0,0,0.08)'
-                    }}
-                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                {label}
-              </Button>
-            );
-          })}
+          <Box sx={{ 
+            display: 'flex', 
+            bgcolor: '#FFFFFF', 
+            p: 0.8, 
+            borderRadius: '100px', 
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+            flex: 1,
+            minWidth: 0,
+            overflowX: 'auto',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' }
+          }}>
+            {['System Records', 'Security & Alerts', 'Access Logs', 'Admin Actions'].map((label, idx) => {
+              const active = tabValue === idx;
+              return (
+                <Button
+                  key={label}
+                  onClick={() => handleTabChange({} as any, idx)}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: { xs: 12, sm: 13 },
+                    px: { xs: 2.5, sm: 3.5 },
+                    py: 1.2,
+                    borderRadius: '100px',
+                    color: active ? '#FFFFFF' : '#64748B',
+                    bgcolor: 'transparent',
+                    position: 'relative',
+                    zIndex: 1,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    '&:hover': {
+                      color: active ? '#FFFFFF' : '#1E293B'
+                    },
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#1E293B',
+                        borderRadius: '100px',
+                        zIndex: -1,
+                        boxShadow: '0 10px 20px -5px rgba(0,0,0,0.2)'
+                      }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  {label}
+                </Button>
+              );
+            })}
+          </Box>
+
+          <Tooltip title="Export Logs">
+            <IconButton 
+              onClick={handleExport}
+              sx={{ 
+                border: `1px solid ${COLORS.border}`, 
+                borderRadius: '14px',
+                bgcolor: '#FFF',
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 },
+                flexShrink: 0,
+                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                '&:hover': { bgcolor: '#F8FAFC', transform: 'translateY(-1px)' },
+                transition: 'all 0.2s'
+              }}
+            >
+              <Download sx={{ fontSize: { xs: 20, sm: 22 }, color: COLORS.textPrimary }} />
+            </IconButton>
+          </Tooltip>
         </Box>
       )}
 
       {/* --- Consolidated Overview Card --- */}
-      {loading && isInitialLoad ? (
+      {loading ? (
         <OverviewSkeleton />
       ) : (
         <Card sx={{ 
@@ -580,8 +632,8 @@ export default function AdminRecordsPage({
                 <Box 
                   key={stat.label}
                   sx={{ 
-                    p: 2.5, bgcolor: '#F8FAFC', borderRadius: '14px',
-                    display: 'flex', flexDirection: 'column', gap: 0.5,
+                    p: { xs: 2, sm: 2.5 }, bgcolor: '#F8FAFC', borderRadius: '14px',
+                    display: 'flex', flexDirection: 'column', gap: 0.2,
                     position: 'relative',
                     border: '1px solid transparent',
                     transition: 'all 0.2s ease',
@@ -590,10 +642,10 @@ export default function AdminRecordsPage({
                     gridColumn: { xs: idx === 4 ? 'span 2' : 'span 1', sm: 'span 1' }
                   }}
                 >
-                  <Typography sx={{ fontSize: { xs: 20, sm: 24 }, fontWeight: 800, color: stat.color || '#1E293B' }}>
+                  <Typography sx={{ fontSize: { xs: 18, sm: 24 }, fontWeight: 800, color: stat.color || '#1E293B' }}>
                     {stat.value}
                   </Typography>
-                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: '0.05em' }}>
+                  <Typography sx={{ fontSize: { xs: 9, sm: 10 }, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: '0.05em' }}>
                     {stat.label}
                   </Typography>
                   {/* Vertical Divider for desktop only */}
@@ -641,7 +693,7 @@ export default function AdminRecordsPage({
       )}
 
       {/* --- Search & Sort/Filter Bar --- */}
-      {loading && isInitialLoad ? (
+      {loading ? (
         <FilterBarSkeleton />
       ) : (
         <Box sx={{ 
@@ -649,7 +701,7 @@ export default function AdminRecordsPage({
           display: 'flex', 
           flexDirection: { xs: 'column', sm: 'row' }, 
           justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          alignItems: { xs: 'stretch', sm: 'center' }, 
           gap: 2 
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0, sm: 0 } }}>

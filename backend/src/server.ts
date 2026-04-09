@@ -8,6 +8,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { connectDB } from "./config/db";
+import { startStaleInstitutionCleanupJob } from "./cron/deleteStaleInstitutions";
 
 // Import all data models to register them with Mongoose
 import "./models/Quote"; // Inspirational quotes for login/register pages
@@ -89,6 +90,9 @@ app.use("/api", quoteRoutes); // Public metadata (quotes)
 // Global Error Handler
 import errorHandler from "./middleware/errorHandler";
 app.use(errorHandler);
+
+// Start background tasks
+startStaleInstitutionCleanupJob();
 
 // Start server
 const PORT = process.env.PORT || 5000;

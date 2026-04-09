@@ -266,3 +266,85 @@ export const sendContactFormEmail = async (
     text: `New contact form from ${formData.firstName} ${formData.lastName} (${formData.email}). Service: ${formData.service || 'None'}. Message: ${formData.description}`
   });
 };
+
+/**
+ * Send a professional announcement email to users
+ */
+export const sendAnnouncementEmail = async (
+  email: string,
+  announcement: {
+    title: string;
+    content: string;
+    type: string;
+    priority: string;
+    attachments?: string[];
+  }
+): Promise<void> => {
+  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/`;
+  
+  // Priority colors for branding
+  const priorityColors: Record<string, string> = {
+    urgent: '#dc2626',
+    high: '#ea580c',
+    medium: '#d97706',
+    low: '#059669',
+    critical: '#dc2626'
+  };
+  
+  const priorityColor = priorityColors[announcement.priority.toLowerCase()] || '#0F172A';
+  
+  const html = `
+    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
+      <div style="background-color: ${priorityColor}; padding: 25px; text-align: center;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+          System Announcement
+        </h1>
+      </div>
+      
+      <div style="padding: 40px 30px;">
+        <div style="display: inline-block; padding: 4px 12px; border-radius: 999px; background-color: #f1f5f9; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px;">
+          ${announcement.type} &bull; ${announcement.priority} Priority
+        </div>
+        
+        <h2 style="color: #0F172A; margin: 0 0 20px 0; font-size: 24px; line-height: 1.3; font-weight: 800;">
+          ${announcement.title}
+        </h2>
+        
+        <div style="color: #334155; line-height: 1.7; font-size: 16px; white-space: pre-wrap; margin-bottom: 30px;">
+          ${announcement.content}
+        </div>
+        
+        ${announcement.attachments && announcement.attachments.length > 0 ? `
+          <div style="padding: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
+            <p style="margin: 0 0 10px 0; font-weight: 700; color: #0F172A; font-size: 14px;">Attachments:</p>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b; font-size: 13px;">
+              ${announcement.attachments.map(a => `<li>${a}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        <div style="text-align: center;">
+          <a href="${loginUrl}" 
+             style="background-color: #0F172A; color: #ffffff; padding: 14px 35px; 
+                    text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 700; font-size: 15px;">
+            View Announcement in App
+          </a>
+        </div>
+      </div>
+      
+      <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+        <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+          This is an official system announcement from the E-Clearance Platform.
+        </p>
+      </div>
+    </div>
+  `;
+
+  await sendEmail({
+    from: '"E-Clearance System" <cleared.system@gmail.com>',
+    to: email,
+    subject: `[${announcement.priority.toUpperCase()}] ${announcement.title}`,
+    html,
+    text: `${announcement.title}\n\n${announcement.content}\n\nView details at: ${loginUrl}`
+  });
+};

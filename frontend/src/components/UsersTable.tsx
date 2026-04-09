@@ -29,7 +29,7 @@ import { getInitials, getAbsoluteUrl } from "../utils/avatarUtils";
 
 // ─── Modern clean Design System ──────────────────────────────────────────────
 const COLORS = {
-  pageBg: '#F8FAFC',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#000000',
   textPrimary: '#1E293B',
@@ -127,6 +127,7 @@ export default function UsersTable({
   const [requestToApprove, setRequestToApprove] = useState<any>(null);
   const [isApproving, setIsApproving] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("Success");
   const [successMsg, setSuccessMsg] = useState("");
   const rowsPerPage = 10;
 
@@ -313,6 +314,7 @@ export default function UsersTable({
     try {
       await adminService.approveAccessRequest(requestToApprove._id, 'student');
       setIsApproveModalOpen(false);
+      setSuccessTitle("Approval Success");
       setSuccessMsg(`Access request for ${requestToApprove.fullName} has been approved. They can now sign in.`);
       setShowSuccessModal(true);
       loadData();
@@ -1187,7 +1189,7 @@ export default function UsersTable({
       <SuccessActionModal
         open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Approval Success"
+        title={successTitle}
         description={successMsg}
       />
 
@@ -1694,7 +1696,9 @@ export default function UsersTable({
                     onClick={async () => {
                       try {
                         await adminService.updateStudentProfile(manageUser._id, { isStudent: isStudentMode, course: studentCourse.trim(), yearLevel: studentYear });
-                        Swal.fire({ icon: 'success', title: 'Profile Updated', timer: 1500, showConfirmButton: false });
+                        setSuccessTitle("Profile Updated");
+                        setSuccessMsg("The student profile has been updated successfully.");
+                        setShowSuccessModal(true);
                       } catch (e: any) {
                         Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Update failed' });
                       }
@@ -1749,7 +1753,9 @@ export default function UsersTable({
                 try {
                   await adminService.updateUserRole(manageUser._id, role, selectedOrgIds);
                   await adminService.updateUserProfile(manageUser._id, { fullName: manageUser.fullName, username: manageUser.username });
-                  Swal.fire({ icon: 'success', title: 'User Updated', timer: 1500, showConfirmButton: false });
+                  setSuccessTitle("User Updated");
+                  setSuccessMsg("The user details and permissions have been updated.");
+                  setShowSuccessModal(true);
                 } catch (error: any) {
                   Swal.fire({ icon: 'error', title: 'Update Failed', text: error.response?.data?.message || error.message });
                   return;
@@ -1769,7 +1775,9 @@ export default function UsersTable({
                     role,
                     ...(selectedOrgIds.length > 0 ? { organizationIds: selectedOrgIds } : {})
                   });
-                  Swal.fire({ icon: 'success', title: 'User Created', timer: 1500, showConfirmButton: false });
+                  setSuccessTitle("User Created");
+                  setSuccessMsg("The new user account has been successfully created.");
+                  setShowSuccessModal(true);
                   setCreatePassword("");
                 } catch (error: any) {
                   Swal.fire({ icon: 'error', title: 'Creation Failed', text: error.response?.data?.message || error.message });

@@ -125,16 +125,31 @@ export const approveRequest = async (req: Request, res: Response) => {
     
     console.log('Final institution status:', verifiedInstitution?.status);
 
-    // Update the requesting user's role to institution_admin
-    await User.findOneAndUpdate(
-      { email: request.administratorEmail },
-      { 
-        role: 'admin', // Use 'admin' role as institution_admin equivalent
+    // Check if the administrator user already exists
+    let adminUser = await User.findOne({ email: request.administratorEmail });
+    
+    if (adminUser) {
+      // Update existing user to admin
+      adminUser.role = 'admin';
+      adminUser.institutionId = institution._id;
+      adminUser.emailVerified = true;
+      await adminUser.save();
+    } else {
+      // Auto-create a new user account for the Institutional Email Address
+      const crypto = require('crypto');
+      const generatedPassword = crypto.randomBytes(16).toString('hex') + 'Z9*!';
+      
+      await User.create({
+        email: request.administratorEmail,
+        fullName: request.administratorName,
+        password: generatedPassword, // Hashed by pre-save middleware
+        role: 'admin',
         institutionId: institution._id,
-        emailVerified: true
-      },
-      { new: true }
-    );
+        status: 'active',
+        emailVerified: true,
+        requiresPasswordSetup: true
+      });
+    }
 
     // Update request status
     console.log('Before approve - Request status:', request.status);

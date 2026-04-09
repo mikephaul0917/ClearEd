@@ -54,13 +54,20 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   LocalOffer as LocalOfferIcon,
+  CalendarMonth as CalendarMonthIcon,
+  PeopleAlt as PeopleAltIcon,
+  Email as EmailIcon,
+  History as HistoryIcon,
+  Tune as TuneIcon,
+  Badge as BadgeIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { superAdminService } from '../../services';
 
 // ─── Modern Bento Design System ──────────────────────────────────────────────
 const COLORS = {
-  pageBg: '#FFFFFF',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#0a0a0a',
   textPrimary: '#000000',
@@ -82,7 +89,7 @@ interface Announcement {
   title: string;
   content: string;
   type: 'maintenance' | 'policy' | 'security' | 'general' | 'urgent';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent';
   targetAudience: 'all' | 'institutions' | 'students' | 'admins' | 'super_admin';
   targetInstitutions: any[];
   isActive: boolean;
@@ -119,13 +126,26 @@ const getPriorityStyle = (p: Announcement['priority']) => {
   return map[p] || { bg: '#F1F5F9', color: '#475569', border: '#D1D5DB' };
 };
 
+const getAnnouncementDate = (d: string) => {
+  const date = new Date(d);
+  const today = new Date();
+  const isToday = date.toDateString() === today.toDateString();
+  
+  if (isToday) {
+    return { part1: 'Today', part2: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) };
+  }
+  
+  return { 
+    part1: date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }), 
+    part2: date.getFullYear().toString() 
+  };
+};
+
 const getTypeIcon = (type: Announcement['type']) => {
   const iconSx = { fontSize: 16 };
   switch (type) {
     case 'maintenance': return <BuildIcon sx={{ ...iconSx, color: COLORS.lavender }} />;
     case 'policy': return <InfoIcon sx={{ ...iconSx, color: COLORS.teal }} />;
-    case 'security': return <SecurityIcon sx={{ ...iconSx, color: COLORS.orange }} />;
-    case 'urgent': return <WarningIcon sx={{ ...iconSx, color: '#dc2626' }} />;
     default: return <NotificationsIcon sx={{ ...iconSx, color: COLORS.textSecondary }} />;
   }
 };
@@ -142,6 +162,7 @@ const SuperAdminAnnouncements: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({ type: '', priority: '', status: '', targetAudience: '', search: '' });
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [institutions, setInstitutions] = useState<any[]>([]);
 
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -165,6 +186,7 @@ const SuperAdminAnnouncements: React.FC = () => {
     targetInstitutions: [] as string[],
     isActive: true, scheduledAt: '', expiresAt: '',
     requiresAcknowledgment: false, tags: [] as string[],
+    sendEmail: false,
   });
   const [showPreview, setShowPreview] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -191,7 +213,13 @@ const SuperAdminAnnouncements: React.FC = () => {
   const removeAttachment = (index: number) => setAttachments(attachments.filter((_, i) => i !== index));
 
   // ─── Data fetching ─────────────────────────────────────────────────────────
-  useEffect(() => { setTimeout(() => { fetchAnnouncements(); fetchStats(); }, 1000); }, []);
+  useEffect(() => { 
+    setTimeout(() => { 
+      fetchAnnouncements(); 
+      fetchStats(); 
+      fetchInstitutions();
+    }, 1000); 
+  }, []);
   useEffect(() => { setFilterLoading(true); setTimeout(() => { fetchAnnouncements(); }, 1000); }, [filters]);
 
   const fetchAnnouncements = async () => {
@@ -212,6 +240,15 @@ const SuperAdminAnnouncements: React.FC = () => {
     finally { setInitialLoading(false); }
   };
 
+  const fetchInstitutions = async () => {
+    try {
+      const response = await superAdminService.getInstitutions('approved');
+      setInstitutions(response.institutions || []);
+    } catch (error) {
+      console.error('Error fetching institutions:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) { Swal.fire('Validation Error', 'Announcement title is required', 'error'); return; }
@@ -226,6 +263,7 @@ const SuperAdminAnnouncements: React.FC = () => {
       if (formData.expiresAt) fd.append('expiresAt', formData.expiresAt);
       if (formData.tags.length > 0) fd.append('tags', JSON.stringify(formData.tags));
       fd.append('requiresAcknowledgment', formData.requiresAcknowledgment.toString());
+      fd.append('sendEmail', formData.sendEmail.toString());
       attachments.forEach((file) => { fd.append('files', file); });
 
       if (editingAnnouncement) {
@@ -248,13 +286,13 @@ const SuperAdminAnnouncements: React.FC = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', content: '', type: 'general', priority: 'medium', targetAudience: 'all', targetInstitutions: [], isActive: true, scheduledAt: '', expiresAt: '', requiresAcknowledgment: false, tags: [] });
+    setFormData({ title: '', content: '', type: 'general', priority: 'medium', targetAudience: 'all', targetInstitutions: [], isActive: true, scheduledAt: '', expiresAt: '', requiresAcknowledgment: false, tags: [], sendEmail: false });
     setAttachments([]); setEditingAnnouncement(null);
   };
 
   const openEditModal = (a: Announcement) => {
     setEditingAnnouncement(a);
-    setFormData({ title: a.title, content: a.content, type: a.type, priority: a.priority, targetAudience: a.targetAudience, targetInstitutions: a.targetInstitutions.map((inst: any) => inst._id), isActive: a.isActive, scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '', expiresAt: a.expiresAt ? new Date(a.expiresAt).toISOString().slice(0, 16) : '', requiresAcknowledgment: a.requiresAcknowledgment, tags: a.tags });
+    setFormData({ title: a.title, content: a.content, type: a.type, priority: a.priority, targetAudience: a.targetAudience, targetInstitutions: a.targetInstitutions.map((inst: any) => inst._id), isActive: a.isActive, scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '', expiresAt: a.expiresAt ? new Date(a.expiresAt).toISOString().slice(0, 16) : '', requiresAcknowledgment: a.requiresAcknowledgment, tags: a.tags, sendEmail: false });
     setShowModal(true);
   };
 
@@ -307,11 +345,11 @@ const SuperAdminAnnouncements: React.FC = () => {
 
   // ═══════════════════════════════════════════════════════════════════════════
   // MAIN RENDER
-  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <Box sx={{ p: isMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+      <Box sx={{ maxWidth: '900px', mx: 'auto', width: '100%' }}>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
+        {/* ── Header ──────────────────────────────────────────────────── */}
       <Box sx={{
         display: 'flex', justifyContent: 'space-between',
         alignItems: isMobile ? 'flex-start' : 'center', mb: 3,
@@ -325,7 +363,7 @@ const SuperAdminAnnouncements: React.FC = () => {
           }}>
             System Announcements
           </Typography>
-          <Typography sx={{ fontFamily: fontStack, fontSize: isMobile ? 13 : 16, color: COLORS.textSecondary, mt: 0.5 }}>
+          <Typography sx={{ fontFamily: fontStack, fontSize: isMobile ? 12 : 14, color: COLORS.textSecondary, mt: 0.5 }}>
             Manage platform-wide communications
           </Typography>
         </Box>
@@ -334,7 +372,7 @@ const SuperAdminAnnouncements: React.FC = () => {
           onClick={() => { resetForm(); setShowModal(true); }}
           fullWidth={isMobile}
           sx={{
-            fontFamily: fontStack, fontWeight: 600, fontSize: 13,
+            fontFamily: fontStack, fontWeight: 700, fontSize: 13,
             borderRadius: COLORS.pillRadius, textTransform: 'none',
             bgcolor: COLORS.black, color: '#FFFFFF', px: 3, py: 1.2,
             '&:hover': { bgcolor: '#222' },
@@ -344,453 +382,448 @@ const SuperAdminAnnouncements: React.FC = () => {
         </Button>
       </Box>
 
-      {/* ── Stats Bento Row ─────────────────────────────────────────── */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
+      {/* ── Tabs Navigation ────────────────────────────────────────── */}
+      <Box sx={{ borderBottom: `1px solid ${COLORS.border}`, mb: 5, display: 'flex', gap: { xs: 2.5, sm: 4 }, overflowX: 'auto', px: { xs: 1, sm: 0 }, '&::-webkit-scrollbar': { display: 'none' } }}>
         {[
-          { label: 'Total', value: stats?.total || 0, accent: COLORS.teal, sub: 'All communications' },
-          { label: 'Active', value: stats?.active || 0, accent: COLORS.lavender, sub: 'Live now' },
-          { label: 'Scheduled', value: stats?.scheduled || 0, accent: COLORS.yellow, sub: 'Upcoming' },
-          { label: 'Expired', value: stats?.expired || 0, accent: COLORS.orange, sub: 'Past' },
-        ].map((stat) => (
-          <Box key={stat.label} sx={{
-            borderRadius: COLORS.cardRadius, p: isMobile ? 2 : 2.5,
-            backgroundColor: `${stat.accent}${stat.accent === COLORS.yellow ? '30' : '12'}`,
-            border: `1px solid ${stat.accent}20`,
-          }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: stat.accent, mb: 1.5 }} />
-            <Box sx={{ fontFamily: fontStack, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.textSecondary, mb: 0.5 }}>
-              {stat.label}
+          { label: 'All', value: '' },
+          { label: 'News', value: 'general' },
+          { label: 'Policy', value: 'policy' },
+          { label: 'Maintenance', value: 'maintenance' },
+        ].map((tab) => {
+          const active = filters.type === tab.value;
+          return (
+            <Box
+              key={tab.label}
+              onClick={() => setFilters({ ...filters, type: tab.value })}
+              sx={{
+                position: 'relative',
+                pb: 1.5,
+                cursor: 'pointer',
+                transition: 'color 0.2s ease',
+                color: active ? COLORS.black : '#94A3B8',
+                '&:hover': { color: COLORS.black }
+              }}
+            >
+              <Typography sx={{ fontFamily: fontStack, fontWeight: active ? 700 : 500, fontSize: 13, whiteSpace: 'nowrap' }}>
+                {tab.label}
+              </Typography>
+              {active && (
+                <motion.div
+                  layoutId="tabUnderline"
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: COLORS.black,
+                  }}
+                />
+              )}
             </Box>
-            <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 22 : 28, color: COLORS.textPrimary, letterSpacing: '-1px' }}>
-              {stat.value}
-            </Typography>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, mt: 0.5 }}>
-              {stat.sub}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* ── Filters ─────────────────────────────────────────────────── */}
-      <Box sx={{
-        borderRadius: COLORS.cardRadius, p: isMobile ? 2 : 3,
-        backgroundColor: `${COLORS.lavender}08`, border: `1px solid ${COLORS.lavender}15`, mb: 3,
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Box sx={{ width: 36, height: 36, borderRadius: '10px', backgroundColor: `${COLORS.lavender}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1.5 }}>
-            <FilterListIcon sx={{ fontSize: 18, color: COLORS.black }} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, mb: 0.25 }}>Filters</Typography>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>Filter by type, priority, or status</Typography>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
-          {[
-            { label: 'Type', key: 'type', options: ['', 'maintenance', 'policy', 'security', 'general', 'urgent'], labels: ['All Types', 'Maintenance', 'Policy', 'Security', 'General', 'Urgent'] },
-            { label: 'Priority', key: 'priority', options: ['', 'low', 'medium', 'high', 'critical'], labels: ['All Priorities', 'Low', 'Medium', 'High', 'Critical'] },
-            { label: 'Status', key: 'status', options: ['', 'active', 'scheduled', 'expired'], labels: ['All Status', 'Active', 'Scheduled', 'Expired'] },
-          ].map((f) => (
-            <FormControl key={f.key} size="small" sx={{ minWidth: isMobile ? '100%' : 130 }}>
-              <InputLabel sx={{ fontFamily: fontStack }}>{f.label}</InputLabel>
-              <Select
-                value={(filters as any)[f.key]}
-                label={f.label}
-                onChange={(e) => setFilters({ ...filters, [f.key]: e.target.value })}
-                sx={selectSx}
-                MenuProps={{ PaperProps: { sx: { borderRadius: '12px', mt: 1, fontFamily: fontStack } } }}
-              >
-                {f.options.map((o, i) => <MenuItem key={o} value={o}>{f.labels[i]}</MenuItem>)}
-              </Select>
-            </FormControl>
-          ))}
-          <Button
-            onClick={() => setFilters({ type: '', priority: '', status: '', targetAudience: '', search: '' })}
-            fullWidth={isMobile}
-            sx={{
-              fontFamily: fontStack, fontWeight: 600, fontSize: 13,
-              textTransform: 'none', borderRadius: '12px',
-              border: `1.5px solid ${COLORS.black}`, color: COLORS.black,
-              ml: isMobile ? 0 : 'auto',
-              '&:hover': { backgroundColor: '#f5f5f5' },
-            }}
-          >
-            Clear
-          </Button>
-        </Box>
-      </Box>
-
-      {/* ── Announcements Table / Cards ─────────────────────────────── */}
-      <Box sx={{
-        borderRadius: COLORS.cardRadius, p: isMobile ? 2 : 3,
-        backgroundColor: `${COLORS.teal}06`, border: `1px solid ${COLORS.teal}12`,
-      }}>
-        {filterLoading && !loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
-
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-          <Box sx={{ width: 36, height: 36, borderRadius: '10px', backgroundColor: `${COLORS.teal}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1.5 }}>
-            <NotificationsIcon sx={{ fontSize: 18, color: COLORS.black }} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, mb: 0.25 }}>Announcements</Typography>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>Manage all system announcements</Typography>
-          </Box>
+          );
+        })}
         </Box>
 
-        {loading ? (
-          <Box>
-            {!isMobile ? (
-              <TableContainer component={Paper} sx={{ borderRadius: '12px', border: `1px solid ${COLORS.border}`, boxShadow: 'none' }}>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#F8FAFC' }}>
-                      {[80, 60, 60, 80, 60, 80, 60].map((w, i) => (
-                        <TableCell key={i}><Skeleton variant="rounded" width={`${w}%`} height={18} sx={{ borderRadius: '6px' }} /></TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton variant="text" width="80%" height={20} />
-                          <Skeleton variant="text" width="60%" height={16} />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Skeleton variant="circular" width={16} height={16} sx={{ opacity: 0.5 }} />
-                            <Skeleton variant="text" width={60} />
-                          </Box>
-                        </TableCell>
-                        <TableCell><Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: COLORS.pillRadius }} /></TableCell>
-                        <TableCell><Skeleton variant="text" width={80} /></TableCell>
-                        <TableCell><Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: COLORS.pillRadius }} /></TableCell>
-                        <TableCell><Skeleton variant="text" width={100} /></TableCell>
-                        <TableCell align="right">
-                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                            <Skeleton variant="circular" width={28} height={28} />
-                            <Skeleton variant="circular" width={28} height={28} />
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {[1, 2, 3].map((i) => (
-                  <Box key={i} sx={{ p: 2, borderRadius: '12px', border: `1px solid ${COLORS.border}`, backgroundColor: 'rgba(255,255,255,0.4)' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Box sx={{ flex: 1 }}><Skeleton variant="text" width="70%" height={24} /><Skeleton variant="text" width="90%" /></Box>
-                      <Box sx={{ display: 'flex', gap: 1 }}><Skeleton variant="circular" width={24} height={24} /><Skeleton variant="circular" width={24} height={24} /></Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}><Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: 10 }} /><Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: 10 }} /></Box>
-                  </Box>
-                ))}
+        {/* ── Main List ───────────────────────────────────────────────── */}
+        <Box sx={{ width: '100%' }}>
+          {loading || filterLoading ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Box key={i} sx={{ display: 'flex', gap: { xs: 2, sm: 5 } }}>
+                  <Box sx={{ width: { xs: 50, sm: 80 }, flexShrink: 0 }}>
+                  <Skeleton variant="text" width="90%" height={16} />
+                  <Skeleton variant="text" width="80%" height={16} />
+                </Box>
               </Box>
-            )}
+            ))}
+          </Box>
+        ) : announcements.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 10 }}>
+            <NotificationsIcon sx={{ fontSize: 48, color: '#E2E8F0', mb: 2 }} />
+            <Typography sx={{ fontFamily: fontStack, color: COLORS.textSecondary, fontWeight: 600 }}>No announcements found</Typography>
           </Box>
         ) : (
-          <>
-            {/* Desktop Table */}
-            {!isMobile && (
-              <TableContainer component={Paper} sx={{ borderRadius: '12px', border: `1px solid ${COLORS.border}`, boxShadow: 'none' }}>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#F8FAFC' }}>
-                      {['Title', 'Type', 'Priority', 'Audience', 'Status', 'Created', 'Actions'].map((h) => (
-                        <TableCell key={h} align={h === 'Actions' ? 'right' : 'left'} sx={{
-                          fontFamily: fontStack, fontSize: 11, fontWeight: 700,
-                          color: COLORS.textSecondary, textTransform: 'uppercase',
-                          letterSpacing: '0.08em', borderBottom: `1px solid ${COLORS.border}`, py: 1.5,
-                        }}>
-                          {h}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {announcements.map((a) => {
-                      const ps = getPriorityStyle(a.priority);
-                      return (
-                        <TableRow key={a._id} sx={{
-                          transition: 'background-color 0.15s ease',
-                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.015)' },
-                          '& td': { fontFamily: fontStack, fontSize: 14, borderBottom: `1px solid ${COLORS.border}`, py: 2 },
-                        }}>
-                          <TableCell>
-                            <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 14, color: COLORS.textPrimary }}>{a.title}</Typography>
-                            <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>{a.content.substring(0, 80)}...</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                              {getTypeIcon(a.type)}
-                              <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textPrimary, textTransform: 'capitalize' }}>{a.type}</Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Chip label={a.priority} size="small" sx={{
-                              fontFamily: fontStack, borderRadius: COLORS.pillRadius, fontWeight: 700, fontSize: 10, textTransform: 'uppercase',
-                              backgroundColor: ps.bg, color: ps.color, border: `1px solid ${ps.border}`,
-                            }} />
-                          </TableCell>
-                          <TableCell>
-                            <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textPrimary, textTransform: 'capitalize' }}>
-                              {a.targetAudience === 'all' ? 'All Users' : a.targetAudience?.replace('_', ' ')}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip label={a.isActive ? 'Active' : 'Inactive'} size="small" sx={{
-                              fontFamily: fontStack, borderRadius: COLORS.pillRadius, fontWeight: 700, fontSize: 10, textTransform: 'uppercase',
-                              backgroundColor: a.isActive ? `${COLORS.teal}25` : '#F1F5F9',
-                              color: a.isActive ? '#065f46' : COLORS.textSecondary,
-                              border: `1px solid ${a.isActive ? `${COLORS.teal}40` : COLORS.border}`,
-                            }} />
-                          </TableCell>
-                          <TableCell>
-                            <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary }}>{formatDate(a.createdAt)}</Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                              <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black }}><EditIcon fontSize="small" /></IconButton>
-                              <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626' }}><DeleteIcon fontSize="small" /></IconButton>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-
-            {/* Mobile Cards */}
-            {isMobile && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {announcements.map((a) => {
-                  const ps = getPriorityStyle(a.priority);
-                  return (
-                    <Box key={a._id} sx={{
-                      p: 2, borderRadius: '12px',
-                      backgroundColor: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`,
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {announcements.map((a) => {
+              const { part1, part2 } = getAnnouncementDate(a.createdAt);
+              return (
+                <Box 
+                  key={a._id}
+                  sx={{ 
+                    display: 'flex', 
+                    gap: { xs: 3, sm: 6 },
+                    position: 'relative',
+                    transition: 'opacity 0.2s ease',
+                    '&:hover .action-buttons': { opacity: 1 }
+                  }}
+                >
+                    {/* Date Block */}
+                    <Box sx={{ 
+                      width: { xs: 50, sm: 80 }, 
+                      flexShrink: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      pt: 0.5
                     }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                        <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
-                          <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 0.5, lineHeight: 1.3 }}>{a.title}</Typography>
-                          <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.3 }}>{a.content.substring(0, 80)}...</Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                          <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black, p: 0.5 }}><EditIcon sx={{ fontSize: 16 }} /></IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626', p: 0.5 }}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {getTypeIcon(a.type)}
-                          <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textPrimary, textTransform: 'capitalize' }}>{a.type}</Typography>
-                        </Box>
-                        <Chip label={a.priority} size="small" sx={{
-                          fontFamily: fontStack, borderRadius: COLORS.pillRadius, fontWeight: 700, fontSize: 9, textTransform: 'uppercase', height: 20,
-                          backgroundColor: ps.bg, color: ps.color, border: `1px solid ${ps.border}`,
-                        }} />
-                        <Chip label={a.isActive ? 'Active' : 'Inactive'} size="small" sx={{
-                          fontFamily: fontStack, borderRadius: COLORS.pillRadius, fontWeight: 700, fontSize: 9, textTransform: 'uppercase', height: 20,
-                          backgroundColor: a.isActive ? `${COLORS.teal}25` : '#F1F5F9',
-                          color: a.isActive ? '#065f46' : COLORS.textSecondary,
-                        }} />
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1.5 }}>
-                        <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textPrimary, textTransform: 'capitalize' }}>
-                          {a.targetAudience === 'all' ? 'All Users' : a.targetAudience?.replace('_', ' ')}
-                        </Typography>
-                        <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary }}>
-                          {new Date(a.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </Box>
+                    <Typography sx={{ 
+                      fontFamily: fontStack, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      color: '#94A3B8',
+                      lineHeight: 1.2
+                    }}>
+                      {part1}
+                    </Typography>
+                    <Typography sx={{ 
+                      fontFamily: fontStack, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      color: '#94A3B8' 
+                    }}>
+                      {part2}
+                    </Typography>
+                  </Box>
+
+                  {/* Content Block */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                      <Typography sx={{ 
+                        fontFamily: fontStack, 
+                        fontSize: { xs: 16, sm: 18 }, 
+                        fontWeight: 800, 
+                        color: COLORS.black,
+                        lineHeight: 1.3
+                      }}>
+                        {a.title}
+                      </Typography>
                     </Box>
-                  );
-                })}
-              </Box>
-            )}
-          </>
+                    <Typography sx={{ 
+                      fontFamily: fontStack, 
+                      fontSize: 13, 
+                      color: '#64748B', 
+                      lineHeight: 1.6,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      mb: 1
+                    }}>
+                      {a.content}
+                    </Typography>
+                    
+                    {/* Meta info & Chips */}
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 2 }}>
+                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          {getTypeIcon(a.type)}
+                          <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {a.type}
+                          </Typography>
+                       </Box>
+                       <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#CBD5E1' }} />
+                       <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>
+                          {(a.targetAudience === 'all' ? 'All Users' : a.targetAudience?.replace('_', ' ')).toUpperCase()}
+                       </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Hover Action Buttons */}
+                  <Box className="action-buttons" sx={{ 
+                    position: 'absolute', 
+                    top: -4, 
+                    right: -40, 
+                    opacity: 0, 
+                    display: { xs: 'none', md: 'flex' },
+                    flexDirection: 'column',
+                    gap: 0.5,
+                    transition: 'all 0.2s ease',
+                  }}>
+                    <Tooltip title="Edit">
+                      <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black, bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, '&:hover': { bgcolor: '#F8FAFC' } }}>
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, '&:hover': { bgcolor: '#FEE2E2' } }}>
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+
+                  {/* Mobile Actions */}
+                  <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, position: 'absolute', top: 0, right: 0 }}>
+                    <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black }}><EditIcon sx={{ fontSize: 16 }} /></IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626' }}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
         )}
       </Box>
 
       {/* ═══ CREATE / EDIT DIALOG ═════════════════════════════════════ */}
+      {/* ═══ CREATE / EDIT DIALOG (PREMIUM BENTO REDESIGN) ══════════════ */}
       <Dialog
         open={showModal} onClose={() => setShowModal(false)}
-        maxWidth={isMobile ? 'sm' : 'lg'} fullWidth fullScreen={isMobile}
+        maxWidth="md" fullWidth fullScreen={isMobile}
         PaperProps={{
           component: 'form', onSubmit: handleSubmit,
-          sx: { borderRadius: isMobile ? 0 : COLORS.cardRadius, maxHeight: isMobile ? '100vh' : '90vh', m: isMobile ? 0 : 2 },
+          sx: { 
+            borderRadius: isMobile ? 0 : '24px', 
+            maxHeight: isMobile ? '100vh' : '90vh', 
+            m: isMobile ? 0 : 2,
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+            overflow: 'hidden'
+          },
         }}
       >
-        <DialogTitle sx={{ pb: 2, px: isMobile ? 2 : 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '10px', backgroundColor: editingAnnouncement ? `${COLORS.lavender}18` : `${COLORS.teal}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {editingAnnouncement ? <EditIcon sx={{ fontSize: 18, color: COLORS.lavender }} /> : <AddIcon sx={{ fontSize: 18, color: COLORS.teal }} />}
-              </Box>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 18 : 22, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
-                {editingAnnouncement ? 'Edit Announcement' : 'Create Announcement'}
+        {/* Modal Header */}
+        <Box sx={{ p: 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: 32, color: COLORS.textPrimary, letterSpacing: '-0.04em' }}>
+                {formData.title || (editingAnnouncement ? 'Edit Announcement' : 'New Announcement')}
               </Typography>
+              <Chip 
+                label={formData.isActive ? 'Live' : 'Draft'} 
+                size="small"
+                sx={{ 
+                  fontFamily: fontStack, fontWeight: 700, fontSize: 11, 
+                  bgcolor: formData.isActive ? '#f1f5f9' : '#fff7ed',
+                  color: formData.isActive ? '#475569' : '#c2410c',
+                  border: '1px solid currentColor',
+                  borderRadius: '6px', height: 22
+                }}
+              />
             </Box>
-            <IconButton onClick={() => setShowModal(false)} sx={{ color: COLORS.textSecondary }}><CloseIcon /></IconButton>
+            <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
+              Created: {editingAnnouncement ? new Date(editingAnnouncement.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
+              {formData.expiresAt && `  •  Due: ${new Date(formData.expiresAt).toLocaleDateString()}`}
+            </Typography>
           </Box>
-        </DialogTitle>
+          <IconButton onClick={() => setShowModal(false)} sx={{ color: '#94a3b8', mt: -1 }}><CloseIcon /></IconButton>
+        </Box>
 
-        <DialogContent sx={{ pt: 1, px: isMobile ? 2 : 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            <Grid container spacing={2.5}>
-              {/* Title */}
-              <Grid item xs={12}>
-                <TextField fullWidth label="Announcement Title" required value={formData.title}
+        <DialogContent sx={{ px: 4, py: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  Title
+                </Typography>
+                <TextField 
+                  fullWidth label="Announcement Title" required 
+                  value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Enter a clear, descriptive title"
-                  error={!formData.title.trim()} helperText={!formData.title.trim() ? 'Required' : ''}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack }, '& .MuiInputLabel-root': { fontFamily: fontStack, backgroundColor: '#FFFFFF', px: 0.5 } }}
-                />
-              </Grid>
-
-              {/* Content */}
-              <Grid item xs={12}>
-                <TextField inputRef={textareaRef} fullWidth label="Content" required multiline rows={5}
-                  value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Provide detailed information..."
-                  error={!formData.content.trim()} helperText={!formData.content.trim() ? 'Required' : ''}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack }, '& .MuiInputLabel-root': { fontFamily: fontStack, backgroundColor: '#FFFFFF', px: 0.5 } }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 2 }}>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton size="small" onClick={(e) => handleFormatText('bold', e)} title="Bold"><FormatBoldIcon sx={{ fontSize: 16 }} /></IconButton>
-                          <IconButton size="small" onClick={(e) => handleFormatText('italic', e)} title="Italic"><FormatItalicIcon sx={{ fontSize: 16 }} /></IconButton>
-                          <IconButton size="small" onClick={(e) => handleFormatText('underline', e)} title="Underline"><FormatUnderlinedIcon sx={{ fontSize: 16 }} /></IconButton>
-                          <IconButton size="small" component="label" title="Attach"><input type="file" multiple hidden onChange={handleFileAttachment} /><LinkIcon sx={{ fontSize: 16 }} /></IconButton>
-                        </Box>
-                      </InputAdornment>
-                    )
+                  placeholder="Enter title..."
+                  variant="outlined"
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' },
+                    '& .MuiInputLabel-root': { fontFamily: fontStack, fontSize: 13 }
                   }}
                 />
-                <FormHelperText sx={{ fontFamily: fontStack, ml: 2 }}>**bold**, *italic*, __underline__</FormHelperText>
-                {attachments.length > 0 && (
-                  <Box sx={{ mt: 1.5, p: 2, backgroundColor: `${COLORS.teal}08`, borderRadius: '12px', border: `1px solid ${COLORS.teal}15` }}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 12, color: COLORS.textPrimary, mb: 1 }}>Attached ({attachments.length})</Typography>
-                    {attachments.map((file, i) => (
-                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1, borderRadius: '8px', backgroundColor: '#fff', mb: 0.5 }}>
-                        <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textPrimary }}>{file.name} ({(file.size / 1024).toFixed(1)} KB)</Typography>
-                        <IconButton size="small" onClick={() => removeAttachment(i)} sx={{ color: '#DC2626' }}><CloseIcon sx={{ fontSize: 14 }} /></IconButton>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
               </Grid>
-
-              {/* Type */}
               <Grid item xs={12} sm={6}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1 }}>Type</Typography>
-                <ToggleButtonGroup value={formData.type} exclusive onChange={(_, v) => v && setFormData({ ...formData, type: v })}
-                  sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, '& .MuiToggleButtonGroup-grouped': { m: 0, border: 0, borderRadius: COLORS.pillRadius, '&.Mui-selected': { backgroundColor: COLORS.black, color: '#FFFFFF', '&:hover': { backgroundColor: '#222' } } } }}
-                >
-                  {['general', 'maintenance', 'policy', 'security', 'urgent'].map((t) => (
-                    <ToggleButton key={t} value={t} sx={{ fontFamily: fontStack, fontSize: 11, px: 1.5, py: 0.5, border: `1px solid ${COLORS.border}`, textTransform: 'capitalize' }}>{t}</ToggleButton>
-                  ))}
-                </ToggleButtonGroup>
-              </Grid>
-
-              {/* Priority */}
-              <Grid item xs={12} sm={6}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Priority
-                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: formData.priority === 'critical' ? '#DC2626' : formData.priority === 'high' ? COLORS.orange : formData.priority === 'medium' ? '#d97706' : COLORS.teal }} />
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  Category
                 </Typography>
-                <ToggleButtonGroup value={formData.priority} exclusive onChange={(_, v) => v && setFormData({ ...formData, priority: v })}
-                  sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, '& .MuiToggleButtonGroup-grouped': { m: 0, border: 0, borderRadius: COLORS.pillRadius } }}
-                >
-                  {[
-                    { v: 'low', bg: COLORS.teal }, { v: 'medium', bg: '#d97706' }, { v: 'high', bg: COLORS.orange }, { v: 'critical', bg: '#DC2626' },
-                  ].map((p) => (
-                    <ToggleButton key={p.v} value={p.v} sx={{
-                      fontFamily: fontStack, fontSize: 11, px: 1.5, py: 0.5, border: `1px solid ${COLORS.border}`, textTransform: 'capitalize',
-                      '&.Mui-selected': { backgroundColor: p.bg, color: '#FFFFFF', '&:hover': { backgroundColor: p.bg, filter: 'brightness(0.9)' } },
-                    }}>{p.v}</ToggleButton>
-                  ))}
-                </ToggleButtonGroup>
-              </Grid>
-
-              {/* Audience + Status */}
-              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontFamily: fontStack }}>Target Audience</InputLabel>
-                  <Select value={formData.targetAudience} label="Target Audience" onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value as Announcement['targetAudience'] })} sx={selectSx}>
-                    <MenuItem value="all">All Users</MenuItem><MenuItem value="institutions">Institutions</MenuItem><MenuItem value="students">Students</MenuItem><MenuItem value="admins">Admins</MenuItem><MenuItem value="super_admin">Super Admin</MenuItem>
+                  <Select 
+                    value={formData.type} 
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    sx={selectSx}
+                  >
+                    <MenuItem value="general">News & Updates</MenuItem>
+                    <MenuItem value="policy">Policy & Rules</MenuItem>
+                    <MenuItem value="maintenance">Maintenance</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontFamily: fontStack }}>Publication Status</InputLabel>
-                  <Select value={formData.isActive ? 'active' : 'inactive'} label="Publication Status" onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'active' })} sx={selectSx}>
-                    <MenuItem value="active">Active — Publish Now</MenuItem><MenuItem value="inactive">Inactive — Draft</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Schedule + Expiry */}
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth type="datetime-local" label="Schedule (Optional)" size="small" value={formData.scheduledAt}
-                  onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })} helperText="Leave empty for immediate"
-                  InputLabelProps={{ shrink: true, sx: { fontFamily: fontStack, backgroundColor: '#fff', px: 0.5 } }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth type="datetime-local" label="Expires (Optional)" size="small" value={formData.expiresAt}
-                  onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })} helperText="Leave empty for no expiry"
-                  InputLabelProps={{ shrink: true, sx: { fontFamily: fontStack, backgroundColor: '#fff', px: 0.5 } }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack } }}
-                />
-              </Grid>
-
-              {/* Tags */}
-              <Grid item xs={12}>
-                <TextField fullWidth label="Tags (Optional)" size="small" value={formData.tags.join(', ')}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) })}
-                  placeholder="maintenance, update, important" helperText="Comma-separated"
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack }, '& .MuiInputLabel-root': { fontFamily: fontStack } }}
-                />
-              </Grid>
-
-              {/* Acknowledgment */}
-              <Grid item xs={12}>
-                <Box sx={{ p: 2, borderRadius: '12px', backgroundColor: `${COLORS.yellow}20`, border: `1px solid ${COLORS.yellow}40`, cursor: 'pointer', '&:hover': { backgroundColor: `${COLORS.yellow}30` } }}>
-                  <FormControlLabel
-                    control={<Checkbox checked={formData.requiresAcknowledgment} onChange={(e) => setFormData({ ...formData, requiresAcknowledgment: e.target.checked })} sx={{ mr: 1 }} />}
-                    label="Require User Acknowledgment"
-                    sx={{ '& .MuiFormControlLabel-label': { fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary } }}
-                  />
-                  <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, ml: 4 }}>Users must acknowledge before dismissing</Typography>
-                </Box>
               </Grid>
             </Grid>
+
+            {/* 2. Recipients Section */}
+            <Box sx={{ 
+              p: 2.5, borderRadius: '16px', border: `1px solid ${COLORS.border}`, 
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              bgcolor: '#ffffff', transition: 'all 0.2s ease',
+              '&:hover': { borderColor: COLORS.black, bgcolor: '#fafafa' }
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                <Box sx={{ 
+                  width: 48, height: 48, borderRadius: '14px', bgcolor: '#f1f5f9', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' 
+                }}>
+                  <PeopleAltIcon />
+                </Box>
+                <Box>
+                  <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                    {formData.targetAudience === 'all' ? 'Add Recipients' : `Target: ${formData.targetAudience}`}
+                  </Typography>
+                  <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
+                    {formData.targetInstitutions.length > 0 
+                      ? `${formData.targetInstitutions.length} Specific Institutions selected`
+                      : 'Select to whom you need to send this announcement'}
+                  </Typography>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={formData.targetInstitutions}
+                    onChange={(e) => setFormData({ ...formData, targetInstitutions: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value })}
+                    renderValue={(selected) => selected.length === 0 ? 'All Institutions' : `${selected.length} Institutions`}
+                    sx={{ ...selectSx, height: 40, bgcolor: '#fff' }}
+                  >
+                    {institutions.map((inst) => (
+                      <MenuItem key={inst._id} value={inst._id}>
+                        <Checkbox checked={formData.targetInstitutions.indexOf(inst._id) > -1} size="small" />
+                        <Typography sx={{ fontFamily: fontStack, fontSize: 13 }}>{inst.name}</Typography>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button 
+                  startIcon={<AddIcon />}
+                  sx={{ 
+                    bgcolor: '#2563eb', color: '#fff', borderRadius: '10px', px: 2, py: 1,
+                    textTransform: 'none', fontWeight: 700, fontFamily: fontStack,
+                    '&:hover': { bgcolor: '#1d4ed8' }
+                  }}
+                >
+                  Add
+                </Button>
+              </Box>
+            </Box>
+
+            {/* 3. Priority & Timing */}
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={4}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  Priority Level
+                </Typography>
+                <FormControl fullWidth size="small">
+                  <Select 
+                    value={formData.priority} 
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                    sx={selectSx}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Box sx={{ 
+                          width: 8, height: 8, borderRadius: '50%', mr: 1,
+                          bgcolor: formData.priority === 'urgent' ? '#dc2626' : formData.priority === 'high' ? '#ea580c' : '#059669' 
+                        }} />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value="low">Low Priority</MenuItem>
+                    <MenuItem value="medium">Medium Priority</MenuItem>
+                    <MenuItem value="high">High Priority</MenuItem>
+                    <MenuItem value="urgent">Urgent</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  Send On
+                </Typography>
+                <TextField 
+                  fullWidth type="datetime-local" size="small" 
+                  value={formData.scheduledAt}
+                  onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' } }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                  Due On
+                </Typography>
+                <TextField 
+                  fullWidth type="datetime-local" size="small" 
+                  value={formData.expiresAt}
+                  onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' } }}
+                />
+              </Grid>
+            </Grid>
+
+            {/* 4. Notes Section */}
+            <Box>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
+                Notes
+              </Typography>
+              <Box sx={{ border: `1px solid ${COLORS.border}`, borderRadius: '16px', overflow: 'hidden' }}>
+                <Box sx={{ px: 2, py: 1, borderBottom: `1px solid ${COLORS.border}`, bgcolor: '#fafafa', display: 'flex', gap: 1 }}>
+                  <IconButton size="small" onClick={(e) => handleFormatText('bold', e)}><FormatBoldIcon sx={{ fontSize: 18 }} /></IconButton>
+                  <IconButton size="small" onClick={(e) => handleFormatText('italic', e)}><FormatItalicIcon sx={{ fontSize: 18 }} /></IconButton>
+                  <IconButton size="small" onClick={(e) => handleFormatText('underline', e)}><FormatUnderlinedIcon sx={{ fontSize: 18 }} /></IconButton>
+                  <Box sx={{ width: 1, height: 18, bgcolor: '#e2e8f0', mx: 1, alignSelf: 'center' }} />
+                  <IconButton size="small" component="label">
+                    <input type="file" multiple hidden onChange={handleFileAttachment} />
+                    <LinkIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Box>
+                <TextField 
+                  fullWidth multiline rows={4}
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="Write your message here..."
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { border: 'none', borderRadius: 0, '& fieldset': { border: 'none' } },
+                    '& .MuiInputBase-input': { fontFamily: fontStack, fontSize: 15, p: 2.5 }
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* 5. Delivery Methods */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pt: 1 }}>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary }}>
+                Send Announcement as:
+              </Typography>
+              <FormControlLabel
+                control={<Checkbox checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />}
+                label={<Typography sx={{ fontFamily: fontStack, fontSize: 14, fontWeight: 600 }}>In-app Popup</Typography>}
+              />
+              <FormControlLabel
+                control={<Checkbox checked={formData.sendEmail} onChange={(e) => setFormData({ ...formData, sendEmail: e.target.checked })} />}
+                label={<Typography sx={{ fontFamily: fontStack, fontSize: 14, fontWeight: 600 }}>Email Notification</Typography>}
+              />
+            </Box>
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2.5, borderTop: `1px solid ${COLORS.border}` }}>
-          <Button onClick={() => setShowPreview(true)} startIcon={<PreviewIcon />}
-            sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, textTransform: 'none', borderRadius: '12px', border: `1.5px solid ${COLORS.black}`, color: COLORS.black, mr: 'auto', '&:hover': { backgroundColor: '#f5f5f5' } }}
-          >Preview</Button>
-          <Button onClick={() => setShowModal(false)}
-            sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, textTransform: 'none', borderRadius: '12px', border: `1.5px solid ${COLORS.border}`, color: COLORS.textSecondary, '&:hover': { backgroundColor: '#f5f5f5' } }}
-          >Cancel</Button>
-          <Button type="submit" disableElevation disabled={!formData.title.trim() || !formData.content.trim()}
-            sx={{
-              fontFamily: fontStack, fontWeight: 600, fontSize: 13, textTransform: 'none',
-              borderRadius: COLORS.pillRadius, bgcolor: COLORS.black, color: '#FFFFFF', px: 3,
-              '&:hover': { bgcolor: '#222' }, '&.Mui-disabled': { bgcolor: '#d1d5db', color: '#9ca3af' },
+        <DialogActions sx={{ p: 4, pt: 2 }}>
+          <Button 
+            onClick={() => setShowModal(false)}
+            sx={{ 
+              fontFamily: fontStack, fontWeight: 700, color: '#64748b', textTransform: 'none',
+              fontSize: 14, mr: 1
             }}
-          >{editingAnnouncement ? 'Update' : 'Publish'}</Button>
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" disableElevation
+            disabled={!formData.title.trim() || !formData.content.trim()}
+            sx={{ 
+              bgcolor: '#2563eb', color: '#fff', borderRadius: '10px', px: 4, py: 1.5,
+              textTransform: 'none', fontWeight: 800, fontFamily: fontStack, fontSize: 15,
+              '&:hover': { bgcolor: '#1d4ed8' },
+              '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' }
+            }}
+          >
+            {editingAnnouncement ? 'Update Announcement' : 'Send Announcement'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -836,7 +869,8 @@ const SuperAdminAnnouncements: React.FC = () => {
             sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, textTransform: 'none', borderRadius: COLORS.pillRadius, bgcolor: COLORS.black, color: '#FFFFFF', px: 3, '&:hover': { bgcolor: '#222' } }}
           >Close</Button>
         </DialogActions>
-      </Dialog>
+        </Dialog>
+      </Box>
     </Box>
   );
 };

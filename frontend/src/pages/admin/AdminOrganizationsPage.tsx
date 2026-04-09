@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 
 // ─── Modern Bento Design System ──────────────────────────────────────────────
 const COLORS = {
-  pageBg: '#F8F9FE',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#1E293B',
   textPrimary: '#1E293B',

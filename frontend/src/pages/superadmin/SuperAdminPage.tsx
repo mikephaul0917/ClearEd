@@ -31,7 +31,7 @@ import SuperAdminAnnouncements from "./SuperAdminAnnouncements";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
-  pageBg: '#FAFAFA',
+  pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#000000',
   textPrimary: '#000000',
@@ -719,8 +719,8 @@ export default function SuperAdminPage() {
         icon: <><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M4 10h16M10 4v16" /></>,
       },
       {
-        title: 'User Management',
-        desc: 'Monitor user counts and platform engagement.',
+        title: 'Institution Management',
+        desc: 'Review, monitor, and manage registered institutions.',
         path: '/super-admin/institution-monitoring',
         accent: COLORS.teal,
         patternColor: '#0D9488', // Darker teal

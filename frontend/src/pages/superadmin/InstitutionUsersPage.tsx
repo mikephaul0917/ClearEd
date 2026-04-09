@@ -6,7 +6,7 @@ import UsersTable from '../../components/UsersTable';
 import { api } from '../../services/api';
 
 const COLORS = {
-  pageBg: '#ffffff',
+  pageBg: '#F9FAFB',
   black: '#0a0a0a',
   textSecondary: '#64748B',
   border: '#E2E8F0',
