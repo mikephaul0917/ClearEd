@@ -132,8 +132,23 @@ export const clearanceService = {
         return response.data;
     },
 
+    bulkMarkAsOfficerCleared: async (organizationId: string, studentIds: string[], signatureData?: string) => {
+        const response = await api.post(`/signatory/organizations/${organizationId}/bulk-clear-students`, { studentIds, signatureData });
+        return response.data;
+    },
+
     getOrganizationClearanceOverview: async (organizationId: string) => {
         const response = await api.get(`/signatory/organizations/${organizationId}/clearance-overview`);
+        return response.data;
+    },
+
+    revokeOfficerClearance: async (organizationId: string, studentId: string) => {
+        const response = await api.post(`/signatory/organizations/${organizationId}/revoke-clearance/${studentId}`);
+        return response.data;
+    },
+
+    bulkRevokeOfficerClearance: async (organizationId: string, studentIds: string[]) => {
+        const response = await api.post(`/signatory/organizations/${organizationId}/bulk-revoke-clearance`, { studentIds });
         return response.data;
     }
 };

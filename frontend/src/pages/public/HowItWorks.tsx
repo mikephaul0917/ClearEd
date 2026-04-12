@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 // ─── Color Tokens ────────────────────────────────────────────────────────────
 const C = {
   white: "#FFFFFF",
-  black: "#000000",
+  black: "#3c4043",
   teal: "#5EEAD4",
   blue: "#B0E0E6",
   yellow: "#FEF08A",
@@ -14,7 +14,7 @@ const C = {
 };
 
 // ─── Shared Styles ────────────────────────────────────────────────────────────
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const cardBase = {
   borderRadius: C.cardRadius,
@@ -121,7 +121,7 @@ export default function HowItWorks() {
               fontSize: { xs: "40px", md: "60px" },
               letterSpacing: "-2px",
               lineHeight: 1.1,
-              color: C.black,
+              color: '#000',
               mb: 3,
             }}
           >
@@ -199,7 +199,7 @@ export default function HowItWorks() {
                 fontWeight: 800,
                 fontSize: "22px",
                 letterSpacing: "-0.3px",
-                color: C.black,
+                color: '#000',
                 lineHeight: 1.3,
               }}
             >
@@ -231,7 +231,7 @@ export default function HowItWorks() {
                 fontWeight: 800,
                 fontSize: "22px",
                 letterSpacing: "-0.3px",
-                color: C.black,
+                color: '#000',
                 lineHeight: 1.3,
               }}
             >
@@ -272,7 +272,7 @@ export default function HowItWorks() {
                 fontWeight: 800,
                 fontSize: "22px",
                 letterSpacing: "-0.3px",
-                color: C.black,
+                color: '#000',
                 lineHeight: 1.3,
               }}
             >
@@ -298,7 +298,7 @@ export default function HowItWorks() {
             sx={{
               ...cardBase,
               backgroundColor: C.white,
-              border: `2px solid ${C.black}`,
+              border: `2px solid ${'#000'}`,
               minHeight: 220,
               alignItems: "flex-start",
               justifyContent: "center",
@@ -311,7 +311,7 @@ export default function HowItWorks() {
                 fontWeight: 800,
                 fontSize: "26px",
                 letterSpacing: "-0.5px",
-                color: C.black,
+                color: '#000',
                 lineHeight: 1.25,
                 maxWidth: 420,
               }}
@@ -355,7 +355,7 @@ export default function HowItWorks() {
                   boxShadow: '0 20px 30px -10px rgba(0,0,0,0.35), 0 10px 15px -5px rgba(0,0,0,0.15)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   "&:hover": {
-                    backgroundColor: "#111",
+                    backgroundColor: "#3c4043",
                     boxShadow: '0 30px 45px -12px rgba(0,0,0,0.45), 0 15px 20px -8px rgba(0,0,0,0.25)',
                     transform: 'translateY(-3px)'
                   },

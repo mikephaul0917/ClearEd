@@ -136,8 +136,28 @@ export default function StudentRequirements() {
             </Paper>
           </Box>
         </Box>
-        <Box display="flex" justifyContent="flex-end" mt={2}>
-          <Button variant="outlined" onClick={saveChanges}>Save changes</Button>
+        <Box sx={{ display: "flex", justifyContent: { xs: 'center', md: 'flex-end' }, mt: 3 }}>
+          <Button 
+            variant="outlined" 
+            onClick={saveChanges}
+            fullWidth
+            sx={{
+              borderRadius: '100px',
+              color: '#000',
+              borderColor: '#E2E8F0',
+              bgcolor: '#FFF',
+              fontWeight: 700,
+              px: { xs: 4, md: 6 },
+              py: { xs: 1.5, md: 1.5 },
+              maxWidth: { md: 240 },
+              textTransform: 'none',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+              '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-2px)' },
+              transition: 'all 0.2s'
+            }}
+          >
+            Save changes
+          </Button>
         </Box>
       </Paper>
     </Box>

@@ -6,7 +6,7 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Divider from "@mui/material/Divider";
-import { useTheme, useMediaQuery } from "@mui/material";
+import { useTheme, useMediaQuery, Skeleton } from "@mui/material";
 
 const FAQ_DATA = {
   general: [
@@ -55,17 +55,54 @@ const CATEGORIES = [
   { id: "features", label: "Features & tools" }
 ];
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState("general");
   const [expanded, setExpanded] = useState<string | false>("panel0");
+  const [isLoading, setIsLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  React.useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [activeCategory]);
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
   };
+
+  const ContentSkeleton = () => (
+    <Box flex={1}>
+      {/* Badge Skeleton */}
+      <Box mb={2}>
+        <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '6px', bgcolor: "#eaebec" }} />
+      </Box>
+
+      {/* Title Skeleton */}
+      <Box mb={6}>
+        <Skeleton variant="text" width="80%" height={isMobile ? 50 : 80} sx={{ bgcolor: "#eaebec" }} />
+        <Skeleton variant="text" width="60%" height={isMobile ? 50 : 80} sx={{ bgcolor: "#eaebec" }} />
+      </Box>
+
+      {/* FAQ Items Skeleton */}
+      <Box>
+        {[1, 2, 3, 4].map((i) => (
+          <Box key={i} sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+              <Skeleton variant="text" width="60%" height={30} sx={{ bgcolor: "#eaebec" }} />
+              <Skeleton variant="text" width="20px" height={30} sx={{ bgcolor: "#eaebec" }} />
+            </Box>
+            <Divider sx={{ borderColor: '#eaebec' }} />
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
 
   return (
     <>
@@ -89,6 +126,7 @@ export default function FAQPage() {
                       whiteSpace: "nowrap",
                       fontSize: "0.95rem",
                       borderRadius: "12px",
+                      fontFamily: fontStack,
                       "&:hover": {
                         backgroundColor: isActive ? "transparent" : "#F8FAFC",
                       }
@@ -130,85 +168,90 @@ export default function FAQPage() {
           </Box>
 
           {/* Content Area */}
-          <Box flex={1}>
-            {/* Badge */}
-            <Box mb={2}>
-              <Typography sx={{ 
-                display: 'inline-block',
-                bgcolor: "rgba(45, 212, 191, 0.15)",
-                color: "#0E7490", 
-                px: 1.5,
-                py: 0.5,
-                borderRadius: '6px',
-                fontSize: "0.75rem", 
-                fontWeight: 800, 
-                letterSpacing: "0.05em" 
-              }}>
-                / FAQS
+          {isLoading ? (
+            <ContentSkeleton />
+          ) : (
+            <Box flex={1}>
+              {/* Badge */}
+              <Box mb={2}>
+                <Typography sx={{ 
+                  display: 'inline-block',
+                  bgcolor: "rgba(45, 212, 191, 0.15)",
+                  color: "#0E7490", 
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: '6px',
+                  fontSize: "0.75rem", 
+                  fontWeight: 800, 
+                  letterSpacing: "0.05em",
+                  fontFamily: fontStack
+                }}>
+                  / FAQS
+                </Typography>
+              </Box>
+
+              <Typography
+                variant="h1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '2rem', sm: '2.75rem', md: '3.5rem' },
+                  color: "#0F172A",
+                  fontFamily: fontStack,
+                  lineHeight: 1.1,
+                  mb: 6,
+                  letterSpacing: { xs: '-0.5px', sm: '-1.5px' }
+                }}
+              >
+                Frequently Asked <br /> Questions
               </Typography>
-            </Box>
 
-            <Typography
-              variant="h1"
-              sx={{
-                fontWeight: 800,
-                fontSize: isMobile ? "2.5rem" : "3.5rem",
-                color: "#0F172A",
-                fontFamily: fontStack,
-                lineHeight: 1.1,
-                mb: 6,
-                letterSpacing: '-0.04em'
-              }}
-            >
-              Frequently asked<br />question
-            </Typography>
+              <Box>
+                {(FAQ_DATA[activeCategory as keyof typeof FAQ_DATA] || []).map((faq, index) => {
+                  const panelId = `panel${index}`;
+                  const isExpanded = expanded === panelId;
 
-            <Box>
-              {(FAQ_DATA[activeCategory as keyof typeof FAQ_DATA] || []).map((faq, index) => {
-                const panelId = `panel${index}`;
-                const isExpanded = expanded === panelId;
-
-                return (
-                  <Box key={index}>
-                    <Accordion
-                      expanded={isExpanded}
-                      onChange={handleChange(panelId)}
-                      disableGutters
-                      elevation={0}
-                      sx={{
-                        backgroundColor: "transparent",
-                        "&:before": { display: "none" },
-                        py: 1
-                      }}
-                    >
-                      <AccordionSummary
-                        expandIcon={
-                          <Box sx={{ fontSize: '24px', fontWeight: 400, color: '#0F172A', transition: 'all 0.2s' }}>
-                            {isExpanded ? "−" : "+"}
-                          </Box>
-                        }
+                  return (
+                    <Box key={index}>
+                      <Accordion
+                        expanded={isExpanded}
+                        onChange={handleChange(panelId)}
+                        disableGutters
+                        elevation={0}
                         sx={{
-                          px: 0,
-                          "& .MuiAccordionSummary-content": { my: 2 },
-                          "& .MuiAccordionSummary-expandIconWrapper": { transform: 'none' }
+                          backgroundColor: "transparent",
+                          "&:before": { display: "none" },
+                          py: 1
                         }}
                       >
-                        <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", fontFamily: fontStack }}>
-                          {faq.question}
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
-                        <Typography sx={{ color: "#64748B", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: 700, fontFamily: fontStack }}>
-                          {faq.answer}
-                        </Typography>
-                      </AccordionDetails>
-                    </Accordion>
-                    <Divider sx={{ borderColor: '#F1F5F9' }} />
-                  </Box>
-                );
-              })}
+                        <AccordionSummary
+                          expandIcon={
+                            <Box sx={{ fontSize: '24px', fontWeight: 400, color: '#0F172A', transition: 'all 0.2s' }}>
+                              {isExpanded ? "−" : "+"}
+                            </Box>
+                          }
+                          sx={{
+                            px: 0,
+                            "& .MuiAccordionSummary-content": { my: 2 },
+                            "& .MuiAccordionSummary-expandIconWrapper": { transform: 'none' }
+                          }}
+                        >
+                          <Typography sx={{ fontWeight: 700, color: "#1E293B", fontSize: "1.25rem", fontFamily: fontStack }}>
+                            {faq.question}
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ px: 0, pb: 4, pt: 0 }}>
+                          <Typography sx={{ color: "#64748B", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: 700, fontFamily: fontStack }}>
+                            {faq.answer}
+                          </Typography>
+                        </AccordionDetails>
+                      </Accordion>
+                      <Divider sx={{ borderColor: '#F1F5F9' }} />
+                    </Box>
+                  );
+                })}
+              </Box>
             </Box>
-          </Box>
+          )}
         </Box>
       </Box>
     </>

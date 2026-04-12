@@ -12,6 +12,7 @@ export interface AuthContextProps {
     loginWithToken: (jwt: string, returnedUser: any) => boolean;
     logout: () => void;
     mockLogin: (userData: any, mockToken: string) => void;
+    updateUser: (data: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -240,8 +241,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('[AuthContext] Mock login completed - user state set and storage event dispatched');
     };
 
+    const updateUser = useCallback((data: Partial<AuthUser>) => {
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, ...data };
+            localStorage.setItem("user", JSON.stringify(updated));
+            // Trigger storage event for cross-tab or redundant listeners
+            window.dispatchEvent(new Event("storage"));
+            return updated;
+        });
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout: performLogout, mockLogin }}>
+        <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout: performLogout, mockLogin, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

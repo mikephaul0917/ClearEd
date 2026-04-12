@@ -46,6 +46,7 @@ import MembersList from "../../components/organization/MembersList";
 import OfficerMarksTab from "../../components/stream/OfficerMarksTab";
 import { useAuth } from "../../hooks/useAuth";
 import { organizationService, clearanceService, api } from "../../services";
+import GenericConfirmationModal from "../../components/modals/GenericConfirmationModal";
 
 /**
  * StreamPage Component
@@ -92,6 +93,9 @@ const StreamPage: React.FC = () => {
     const [isCreateMaterialModalOpen, setIsCreateMaterialModalOpen] = useState(false);
     const [isCustomiseModalOpen, setIsCustomiseModalOpen] = useState(false);
     const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [isUnarchiveModalOpen, setIsUnarchiveModalOpen] = useState(false);
+    const [isActionLoading, setIsActionLoading] = useState(false);
     const [tabValue, setTabValue] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [createMenuAnchorEl, setCreateMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -114,11 +118,11 @@ const StreamPage: React.FC = () => {
             const data = await organizationService.getOrganization(orgId);
             setOrg(data.organization);
             setMembership(data.membership);
-            
+
             // Sync theme values from org if available, defaulting to previous slate color
             if (data.organization?.themeColor) setThemeColor(data.organization.themeColor);
             else setThemeColor('#0F172A');
-            
+
             if (data.organization?.headerImage) setHeaderImage(data.organization.headerImage);
 
             // 1.5 Fetch Members
@@ -197,28 +201,34 @@ const StreamPage: React.FC = () => {
     };
 
     const handleArchive = async () => {
-        if (!orgId || !window.confirm("Are you sure you want to archive this organization? Students will no longer be able to submit requirements.")) return;
-
+        if (!orgId) return;
+        setIsActionLoading(true);
         try {
             await organizationService.archiveOrganization(orgId);
-            alert("Organization archived successfully.");
-            navigate("/archived-organizations");
+            setSnackbarMessage("Organization archived successfully");
+            setIsArchiveModalOpen(false);
+            setTimeout(() => navigate("/archived-organizations"), 1500);
         } catch (error) {
             console.error("Failed to archive organization:", error);
-            alert("Failed to archive organization.");
+            setSnackbarMessage("Failed to archive organization");
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
     const handleUnarchive = async () => {
-        if (!orgId || !window.confirm("Are you sure you want to unarchive this organization? It will become active again.")) return;
-
+        if (!orgId) return;
+        setIsActionLoading(true);
         try {
             await api.put(`/organizations/${orgId}/restore`);
-            alert("Organization unarchived successfully.");
-            navigate("/home");
+            setSnackbarMessage("Organization unarchived successfully");
+            setIsUnarchiveModalOpen(false);
+            setTimeout(() => navigate("/home"), 1500);
         } catch (error) {
             console.error("Failed to unarchive organization:", error);
-            alert("Failed to unarchive organization.");
+            setSnackbarMessage("Failed to unarchive organization");
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
@@ -304,33 +314,46 @@ const StreamPage: React.FC = () => {
                         backgroundImage: headerImage ? `url(${headerImage})` : 'none',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        p: { xs: 3, md: 5 },
+                        p: { xs: 2.5, sm: 3, md: 5 },
                         mb: 4,
                         color: "white",
                         position: "relative",
                         overflow: "hidden"
                     }}
                 >
-                    <Box sx={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Box sx={{
+                        position: "relative",
+                        zIndex: 1,
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
+                        justifyContent: "space-between",
+                        alignItems: { xs: "flex-start", sm: "flex-start" },
+                        gap: 2
+                    }}>
                         <Box>
                             <Typography variant="h3" fontWeight={800} gutterBottom sx={{ fontSize: { xs: "1.75rem", md: "2.5rem" } }}>
                                 {org.name}
                             </Typography>
-                            <Box display="flex" gap={2} alignItems="center">
-                                <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                            <Box display="flex" gap={2} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                                <Typography variant="subtitle1" sx={{ opacity: 0.9, fontSize: { xs: "0.875rem", sm: "1rem" } }}>
                                     {org.termId ? `${org.termId.semester} ${org.termId.academicYear}` : "Academic Term"}
                                 </Typography>
-                                <Divider orientation="vertical" flexItem sx={{ bgcolor: "rgba(255,255,255,0.3)" }} />
-                                <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                                <Divider orientation="vertical" flexItem sx={{ bgcolor: "rgba(255,255,255,0.3)", display: { xs: 'none', sm: 'block' } }} />
+                                <Typography variant="subtitle1" sx={{ opacity: 0.9, fontSize: { xs: "0.875rem", sm: "1rem" } }}>
                                     {org.institutionId?.name || "Institution"}
                                 </Typography>
                                 {org.status === 'archived' && (
-                                    <Chip label="Archived" size="small" sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white", ml: 1 }} />
+                                    <Chip label="Archived" size="small" sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }} />
                                 )}
                             </Box>
                         </Box>
-                        {(isAdmin || isOfficer) && org.status !== 'archived' && (
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                        {(isAdmin || isOfficer) && (
+                            <Box sx={{
+                                display: 'flex',
+                                gap: 1,
+                                alignSelf: { xs: 'flex-end', sm: 'flex-start' },
+                                mt: { xs: 0, sm: 0 }
+                            }}>
                                 {isOfficer && (
                                     <Button
                                         variant="contained"
@@ -338,7 +361,7 @@ const StreamPage: React.FC = () => {
                                         onClick={() => setIsCustomiseModalOpen(true)}
                                         sx={{
                                             bgcolor: "white",
-                                            color: "#1967d2",
+                                            color: "#0E7490",
                                             fontWeight: 500,
                                             textTransform: "none",
                                             borderRadius: 20,
@@ -353,7 +376,7 @@ const StreamPage: React.FC = () => {
                                     </Button>
                                 )}
                                 <Tooltip title="Archive Organization">
-                                    <IconButton onClick={handleArchive} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+                                    <IconButton onClick={() => setIsArchiveModalOpen(true)} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
                                         <ArchiveIcon />
                                     </IconButton>
                                 </Tooltip>
@@ -368,7 +391,7 @@ const StreamPage: React.FC = () => {
                                         onClick={() => setIsCustomiseModalOpen(true)}
                                         sx={{
                                             bgcolor: "white",
-                                            color: "#1967d2",
+                                            color: "#0E7490",
                                             fontWeight: 500,
                                             textTransform: "none",
                                             borderRadius: 20,
@@ -383,7 +406,7 @@ const StreamPage: React.FC = () => {
                                     </Button>
                                 )}
                                 <Tooltip title="Unarchive Organization">
-                                    <IconButton onClick={handleUnarchive} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+                                    <IconButton onClick={() => setIsUnarchiveModalOpen(true)} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
                                         <UnarchiveIcon />
                                     </IconButton>
                                 </Tooltip>
@@ -410,17 +433,21 @@ const StreamPage: React.FC = () => {
                         value={tabValue}
                         onChange={(_, v) => setTabValue(v)}
                         textColor="inherit"
-                        TabIndicatorProps={{ sx: { bgcolor: "#0F172A", height: 3 } }}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        allowScrollButtonsMobile
+                        TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                         sx={{
                             "& .MuiTab-root": {
                                 textTransform: "none",
                                 fontWeight: 700,
                                 fontSize: "1rem",
                                 minWidth: 100,
-                                py: 1.5
+                                py: 1.5,
+                                color: "#5F6368"
                             },
                             "& .Mui-selected": {
-                                color: "#0F172A"
+                                color: "#0D9488 !important"
                             }
                         }}
                     >
@@ -439,7 +466,7 @@ const StreamPage: React.FC = () => {
                             {isOfficer && org?.status !== 'archived' && (
                                 <Paper sx={{ p: 2, borderRadius: 2, border: "1px solid #E2E8F0", display: 'flex', flexDirection: 'column' }} elevation={0}>
                                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                                        <Typography variant="subtitle2" fontWeight={700} sx={{ fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif" }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                                             Org code
                                         </Typography>
                                         <IconButton size="small" onClick={handleMenuClick}>
@@ -463,14 +490,14 @@ const StreamPage: React.FC = () => {
                                         </Menu>
                                     </Box>
                                     <Box display="flex" alignItems="center" gap={1} sx={{ mt: 0.5 }}>
-                                        <Typography 
-                                            variant="h5" 
-                                            sx={{ fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif", color: '#0F172A', fontWeight: 600, letterSpacing: 0.5, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                                        <Typography
+                                            variant="h5"
+                                            sx={{ fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', color: '#0F172A', fontWeight: 600, letterSpacing: 0.5, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
                                             onClick={() => setIsCodeModalOpen(true)}
                                         >
                                             {org.joinCode}
                                         </Typography>
-                                        <IconButton size="small" sx={{ color: '#1a73e8' }} onClick={() => setIsCodeModalOpen(true)}>
+                                        <IconButton size="small" sx={{ color: '#0E7490' }} onClick={() => setIsCodeModalOpen(true)}>
                                             <FullscreenIcon fontSize="small" />
                                         </IconButton>
                                     </Box>
@@ -478,16 +505,16 @@ const StreamPage: React.FC = () => {
                             )}
 
                             <Paper sx={{ p: 2, borderRadius: 2, border: "1px solid #E2E8F0" }} elevation={0}>
-                                <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif" }}>
+                                <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                                     Upcoming
                                 </Typography>
-                                <Typography variant="body2" sx={{ mb: 2, color: "#64748B", fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif" }}>
+                                <Typography variant="body2" sx={{ mb: 2, color: "#64748B", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                                     {requirements.filter(r => r.status !== 'approved' && !r.isAnnouncement).length} items to complete
                                 </Typography>
                                 <Button
                                     variant="text"
                                     size="small"
-                                    sx={{ textTransform: 'none', fontWeight: 700, p: 0, fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif" }}
+                                    sx={{ textTransform: 'none', fontWeight: 700, p: 0, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}
                                     onClick={() => navigate("/student/progress")}
                                 >
                                     View all
@@ -499,7 +526,7 @@ const StreamPage: React.FC = () => {
                         <Box sx={{ flex: 1 }}>
                             {/* Announce Area (Officer only) */}
                             {isOfficer && org.status !== 'archived' && (
-                                <StreamComposer 
+                                <StreamComposer
                                     organizationId={org._id}
                                     onCreated={fetchData}
                                     userAvatarUrl={fullUser?.avatarUrl}
@@ -547,7 +574,7 @@ const StreamPage: React.FC = () => {
                                     onClick={handleCreateMenuClick}
                                     sx={{
                                         borderRadius: 20,
-                                        bgcolor: "#5f6368",
+                                        bgcolor: "#3c4043",
                                         color: "#ffffff",
                                         textTransform: "none",
                                         fontWeight: 600,
@@ -555,7 +582,7 @@ const StreamPage: React.FC = () => {
                                         px: 3,
                                         py: 1.2,
                                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                        '&:hover': { bgcolor: '#4b4e52', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }
+                                        '&:hover': { bgcolor: '#202124', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }
                                     }}
                                 >
                                     Create
@@ -571,8 +598,8 @@ const StreamPage: React.FC = () => {
                                         sx: { mt: 1, minWidth: 260, borderRadius: 2, py: 1 }
                                     }}
                                 >
-                                    <MenuItem 
-                                        onClick={() => { handleCreateMenuClose(); setIsCreateModalOpen(true); }} 
+                                    <MenuItem
+                                        onClick={() => { handleCreateMenuClose(); setIsCreateModalOpen(true); }}
                                         sx={{ py: 1.5 }}
                                     >
                                         <ListItemIcon sx={{ color: "#3c4043", minWidth: 40 }}><AssignmentIcon /></ListItemIcon>
@@ -593,7 +620,7 @@ const StreamPage: React.FC = () => {
                                 </Menu>
                             </Box>
                         )}
-                        
+
                         {/* Actionable Work Items List */}
                         {requirements.filter(req => !req.isAnnouncement && req.type !== 'announcement' && req.type !== 'material').length > 0 ? (
                             requirements.filter(req => !req.isAnnouncement && req.type !== 'announcement' && req.type !== 'material').map((req) => (
@@ -724,7 +751,27 @@ const StreamPage: React.FC = () => {
                     currentHeaderImage={headerImage}
                     onSave={handleSaveAppearance}
                 />
-                
+
+                <GenericConfirmationModal
+                    open={isArchiveModalOpen}
+                    onClose={() => setIsArchiveModalOpen(false)}
+                    onConfirm={handleArchive}
+                    title="Are You Sure Want To Archive?"
+                    description="You are about to archive this organization. Students will no longer be able to submit requirements."
+                    confirmText="Yes, Archive"
+                    loading={isActionLoading}
+                />
+
+                <GenericConfirmationModal
+                    open={isUnarchiveModalOpen}
+                    onClose={() => setIsUnarchiveModalOpen(false)}
+                    onConfirm={handleUnarchive}
+                    title="Are You Sure Want To Unarchive?"
+                    description="You are about to unarchive this organization. It will become active and visible to students again."
+                    confirmText="Yes, Unarchive"
+                    loading={isActionLoading}
+                />
+
                 <Snackbar
                     open={Boolean(snackbarMessage)}
                     autoHideDuration={3000}
@@ -748,7 +795,7 @@ const StreamPage: React.FC = () => {
                     }}
                 >
                     <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography sx={{ fontSize: '1.25rem', color: '#1F2937', fontWeight: 400 }}>Class code</Typography>
+                        <Typography sx={{ fontSize: '1.25rem', color: '#1F2937', fontWeight: 400 }}>Organization code</Typography>
                         <IconButton onClick={() => setIsCodeModalOpen(false)} sx={{ color: '#4B5563' }}>
                             <CloseIcon />
                         </IconButton>
@@ -771,10 +818,10 @@ const StreamPage: React.FC = () => {
                         <Button
                             startIcon={<ContentCopyIcon />}
                             onClick={handleCopyInviteLink}
-                            sx={{ 
-                                color: '#1a73e8', 
-                                textTransform: 'none', 
-                                fontWeight: 500, 
+                            sx={{
+                                color: '#0E7490',
+                                textTransform: 'none',
+                                fontWeight: 500,
                                 fontSize: '0.9rem',
                                 '&:hover': { bgcolor: 'rgba(26, 115, 232, 0.04)' }
                             }}

@@ -39,7 +39,10 @@ const ArchivedOrganizationsPage: React.FC = () => {
         } catch (error) {
             console.error("Failed to fetch organizations", error);
         } finally {
-            setLoading(false);
+            // Add deliberate delay for premium feel
+            setTimeout(() => {
+                setLoading(false);
+            }, 2000);
         }
     };
 

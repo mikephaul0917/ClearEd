@@ -5,6 +5,8 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
+import Skeleton from "@mui/material/Skeleton";
+import Divider from "@mui/material/Divider";
 import Alert from "@mui/material/Alert";
 import TodoItem from "../../components/todo/TodoItem";
 import { useAuth } from "../../hooks/useAuth";
@@ -92,13 +94,25 @@ const TodoPage: React.FC = () => {
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to fetch to-do items.");
         } finally {
-            setLoading(false);
+            // Add deliberate delay for premium feel
+            setTimeout(() => {
+                setLoading(false);
+            }, 2000);
         }
     }, [isOfficer]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    // Trigger skeleton on tab change for premium feel
+    useEffect(() => {
+        setLoading(true);
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, [tabValue]);
 
     const renderEmptyState = (type: 'assigned' | 'missing' | 'done') => {
         if (isOfficer) {
@@ -245,6 +259,7 @@ const TodoPage: React.FC = () => {
 
         // Common Accordion styles
         const accordionSx = {
+            bgcolor: '#F9FAFB',
             boxShadow: 'none',
             '&:before': { display: 'none' },
             borderBottom: '1px solid #E5E7EB',
@@ -267,7 +282,7 @@ const TodoPage: React.FC = () => {
                         <Typography sx={{ fontSize: '1.25rem', color: '#3C4043', ml: 1, flex: 1, fontFamily: "'Google Sans', Roboto, Arial, sans-serif" }}>
                             {title}
                         </Typography>
-                        <Typography sx={{ color: count > 0 ? '#1A73E8' : '#3C4043', mr: 2, fontSize: '0.875rem' }}>
+                        <Typography sx={{ color: count > 0 ? '#0E7490' : '#3C4043', mr: 2, fontSize: '0.875rem' }}>
                             {count}
                         </Typography>
                     </AccordionSummary>
@@ -330,113 +345,156 @@ const TodoPage: React.FC = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-            <Box sx={{ mb: 2 }}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
-                    <Tabs
-                        value={tabValue}
-                        onChange={(_, val) => setTabValue(val)}
-                        textColor="inherit"
-                        indicatorColor="primary"
-                        sx={{
-                            minHeight: 48,
-                            "& .MuiTabs-flexContainer": {
-                                gap: 3
-                            },
-                            "& .MuiTab-root": {
-                                textTransform: "none",
-                                fontWeight: 500,
-                                minWidth: 'auto',
-                                px: 0,
-                                py: 1.5,
-                                mr: 4,
-                                fontSize: "0.875rem",
-                                color: "#5F6368", // Google dark grey
-                                fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
-                                transition: 'color 0.2s',
-                                '&:hover': {
-                                    color: '#202124' // darker grey on hover
-                                },
-                                '&.Mui-selected': {
-                                    color: '#000', // Black
-                                    fontWeight: 500
-                                }
-                            },
-                            "& .MuiTabs-indicator": {
-                                height: 3,
-                                borderRadius: "3px 3px 0 0",
-                                bgcolor: "#000" // Black indicator
-                            }
-                        }}
-                    >
-                        <Tab label="Assigned" />
-                        <Tab label="Missing" />
-                        <Tab label="Done" />
-                    </Tabs>
-                </Box>
-
-                <Box sx={{ px: 1, mb: 4 }}>
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
-                        <Select
-                            value={selectedOrg}
-                            onChange={(e) => setSelectedOrg(e.target.value)}
-                            displayEmpty
+        <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', pt: 0, pb: 8 }}>
+            <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+                <Box sx={{ mb: 2 }}>
+                    <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
+                        <Tabs
+                            value={tabValue}
+                            onChange={(_, val) => setTabValue(val)}
+                            textColor="inherit"
+                            indicatorColor="primary"
                             sx={{
-                                color: '#3C4043',
-                                fontSize: '0.875rem',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#dadce0', // Gray border default
-                                    borderWidth: 1,
-                                    borderRadius: '4px'
+                                minHeight: 48,
+                                "& .MuiTabs-flexContainer": {
+                                    gap: 2
                                 },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#202124' // Dark hover
+                                "& .MuiTab-root": {
+                                    textTransform: "none",
+                                    fontWeight: 500,
+                                    minWidth: 'auto',
+                                    px: 0,
+                                    py: 1.5,
+                                    mr: 3,
+                                    fontSize: "0.875rem",
+                                    color: "#5F6368", // Google dark grey
+                                    fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
+                                    transition: 'color 0.2s',
+                                    '&:hover': {
+                                        color: '#202124' // darker grey on hover
+                                    },
+                                    '&.Mui-selected': {
+                                        color: '#0D9488', // Dark teal
+                                        fontWeight: 500
+                                    }
                                 },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#000', // Black when focused
-                                    borderWidth: 2
-                                },
-                                '& .MuiSelect-select': {
-                                    py: 1,
-                                    px: 2
-                                },
-                                '& .MuiSvgIcon-root': {
-                                    color: '#5f6368' // Gray dropdown arrow
+                                "& .MuiTabs-indicator": {
+                                    height: 3,
+                                    borderRadius: "3px 3px 0 0",
+                                    bgcolor: "#0D9488" // Dark teal indicator
                                 }
                             }}
                         >
-                            <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>All classes</MenuItem>
-                            {allOrganizations.map(org => (
-                                <MenuItem key={org.id} value={org.id} sx={{ fontSize: '0.875rem' }}>
-                                    {org.name}
-                                </MenuItem>
+                            <Tab label="Assigned" />
+                            <Tab label="Missing" />
+                            <Tab label="Done" />
+                        </Tabs>
+                    </Box>
+
+                    <Box sx={{ px: 1, mb: 4 }}>
+                        <FormControl size="small" sx={{ minWidth: 200 }}>
+                            <Select
+                                value={selectedOrg}
+                                onChange={(e) => setSelectedOrg(e.target.value)}
+                                displayEmpty
+                                sx={{
+                                    bgcolor: '#F9FAFB',
+                                    color: '#3C4043',
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#dadce0', // Gray border default
+                                        borderWidth: 1,
+                                        borderRadius: '4px'
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#202124' // Dark hover
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#0D9488', // Dark teal when focused
+                                        borderWidth: 2
+                                    },
+                                    '& .MuiSelect-select': {
+                                        py: 1,
+                                        px: 2
+                                    },
+                                    '& .MuiSvgIcon-root': {
+                                        color: '#5f6368' // Gray dropdown arrow
+                                    }
+                                }}
+                            >
+                                <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>All organizations</MenuItem>
+                                {allOrganizations.map(org => (
+                                    <MenuItem key={org.id} value={org.id} sx={{ fontSize: '0.875rem' }}>
+                                        {org.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+
+                    {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{error}</Alert>}
+                </Box>
+
+                {loading ? (
+                    <Box sx={{ mt: 2 }}>
+                        {/* Skeleton Filter Box */}
+                        <Box sx={{ px: 1, mb: 4, opacity: 0.5 }}>
+                             <Skeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: '6px', bgcolor: "#eaebec" }} />
+                        </Box>
+
+                        {/* Accordion Skeletons */}
+                        {[1, 2, 3].map((i) => (
+                            <Box key={i} sx={{ 
+                                bgcolor: '#F9FAFB', 
+                                borderBottom: '1px solid #E5E7EB',
+                                py: 2.5,
+                                px: 2,
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}>
+                                <Skeleton variant="text" width="20%" height={32} sx={{ bgcolor: "#eaebec", mr: 'auto' }} />
+                                <Skeleton variant="text" width={20} height={24} sx={{ bgcolor: "#eaebec", mr: 4 }} />
+                                <Skeleton variant="circular" width={20} height={20} sx={{ bgcolor: "#eaebec" }} />
+                            </Box>
+                        ))}
+
+                        {/* Expanded Items Skeleton (simulating one open group) */}
+                        <Box sx={{ px: 2, pt: 2 }}>
+                            {[1, 2].map((i) => (
+                                <Box key={i} sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: 2, 
+                                    mb: 3,
+                                    p: 2,
+                                    bgcolor: 'white',
+                                    borderRadius: '12px',
+                                    border: '1px solid #F1F5F9'
+                                }}>
+                                    <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: "#eaebec" }} />
+                                    <Box sx={{ flex: 1 }}>
+                                        <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: "#eaebec", mb: 0.5 }} />
+                                        <Skeleton variant="text" width="30%" height={16} sx={{ bgcolor: "#eaebec" }} />
+                                    </Box>
+                                    <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: '999px', bgcolor: "#eaebec" }} />
+                                </Box>
                             ))}
-                        </Select>
-                    </FormControl>
-                </Box>
-
-                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{error}</Alert>}
-            </Box>
-
-            {loading ? (
-                <Box display="flex" justifyContent="center" py={12}>
-                    <CircularProgress color="inherit" />
-                </Box>
-            ) : (
-                <>
-                    <TabPanel value={tabValue} index={0}>
-                        {renderList(todoData.assigned, 'assigned')}
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={1}>
-                        {renderList(todoData.missing, 'missing')}
-                    </TabPanel>
-                    <TabPanel value={tabValue} index={2}>
-                        {renderList(todoData.done, 'done')}
-                    </TabPanel>
-                </>
-            )}
-
-        </Container>
+                        </Box>
+                    </Box>
+                ) : (
+                    <>
+                        <TabPanel value={tabValue} index={0}>
+                            {renderList(todoData.assigned, 'assigned')}
+                        </TabPanel>
+                        <TabPanel value={tabValue} index={1}>
+                            {renderList(todoData.missing, 'missing')}
+                        </TabPanel>
+                        <TabPanel value={tabValue} index={2}>
+                            {renderList(todoData.done, 'done')}
+                        </TabPanel>
+                    </>
+                )}
+            </Container>
+        </Box>
     );
 };
 

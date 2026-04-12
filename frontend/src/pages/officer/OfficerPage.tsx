@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -27,7 +28,8 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, authService } from '../../services';
-import { getInitials } from "../../utils/avatarUtils";
+import { getInitials, formatNameFromEmail } from "../../utils/avatarUtils";
+import GenericConfirmationModal from "../../components/modals/GenericConfirmationModal";
 import SuccessMessage from "../../components/SuccessMessage";
 import { showGlobalModal } from "../../components/GlobalModal";
 import OfficerClassroomView from "../../components/officer/OfficerClassroomView";
@@ -50,7 +52,8 @@ import {
   SettingsRow,
   SettingsField,
   ProfilePictureSection,
-  SettingsHeader
+  SettingsHeader,
+  SettingsSkeleton
 } from "../../components/layout/SettingsLayout";
 import SuccessModal from "../../components/SuccessModal";
 import PasswordConfirmModal from "../dean/components/PasswordConfirmModal";
@@ -86,7 +89,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const glassCard = {
   borderRadius: COLORS.cardRadius,
@@ -100,6 +103,7 @@ const glassCard = {
 export default function OfficerPage() {
   const location = useLocation();
   const nav = useNavigate();
+  const { updateUser } = useAuth();
   const isReview = location.pathname.includes("/review");
   const isSettings = location.pathname.includes("/settings");
   const isTodo = location.pathname.includes("/todo");
@@ -130,6 +134,10 @@ export default function OfficerPage() {
   };
   const [notice, setNotice] = useState<any>((location.state as any)?.banner ?? null);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [filterCourse, setFilterCourse] = useState<string>("");
   const [filterYear, setFilterYear] = useState<string>("");
@@ -229,13 +237,21 @@ export default function OfficerPage() {
   };
 
   useEffect(() => {
+    if (active === 'settings') {
+      setSettingsLoading(true);
+      const timer = setTimeout(() => setSettingsLoading(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [active]);
+
+  useEffect(() => {
     (async () => {
       try {
         const storedUserStr = localStorage.getItem("user");
         const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
         const savedUsername = localStorage.getItem("username") || fullUser?.fullName || fullUser?.firstName || "";
-        const base = savedUsername || (email || "").split("@")[0];
-        const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
+        const baseName = savedUsername || formatNameFromEmail(email || "");
+        const parts = baseName.split(" ");
         const first = parts[0] || "";
         const last = parts.slice(1).join(" ") || "";
         setProfileFirst(first);
@@ -301,6 +317,21 @@ export default function OfficerPage() {
     }
   }, [isSettings]);
 
+  const handleDeleteAvatar = async () => {
+    setIsDeletingAvatar(true);
+    try {
+      await api.put("/auth/profile", { avatarUrl: "" });
+      setAvatarUrl("");
+      updateUser({ avatarUrl: "" });
+      updateLocalAvatar("");
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -362,13 +393,8 @@ export default function OfficerPage() {
   });
 
   const fullName = useMemo(() => {
-    const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
-    const composed = [cap(profileFirst.trim()), cap(profileLast.trim())].filter(Boolean).join(" ");
-    if (composed) return composed;
-    const local = (email || "").split("@")[0];
-    const parts = local.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
-    const name = parts.map(cap).join(" ");
-    return name || "Officer";
+    const name = formatNameFromEmail(email || "", "Officer");
+    return name;
   }, [profileFirst, profileLast, email]);
 
   const initials = useMemo(() => {
@@ -405,7 +431,7 @@ export default function OfficerPage() {
     }
     if (newPass !== confirmPass) {
       showGlobalModal(
-        "Password Mismatch", 
+        "Password Mismatch",
         "New password and confirmation do not match. Please ensure both fields are identical.",
         "error"
       );
@@ -466,176 +492,191 @@ export default function OfficerPage() {
         <OfficerClassroomView />
       ) : active === "todo" ? (
         <TodoPage />
-      ) : (
-        <SettingsContainer>
-          <SettingsHeader 
-            title="Account Information" 
-            subtitle="Manage your administrative account settings" 
-          />
-
-          <SettingsSection>
-            <ProfilePictureSection
-              avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
-              initials={getInitials(draftFullName)}
-              onFileSelect={async (file) => {
-                try {
-                  const formData = new FormData();
-                  formData.append('avatar', file);
-                  const res = await api.post("/auth/avatar", formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                  });
-                  setAvatarUrl(res.data.avatarUrl);
-                  updateLocalAvatar(res.data.avatarUrl);
-                } catch (err: any) {
-                  console.error("Upload failed:", err);
-                }
-              }}
-              onDelete={async () => {
-                try {
-                  await api.put("/auth/profile", { avatarUrl: "" });
-                  setAvatarUrl("");
-                  updateLocalAvatar("");
-                } catch (err) {
-                  console.error("Delete failed:", err);
-                }
-              }}
+      ) : active === "settings" ? (
+        settingsLoading ? (
+          <SettingsSkeleton />
+        ) : (
+          <SettingsContainer>
+            <SettingsHeader
+              title="Account Information"
+              subtitle="Manage your administrative account settings"
             />
-          </SettingsSection>
 
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField 
-                label="First Name"
+            <SettingsSection>
+              <ProfilePictureSection
+                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
+                initials={getInitials(draftFullName)}
+                onFileSelect={async (file) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    const res = await api.post("/auth/avatar", formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    setAvatarUrl(res.data.avatarUrl);
+                    updateUser({ avatarUrl: res.data.avatarUrl });
+                    updateLocalAvatar(res.data.avatarUrl);
+                  } catch (err: any) {
+                    console.error("Upload failed:", err);
+                  }
+                }}
+                onDelete={() => setShowDeleteConfirm(true)}
+              />
+
+              <GenericConfirmationModal
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDeleteAvatar}
+                loading={isDeletingAvatar}
+                title={
+                  <>
+                    Are You Sure <br /> Want To Remove?
+                  </>
+                }
+                description={
+                  <>
+                    You are about to remove your profile picture. <br />
+                    This action <strong>cannot be undone</strong>.
+                  </>
+                }
+                confirmText="Yes, Remove"
+              />
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField
+                  label="First Name"
+                >
+                  <TextField
+                    fullWidth
+                    name="first-name"
+                    autoComplete="given-name"
+                    value={draftFirst}
+                    onChange={(e) => setDraftFirst(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+                <SettingsField
+                  label="Last Name"
+                >
+                  <TextField
+                    fullWidth
+                    name="last-name"
+                    autoComplete="family-name"
+                    value={draftLast}
+                    onChange={(e) => setDraftLast(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField
+                  label="Email"
+                >
+                  <TextField
+                    fullWidth
+                    name="real-email"
+                    autoComplete="email"
+                    value={email}
+                    disabled
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Account Type">
+                  <TextField
+                    fullWidth
+                    value="Organization Officer"
+                    disabled
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="New Password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Confirm Password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
+              <Button
+                variant="contained"
+                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                sx={{
+                  backgroundColor: '#3c4043',
+                  color: '#FFF',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                  '&:hover': {
+                    backgroundColor: '#202124',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
+                  },
+                  transition: 'all 0.2s ease'
+                }}
               >
-                <TextField
-                  fullWidth
-                  name="first-name"
-                  autoComplete="given-name"
-                  value={draftFirst}
-                  onChange={(e) => setDraftFirst(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-              <SettingsField 
-                label="Last Name"
-              >
-                <TextField
-                  fullWidth
-                  name="last-name"
-                  autoComplete="family-name"
-                  value={draftLast}
-                  onChange={(e) => setDraftLast(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
-
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField 
-                label="Email"
-              >
-                <TextField
-                  fullWidth
-                  name="real-email"
-                  autoComplete="email"
-                  value={email}
-                  disabled
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-              <SettingsField label="Account Type">
-                <TextField
-                  fullWidth
-                  value="Organization Officer"
-                  disabled
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
-
-
-
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField label="New Password">
-                <TextField
-                  type="password"
-                  fullWidth
-                  placeholder="Enter new password"
-                  autoComplete="new-password"
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-              <SettingsField label="Confirm Password">
-                <TextField
-                  type="password"
-                  fullWidth
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                  value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', '& fieldset': { border: 'none' } } }}
-                />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
-
-          <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
-            <Button
-              variant="contained"
-              onClick={(e) => { e.preventDefault(); updateProfile(); }}
-              sx={{
-                backgroundColor: '#000',
-                color: '#FFF',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: '1rem',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  backgroundColor: '#111',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Save Profile
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={updatePassword}
-              sx={{
-                color: '#000',
-                borderColor: '#000',
-                borderWidth: '1.2px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: '1rem',
-                backgroundColor: '#FFF',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                '&:hover': {
+                Save Profile
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={updatePassword}
+                sx={{
+                  color: '#000',
                   borderColor: '#000',
-                  bgcolor: '#F8FAFC',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Update Password
-            </Button>
-          </Box>
-        </SettingsContainer>
-      )}
+                  borderWidth: '1.2px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  backgroundColor: '#FFF',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                  '&:hover': {
+                    borderColor: '#000',
+                    bgcolor: '#F8FAFC',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Update Password
+              </Button>
+            </Box>
+          </SettingsContainer>
+        )) : null}
       <SuccessModal
         open={successModalOpen}
         onClose={() => setSuccessModalOpen(false)}

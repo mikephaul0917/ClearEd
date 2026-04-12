@@ -9,7 +9,7 @@ import SuccessActionModal from "../../components/SuccessActionModal";
 
 const C = {
   white: "#FFFFFF",
-  black: "#000000",
+  black: "#3c4043",
   gray: "#F9FAFB",
   border: "#E2E8F0",
   fontStack: "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif",
@@ -105,12 +105,12 @@ export default function ContactPage() {
           <Grid item xs={12} md={5}>
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
               <Box sx={{ mb: 8 }}>
-                <Typography sx={{ fontSize: "16px", color: C.black, fontWeight: 500, mb: 0.5 }}>Lucena City, Quezon</Typography>
+                <Typography sx={{ fontSize: "16px", color: '#000', fontWeight: 500, mb: 0.5 }}>Lucena City, Quezon</Typography>
                 <Typography sx={{ fontSize: "16px", color: "#6B7280", fontWeight: 500 }}>2026</Typography>
               </Box>
 
               <Box>
-                <Typography sx={{ fontSize: "16px", color: C.black, fontWeight: 700, mb: 1 }}>Office hours</Typography>
+                <Typography sx={{ fontSize: "16px", color: '#000', fontWeight: 700, mb: 1 }}>Office hours</Typography>
                 <Typography sx={{ fontSize: "16px", color: "#6B7280", fontWeight: 500, mb: 0.5 }}>Monday — Friday</Typography>
                 <Typography sx={{ fontSize: "16px", color: "#6B7280", fontWeight: 500 }}>8 AM — 5 PM</Typography>
               </Box>
@@ -198,7 +198,7 @@ export default function ContactPage() {
                   fontSize: { xs: "24px", md: "56px" },
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
-                  color: C.black,
+                  color: '#000',
                   wordBreak: "break-all"
                 }}
               >
@@ -211,7 +211,7 @@ export default function ContactPage() {
                   fontSize: { xs: "24px", md: "42px" },
                   fontWeight: 800,
                   letterSpacing: "-0.04em",
-                  color: C.black
+                  color: '#000'
                 }}
               >
                 (+63) 9152216815
@@ -223,16 +223,16 @@ export default function ContactPage() {
         {/* Footer info */}
         <Box sx={{ mt: 15, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
           <Box>
-            <Typography sx={{ fontSize: "12px", fontWeight: 800, color: C.black, mb: 1 }}>LOCATION</Typography>
+            <Typography sx={{ fontSize: "12px", fontWeight: 800, color: '#000', mb: 1 }}>LOCATION</Typography>
             <Typography sx={{ fontSize: "14px", color: "#6B7280", fontWeight: 500 }}>Lucena, Quezon 2026</Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: C.black }, cursor: "pointer" }}>Facebook</Typography>
-            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: C.black }, cursor: "pointer" }}>Instagram</Typography>
-            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: C.black }, cursor: "pointer" }}>Twitter</Typography>
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Facebook</Typography>
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Instagram</Typography>
+            <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Twitter</Typography>
             <Typography
               onClick={() => navigate("/privacy")}
-              sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: C.black }, cursor: "pointer" }}
+              sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}
             >
               Privacy Policy
             </Typography>

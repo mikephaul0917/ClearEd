@@ -6,13 +6,16 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid";
-import { useTheme, useMediaQuery, SvgIconProps } from "@mui/material";
+import { useTheme, useMediaQuery, SvgIconProps, Skeleton, Menu, MenuItem, ListItemIcon, ListItemText, IconButton } from "@mui/material";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { RiUserSettingsLine } from "react-icons/ri";
 
 interface SettingsHeaderProps {
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
   icon?: React.ReactElement<SvgIconProps>;
 }
 
@@ -46,7 +49,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({ children }) =>
 };
 
 interface SettingsFieldProps {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
   fullWidth?: boolean;
   labelAction?: React.ReactNode;
@@ -90,12 +93,30 @@ interface ProfilePictureSectionProps {
   onDelete?: () => void;
 }
 
-export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ avatarUrl, initials, onFileSelect }) => {
+export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ avatarUrl, initials, onFileSelect, onDelete }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleUploadClick = () => {
+    handleMenuClose();
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleDeleteClick = () => {
+    handleMenuClose();
+    if (onDelete) {
+      onDelete();
     }
   };
 
@@ -122,44 +143,73 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
             width: 80,
             height: 80,
             fontSize: '1.75rem',
-            bgcolor: '#0F172A',
+            bgcolor: '#5f6368',
             color: '#FFFFFF',
-            fontWeight: 800,
-            border: '4px solid #FFF',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+            fontWeight: 700,
+            border: 'none',
           }}
         >
           {initials}
         </Avatar>
-        <Box
-          onClick={handleUploadClick}
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            width: 32,
-            height: 32,
-            bgcolor: '#FFF',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            cursor: 'pointer',
-            border: '1px solid #E2E8F0',
-            transition: 'all 0.2s',
-            zIndex: 2,
-            '&:hover': {
-              transform: 'scale(1.1)',
-              bgcolor: '#F8FAFC'
+
+        {/* Action Button - Ellipsis Menu */}
+        <Box sx={{ position: 'absolute', bottom: -4, right: -4 }}>
+          <IconButton
+            onClick={handleMenuClick}
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: '#FFF',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              '&:hover': { bgcolor: '#F8FAFC' }
+            }}
+          >
+            <MoreVertIcon sx={{ fontSize: 18, color: '#64748B' }} />
+          </IconButton>
+        </Box>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          elevation={0}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              borderRadius: '12px',
+              minWidth: 180,
+              border: '1px solid #F1F5F9',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+              '& .MuiMenuItem-root': {
+                px: 2,
+                py: 1.25,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: '#1E293B',
+                gap: 1.5,
+                '&:hover': { bgcolor: '#F8FAFC' }
+              }
             }
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-        </Box>
+          <MenuItem onClick={handleUploadClick}>
+            <ListItemIcon sx={{ minWidth: 'auto !important', color: '#64748B' }}>
+              <PhotoCameraIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            <ListItemText primary="Upload New Photo" />
+          </MenuItem>
+          {avatarUrl && onDelete && (
+            <MenuItem onClick={handleDeleteClick} sx={{ color: '#DC2626 !important' }}>
+              <ListItemIcon sx={{ minWidth: 'auto !important', color: '#DC2626' }}>
+                <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+              </ListItemIcon>
+              <ListItemText primary="Remove Photo" />
+            </MenuItem>
+          )}
+        </Menu>
       </Box>
     </Box>
   );
@@ -171,7 +221,6 @@ export const SettingsContainer: React.FC<{ children: React.ReactNode }> = ({ chi
       maxWidth: '850px',
       mx: 'auto',
       px: { xs: 1.5, sm: 3, md: 4 },
-      pt: { xs: 2, md: 4 },
       pb: { xs: 4, md: 8 },
     }}>
       <Box sx={{
@@ -185,4 +234,105 @@ export const SettingsContainer: React.FC<{ children: React.ReactNode }> = ({ chi
       </Box>
     </Box>
   );
+};
+
+export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ mode = 'officer' }) => {
+    return (
+        <SettingsContainer>
+            {/* Header Skeleton */}
+            <Box sx={{ mb: 4, px: 1 }}>
+                <Skeleton variant="text" width="40%" height={40} sx={{ bgcolor: '#eaebec', mb: 0.5 }} />
+                <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: '#eaebec' }} />
+            </Box>
+
+            {/* Profile Section Skeleton */}
+            <Box sx={{ mb: 4, px: 1 }}>
+                <Skeleton variant="circular" width={80} height={80} sx={{ bgcolor: '#eaebec' }} />
+            </Box>
+
+            {/* Specialized Field Skeletons */}
+            {mode === 'student' ? (
+                <>
+                    {/* Name Section */}
+                    <Box sx={{ mb: 4 }}>
+                        <Grid container spacing={{ xs: 3, md: 4 }}>
+                            {[1, 2].map((i) => (
+                                <Grid item xs={12} md={6} key={i}>
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                    {/* Email Section */}
+                    <Box sx={{ mb: 4 }}>
+                        <Skeleton variant="text" width="15%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                        <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                    </Box>
+                    {/* Academic Info Section */}
+                    <Box sx={{ mb: 4 }}>
+                        <Grid container spacing={{ xs: 3, md: 4 }} sx={{ mb: 3 }}>
+                            {[1, 2].map((i) => (
+                                <Grid item xs={12} md={6} key={i}>
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                        <Grid container spacing={{ xs: 3, md: 4 }}>
+                            {[1, 2].map((i) => (
+                                <Grid item xs={12} md={6} key={i}>
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                    {/* Password Section */}
+                    <Box sx={{ mb: 4 }}>
+                        <Grid container spacing={{ xs: 3, md: 4 }}>
+                            {[1, 2].map((i) => (
+                                <Grid item xs={12} md={6} key={i}>
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                </>
+            ) : (
+                <>
+                    {/* Generic / Officer Layout (3 rows of 2 fields) */}
+                    {[1, 2, 3].map((section) => (
+                        <Box key={section} sx={{ mb: 4 }}>
+                            <Grid container spacing={{ xs: 3, md: 4 }}>
+                                {[1, 2].map((field) => (
+                                    <Grid item xs={12} md={6} key={field}>
+                                        <Box>
+                                            <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
+                                            <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '12px' }} />
+                                        </Box>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+                    ))}
+                </>
+            )}
+
+            {/* Actions Skeleton */}
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2, 
+                mt: mode === 'officer' ? 6 : 4, 
+                pt: mode === 'officer' ? 4 : 0, 
+                borderTop: mode === 'officer' ? '1px solid #F1F5F9' : 'none',
+                px: 1 
+            }}>
+                <Skeleton variant="rectangular" width={140} height={48} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                <Skeleton variant="rectangular" width={160} height={48} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+            </Box>
+        </SettingsContainer>
+    );
 };

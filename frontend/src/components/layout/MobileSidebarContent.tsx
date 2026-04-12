@@ -422,11 +422,10 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                     sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: "#020617",
+                        bgcolor: "#5F6368",
                         color: "#FFFFFF",
                         fontSize: 14,
-                        fontWeight: 800,
-                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                        fontWeight: 700,
                     }}
                 >
                     {initials}

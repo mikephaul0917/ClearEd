@@ -30,16 +30,16 @@ const TodoItem: React.FC<TodoItemProps> = ({
     const getStatusConfig = () => {
         switch (status) {
             case "approved":
-                return { label: "Approved", color: "success", bgcolor: "#ECFDF5" };
+                return { label: "Approved", color: "#0D9488", bgcolor: "#F0FDFA" };
             case "pending":
-                return { label: "Pending", color: "warning", bgcolor: "#FFFBEB" };
+                return { label: "Pending", color: "#D97706", bgcolor: "#FFFBEB" };
             case "rejected":
             case "resubmission_required":
-                return { label: "Needs Correction", color: "error", bgcolor: "#FEF2F2" };
+                return { label: "Needs Correction", color: "#DC2626", bgcolor: "#FEF2F2" };
             case "missing":
-                return { label: "Missing", color: "error", bgcolor: "#FEF2F2" };
+                return { label: "Missing", color: "#DC2626", bgcolor: "#FEF2F2" };
             default:
-                return { label: "Assigned", color: "default", bgcolor: "#F8FAFC" };
+                return { label: "Assigned", color: "#475569", bgcolor: "#F8FAFC" };
         }
     };
 
@@ -72,19 +72,23 @@ const TodoItem: React.FC<TodoItemProps> = ({
                 </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', pt: 0.5, pr: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', pt: 0.8, pr: 1 }}>
                 {status !== 'not_started' && (
-                    <Chip
-                        label={statusConfig.label}
-                        size="small"
-                        sx={{
-                            fontWeight: 600,
-                            fontSize: '0.75rem',
-                            bgcolor: statusConfig.bgcolor,
-                            color: `${statusConfig.color}.main`,
-                            border: `1px solid transparent`,
-                        }}
-                    />
+                    <Box sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: '999px',
+                        bgcolor: statusConfig.bgcolor,
+                        color: statusConfig.color,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.01em',
+                        border: `1px solid ${statusConfig.color}20`
+                    }}>
+                        {statusConfig.label}
+                    </Box>
                 )}
             </Box>
         </Box>

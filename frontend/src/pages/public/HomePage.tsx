@@ -51,7 +51,10 @@ const HomePage: React.FC = () => {
         } catch (error) {
             console.error("Failed to fetch organizations", error);
         } finally {
-            setLoading(false);
+            // Add deliberate delay for premium feel
+            setTimeout(() => {
+                setLoading(false);
+            }, 2000);
         }
     };
 
@@ -67,7 +70,7 @@ const HomePage: React.FC = () => {
 
     return (
         <>
-            <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 4 } }}>
+            <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 4 }, pb: { xs: 2, md: 4 }, pt: 0 }}>
                 <OrganizationBoard
                     organizations={organizations}
                     loading={loading}
@@ -106,7 +109,7 @@ const HomePage: React.FC = () => {
                                         bottom: { xs: 24, sm: 'auto' },
                                         right: { xs: 24, sm: 'auto' },
                                         zIndex: 1000,
-                                        bgcolor: "#000000",
+                                        bgcolor: "#3c4043",
                                         color: "#FFFFFF",
                                         border: "none",
                                         borderRadius: { xs: "16px", sm: "10px" },
@@ -119,7 +122,7 @@ const HomePage: React.FC = () => {
                                         boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1)",
                                         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                                         "&:hover": {
-                                            bgcolor: "#18181B",
+                                            bgcolor: "#202124",
                                             boxShadow: "0 15px 40px rgba(0, 0, 0, 0.35)",
                                             transform: "translateY(-4px) scale(1.02)"
                                         }

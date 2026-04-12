@@ -63,7 +63,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const glassCard = {
   borderRadius: COLORS.cardRadius,
@@ -321,7 +321,7 @@ export default function AdminPage() {
     }
     if (newPass !== confirmPass) {
       showGlobalModal(
-        "Password Mismatch", 
+        "Password Mismatch",
         "New password and confirmation do not match. Please ensure both fields are identical.",
         "error"
       );
@@ -985,7 +985,7 @@ export default function AdminPage() {
                 variant="contained"
                 onClick={(e) => { e.preventDefault(); updateProfile(); }}
                 sx={{
-                  backgroundColor: '#000',
+                  backgroundColor: '#3c4043',
                   color: '#FFF',
                   padding: '12px 16px',
                   borderRadius: '8px',
@@ -994,7 +994,7 @@ export default function AdminPage() {
                   fontSize: '1rem',
                   boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                   '&:hover': {
-                    backgroundColor: '#111',
+                    backgroundColor: '#202124',
                     transform: 'translateY(-1px)',
                     boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                   },

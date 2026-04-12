@@ -168,7 +168,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                     mb: 1,
                     fontSize: '1.45rem',
                     letterSpacing: '-0.02em',
-                    fontFamily: "'Inter', sans-serif"
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   {title}
@@ -180,7 +180,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                     lineHeight: 1.55,
                     px: 3,
                     fontWeight: 500,
-                    fontFamily: "'Inter', sans-serif"
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   {description}

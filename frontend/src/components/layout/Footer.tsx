@@ -14,7 +14,7 @@ const TikTokIcon = () => (
 const Footer = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const fontStack = "'Plus Jakarta Sans', 'Inter', sans-serif";
+    const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
     const footerStyles = {
         position: 'fixed',

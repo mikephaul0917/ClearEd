@@ -132,7 +132,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                     color: color,
                                     fontWeight: 800,
                                     fontSize: 18,
-                                    fontFamily: "'Inter', sans-serif"
+                                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                                 }}
                             >
                                 {name.charAt(0)}
@@ -165,7 +165,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             fontSize: "1.25rem",
                             fontWeight: 800,
                             color: "#1F2937",
-                            fontFamily: "'Inter', sans-serif",
+                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                             display: "-webkit-box",
                             WebkitLineClamp: 1,
                             WebkitBoxOrient: "vertical",
@@ -189,7 +189,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 fontSize: "0.875rem",
                                 color: "#6B7280",
                                 lineHeight: 1.5,
-                                fontFamily: "'Inter', sans-serif",
+                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                                 display: "-webkit-box",
                                 WebkitLineClamp: 3,
                                 WebkitBoxOrient: "vertical",
@@ -224,7 +224,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 }
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#000000", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#000000", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', whiteSpace: 'nowrap' }}>
                                 Learn more
                             </Typography>
                         </Box>
@@ -240,7 +240,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 justifyContent: 'center',
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#0D9488", fontFamily: "'Inter', sans-serif", textTransform: 'capitalize' }}>
+                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#0D9488", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', textTransform: 'capitalize' }}>
                                 {role}
                             </Typography>
                         </Box>
@@ -262,7 +262,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     }
                 }}
             >
-                <DialogTitle sx={{ m: 0, p: 2, pr: 6, fontWeight: 800, fontSize: "1.5rem", fontFamily: "'Inter', sans-serif" }}>
+                <DialogTitle sx={{ m: 0, p: 2, pr: 6, fontWeight: 800, fontSize: "1.5rem", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                     {name}
                     <IconButton
                         onClick={handleClose}
@@ -277,7 +277,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     </IconButton>
                 </DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
-                    <Typography sx={{ color: "#4B5563", lineHeight: 1.6, fontFamily: "'Inter', sans-serif" }}>
+                    <Typography sx={{ color: "#4B5563", lineHeight: 1.6, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                         {description || "Join this organization to access exclusive content and tools for your clearance process."}
                     </Typography>
                     <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>

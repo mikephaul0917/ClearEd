@@ -1,12 +1,65 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Checkbox, Menu, MenuItem, Avatar, Divider } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import UndoIcon from '@mui/icons-material/Undo';
+import { motion, AnimatePresence } from 'framer-motion';
 import { clearanceService, api } from '../../services';
 import SignatureModal from './SignatureModal';
 import StudentProgress from '../../pages/student/StudentProgress';
+import { getInitials, getAbsoluteUrl } from "../../utils/avatarUtils";
+
+const COLORS = {
+    teal: '#0E7490',
+    textPrimary: '#1E293B',
+    textSecondary: '#64748B',
+    border: '#F1F5F9',
+    surface: '#FFFFFF',
+    black: '#000000'
+};
+
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
+
+const StatusPill = ({ status }: { status: string }) => {
+    const getStyle = (s: string) => {
+        switch (s?.toLowerCase()) {
+            case 'completed':
+            case 'officer_cleared':
+                return { color: '#0D9488', bg: '#F0FDFA', label: s === 'completed' ? 'Finalized' : 'Cleared' };
+            case 'pending':
+            case 'in_progress':
+                return { color: '#D97706', bg: '#FFFBEB', label: s === 'pending' ? 'Pending' : 'In Progress' };
+            case 'rejected':
+                return { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' };
+            default:
+                return { color: '#64748B', bg: '#F8FAFC', label: 'Not Started' };
+        }
+    };
+
+    const style = getStyle(status);
+
+    return (
+        <Box sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: '999px',
+            bgcolor: style.bg,
+            color: style.color,
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            letterSpacing: '0.01em',
+            border: `1px solid ${style.color}20`
+        }}>
+            {style.label}
+        </Box>
+    );
+};
 
 // Note: Ensure that the Empty State illustration reflects an empty grades view
 const EmptyStateSvg = () => (
@@ -38,12 +91,28 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
     const [requests, setRequests] = useState<any[]>([]);
     const [signatureModalOpen, setSignatureModalOpen] = useState(false);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+    const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+    const [isBulkAction, setIsBulkAction] = useState(false);
 
     // View Modal State
     const [viewStudentModalOpen, setViewStudentModalOpen] = useState(false);
     const [viewedStudentName, setViewedStudentName] = useState("");
     const [viewedStudentId, setViewedStudentId] = useState<string | null>(null);
     const [viewedStudentInfo, setViewedStudentInfo] = useState<any>(null);
+
+    // Actions Menu State
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [activeReq, setActiveReq] = useState<any>(null);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>, req: any) => {
+        setAnchorEl(event.currentTarget);
+        setActiveReq(req);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        setActiveReq(null);
+    };
 
     const fetchOverview = async () => {
         try {
@@ -69,6 +138,21 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
     };
 
     const handleConfirmClearance = async (signatureData: string) => {
+        if (isBulkAction) {
+            if (selectedStudentIds.length === 0) return;
+            try {
+                await clearanceService.bulkMarkAsOfficerCleared(organizationId, selectedStudentIds, signatureData);
+                setSignatureModalOpen(false);
+                setSelectedStudentIds([]);
+                setIsBulkAction(false);
+                fetchOverview();
+            } catch (error) {
+                console.error('Failed to mark students as cleared', error);
+                alert('Failed to mark students as cleared. Some students may not have approved requirements.');
+            }
+            return;
+        }
+
         if (!selectedStudentId) return;
         try {
             await clearanceService.markAsOfficerCleared(organizationId, selectedStudentId, signatureData);
@@ -81,6 +165,55 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
         }
     };
 
+    const handleRevokeClearance = async (studentId: string) => {
+        if (window.confirm("Are you sure you want to revoke this student's clearance? This will set their status back to 'In Progress'.")) {
+            try {
+                await clearanceService.revokeOfficerClearance(organizationId, studentId);
+                fetchOverview();
+            } catch (error: any) {
+                console.error('Failed to revoke clearance', error);
+                alert(error.response?.data?.message || 'Failed to revoke clearance');
+            }
+        }
+    };
+
+    const handleBulkRevoke = async () => {
+        if (selectedStudentIds.length === 0) return;
+        if (window.confirm(`Are you sure you want to revoke clearance for ${selectedStudentIds.length} students?`)) {
+            try {
+                const response = await clearanceService.bulkRevokeOfficerClearance(organizationId, selectedStudentIds);
+                alert(response.message);
+                setSelectedStudentIds([]);
+                fetchOverview();
+            } catch (error: any) {
+                console.error('Failed to revoke clearances', error);
+                alert(error.response?.data?.message || 'Failed to revoke clearances');
+            }
+        }
+    };
+
+    const toggleSelectAll = () => {
+        // Updated logic to include those that can be REVOKED as well
+        const selectableStudents = requests.map(r => r.student?._id).filter(Boolean);
+        
+        if (selectedStudentIds.length === selectableStudents.length && selectableStudents.length > 0) {
+            setSelectedStudentIds([]);
+        } else {
+            setSelectedStudentIds(selectableStudents);
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedStudentIds(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkClear = () => {
+        setIsBulkAction(true);
+        setSignatureModalOpen(true);
+    };
+
     const handleViewStudent = async (req: any) => {
         const studentId = req.student?._id;
         if (!studentId) return;
@@ -90,6 +223,19 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
         setViewedStudentInfo(req.student);
         setViewStudentModalOpen(true);
     };
+
+    const selectedRequests = useMemo(() => 
+        requests.filter(r => selectedStudentIds.includes(r.student?._id)),
+        [requests, selectedStudentIds]
+    );
+
+    const canBulkClear = useMemo(() => 
+        selectedRequests.some(r => r.status !== 'officer_cleared' && r.status !== 'completed'),
+    [selectedRequests]);
+
+    const canBulkRevoke = useMemo(() => 
+        selectedRequests.some(r => r.status === 'officer_cleared' || r.status === 'completed'),
+    [selectedRequests]);
 
     if (loading) {
         return (
@@ -106,100 +252,209 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                 <Typography variant="body1" sx={{ color: '#3c4043', fontWeight: 500, my: 2 }}>
                     This is where you'll view and manage grades
                 </Typography>
-                <Button 
-                    startIcon={<PersonAddIcon />} 
-                    sx={{ textTransform: 'none', color: '#1a73e8', fontWeight: 500 }}
-                >
-                    Invite students
-                </Button>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 2 }}>
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+        <Box sx={{ p: { xs: 0, sm: 2, md: 3 } }}>
+            <TableContainer component={Paper} elevation={0} sx={{ 
+                border: `1px solid ${COLORS.border}`, 
+                borderRadius: '16px', 
+                overflow: 'hidden'
+            }}>
                 <Table>
-                    <TableHead sx={{ bgcolor: '#f8f9fa' }}>
+                    <TableHead>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 600 }}>Student</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Progress</TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                            <TableCell sx={{ fontWeight: 600, align: 'right' }}>Actions</TableCell>
+                            <TableCell padding="checkbox" sx={{ bgcolor: '#F8FAFC', borderBottom: `1px solid ${COLORS.border}`, width: 48 }}>
+                                <Checkbox 
+                                    size="small" 
+                                    sx={{ color: '#CBD5E1', '&.Mui-checked': { color: COLORS.teal } }}
+                                    checked={
+                                        requests.filter(r => r.status !== 'officer_cleared' && r.status !== 'completed').length > 0 &&
+                                        selectedStudentIds.length === requests.filter(r => r.status !== 'officer_cleared' && r.status !== 'completed').length
+                                    }
+                                    indeterminate={
+                                        selectedStudentIds.length > 0 && 
+                                        selectedStudentIds.length < requests.filter(r => r.status !== 'officer_cleared' && r.status !== 'completed').length
+                                    }
+                                    onChange={toggleSelectAll}
+                                />
+                            </TableCell>
+                            <TableCell sx={{ 
+                                bgcolor: '#F8FAFC',
+                                color: COLORS.textSecondary, 
+                                fontWeight: 700, 
+                                fontSize: '0.725rem', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.05em',
+                                fontFamily: fontStack,
+                                borderBottom: `1px solid ${COLORS.border}`,
+                                py: 2
+                            }}>
+                                Student
+                            </TableCell>
+                            <TableCell sx={{ 
+                                bgcolor: '#F8FAFC',
+                                color: COLORS.textSecondary, 
+                                fontWeight: 700, 
+                                fontSize: '0.725rem', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.05em', 
+                                fontFamily: fontStack,
+                                borderBottom: `1px solid ${COLORS.border}`,
+                                py: 2,
+                                display: { xs: 'none', md: 'table-cell' }
+                            }}>
+                                Email Address
+                            </TableCell>
+                            <TableCell sx={{ 
+                                bgcolor: '#F8FAFC',
+                                color: COLORS.textSecondary, 
+                                fontWeight: 700, 
+                                fontSize: '0.725rem', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.05em',
+                                fontFamily: fontStack,
+                                borderBottom: `1px solid ${COLORS.border}`,
+                                py: 2,
+                                display: { xs: 'none', sm: 'table-cell' }
+                            }}>
+                                Progress
+                            </TableCell>
+                            <TableCell sx={{ 
+                                bgcolor: '#F8FAFC',
+                                color: COLORS.textSecondary, 
+                                fontWeight: 700, 
+                                fontSize: '0.725rem', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.05em',
+                                fontFamily: fontStack,
+                                borderBottom: `1px solid ${COLORS.border}`,
+                                py: 2
+                            }}>
+                                Status
+                            </TableCell>
+                            <TableCell align="right" sx={{ bgcolor: '#F8FAFC', borderBottom: `1px solid ${COLORS.border}`, width: 50 }} />
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {requests.map((req) => (
-                            <TableRow key={req.id} hover>
-                                <TableCell>{req.student?.fullName || 'Unknown Student'}</TableCell>
-                                <TableCell>{req.student?.email}</TableCell>
+                            <TableRow 
+                                key={req.id} 
+                                hover 
+                                sx={{ 
+                                    '&:last-child td': { border: 0 },
+                                    transition: 'background-color 0.2s ease',
+                                    '&:hover': { bgcolor: '#F8FAFC !important' }
+                                }}
+                            >
+                                <TableCell padding="checkbox">
+                                    <Checkbox 
+                                        size="small" 
+                                        sx={{ color: '#E2E8F0', '&.Mui-checked': { color: COLORS.teal } }}
+                                        checked={selectedStudentIds.includes(req.student?._id)}
+                                        onChange={() => toggleSelect(req.student?._id)}
+                                    />
+                                </TableCell>
                                 <TableCell>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={{ width: '100%', mr: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Avatar 
+                                            src={getAbsoluteUrl(req.student?.avatarUrl || req.student?.profilePicture)}
+                                            sx={{ 
+                                                width: 32, 
+                                                height: 32, 
+                                                bgcolor: '#5F6368', 
+                                                fontSize: '0.75rem', 
+                                                fontWeight: 700 
+                                            }}
+                                        >
+                                            {getInitials(req.student?.fullName || 'U')}
+                                        </Avatar>
+                                        <Typography sx={{ 
+                                            fontWeight: 600, 
+                                            fontSize: '0.875rem', 
+                                            color: COLORS.textPrimary,
+                                            fontFamily: fontStack
+                                        }}>
+                                            {req.student?.fullName || 'Unknown Student'}
+                                        </Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, color: COLORS.textSecondary, fontSize: '0.875rem', fontFamily: fontStack }}>
+                                    {req.student?.email}
+                                </TableCell>
+                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 100 }}>
+                                        <Box sx={{ flexGrow: 1 }}>
                                             <LinearProgress 
                                                 variant="determinate" 
                                                 value={req.progress.total > 0 ? (req.progress.completed / req.progress.total) * 100 : 0} 
-                                                sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(176, 224, 230, 0.2)', '& .MuiLinearProgress-bar': { bgcolor: '#B0E0E6' } }}
+                                                sx={{ 
+                                                    height: 6, 
+                                                    borderRadius: 3, 
+                                                    bgcolor: '#F1F5F9',
+                                                    '& .MuiLinearProgress-bar': { bgcolor: COLORS.teal } 
+                                                }}
                                             />
                                         </Box>
-                                        <Box sx={{ minWidth: 35 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {req.progress.completed}/{req.progress.total}
-                                            </Typography>
-                                        </Box>
+                                        <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: COLORS.textSecondary }}>
+                                            {req.progress.completed}/{req.progress.total}
+                                        </Typography>
                                     </Box>
                                 </TableCell>
                                 <TableCell>
-                                    {req.status === 'completed' && <Chip label="Finalized (Admin)" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 600 }} />}
-                                    {req.status === 'officer_cleared' && <Chip label="Cleared by Officer" size="small" sx={{ bgcolor: 'rgba(176, 224, 230, 0.2)', color: '#0E7490', fontWeight: 700, fontSize: '0.65rem' }} />}
-                                    {req.status === 'in_progress' && <Chip label="In Progress" size="small" sx={{ bgcolor: '#fef9c3', color: '#854d0e', fontWeight: 600 }} />}
-                                    {req.status === 'pending' && <Chip label="Pending" size="small" sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 600 }} />}
-                                    {req.status === 'rejected' && <Chip label="Rejected" size="small" sx={{ bgcolor: '#fee2e2', color: '#991b1b', fontWeight: 600 }} />}
-                                    {req.status === 'not_started' && <Chip label="Not Started" size="small" sx={{ bgcolor: '#f1f5f9', color: '#64748b', fontWeight: 600 }} />}
+                                    <StatusPill status={req.status} />
                                 </TableCell>
-                                <TableCell sx={{ align: 'right', textAlign: 'right' }}>
-                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            startIcon={<VisibilityIcon />}
-                                            onClick={() => handleViewStudent(req)}
-                                            sx={{
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                borderColor: '#e2e8f0',
-                                                color: '#475569',
-                                                '&:hover': { bgcolor: '#f1f5f9', borderColor: '#cbd5e1' }
-                                            }}
-                                        >
-                                            View
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            startIcon={<CheckCircleIcon />}
-                                            disabled={req.status === 'officer_cleared' || req.status === 'completed'}
-                                            onClick={() => handleOpenSignatureModal(req.student?._id)}
-                                            sx={{ 
-                                                textTransform: 'none', 
-                                                fontWeight: 600,
-                                                bgcolor: req.status === 'officer_cleared' || req.status === 'completed' ? '#e2e8f0' : '#0ea5e9',
-                                                color: req.status === 'officer_cleared' || req.status === 'completed' ? '#94a3b8' : '#fff',
-                                                '&:hover': { bgcolor: '#0284c7' },
-                                                boxShadow: 'none',
-                                                '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' }
-                                            }}
-                                        >
-                                            {req.status === 'officer_cleared' || req.status === 'completed' ? 'Cleared' : 'Mark as Cleared'}
-                                        </Button>
-                                    </Box>
+                                <TableCell align="right">
+                                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, req)}>
+                                        <MoreVertIcon sx={{ color: COLORS.textSecondary, fontSize: 20 }} />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                elevation={0}
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        minWidth: 150,
+                        border: '1px solid #F1F5F9',
+                        '& .MuiMenuItem-root': {
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: COLORS.textPrimary,
+                            py: 1.25,
+                            gap: 1.5
+                        }
+                    }
+                }}
+            >
+                <MenuItem onClick={() => { handleViewStudent(activeReq); handleMenuClose(); }}>
+                    <VisibilityIcon sx={{ fontSize: 18, color: COLORS.textSecondary }} />
+                    View Details
+                </MenuItem>
+                <MenuItem 
+                    onClick={() => { handleOpenSignatureModal(activeReq.student?._id); handleMenuClose(); }}
+                    disabled={activeReq?.status === 'officer_cleared' || activeReq?.status === 'completed'}
+                >
+                    <CheckCircleIcon sx={{ fontSize: 18, color: activeReq?.status === 'officer_cleared' || activeReq?.status === 'completed' ? '#CBD5E1' : COLORS.teal }} />
+                    {activeReq?.status === 'officer_cleared' || activeReq?.status === 'completed' ? 'Already Cleared' : 'Mark as Cleared'}
+                </MenuItem>
+                {(activeReq?.status === 'officer_cleared' || activeReq?.status === 'completed') && (
+                    <MenuItem onClick={() => { handleRevokeClearance(activeReq.student?._id); handleMenuClose(); }} sx={{ color: '#DC2626 !important' }}>
+                        <UndoIcon sx={{ fontSize: 18, color: '#DC2626' }} />
+                        Revoke Clearance
+                    </MenuItem>
+                )}
+            </Menu>
 
             <SignatureModal 
                 open={signatureModalOpen} 
@@ -211,7 +466,13 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
             />
 
             {/* View Student Timeline Modal */}
-            <Dialog open={viewStudentModalOpen} onClose={() => setViewStudentModalOpen(false)} maxWidth="lg" fullWidth>
+            <Dialog 
+                open={viewStudentModalOpen} 
+                onClose={() => setViewStudentModalOpen(false)} 
+                maxWidth="lg" 
+                fullWidth
+                fullScreen={window.innerWidth < 600}
+            >
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" fontWeight={700}>
                         Clearance Overview: {viewedStudentName}
@@ -236,6 +497,86 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Bulk Actions Overlay */}
+            <AnimatePresence>
+                {selectedStudentIds.length > 0 && (
+                    <Box
+                        component={motion.div}
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        sx={{
+                            position: 'fixed',
+                            bottom: { xs: 16, sm: 72 }, // Match UsersTable.tsx to clear fixed footer
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: { xs: 'calc(100% - 32px)', sm: 'auto' },
+                            bgcolor: '#3c4043',
+                            color: '#FFF',
+                            py: 2,
+                            px: 3,
+                            borderRadius: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+                            zIndex: 1000
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: 13, letterSpacing: '0.01em' }}>
+                                {selectedStudentIds.length} students selected
+                            </Typography>
+                        </Box>
+                        <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.15)', height: 20, my: 'auto' }} />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                variant="text"
+                                size="small"
+                                onClick={handleBulkClear}
+                                disabled={!canBulkClear}
+                                sx={{ 
+                                    color: canBulkClear ? '#FFF' : 'rgba(255,255,255,0.3)', 
+                                    textTransform: 'none', 
+                                    fontWeight: 700,
+                                    fontSize: '0.8125rem',
+                                    bgcolor: 'transparent',
+                                    px: 1.5,
+                                    borderRadius: '8px',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                                    '& .MuiButton-startIcon': { color: 'inherit' },
+                                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
+                                }}
+                                startIcon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
+                            >
+                                Mark as Cleared
+                            </Button>
+                            <Button
+                                variant="text"
+                                size="small"
+                                onClick={handleBulkRevoke}
+                                disabled={!canBulkRevoke}
+                                sx={{ 
+                                    color: canBulkRevoke ? '#FFF' : 'rgba(255,255,255,0.3)', 
+                                    textTransform: 'none', 
+                                    fontWeight: 700,
+                                    fontSize: '0.8125rem',
+                                    bgcolor: 'transparent',
+                                    px: 1.5,
+                                    borderRadius: '8px',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                                    '& .MuiButton-startIcon': { color: 'inherit' },
+                                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
+                                }}
+                                startIcon={<UndoIcon sx={{ fontSize: 18 }} />}
+                            >
+                                Revoke
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+            </AnimatePresence>
         </Box>
     );
 };

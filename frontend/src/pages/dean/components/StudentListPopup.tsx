@@ -38,7 +38,7 @@ interface StudentListPopupProps {
   onSearchChange: (q: string) => void;
 }
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {

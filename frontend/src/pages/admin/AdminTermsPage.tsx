@@ -32,7 +32,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface Term {
   _id: string;

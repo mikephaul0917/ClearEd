@@ -76,7 +76,7 @@ const COLORS = {
   cardRadius: '16px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface AuditLog {
   _id: string;
@@ -986,7 +986,7 @@ export default function AdminRecordsPage({
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Network</Typography>
-                  <Typography sx={{ fontWeight: 600, fontFamily: 'monospace', fontSize: 13 }}>{selectedLog.ipAddress}</Typography>
+                  <Typography sx={{ fontWeight: 600, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', fontSize: 13 }}>{selectedLog.ipAddress}</Typography>
                   <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>Source IP</Typography>
                 </Grid>
               </Grid>
@@ -997,7 +997,7 @@ export default function AdminRecordsPage({
                 <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Activity Payload</Typography>
                 <Box sx={{
                   mt: 1, p: 2, borderRadius: '12px', backgroundColor: '#F1F5F9',
-                  fontFamily: 'monospace', fontSize: 12, overflowX: 'auto',
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', fontSize: 12, overflowX: 'auto',
                   border: '1px solid ' + COLORS.border
                 }}>
                   {selectedLog.details}

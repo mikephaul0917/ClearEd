@@ -49,7 +49,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const getGreetingTime = () => {
   const hour = new Date().getHours();
@@ -396,7 +396,7 @@ export default function SuperAdminPage() {
 
       if (newPass !== confirmPass) {
         showGlobalModal(
-          "Password Mismatch", 
+          "Password Mismatch",
           "New password and confirmation do not match. Please ensure both fields are identical.",
           "error"
         );
@@ -469,43 +469,51 @@ export default function SuperAdminPage() {
     if (isSettings) {
       if (loadingSettings) {
         return (
-          <Box sx={{
-            backgroundColor: '#FAFAFA',
-            minHeight: '100vh',
-            py: isSmallMobile ? 2 : 4,
-            px: isSmallMobile ? 1 : 0
-          }}>
-            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, mb: isSmallMobile ? 4 : 6 }}>
-              <Skeleton variant="text" width={220} height={isSmallMobile ? 32 : 40} sx={{ mb: 1 }} />
-              <Skeleton variant="text" width={320} height={isSmallMobile ? 18 : 22} />
-            </Box>
+          <SettingsContainer>
+            <SettingsHeader
+              title={<Skeleton variant="text" width={180} height={40} />}
+              subtitle={<Skeleton variant="text" width={320} height={20} />}
+            />
 
-            <Box sx={{ maxWidth: '800px', mx: 'auto', px: isSmallMobile ? 2 : 4, display: 'flex', flexDirection: 'column', gap: isSmallMobile ? 2 : 3 }}>
-              <Card sx={{ borderRadius: '12px', border: '1px solid #D1D5DB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                  <Skeleton variant="rectangular" height={40} width="50%" sx={{ mb: 3, borderRadius: 2 }} />
-                  <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} />
-                  <Skeleton variant="rectangular" height={48} sx={{ mb: 2, borderRadius: 1 }} />
-                  <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} />
-                  <Skeleton variant="rectangular" height={48} sx={{ mb: 3, borderRadius: 1 }} />
-                  <Skeleton variant="rectangular" height={40} width={140} sx={{ borderRadius: 2 }} />
-                </CardContent>
-              </Card>
+            <SettingsSection>
+              <Box sx={{ mb: 4 }}>
+                <Skeleton variant="circular" width={80} height={80} />
+              </Box>
+            </SettingsSection>
 
-              <Card sx={{ borderRadius: '12px', border: '1px solid #D1D5DB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <CardContent sx={{ p: isSmallMobile ? 3 : 6 }}>
-                  <Skeleton variant="rectangular" height={40} width="40%" sx={{ mb: 3, borderRadius: 2 }} />
-                  {[1, 2, 3].map((i) => (
-                    <Box key={i} sx={{ mb: 2 }}>
-                      <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} />
-                      <Skeleton variant="rectangular" height={48} sx={{ borderRadius: 1 }} />
-                    </Box>
-                  ))}
-                  <Skeleton variant="rectangular" height={40} width={160} sx={{ mt: 1, borderRadius: 2 }} />
-                </CardContent>
-              </Card>
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label={<Skeleton variant="text" width={80} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                </SettingsField>
+                <SettingsField label={<Skeleton variant="text" width={80} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsField label={<Skeleton variant="text" width={40} />}>
+                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+              </SettingsField>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label={<Skeleton variant="text" width={100} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                </SettingsField>
+                <SettingsField label={<Skeleton variant="text" width={120} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+              <Skeleton variant="rectangular" width={140} height={48} sx={{ borderRadius: '8px' }} />
+              <Skeleton variant="rectangular" width={160} height={48} sx={{ borderRadius: '8px' }} />
             </Box>
-          </Box>
+          </SettingsContainer>
         );
       }
 
@@ -620,7 +628,7 @@ export default function SuperAdminPage() {
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
               sx={{
-                backgroundColor: '#000',
+                backgroundColor: '#3c4043',
                 color: '#FFF',
                 padding: '12px 16px',
                 borderRadius: '8px',
@@ -629,7 +637,7 @@ export default function SuperAdminPage() {
                 fontSize: '1rem',
                 boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
                 '&:hover': {
-                  backgroundColor: '#111',
+                  backgroundColor: '#202124',
                   transform: 'translateY(-1px)',
                   boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
                 },
@@ -695,11 +703,11 @@ export default function SuperAdminPage() {
             }}
           >
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton 
-                key={i} 
-                variant="rounded" 
-                height={260} 
-                sx={{ borderRadius: COLORS.cardRadius, bgcolor: 'rgba(0,0,0,0.03)' }} 
+              <Skeleton
+                key={i}
+                variant="rounded"
+                height={260}
+                sx={{ borderRadius: COLORS.cardRadius, bgcolor: 'rgba(0,0,0,0.03)' }}
               />
             ))}
           </Box>

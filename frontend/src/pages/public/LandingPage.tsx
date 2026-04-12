@@ -10,6 +10,7 @@ import { fetchLandingStats, LandingStats } from "../../services/public.service";
 import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
 import { LayoutGroup } from "framer-motion";
+import { useAuth } from "../../hooks/useAuth";
 
 /* ---------------- Icons (Sidebar Style) ---------------- */
 function IconBase({ children, color }: any) {
@@ -33,7 +34,7 @@ const C = {
   textHeader: "#0F172A",
   textSub: "#64748B",
   blueAccent: "#B0E0E6",
-  fontStack: "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif",
+  fontStack: '"Google Sans", "Product Sans", Roboto, sans-serif',
 };
 
 const fadeInUp = {
@@ -45,6 +46,7 @@ const fadeInUp = {
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [stats, setStats] = useState<LandingStats>({
     totalInstitutions: 0,
     studentsClearedCount: 0,
@@ -61,10 +63,10 @@ export default function LandingPage() {
   const navLinks = [
     { label: "How it Works", id: "how-it-works", icon: QuestionSIcon },
     { label: "About us", id: "about", icon: InfoSIcon },
-    { 
-      label: localStorage.getItem('token') ? "Home" : "Login", 
-      path: localStorage.getItem('token') ? "/home" : "/login", 
-      icon: LoginSIcon 
+    {
+      label: token ? "Home" : "Login",
+      path: token ? "/home" : "/login",
+      icon: LoginSIcon
     },
   ];
 
@@ -545,7 +547,7 @@ export default function LandingPage() {
                     letterSpacing: "-0.055em",
                     color: "#000000",
                     mb: { xs: 4, md: 0 },
-                    fontFamily: "'Plus Jakarta Sans', sans-serif"
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   We Turn Clearance <br /> Into Seamless <br /> Flow
@@ -563,7 +565,7 @@ export default function LandingPage() {
                     mb: 4,
                     lineHeight: 1.7,
                     maxWidth: 420,
-                    fontFamily: "'Inter', sans-serif",
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                     fontWeight: 450
                   }}
                 >
@@ -576,7 +578,7 @@ export default function LandingPage() {
                   to="/how-it-works"
                   variant="contained"
                   sx={{
-                    bgcolor: "#000000",
+                    bgcolor: "#3c4043",
                     color: "#FFFFFF",
                     borderRadius: "100px",
                     px: { xs: 4, md: 5 },
@@ -585,9 +587,9 @@ export default function LandingPage() {
                     fontWeight: 700,
                     textTransform: "none",
                     boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                     "&:hover": {
-                      bgcolor: "#1a1a1a",
+                      bgcolor: "#3c4043",
                       boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)",
                       transform: 'translateY(-2px)'
                     },
@@ -628,7 +630,7 @@ export default function LandingPage() {
                           letterSpacing: "0.1em",
                           mb: 1.5,
                           textTransform: 'uppercase',
-                          fontFamily: "'Plus Jakarta Sans', sans-serif"
+                          fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                         }}
                       >
                         {stat.label}
@@ -640,7 +642,7 @@ export default function LandingPage() {
                           fontSize: { xs: "32px", md: "52px" },
                           color: "#000000",
                           letterSpacing: "-0.055em",
-                          fontFamily: "'Plus Jakarta Sans', sans-serif"
+                          fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                         }}
                       >
                         {stat.value}

@@ -257,7 +257,7 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                                             textTransform: "none",
                                             py: 1.5,
                                             fontWeight: 600,
-                                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                                             display: 'flex', gap: 1, alignItems: 'center',
                                             transition: 'all 0.2s ease',
                                             backgroundColor: actionState === 'success' ? '#10b981' : '#0a0a0a',
@@ -280,7 +280,7 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                                             textTransform: "none",
                                             py: 1.5,
                                             fontWeight: 600,
-                                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                                             display: 'flex', gap: 1, alignItems: 'center',
                                             border: '1.5px solid #EF4444',
                                             color: '#EF4444',
@@ -332,7 +332,7 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                         onClick={() => setConfirmRejectOpen(false)}
                         disabled={actionState !== "idle"}
                         sx={{
-                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                             fontWeight: 600, textTransform: "none", borderRadius: "999px", color: "#64748B"
                         }}
                     >
@@ -342,7 +342,7 @@ const ReviewSubmissionsModal: React.FC<ReviewSubmissionsModalProps> = ({
                         onClick={() => handleReview("rejected")}
                         disabled={actionState !== "idle"}
                         sx={{
-                            fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                             fontWeight: 600, textTransform: "none", borderRadius: "999px", px: 3,
                             display: 'flex', gap: 1, alignItems: 'center', transition: 'all 0.2s ease',
                             ...(actionState === 'success' ? {

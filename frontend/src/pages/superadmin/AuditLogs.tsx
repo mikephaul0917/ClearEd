@@ -64,7 +64,7 @@ const COLORS = {
   cardRadius: '16px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface AuditLog {
   _id: string;
@@ -878,13 +878,13 @@ export default function AuditLogs() {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography sx={{ fontSize: 10, fontWeight: 800, color: COLORS.textSecondary }}>NETWORK ID</Typography>
-                    <Typography sx={{ fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>{selectedLog.ipAddress}</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: 14, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>{selectedLog.ipAddress}</Typography>
                   </Grid>
                 </Grid>
               </Box>
               <Box sx={{ mb: 4 }}>
                 <Typography sx={{ fontSize: 10, fontWeight: 800, color: COLORS.textSecondary, mb: 1 }}>PAYLOAD DATA</Typography>
-                <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#1E293B', color: '#5eead4', fontSize: 12, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#1E293B', color: '#5eead4', fontSize: 12, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', whiteSpace: 'pre-wrap' }}>
                   {selectedLog.details}
                 </Box>
               </Box>

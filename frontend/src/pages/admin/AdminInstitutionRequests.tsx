@@ -323,7 +323,7 @@ export default function AdminInstitutionRequests({
                       </Box>
                     </TableCell>
                     <TableCell sx={{ py: 1.5 }}>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#475569', fontSize: '0.8125rem' }}>
+                      <Typography variant="body2" sx={{ fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', color: '#475569', fontSize: '0.8125rem' }}>
                         {request.academicDomain}
                       </Typography>
                     </TableCell>
@@ -527,7 +527,7 @@ export default function AdminInstitutionRequests({
                   handleAction(selectedRequest, 'clarify');
                 }}
                 sx={{
-                  fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '999px',
@@ -545,7 +545,7 @@ export default function AdminInstitutionRequests({
                   handleAction(selectedRequest, 'reject');
                 }}
                 sx={{
-                  fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '999px',
@@ -563,7 +563,7 @@ export default function AdminInstitutionRequests({
                   handleAction(selectedRequest, 'approve');
                 }}
                 sx={{
-                  fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '999px',
@@ -648,7 +648,7 @@ export default function AdminInstitutionRequests({
             onClick={() => setActionDialogOpen(false)}
             disabled={actionState !== 'idle'}
             sx={{
-              fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+              fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
               fontWeight: 600,
               textTransform: 'none',
               borderRadius: '999px',
@@ -661,7 +661,7 @@ export default function AdminInstitutionRequests({
             onClick={executeAction}
             disabled={(actionType !== 'approve' && !actionForm.reason.trim()) || actionState !== 'idle'}
             sx={{
-              fontFamily: "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif",
+              fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
               fontWeight: 600,
               textTransform: 'none',
               borderRadius: '999px',

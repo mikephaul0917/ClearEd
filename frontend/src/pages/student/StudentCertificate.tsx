@@ -6,7 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import CloseIcon from "@mui/icons-material/Close";
 import Skeleton from "@mui/material/Skeleton";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api, clearanceService } from "../../services";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -19,6 +19,7 @@ export default function StudentCertificate() {
   const [downloading, setDownloading] = useState(false);
   const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
   const [showMaximized, setShowMaximized] = useState(false);
+  const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +36,9 @@ export default function StudentCertificate() {
         setSignatureUrl(res.finalClearance?.signatureUrl || null);
       } catch { }
 
+      setTimeout(() => {
       setLoading(false);
+    }, 2000);
     };
 
     setTimeout(fetchData, 1000);
@@ -65,30 +68,28 @@ export default function StudentCertificate() {
 
   const renderCertificateContent = () => (
     <>
-      {/* Left Vertical Banner */}
-      <Box sx={{
-        width: 70,
+      {/* Vertical/Horizontal Banner */}
+      <Box className="banner-strip" sx={{
+        width: { xs: "100%", md: 70 },
+        height: { xs: 50, md: "auto" },
         bgcolor: "#f59e0b",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 2,
-        position: "relative"
+        position: "relative",
+        p: { xs: 1, md: 0 }
       }}>
         <Typography
+          className="banner-text"
           sx={{
             color: "white",
             whiteSpace: "nowrap",
-            fontSize: "2.8rem",
+            fontSize: { xs: "1.2rem", sm: "1.8rem", md: "2.8rem" },
             fontWeight: 800,
-            letterSpacing: "4px",
+            letterSpacing: { xs: "2px", md: "4px" },
             fontFamily: "'Playfair Display', serif",
             textTransform: "uppercase",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%) rotate(-90deg)",
             zIndex: 3,
             width: "max-content",
             userSelect: "none"
@@ -99,7 +100,7 @@ export default function StudentCertificate() {
       </Box>
 
       {/* Main Content Area */}
-      <Box sx={{ flex: 1, p: 4, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}>
+      <Box sx={{ flex: 1, px: { xs: 2, md: 4 }, pb: 4, pt: 2, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1, width: "100%" }}>
         <Typography sx={{ fontSize: "1rem", fontStyle: "italic", mb: 2, color: "#475569" }}>
           This is to certify that
         </Typography>
@@ -112,21 +113,45 @@ export default function StudentCertificate() {
             mb: 1,
             textAlign: "center",
             fontFamily: "'Lora', serif",
-            textTransform: "uppercase"
+            textTransform: "uppercase",
+            fontSize: { xs: '1.5rem', md: '3rem' }
           }}
         >
           {`${profile.firstName || ""} ${profile.familyName || ""}`.trim() ||
             (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!).fullName : "Student Name")}
         </Typography>
 
-        <Typography sx={{ fontSize: "1rem", mb: 4, color: "#475569", textAlign: "center", maxWidth: 500 }}>
+        <Typography sx={{ fontSize: { xs: "0.85rem", md: "1rem" }, mb: 4, color: "#475569", textAlign: "center", maxWidth: 500 }}>
           ID: {profile.studentNumber || "N/A"} • {profile.course || "General Student"}
         </Typography>
 
-        <Typography sx={{ fontSize: "1.1rem", textAlign: "center", lineHeight: 1.8, color: "#1e293b", mb: 4, px: 4 }}>
+        {/* Badge Overlay - Moved above 'hereby' for mobile */}
+        <Box sx={{
+          position: { xs: "static", md: "absolute" },
+          top: 40,
+          right: 40,
+          width: { xs: "100%", md: 120 },
+          height: { xs: "auto", md: 120 },
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 5,
+          my: { xs: 2, md: 0 }
+        }}>
+          <Box sx={{ position: "relative", width: 100, height: 100, transform: { xs: "scale(0.8)", md: "none" } }}>
+            <Box sx={{ position: "absolute", inset: 0, borderRadius: "50%", bgcolor: "#f59e0b", border: "4px double white", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", p: 1, zIndex: 2 }}>
+              <Typography sx={{ color: "white", fontWeight: 800, fontSize: "0.7rem", textTransform: "uppercase" }}>Pending Clearance</Typography>
+            </Box>
+            <Box sx={{ position: "absolute", bottom: -15, left: -5, width: 30, height: 50, bgcolor: "#d97706", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(15deg)", zIndex: 1 }} />
+            <Box sx={{ position: "absolute", bottom: -15, right: -5, width: 30, height: 50, bgcolor: "#d97706", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(-15deg)", zIndex: 1 }} />
+          </Box>
+        </Box>
+
+        <Typography sx={{ fontSize: { xs: "0.95rem", md: "1.1rem" }, textAlign: "center", lineHeight: 1.8, color: "#1e293b", mb: 4, px: 4 }}>
           is cleared of any responsibility from the College of <strong>{profile.college || profile.course || "Education"}</strong> for the
           <strong> {profile.semester || "First"} </strong> Semester, Academic Year <strong> {profile.academicYear || "2025-2026"} </strong>.
-        </Typography>        <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mt: "auto", pr: 4 }}>
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: { xs: "center", md: "flex-end" }, width: "100%", mt: { xs: 3, md: "auto" }, pr: { xs: 0, md: 4 } }}>
           <Box sx={{ display: "flex", flexDirection: "column", position: "relative", width: 250 }}>
             <Box sx={{ height: 60, position: "relative", display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
               {signatureUrl ? (
@@ -144,66 +169,60 @@ export default function StudentCertificate() {
             <Typography sx={{ fontSize: "0.85rem", color: "#f59e0b", fontWeight: 800, textAlign: "center", textTransform: "uppercase", letterSpacing: "1px" }}>College Dean</Typography>
           </Box>
         </Box>
+
       </Box>
 
-      {/* Gold Badge Overlay */}
-      <Box sx={{ position: "absolute", top: 40, right: 40, width: 120, height: 120, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>
-        <Box sx={{ position: "relative", width: 100, height: 100 }}>
-          <Box sx={{ position: "absolute", inset: 0, borderRadius: "50%", bgcolor: "#f59e0b", border: "4px double white", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", p: 1, zIndex: 2 }}>
-            <Typography sx={{ color: "white", fontWeight: 800, fontSize: "0.7rem", textTransform: "uppercase" }}>Clearance Approved</Typography>
-          </Box>
-          <Box sx={{ position: "absolute", bottom: -15, left: -5, width: 30, height: 50, bgcolor: "#d97706", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(15deg)", zIndex: 1 }} />
-          <Box sx={{ position: "absolute", bottom: -15, right: -5, width: 30, height: 50, bgcolor: "#d97706", clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)", transform: "rotate(-15deg)", zIndex: 1 }} />
-        </Box>
-      </Box>
-
-      {/* Maximize Button - ICON ONLY */}
-      {!showMaximized && (
-        <IconButton
-          onClick={() => setShowMaximized(true)}
-          data-html2canvas-ignore
-          sx={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            zIndex: 9999,
-            bgcolor: "rgba(255,255,255,0.7)",
-            color: "#000",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            "&:hover": { bgcolor: "rgba(255,255,255,0.9)", transform: "scale(1.1)" },
-            transition: "all 0.2s"
-          }}
-          className="no-print"
-        >
-          <FullscreenIcon fontSize="large" />
-        </IconButton>
-      )}
     </>
   );
 
   const renderSkeleton = () => (
-    <Box sx={{ flex: 1, display: "flex", minHeight: 600, bgcolor: "#F9FAFB", position: "relative" }}>
-
+    <Box sx={{
+      flex: 1,
+      display: "flex",
+      flexDirection: { xs: "column", md: "row" },
+      minHeight: 600,
+      bgcolor: "#F9FAFB",
+      position: "relative"
+    }}>
       {/* Main Content Skeleton Area */}
-      <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Skeleton width="30%" height={24} sx={{ mb: 2, borderRadius: "4px" }} />
-        <Skeleton width="60%" height={80} sx={{ mb: 0.5, borderRadius: "8px" }} />
-        <Skeleton width="40%" height={32} sx={{ mb: 4, borderRadius: "6px" }} />
+      <Box sx={{ flex: 1, p: { xs: 1.5, sm: 2, md: 4 }, pb: 4, pt: 2, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1, width: "100%" }}>
+        <Skeleton width="30%" height={24} sx={{ mb: 2, borderRadius: "4px", bgcolor: "#eaebec" }} />
+        <Skeleton
+          sx={{
+            width: { xs: "60%", md: "50%" },
+            height: { xs: 40, md: 80 },
+            mb: 1,
+            borderRadius: "8px",
+            bgcolor: "#eaebec"
+          }}
+        />
+        <Skeleton width="40%" height={32} sx={{ mb: 4, borderRadius: "6px", bgcolor: "#eaebec" }} />
 
-        <Skeleton width="85%" height={80} sx={{ mb: 4, borderRadius: "8px" }} />
+        {/* Badge Skeleton Placeholder */}
+        <Box sx={{
+          position: { xs: "static", md: "absolute" },
+          top: 40,
+          right: 40,
+          width: { xs: "100%", md: 120 },
+          height: { xs: "auto", md: 120 },
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          my: { xs: 2, md: 0 },
+          zIndex: 5
+        }}>
+          <Skeleton variant="circular" width={100} height={100} sx={{ bgcolor: "#eaebec" }} />
+        </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", mt: "auto", pr: 4 }}>
+        <Skeleton width="85%" height={80} sx={{ mb: 4, borderRadius: "8px", bgcolor: "#eaebec" }} />
+
+        <Box sx={{ display: "flex", justifyContent: { xs: "center", md: "flex-end" }, width: "100%", mt: { xs: 3, md: "auto" }, pr: { xs: 0, md: 4 } }}>
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: 250 }}>
-            <Skeleton variant="rectangular" width="80%" height={60} sx={{ mb: 1, borderRadius: "4px" }} />
-            <Box sx={{ borderBottom: "1.5px solid #f1f5f9", width: "100%", mb: 0.5 }} />
-            <Skeleton width="70%" height={16} sx={{ borderRadius: "2px" }} />
+            <Skeleton variant="rectangular" width="80%" height={60} sx={{ mb: 1, borderRadius: "4px", bgcolor: "#eaebec" }} />
+            <Box sx={{ borderBottom: "1.5px solid #eaebec", width: "100%", mb: 0.5 }} />
+            <Skeleton width="70%" height={16} sx={{ borderRadius: "2px", bgcolor: "#eaebec" }} />
           </Box>
         </Box>
-      </Box>
-
-      {/* Badge Skeleton Placeholder */}
-      <Box sx={{ position: "absolute", top: 40, right: 40 }}>
-        <Skeleton variant="circular" width={100} height={100} />
       </Box>
     </Box>
   );
@@ -222,19 +241,33 @@ export default function StudentCertificate() {
     <Box sx={{
       position: "relative",
       flex: 1,
-      minHeight: "100vh",
+      minHeight: { xs: "auto", md: "100vh" },
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "flex-start",
-      overflow: "auto",
+      overflowX: "hidden",
+      mt: 0,
       bgcolor: "#F9FAFB",
-      pt: 2,
-      pb: 4
+      pt: 0,
+      pb: 2
     }}>
       <style>{`
-        body { overflow: hidden !important; }
-        main { overflow: hidden !important; height: 100vh !important; }
+
+        .banner-text {
+          position: relative;
+          transform: none;
+        }
+
+        @media (min-width: 900px) {
+          .banner-strip { flex-direction: column !important; }
+          .banner-text {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(-90deg) !important;
+          }
+        }
 
         @media print {
           body { overflow: visible !important; }
@@ -249,50 +282,117 @@ export default function StudentCertificate() {
             height: 100%;
             margin: 0;
             padding: 0;
+            display: flex !important;
+            flex-direction: row !important;
             -webkit-print-color-adjust: exact;
+          }
+          .banner-strip { width: 70px !important; height: 100% !important; flex-direction: column !important; }
+          .banner-text {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(-90deg) !important;
+            font-size: 2.8rem !important;
           }
         }
       `}</style>
 
-      <Box sx={{ width: "100%", maxWidth: 850, position: "relative", mt: 0 }}>
+      {/* Fluid View Container */}
+      <Box sx={{
+        width: "100%",
+        maxWidth: 850,
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        overflow: "visible",
+        mt: 0,
+        mb: 0,
+        px: { xs: 1.5, sm: 2, md: 0 }
+      }}>
         <Box
           id="receipt"
+          ref={certRef}
           sx={{
             position: "relative",
-            width: 850,
-            minHeight: 600,
+            width: "100%",
+            maxWidth: 850,
+            minHeight: { xs: "auto", md: 600 },
             bgcolor: "#F9FAFB",
             overflow: "hidden",
             display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            boxShadow: { xs: "0 10px 40px rgba(0,0,0,0.1)", md: "none" },
+            borderRadius: { xs: "12px", md: "0" }
           }}
         >
           {loading ? renderSkeleton() : renderCertificateContent()}
+
+          {/* Maximize Button - Desktop Only */}
+          {!loading && !showMaximized && (
+            <IconButton
+              onClick={() => setShowMaximized(true)}
+              data-html2canvas-ignore
+              sx={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                zIndex: 10,
+                bgcolor: "rgba(255,255,255,0.7)",
+                color: "#000",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                display: { xs: 'none', sm: 'none', md: 'flex' },
+                "&:hover": { bgcolor: "rgba(255,255,255,0.9)", transform: "scale(1.1)" },
+                transition: "all 0.2s"
+              }}
+              className="no-print"
+            >
+              <FullscreenIcon fontSize="large" />
+            </IconButton>
+          )}
         </Box>
       </Box>
 
-      {/* Action Buttons at the Bottom */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2 }} className="no-print">
+      {/* Action Buttons - OUTSIDE the scaling container */}
+      <Box
+        data-html2canvas-ignore
+        className="no-print"
+        sx={{
+          mt: 4,
+          display: 'flex',
+          justifyContent: 'center',
+          gap: { xs: 1.5, sm: 2 },
+          width: "100%",
+          px: { xs: 2, sm: 3 },
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: 'center'
+        }}
+      >
         {loading ? (
           <>
-            <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: '8px' }} />
-            <Skeleton variant="rectangular" width={180} height={40} sx={{ borderRadius: '8px' }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
           </>
         ) : (
           <>
             <Button
               variant="contained"
               onClick={printReceipt}
+              fullWidth
               sx={{
                 bgcolor: '#000',
                 color: '#FFF',
                 borderRadius: '100px',
                 fontWeight: 700,
+                fontSize: { xs: '0.9rem', sm: '0.95rem' },
                 px: 4,
-                py: 1.5,
+                py: 1.2,
+                maxWidth: { sm: 210 },
                 textTransform: 'none',
-                boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
-                '&:hover': { bgcolor: '#222', transform: 'translateY(-2px)' },
-                transition: 'all 0.2s'
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                '&:hover': { bgcolor: '#222', transform: 'translateY(-1px)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)' },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               Print Receipt
@@ -301,19 +401,22 @@ export default function StudentCertificate() {
               variant="outlined"
               onClick={downloadPdf}
               disabled={downloading}
+              fullWidth
               sx={{
                 borderRadius: '100px',
                 color: '#000',
                 borderColor: '#E2E8F0',
                 bgcolor: '#FFF',
                 fontWeight: 700,
+                fontSize: { xs: '0.9rem', sm: '0.95rem' },
                 px: 4,
-                py: 1.5,
+                py: 1.2,
+                maxWidth: { sm: 210 },
                 textTransform: 'none',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-                '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-2px)' },
-                '&.Mui-disabled': { color: '#64748B', borderColor: '#E2E8F0', bgcolor: '#FFF', opacity: 0.8 },
-                transition: 'all 0.2s'
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                '&:hover': { bgcolor: '#f9fafb', borderColor: '#CBD5E1', transform: 'translateY(-1px)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' },
+                '&.Mui-disabled': { color: '#94A3B8', borderColor: '#F1F5F9', bgcolor: '#F8FAFC', opacity: 0.8 },
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               {downloading ? "Downloading..." : "Download PDF"}

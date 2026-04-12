@@ -26,6 +26,7 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Divider from "@mui/material/Divider";
 import { clearanceService } from "../../services";
 import AssignToModal from "./AssignToModal";
+import AddLinkModal from "./AddLinkModal";
 
 /**
  * CreateMaterialModal Component
@@ -70,20 +71,33 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
         strikeThrough: false,
         insertUnorderedList: false
     });
+    const [linkModal, setLinkModal] = useState<{
+        open: boolean;
+        type: string;
+        title: string;
+        description: string;
+        placeholder: string;
+    }>({
+        open: false,
+        type: "Link",
+        title: "",
+        description: "",
+        placeholder: ""
+    });
     const editorRef = useRef<HTMLDivElement>(null);
-    
+
     useEffect(() => {
         if (open) {
             if (isEdit && editData) {
                 setTitle(editData.title || "");
                 setInstructions(editData.instructions || "");
                 setTopic(editData.topic || "No topic");
-                
+
                 // if there's already an editor loaded, set its innerHTML
                 if (editorRef.current) {
                     editorRef.current.innerHTML = editData.instructions || "";
                 }
-                
+
                 // For pre-selected students
                 if (editData.assignedTo && editData.assignedTo.length > 0) {
                     setSelectedIds(editData.assignedTo.map((a: any) => a._id || a));
@@ -114,7 +128,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
     };
 
     const handleToggleAssign = (id: string) => {
-        setSelectedIds(prev => 
+        setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
         );
     };
@@ -153,7 +167,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
             formData.append('organizationId', organizationId);
             formData.append('isAnnouncement', 'false');
             formData.append('type', 'material');
-            
+
             if (selectedIds.length !== students.length && selectedIds.length > 0) {
                 selectedIds.forEach(id => formData.append('assignedTo', id));
             }
@@ -163,7 +177,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
             if (urlAttachments.length > 0) {
                 formData.append('attachments', JSON.stringify(urlAttachments));
             }
-            
+
             // Handle File Uploads
             attachments.filter(a => a.file).forEach(a => {
                 formData.append('files', a.file as Blob);
@@ -185,14 +199,21 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
     };
 
     const handleUrlAttachment = (promptText: string, type: string) => {
-        const url = window.prompt(`Enter ${promptText}:`);
-        if (url && url.trim() !== '') {
-            let parsedUrl = url.trim();
-            if (!parsedUrl.startsWith('http://') && !parsedUrl.startsWith('https://')) {
-                parsedUrl = 'https://' + parsedUrl; // Ensure absolute URL for links
-            }
-            setAttachments(prev => [...prev, { type, url: parsedUrl, name: parsedUrl }]);
+        setLinkModal({
+            open: true,
+            type,
+            title: `Add ${type} Resource`,
+            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            placeholder: `${type} Link`
+        });
+    };
+
+    const onAddLinkResource = (url: string) => {
+        let parsedUrl = url.trim();
+        if (!parsedUrl.startsWith('http://') && !parsedUrl.startsWith('https://')) {
+            parsedUrl = 'https://' + parsedUrl;
         }
+        setAttachments(prev => [...prev, { type: linkModal.type, url: parsedUrl, name: parsedUrl }]);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,41 +276,41 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    px: 3,
-                    py: 2,
+                    px: { xs: 1.5, sm: 3 },
+                    py: { xs: 1, sm: 2 },
                     bgcolor: "white",
-                    borderBottom: "1px solid #e0e0e0"
+                    borderBottom: "1px solid #e0e0e0",
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1100
                 }}
             >
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 2 }}>
                     <IconButton edge="start" color="inherit" onClick={handleClose} aria-label="close">
                         <CloseIcon sx={{ color: "#5f6368" }} />
                     </IconButton>
                     <Box display="flex" alignItems="center" gap={1.5} sx={{ color: "#5f6368", bgcolor: "#f1f3f4", p: 1, borderRadius: 1 }}>
-                        <BookIcon sx={{ color: "#1967d2" }} />
+                        <BookIcon sx={{ color: "#0D9488", fontSize: { xs: 20, sm: 24 } }} />
                     </Box>
-                    <Typography variant="h6" sx={{ color: "#3c4043", fontWeight: 400, fontSize: "1.375rem" }}>
+                    <Typography variant="h6" sx={{ color: "#3c4043", fontWeight: 400, fontSize: { xs: "1.125rem", sm: "1.375rem" } }}>
                         Material
                     </Typography>
                 </Box>
-                
+
                 <Box display="flex" alignItems="center" gap={2}>
-                    <Typography sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
-                        Saved
-                    </Typography>
                     <Button
                         variant="contained"
                         onClick={handleCreate}
                         disabled={loading || !title.trim()}
                         sx={{
-                            bgcolor: "#1a73e8",
+                            bgcolor: "#3c4043",
                             color: "white",
                             textTransform: "none",
                             fontWeight: 500,
-                            borderRadius: 1,
-                            px: 3,
+                            borderRadius: '8px',
+                            px: { xs: 2.5, sm: 3 },
                             boxShadow: "none",
-                            "&:hover": { bgcolor: "#1557b0", boxShadow: "0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)" },
+                            "&:hover": { bgcolor: "#202124", boxShadow: "none" },
                             "&.Mui-disabled": { bgcolor: "#e8eaed", color: "#9aa0a6" }
                         }}
                     >
@@ -298,11 +319,11 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                 </Box>
             </Box>
 
-            <DialogContent sx={{ p: 0, display: "flex", height: "calc(100vh - 65px)" }}>
+            <DialogContent sx={{ p: 0, display: "flex", flexDirection: { xs: 'column', md: 'row' }, height: "calc(100vh - 69px)", overflow: 'hidden' }}>
                 {/* Main Content Area (Left) */}
-                <Box sx={{ flex: 1, p: 4, overflowY: "auto", display: 'flex', justifyContent: 'center' }}>
-                    <Box sx={{ maxWidth: 800, width: "100%", display: "flex", flexDirection: "column", gap: 3 }}>
-                        
+                <Box sx={{ flex: 1, p: { xs: 1.5, sm: 4 }, overflowY: "auto", display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ maxWidth: 800, width: "100%", display: "flex", flexDirection: "column", gap: { xs: 2, md: 3 } }}>
+
                         {error && (
                             <Alert severity="error" sx={{ borderRadius: 2 }}>
                                 {error}
@@ -310,9 +331,9 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                         )}
 
                         {/* Title and Instructions Card */}
-                        <Box sx={{ bgcolor: "white", borderRadius: 2, p: 0, border: "1px solid #dadce0", overflow: "hidden" }}>
+                        <Box sx={{ bgcolor: "white", borderRadius: 2, p: 0, border: "1px solid #dadce0", overflow: "visible" }}>
                             {/* Title Input */}
-                            <Box sx={{ p: 3, bgcolor: "#f1f3f4", borderBottom: "1px solid #dadce0" }}>
+                            <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: "#f1f3f4", borderBottom: "1px solid #dadce0" }}>
                                 <TextField
                                     fullWidth
                                     placeholder="Title"
@@ -325,14 +346,14 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                                     }}
                                 />
                             </Box>
-                            
+
                             {/* Formatting Toolbar */}
                             <Box sx={{ display: "flex", gap: 0.5, px: 2, py: 1, borderBottom: "1px solid #dadce0" }}>
-                                <IconButton size="small" sx={{ color: activeFormats.bold ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.bold ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "bold")}><FormatBoldIcon fontSize="small" /></IconButton>
-                                <IconButton size="small" sx={{ color: activeFormats.italic ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.italic ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "italic")}><FormatItalicIcon fontSize="small" /></IconButton>
-                                <IconButton size="small" sx={{ color: activeFormats.underline ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.underline ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "underline")}><FormatUnderlinedIcon fontSize="small" /></IconButton>
-                                <IconButton size="small" sx={{ color: activeFormats.insertUnorderedList ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.insertUnorderedList ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "insertUnorderedList")}><FormatListBulletedIcon fontSize="small" /></IconButton>
-                                <IconButton size="small" sx={{ color: activeFormats.strikeThrough ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.strikeThrough ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "strikeThrough")}><FormatStrikethroughIcon fontSize="small" /></IconButton>
+                                <IconButton size="small" sx={{ color: activeFormats.bold ? "#0D9488" : "#5f6368", bgcolor: activeFormats.bold ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "bold")}><FormatBoldIcon fontSize="small" /></IconButton>
+                                <IconButton size="small" sx={{ color: activeFormats.italic ? "#0D9488" : "#5f6368", bgcolor: activeFormats.italic ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "italic")}><FormatItalicIcon fontSize="small" /></IconButton>
+                                <IconButton size="small" sx={{ color: activeFormats.underline ? "#0D9488" : "#5f6368", bgcolor: activeFormats.underline ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "underline")}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                <IconButton size="small" sx={{ color: activeFormats.insertUnorderedList ? "#0D9488" : "#5f6368", bgcolor: activeFormats.insertUnorderedList ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "insertUnorderedList")}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                <IconButton size="small" sx={{ color: activeFormats.strikeThrough ? "#0D9488" : "#5f6368", bgcolor: activeFormats.strikeThrough ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "strikeThrough")}><FormatStrikethroughIcon fontSize="small" /></IconButton>
                             </Box>
 
                             {/* Instructions Input */}
@@ -360,9 +381,9 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                                 />
                             </Box>
                         </Box>
-                        
+
                         {/* Attachments Card (Placeholder for now) */}
-                        <Box sx={{ bgcolor: "white", borderRadius: 2, p: 3, border: "1px solid #dadce0" }}>
+                        <Box sx={{ bgcolor: "white", borderRadius: 2, p: { xs: 2, sm: 3 }, border: "1px solid #dadce0" }}>
                             <Typography sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#3c4043", mb: 2 }}>
                                 Attach
                             </Typography>
@@ -380,12 +401,12 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                                         <Typography sx={{ fontSize: "0.75rem", color: "#3c4043", fontWeight: 500 }}>{item.label}</Typography>
                                     </Box>
                                 ))}
-                                <input 
-                                    type="file" 
-                                    id="requirement-file-upload-input" 
-                                    multiple 
-                                    style={{ display: 'none' }} 
-                                    onChange={handleFileUpload} 
+                                <input
+                                    type="file"
+                                    id="requirement-file-upload-input"
+                                    multiple
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileUpload}
                                 />
                             </Box>
 
@@ -397,10 +418,10 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                                         <Box key={idx} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, border: '1px solid #dadce0', borderRadius: 1 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, overflow: 'hidden' }}>
                                                 {att.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" width={20} alt="Drive" /> :
-                                                 att.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width={20} alt="YouTube" /> :
-                                                 att.type === 'Link' ? <Box component="span" sx={{ fontSize: 20 }}>🔗</Box> :
-                                                 <BookIcon sx={{ color: "#1967d2", fontSize: 20 }} />}
-                                                <Typography sx={{ fontSize: "0.875rem", color: "#1967d2", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                    att.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width={20} alt="YouTube" /> :
+                                                        att.type === 'Link' ? <Box component="span" sx={{ fontSize: 20 }}>🔗</Box> :
+                                                            <BookIcon sx={{ color: "#0D9488", fontSize: 20 }} />}
+                                                <Typography sx={{ fontSize: "0.875rem", color: "#0D9488", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                                     {att.name}
                                                 </Typography>
                                             </Box>
@@ -417,8 +438,19 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                 </Box>
 
                 {/* Settings Sidebar (Right) */}
-                <Box sx={{ width: 300, bgcolor: "white", borderLeft: "1px solid #e0e0e0", p: 3, display: "flex", flexDirection: "column", gap: 3, overflowY: "auto" }}>
-                    
+                <Box sx={{
+                    width: { xs: '100%', md: 300 },
+                    bgcolor: "white",
+                    borderLeft: { md: "1px solid #e0e0e0" },
+                    borderTop: { xs: "1px solid #e0e0e0", md: "none" },
+                    p: { xs: 2, sm: 3 },
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
+                    overflowY: "auto",
+                    maxHeight: { xs: '250px', md: 'none' }
+                }}>
+
                     {/* For */}
                     <Box>
                         <Typography sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#3c4043", mb: 1 }}>For</Typography>
@@ -428,7 +460,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                             value={organizationId}
                             sx={{ bgcolor: "#f1f3f4", '& .MuiOutlinedInput-notchedOutline': { border: 'none' }, borderRadius: 1 }}
                         >
-                            <MenuItem value={organizationId}>{organizationName || "Current Class"}</MenuItem>
+                            <MenuItem value={organizationId}>{organizationName || "Current Organization"}</MenuItem>
                         </Select>
                     </Box>
 
@@ -438,12 +470,12 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                         <Button
                             variant="outlined"
                             fullWidth
-                            startIcon={<PeopleOutlineIcon sx={{ color: "#1967d2" }} />}
+                            startIcon={<PeopleOutlineIcon sx={{ color: "#0D9488" }} />}
                             onClick={() => setIsAssignModalOpen(true)}
                             sx={{
                                 justifyContent: "flex-start",
                                 borderColor: "#dadce0",
-                                color: "#1967d2",
+                                color: "#0D9488",
                                 textTransform: "none",
                                 fontWeight: 500,
                                 borderRadius: 10,
@@ -454,7 +486,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                         </Button>
                     </Box>
 
-                    
+
                     <Divider />
 
                     {/* Topic */}
@@ -462,7 +494,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                         <Typography sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#3c4043", mb: 1 }}>Topic</Typography>
                         {isCreatingTopic ? (
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #1a73e8", width: "100%", display: "flex", alignItems: "center" }}>
+                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #0D9488", width: "100%", display: "flex", alignItems: "center" }}>
                                     <TextField
                                         fullWidth
                                         variant="standard"
@@ -478,8 +510,8 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                                             sx: { fontSize: "0.875rem", color: "#3c4043", p: 1.5, pl: 2 }
                                         }}
                                     />
-                                    <IconButton 
-                                        size="small" 
+                                    <IconButton
+                                        size="small"
                                         onClick={() => {
                                             setIsCreatingTopic(false);
                                             setNewTopic("");
@@ -518,13 +550,22 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
             </DialogContent>
 
             {/* Assign To Sub-Modal */}
-            <AssignToModal 
-                open={isAssignModalOpen} 
-                onClose={() => setIsAssignModalOpen(false)} 
+            <AssignToModal
+                open={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
                 students={students}
                 selectedIds={selectedIds}
                 onToggle={handleToggleAssign}
                 onToggleAll={handleToggleAllAssign}
+            />
+
+            <AddLinkModal
+                open={linkModal.open}
+                onClose={() => setLinkModal(prev => ({ ...prev, open: false }))}
+                onAdd={onAddLinkResource}
+                title={linkModal.title}
+                description={linkModal.description}
+                placeholder={linkModal.placeholder}
             />
         </Dialog>
     );

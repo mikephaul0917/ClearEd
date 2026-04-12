@@ -99,7 +99,7 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
                         </Box>
 
                         <Typography sx={{ color: "#202124", fontWeight: 500, fontSize: "1rem", mb: 3 }}>
-                            There are no members in this class
+                            There are no members in this organization
                         </Typography>
 
                         <Button
@@ -107,7 +107,7 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
                             sx={{
                                 textTransform: "none",
                                 fontWeight: 500,
-                                color: "#1a73e8",
+                                color: "#0E7490",
                                 "&:hover": { bgcolor: "rgba(26,115,232,0.04)" }
                             }}
                         >
@@ -117,86 +117,112 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
                 ) : (
                     <Box>
                         {/* Select All Checkbox */}
-                        <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={isAllSelected}
-                                        indeterminate={isIndeterminate}
-                                        onChange={onToggleAll}
-                                        color="primary"
-                                    />
-                                }
-                                label={
-                                    <Typography sx={{ fontWeight: 500, color: "#3c4043" }}>
-                                        All members
-                                    </Typography>
-                                }
-                            />
-                        </Box>
+                    <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={isAllSelected}
+                                    indeterminate={isIndeterminate}
+                                    onChange={onToggleAll}
+                                    sx={{
+                                        color: '#dadce0',
+                                        '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                                            color: '#0D9488',
+                                        },
+                                    }}
+                                />
+                            }
+                            label={
+                                <Typography sx={{ fontWeight: 500, color: "#3c4043" }}>
+                                    All members
+                                </Typography>
+                            }
+                        />
+                    </Box>
 
-                        {/* Student List */}
-                        <List sx={{ pt: 0, pb: 0, maxHeight: 400, overflowY: "auto" }}>
-                            {students.map((student) => {
-                                // OrganizationMember uses `userId` to populate the User object
-                                const userObj = student.userId || student.user;
-                                const id = userObj?._id || student._id;
-                                const isSelected = selectedIds.includes(id);
-                                const fullName = userObj?.fullName || `${userObj?.firstName || ''} ${userObj?.lastName || ''}`.trim() || 'Unknown Member';
-                                
-                                return (
-                                    <ListItem 
-                                        key={id} 
-                                        // @ts-ignore
-                                        button="true"
-                                        onClick={() => onToggle(id)}
+                    {/* Student List */}
+                    <List sx={{ pt: 0, pb: 0, maxHeight: 400, overflowY: "auto" }}>
+                        {students.map((student) => {
+                            // OrganizationMember uses `userId` to populate the User object
+                            const userObj = student.userId || student.user;
+                            const id = userObj?._id || student._id;
+                            const isSelected = selectedIds.includes(id);
+                            const fullName = userObj?.fullName || `${userObj?.firstName || ''} ${userObj?.lastName || ''}`.trim() || 'Unknown Member';
+                            
+                            return (
+                                <ListItem 
+                                    key={id} 
+                                    // @ts-ignore
+                                    button="true"
+                                    onClick={() => onToggle(id)}
+                                    sx={{ 
+                                        borderBottom: "1px solid #f1f3f4",
+                                        "&:hover": { bgcolor: "#f8f9fa", cursor: "pointer" },
+                                        py: 1.5
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={isSelected}
+                                        tabIndex={-1}
+                                        disableRipple
+                                        sx={{
+                                            color: '#dadce0',
+                                            '&.Mui-checked': {
+                                                color: '#0D9488',
+                                            },
+                                        }}
+                                    />
+                                    <Avatar 
+                                        src={getAbsoluteUrl(userObj?.avatarUrl)} 
+                                        alt={fullName}
                                         sx={{ 
-                                            borderBottom: "1px solid #f1f3f4",
-                                            "&:hover": { bgcolor: "#f8f9fa", cursor: "pointer" }
+                                            width: 44, 
+                                            height: 44, 
+                                            mr: 2, 
+                                            ml: 1, 
+                                            bgcolor: "#5F6368",
+                                            fontSize: 16,
+                                            fontWeight: 700,
+                                            color: "#FFFFFF"
                                         }}
                                     >
-                                        <Checkbox
-                                            checked={isSelected}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            color="primary"
-                                        />
-                                        <Avatar 
-                                            src={getAbsoluteUrl(userObj?.avatarUrl)} 
-                                            alt={fullName}
-                                            sx={{ width: 32, height: 32, mr: 2, ml: 1, bgcolor: "#1967d2" }}
-                                        >
-                                            {fullName.charAt(0).toUpperCase()}
-                                        </Avatar>
-                                        <Typography sx={{ color: "#3c4043", fontSize: "0.875rem" }}>
+                                        {fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                                    </Avatar>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                        <Typography sx={{ color: "#202124", fontSize: "0.9375rem", fontWeight: 600, lineHeight: 1.2 }}>
                                             {fullName}
                                         </Typography>
-                                    </ListItem>
-                                );
-                            })}
-                        </List>
-                    </Box>
-                )}
-            </DialogContent>
+                                        <Typography sx={{ color: "#70757a", fontSize: "0.8125rem", mt: 0.5 }}>
+                                            {userObj?.email || "No email"}
+                                        </Typography>
+                                    </Box>
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                </Box>
+            )}
+        </DialogContent>
 
-            <DialogActions sx={{ p: 2, borderTop: "1px solid #e0e0e0" }}>
-                <Button
-                    variant="contained"
-                    onClick={onClose}
-                    sx={{
-                        textTransform: "none",
-                        bgcolor: "#1a73e8",
-                        color: "white",
-                        fontWeight: 500,
-                        borderRadius: 20,
-                        px: 3,
-                        boxShadow: "none",
-                        "&:hover": { bgcolor: "#1557b0", boxShadow: "none" }
-                    }}
-                >
-                    Done
-                </Button>
-            </DialogActions>
+        <DialogActions sx={{ p: 2, borderTop: "1px solid #e0e0e0" }}>
+            <Button
+                variant="contained"
+                onClick={onClose}
+                sx={{
+                    textTransform: "none",
+                    bgcolor: "#3c4043",
+                    color: "white",
+                    fontWeight: 600,
+                    borderRadius: 20,
+                    px: 4,
+                    py: 1,
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "#202124", boxShadow: "none" }
+                }}
+            >
+                Done
+            </Button>
+        </DialogActions>
         </Dialog>
     );
 };

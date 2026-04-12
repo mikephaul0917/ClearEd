@@ -139,11 +139,11 @@ export default function Header() {
                 <Box
                   className="inner-pill"
                   sx={{
-                    bgcolor: isToggled ? '#FFFFFF' : '#000000',
+                    bgcolor: isToggled ? '#FFFFFF' : '#3c4043',
                     borderRadius: '100px',
                     px: 3,
                     py: 1.25,
-                    color: isToggled ? '#000000' : '#FFFFFF',
+                    color: isToggled ? '#3c4043' : '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '0.875rem',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',

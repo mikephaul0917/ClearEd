@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from "@mui/material";
+import { Box, Typography, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Skeleton } from "@mui/material";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { studentService } from "../../services/student.service";
@@ -53,6 +53,7 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
+            setLoading(true);
             try {
                 const data = await studentService.getLeaderboardStats();
                 if (data.success) {
@@ -61,7 +62,10 @@ export default function LeaderboardPage() {
             } catch (error) {
                 console.error("Error fetching leaderboard:", error);
             } finally {
-                setLoading(false);
+                // Ensure skeleton is visible for a premium feel
+                setTimeout(() => {
+                    setLoading(false);
+                }, 2000);
             }
         };
         fetchLeaderboard();
@@ -69,24 +73,89 @@ export default function LeaderboardPage() {
 
     const currentUserRank = leaderboard.find(u => u._id === userId)?.rank || "-";
 
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-                <CircularProgress sx={{ color: '#0a0a0a' }} />
+    const renderSkeleton = () => (
+        <Box sx={{ px: { xs: 2, md: 4 }, pt: 0, pb: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
+            {/* Header Skeleton */}
+            <Box sx={{ mb: 6 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: 2, bgcolor: "#eaebec" }} />
+                    <Skeleton variant="text" width={200} height={40} sx={{ bgcolor: "#eaebec" }} />
+                </Box>
+                <Skeleton variant="text" width={250} height={20} sx={{ bgcolor: "#eaebec" }} />
             </Box>
-        );
+
+            {/* Personal Rank Banner Skeleton */}
+            <Box sx={{
+                bgcolor: '#FEFCE8',
+                borderRadius: '16px',
+                p: { xs: 2, md: 3 },
+                mb: 4,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+            }}>
+                <Skeleton variant="circular" width={48} height={48} sx={{ bgcolor: "#eaebec" }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <Skeleton variant="text" width={80} height={16} sx={{ mb: 0.5, bgcolor: "#eaebec" }} />
+                    <Skeleton variant="text" width="40%" height={24} sx={{ bgcolor: "#eaebec" }} />
+                </Box>
+            </Box>
+
+            {/* Table Skeleton */}
+            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: '16px', overflow: 'hidden' }}>
+            <Table>
+                <TableHead sx={{ bgcolor: '#F9FAFB' }}>
+                    <TableRow>
+                        {['RANK', 'USER', 'ORGS CLEARED', 'CLEARANCE TIME', 'STATUS'].map((head) => (
+                            <TableCell key={head} sx={{ py: 2 }}>
+                                <Skeleton variant="text" width={60} height={16} sx={{ bgcolor: "#eaebec" }} />
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <TableRow key={i}>
+                            <TableCell>
+                                <Skeleton variant="rectangular" width={24} height={24} sx={{ borderRadius: 1, bgcolor: "#eaebec" }} />
+                            </TableCell>
+                            <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Skeleton variant="circular" width={32} height={32} sx={{ bgcolor: "#eaebec" }} />
+                                    <Skeleton variant="text" width={120} height={20} sx={{ bgcolor: "#eaebec" }} />
+                                </Box>
+                            </TableCell>
+                            <TableCell>
+                                <Skeleton variant="text" width={40} height={20} sx={{ bgcolor: "#eaebec" }} />
+                            </TableCell>
+                            <TableCell>
+                                <Skeleton variant="text" width={80} height={20} sx={{ bgcolor: "#eaebec" }} />
+                            </TableCell>
+                            <TableCell>
+                                <Skeleton variant="rectangular" width={70} height={24} sx={{ borderRadius: '999px', bgcolor: "#eaebec" }} />
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+        </Box >
+    );
+
+    if (loading) {
+        return renderSkeleton();
     }
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto', fontFamily: "'Inter', sans-serif" }}>
+        <Box sx={{ px: { xs: 2, md: 4 }, pt: 0, pb: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto', fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
 
             {/* Header Content */}
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 6 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                     <Box sx={{
                         bgcolor: '#FFF8E1',
                         color: '#F59E0B',
-                        p: 1,
+                        p: { xs: 0.5, sm: 1 },
                         borderRadius: 2,
                         display: 'flex',
                         alignItems: 'center',
@@ -94,11 +163,22 @@ export default function LeaderboardPage() {
                     }}>
                         <CustomTrophyIcon color="#F59E0B" />
                     </Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#000' }}>
+                    <Typography variant="h4" sx={{
+                        fontWeight: 600,
+                        color: '#000',
+                        fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
+                        letterSpacing: { xs: '-0.5px', sm: '-1.5px' },
+                        fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                        lineHeight: 1.2
+                    }}>
                         Leaderboard
                     </Typography>
                 </Box>
-                <Typography variant="body1" sx={{ color: '#6B7280', fontSize: '1.05rem' }}>
+                <Typography variant="body1" sx={{
+                    color: '#6B7280',
+                    fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
+                }}>
                     See how you rank among other students
                 </Typography>
             </Box>
@@ -180,23 +260,22 @@ export default function LeaderboardPage() {
                                                 const isCurrentUser = !!currentId && currentId === rowUserId;
 
                                                 const leaderboardUser = isCurrentUser ? { ...row.user, ...fullUser } : row.user;
-                                                
+
                                                 // Consistently use the same fallback logic as comments/submissions
-                                                const avatarSrc = leaderboardUser?.avatarUrl || 
-                                                                leaderboardUser?.avatarUrl || ""
-                                                
+                                                const avatarSrc = leaderboardUser?.avatarUrl ||
+                                                    leaderboardUser?.avatarUrl || ""
+
                                                 return (
                                                     <>
-                                                        <Avatar 
-                                                            src={getAbsoluteUrl(avatarSrc)} 
-                                                            sx={{ 
-                                                                width: 32, 
-                                                                height: 32, 
-                                                                bgcolor: '#020617', 
-                                                                color: '#FFFFFF', 
-                                                                fontSize: '0.875rem',
-                                                                fontWeight: 800,
-                                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                        <Avatar
+                                                            src={getAbsoluteUrl(avatarSrc)}
+                                                            sx={{
+                                                                width: 32,
+                                                                height: 32,
+                                                                bgcolor: "#5f6368",
+                                                                color: "#FFFFFF",
+                                                                fontSize: "0.75rem",
+                                                                fontWeight: 700
                                                             }}
                                                         >
                                                             {getInitials(leaderboardUser?.name || leaderboardUser?.fullName, leaderboardUser?.email)}
@@ -211,7 +290,7 @@ export default function LeaderboardPage() {
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <WorkspacePremiumIcon sx={{ fontSize: 18, color: '#3B82F6' }} />
+                                            <WorkspacePremiumIcon sx={{ fontSize: 18, color: '#0D9488' }} />
                                             <Typography sx={{ color: '#374151', fontSize: '0.95rem', fontWeight: 500 }}>
                                                 {row.certifications}
                                             </Typography>
@@ -224,14 +303,17 @@ export default function LeaderboardPage() {
                                     </TableCell>
                                     <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
                                         <Box sx={{
-                                            bgcolor: row.status === 'Cleared' ? 'rgba(176, 224, 230, 0.2)' : '#FEF3C7',
-                                            color: row.status === 'Cleared' ? '#0E7490' : '#92400E',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
                                             px: 1.5,
                                             py: 0.5,
-                                            borderRadius: 2,
-                                            display: 'inline-block',
-                                            fontSize: '0.85rem',
-                                            fontWeight: 600
+                                            borderRadius: '999px',
+                                            bgcolor: row.status === 'Cleared' ? '#F0FDFA' : '#FFFBEB',
+                                            color: row.status === 'Cleared' ? '#0D9488' : '#D97706',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            letterSpacing: '0.01em',
+                                            border: `1px solid ${row.status === 'Cleared' ? '#0D9488' : '#D97706'}20`
                                         }}>
                                             {row.status}
                                         </Box>

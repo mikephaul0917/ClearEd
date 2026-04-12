@@ -259,7 +259,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     startIcon={<ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />}
                     onClick={() => setShowComments(!showComments)}
                     sx={{
-                        color: "#1967d2",
+                        color: "#0E7490",
                         textTransform: "none",
                         fontWeight: 500,
                         borderRadius: 20,
@@ -268,7 +268,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         "&:hover": { bgcolor: "rgba(25, 103, 210, 0.04)" }
                     }}
                 >
-                    {comments.length > 0 ? `${comments.length} class comment${comments.length > 1 ? 's' : ''}` : "Add class comment"}
+                    {comments.length > 0 ? `${comments.length} organization comment${comments.length > 1 ? 's' : ''}` : "Add organization comment"}
                 </Button>
             </Box>
             <Collapse in={showComments}>
@@ -292,7 +292,13 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
                                         <Avatar
                                             src={getAbsoluteUrl(avatarSrc)}
-                                            sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem" }}
+                                            sx={{ 
+                                                width: 32, 
+                                                height: 32, 
+                                                bgcolor: "#5f6368", 
+                                                fontSize: "0.75rem",
+                                                fontWeight: 700
+                                            }}
                                         >
                                             {getInitials(commentUser?.fullName, commentUser?.email)}
                                         </Avatar>
@@ -316,7 +322,17 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     )}
                     <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
-                            <Avatar src={getAbsoluteUrl(currentUser?.avatarUrl)} sx={{ width: 32, height: 32, bgcolor: "#5f6368", fontSize: "1rem", mt: 0.5 }}>
+                            <Avatar 
+                                src={getAbsoluteUrl(currentUser?.avatarUrl)} 
+                                sx={{ 
+                                    width: 32, 
+                                    height: 32, 
+                                    bgcolor: "#5f6368", 
+                                    fontSize: "0.75rem",
+                                    fontWeight: 700,
+                                    mt: 0.5 
+                                }}
+                            >
                                 {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
                             </Avatar>
 
@@ -324,7 +340,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                 <Box
                                     sx={{
                                         flex: 1,
-                                        border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`,
+                                        border: `1px solid ${isCommentFocused ? '#0E7490' : '#dadce0'}`,
                                         borderRadius: "24px",
                                         bgcolor: "#f1f3f4",
                                         px: 2,
@@ -341,7 +357,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                         fullWidth
                                         multiline={isCommentFocused}
                                         minRows={isCommentFocused ? 2 : 1}
-                                        placeholder="Add class comment..."
+                                        placeholder="Add organization comment..."
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         onFocus={() => setIsCommentFocused(true)}
@@ -378,7 +394,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     }}
                                     disabled={!newComment.trim() || isSubmittingComment}
                                     sx={{
-                                        color: newComment.trim() ? "#1a73e8" : "#ccc",
+                                        color: newComment.trim() ? "#0E7490" : "#ccc",
                                         p: 1,
                                         mb: 0.5,
                                         display: (isCommentFocused || newComment.trim() !== "") ? 'inline-flex' : 'none'
@@ -461,7 +477,13 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         <Box display="flex" gap={3} alignItems="center">
                             <Avatar
                                 src={getAbsoluteUrl(author?.avatarUrl)}
-                                sx={{ bgcolor: "#5f6368", width: 40, height: 40, fontSize: "1.2rem" }}
+                                sx={{ 
+                                    bgcolor: "#5f6368", 
+                                    width: 40, 
+                                    height: 40, 
+                                    fontSize: "0.875rem",
+                                    fontWeight: 700
+                                }}
                             >
                                 {getInitials(author?.fullName)}
                             </Avatar>
@@ -550,7 +572,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                                 file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
                                                     file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
                                                         (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
-                                                            <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                            <AttachmentIcon sx={{ color: '#0E7490', fontSize: 28 }} />)}
                                         </Box>
                                     </Box>
                                 ))}
@@ -590,16 +612,17 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         justifyContent: "space-between",
                         cursor: "pointer",
                         bgcolor: expanded ? "#f1f3f4" : "transparent",
-                        border: expanded ? "2px solid #1a73e8" : "2px solid transparent",
+                        border: expanded ? "2px solid #0E7490" : "2px solid transparent",
                         borderRadius: expanded ? "8px" : "0",
                         transition: "border 0.15s ease",
                         boxSizing: 'border-box'
                     }}
                     onClick={() => setExpanded(!expanded)}
                 >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3, flex: 1 }}>
-                        <Avatar sx={{ bgcolor: avatarConfig.color, width: 40, height: 40 }}>
-                            {avatarConfig.icon}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 3 }, flex: 1 }}>
+                        <Avatar sx={{ bgcolor: avatarConfig.color, width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 } }}>
+                            {/* Scale icon down on mobile */}
+                            {React.cloneElement(avatarConfig.icon as React.ReactElement, { sx: { fontSize: { xs: 20, sm: 24 } } })}
                         </Avatar>
 
                         <Typography
@@ -608,7 +631,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                 fontWeight: 500,
                                 lineHeight: 1.3,
                                 fontFamily: "'Google Sans', 'Roboto', 'Inter', sans-serif",
-                                fontSize: "1rem",
+                                fontSize: { xs: "0.875rem", sm: "1rem" },
                                 color: "#3c4043"
                             }}
                         >
@@ -758,7 +781,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                                             file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
                                                                 file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
                                                                     (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
-                                                                        <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
+                                                                        <AttachmentIcon sx={{ color: '#0E7490', fontSize: 28 }} />)}
                                                     </Box>
                                                 </Box>
                                             ))}
@@ -766,28 +789,37 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     </Box>
                                 )}
                             </Box>
-
                             {/* Right Side: Stats Block */}
                             {type !== 'announcement' && !isAnnouncement && type !== 'material' && (
-                                <Box sx={{ display: 'flex', gap: 4, pl: { md: 4 }, pr: 2, pt: 0, height: 'fit-content' }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
-                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    gap: { xs: 3, sm: 4 }, 
+                                    pl: { xs: 0, md: 4 }, 
+                                    pr: { xs: 0, md: 2 }, 
+                                    pt: { xs: 2, md: 0 }, 
+                                    height: 'fit-content',
+                                    borderTop: { xs: '1px solid #e0e0e0', md: 'none' },
+                                    justifyContent: { xs: 'space-around', md: 'flex-start' }
+                                }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #e0e0e0' }, pl: { xs: 0, md: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
                                             {stats?.approved || 0}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
                                             Handed in
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: 3 }}>
-                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: '2.5rem' }}>
-                                            {(stats?.totalMembers || 0) - (stats?.approved || 0)}
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: { xs: 2, sm: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
+                                            {stats?.pending || 0}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
                                             Assigned
                                         </Typography>
                                     </Box>
                                 </Box>
                             )}
+
                         </Box>
 
                         <Divider sx={{ borderColor: '#e0e0e0' }} />
@@ -801,7 +833,7 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     if (onAction) onAction(id);
                                 }}
                                 sx={{
-                                    color: "#1a73e8",
+                                    color: "#0E7490",
                                     textTransform: "none",
                                     fontWeight: 500,
                                     fontSize: "0.875rem",

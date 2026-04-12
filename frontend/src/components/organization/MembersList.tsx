@@ -10,9 +10,12 @@ import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { organizationService } from "../../services";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import { useAuth } from "../../contexts/AuthContext";
@@ -27,6 +30,25 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [removingId, setRemovingId] = useState<string | null>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [menuTargetId, setMenuTargetId] = useState<string | null>(null);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, userId: string) => {
+        setAnchorEl(event.currentTarget);
+        setMenuTargetId(userId);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        setMenuTargetId(null);
+    };
+
+    const handleRemoveClick = () => {
+        if (menuTargetId) {
+            handleRemoveMember(menuTargetId);
+        }
+        handleMenuClose();
+    };
 
     const fetchMembers = async () => {
         try {
@@ -110,15 +132,17 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
 
                         return (
                             <React.Fragment key={member._id}>
-                                <ListItem sx={{ py: 2 }}>
-                                    <ListItemAvatar>
+                                <ListItem sx={{ py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 2 } }}>
+                                    <ListItemAvatar sx={{ minWidth: { xs: 48, sm: 56 } }}>
                                         <Avatar 
                                             src={getAbsoluteUrl(avatarSrc)}
                                             sx={{ 
-                                                bgcolor: "#020617", 
+                                                bgcolor: "#5F6368", 
                                                 color: "#FFFFFF",
-                                                fontWeight: 800,
-                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                fontWeight: 700,
+                                                fontSize: '0.75rem',
+                                                width: { xs: 32, sm: 40 },
+                                                height: { xs: 32, sm: 40 }
                                             }}
                                         >
                                             {getInitials(memberUser?.fullName, memberUser?.email)}
@@ -126,26 +150,25 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={
-                                            <Typography fontWeight={600}>
+                                            <Typography fontWeight={600} sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                                                 {memberUser?.fullName}
-                                                {memberUser?.role === 'officer' && (
-                                                    <Chip label="Officer" size="small" sx={{ ml: 1, height: 20, fontSize: "0.7rem", bgcolor: "#E0F2FE", color: "#0369A1" }} />
-                                                )}
                                             </Typography>
                                         }
-                                        secondary={memberUser?.email}
+                                        secondary={
+                                            <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {memberUser?.email}
+                                            </Typography>
+                                        }
                                     />
                                     {canManage && memberUser?.role !== 'admin' && memberUser?.role !== 'super_admin' && (
-                                        <Tooltip title="Remove Member">
-                                            <IconButton
-                                                edge="end"
-                                                onClick={() => handleRemoveMember(memberUser?._id)}
-                                                disabled={removingId === memberUser?._id}
-                                                color="error"
-                                            >
-                                                <PersonRemoveIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <IconButton
+                                            edge="end"
+                                            onClick={(e) => handleMenuOpen(e, memberUser?._id)}
+                                            size="small"
+                                            sx={{ color: "#64748B" }}
+                                        >
+                                            <MoreVertIcon fontSize="small" />
+                                        </IconButton>
                                     )}
                                 </ListItem>
                                 {index < officers.length - 1 && <Divider />}
@@ -161,8 +184,8 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
             </Paper>
 
             {/* Students Section */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" fontWeight={700} sx={{ color: "#0F172A" }}>
+            <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} mb={2} gap={1}>
+                <Typography variant="h6" fontWeight={700} sx={{ color: "#0F172A", fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                     Students
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -181,43 +204,45 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                                         
                         return (
                             <React.Fragment key={member._id}>
-                                <ListItem sx={{ py: 2 }}>
-                                    <ListItemAvatar>
+                                <ListItem sx={{ py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 2 } }}>
+                                    <ListItemAvatar sx={{ minWidth: { xs: 48, sm: 56 } }}>
                                         <Avatar 
                                             src={getAbsoluteUrl(avatarSrc)}
                                             sx={{ 
-                                                bgcolor: "#020617", 
+                                                bgcolor: "#5F6368", 
                                                 color: "#FFFFFF",
-                                                fontWeight: 800,
-                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                fontWeight: 700,
+                                                fontSize: '0.75rem',
+                                                width: { xs: 32, sm: 40 },
+                                                height: { xs: 32, sm: 40 }
                                             }}
                                         >
                                             {getInitials(memberUser?.fullName, memberUser?.email)}
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
-                                        primary={<Typography fontWeight={600}>{memberUser?.fullName}</Typography>}
+                                        primary={<Typography fontWeight={600} sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{memberUser?.fullName}</Typography>}
                                         secondary={
-                                            <Box component="span" display="flex" flexDirection="column">
-                                                <Typography variant="caption" color="text.secondary">{memberUser?.email}</Typography>
+                                            <Box component="span" display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {memberUser?.email}
+                                                </Typography>
                                                 {memberUser?.studentId && (
                                                     <Typography variant="caption" fontWeight={700}>{memberUser?.studentId}</Typography>
                                                 )}
                                             </Box>
                                         }
+                                        sx={{ minWidth: 0 }}
                                     />
                                     {canManage && (
-                                        <Tooltip title="Remove Member">
-                                            <IconButton
-                                                edge="end"
-                                                onClick={() => handleRemoveMember(memberUser?._id || member.userId?._id)}
-                                                disabled={removingId === (memberUser?._id || member.userId?._id)}
-                                                color="error"
-                                                size="small"
-                                            >
-                                                <PersonRemoveIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <IconButton
+                                            edge="end"
+                                            onClick={(e) => handleMenuOpen(e, memberUser?._id || member.userId?._id)}
+                                            size="small"
+                                            sx={{ color: "#64748B" }}
+                                        >
+                                            <MoreVertIcon fontSize="small" />
+                                        </IconButton>
                                     )}
                                 </ListItem>
                                 {index < students.length - 1 && <Divider />}
@@ -231,6 +256,34 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                     )}
                 </List>
             </Paper>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                PaperProps={{
+                    elevation: 0,
+                    sx: {
+                        minWidth: 160,
+                        borderRadius: "12px",
+                        mt: 0.5,
+                        border: "1px solid #E2E8F0",
+                        "& .MuiMenuItem-root": {
+                            py: 1.5,
+                            px: 2,
+                            typography: 'body2',
+                            color: "#3c4043",
+                            "&:hover": { bgcolor: "#f1f3f4" }
+                        }
+                    }
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+                <MenuItem onClick={handleRemoveClick} sx={{ color: "#d93025 !important" }}>
+                    <PersonRemoveIcon sx={{ fontSize: 18, mr: 1.5, color: "#d93025" }} />
+                    Remove member
+                </MenuItem>
+            </Menu>
         </Box>
     );
 };

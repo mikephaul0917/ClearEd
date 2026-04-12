@@ -20,7 +20,7 @@ interface PasswordConfirmModalProps {
   loading?: boolean;
 }
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 export default function PasswordConfirmModal({ open, onClose, onConfirm, loading }: PasswordConfirmModalProps) {
   const [password, setPassword] = React.useState('');

@@ -54,7 +54,7 @@ export default function AdminRequirementsPage({
     pageBg: '#F9FAFB',
     teal: '#5fcca0',
   };
-  const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+  const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
   const fetchAll = useCallback(async () => {
     setLoading(true);

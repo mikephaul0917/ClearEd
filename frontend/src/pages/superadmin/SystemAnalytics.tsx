@@ -82,7 +82,7 @@ const COLORS = {
   softBg: '#F8FAFC',
 };
 
-const fontStack = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 // ─── Mock Data & Trend Helpers ──────────────────────────────────────────────
 const generateMockTimeline = (days: number) => {

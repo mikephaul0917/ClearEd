@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Quote, { IQuote } from "../../models/Quote";
 import crypto from "crypto";
+import axios from "axios";
 
 // Get all quotes
 export const listQuotes = async (req: Request, res: Response) => {
@@ -16,24 +17,61 @@ export const listQuotes = async (req: Request, res: Response) => {
 export const getActiveQuotes = async (req: Request, res: Response) => {
   try {
     const { page } = req.params;
+
+    // 1. Try API Ninjas (Primary if key exists)
+    const NINJA_API_KEY = process.env.NINJA_API_KEY;
+    if (NINJA_API_KEY) {
+      try {
+        // Fetching Quote of the Day (No categories to avoid premium restrictions)
+        let response = await axios.get("https://api.api-ninjas.com/v2/quoteoftheday", {
+          headers: { "X-Api-Key": NINJA_API_KEY },
+          timeout: 5000 
+        });
+
+        const extractQuote = (data: any) => {
+          if (Array.isArray(data) && data.length > 0) return data[0];
+          if (data && data.quote) return data;
+          return null;
+        };
+
+        let ninjaQuote = extractQuote(response.data);
+
+        // Sub-fallback to standard quotes if quoteoftheday is empty
+        if (!ninjaQuote) {
+          const v1Response = await axios.get("https://api.api-ninjas.com/v1/quotes", {
+            headers: { "X-Api-Key": NINJA_API_KEY },
+            timeout: 5000
+          });
+          ninjaQuote = extractQuote(v1Response.data);
+        }
+
+        if (ninjaQuote) {
+          return res.json({
+            text: ninjaQuote.quote,
+            author: ninjaQuote.author,
+            isActive: true,
+            page: "both",
+            isExternal: true
+          });
+        }
+      } catch (ninjaError: any) {
+        console.error("API Ninjas fetch failed, falling back to database:", ninjaError.message);
+      }
+    }
+
+    // 2. Try Local Database (Secondary Fallback)
     const quotes = await Quote.find({
       isActive: true,
       $or: [{ page }, { page: "both" }]
     }).sort({ createdAt: -1 });
     
-    // Return a random quote from the active ones using crypto for better randomness
     if (quotes.length > 0) {
       const randomIndex = Math.floor(crypto.randomBytes(4).readUInt32LE() / 0xFFFFFFFF * quotes.length);
-      res.json(quotes[randomIndex]);
-    } else {
-      // Return default quote if no active quotes found
-      res.json({
-        text: "A great product doesn't just meet needs — it creates desire.",
-        author: "Anonymous",
-        isActive: true,
-        page: "both"
-      });
+      return res.json(quotes[randomIndex]);
     }
+
+    // 3. Absolute Fallback (If both API and DB fail)
+    res.status(404).json({ message: "No quotes available" });
   } catch (error: any) {
     res.status(500).json({ message: "Failed to fetch quotes", error: error.message });
   }

@@ -27,6 +27,7 @@ export interface IClearanceRequirement extends Document {
     organizationId: mongoose.Types.ObjectId;
     institutionId: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId; // The Clearance Officer
+    isReviewed: boolean; // Manual override for the To Review / Reviewed tabs
     isActive: boolean;
     order: number; // For manual sequencing in the UI
     createdAt: Date;
@@ -94,6 +95,10 @@ const ClearanceRequirementSchema = new Schema<IClearanceRequirement>({
         type: Schema.Types.ObjectId,
         ref: "User",
         required: true
+    },
+    isReviewed: {
+        type: Boolean,
+        default: false
     },
     isActive: {
         type: Boolean,

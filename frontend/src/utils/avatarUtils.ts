@@ -20,3 +20,12 @@ export const getInitials = (name?: string, fallbackMail?: string): string => {
     }
     return fallbackMail?.charAt(0).toUpperCase() || "U";
 };
+
+export const formatNameFromEmail = (email: string, fallback: string = "User"): string => {
+    if (!email) return fallback;
+    const local = email.split('@')[0];
+    const parts = local.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
+    const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+    const formatted = parts.map(cap).join(" ");
+    return formatted || cap(local) || fallback;
+};

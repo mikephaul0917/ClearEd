@@ -22,6 +22,7 @@ import YouTubeIcon from "@mui/icons-material/YouTube";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import LinkIcon from "@mui/icons-material/Link";
 import { clearanceService } from "../../services";
+import AddResourceModal from "../modals/AddResourceModal";
 
 interface StreamComposerProps {
     organizationId: string;
@@ -36,13 +37,22 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
     const [error, setError] = useState<string | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
 
+    // Modal state for attachments
+    const [resourceModal, setResourceModal] = useState<{
+        open: boolean;
+        type: 'Drive' | 'YouTube' | 'Link';
+    }>({
+        open: false,
+        type: 'Link'
+    });
+
     const [activeFormats, setActiveFormats] = useState({
         bold: false,
         italic: false,
         underline: false,
         insertUnorderedList: false
     });
-    
+
     // Attachments State
     const [attachments, setAttachments] = useState<Array<{ type: string, file?: File, url?: string, name: string }>>([]);
 
@@ -84,13 +94,13 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
             formData.append('isMandatory', 'false');
             formData.append('isAnnouncement', 'true');
             formData.append('type', 'announcement');
-            
+
             // Handle URL Attachments
             const urlAttachments = attachments.filter(a => !a.file).map(a => ({ name: a.name, url: a.url, type: a.type }));
             if (urlAttachments.length > 0) {
                 formData.append('attachments', JSON.stringify(urlAttachments));
             }
-            
+
             // Handle File Uploads
             attachments.filter(a => a.file).forEach(a => {
                 formData.append('files', a.file as Blob);
@@ -106,16 +116,14 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
             setLoading(false);
         }
     };
-    
-    const handleUrlAttachment = (promptText: string, type: string) => {
-        const url = window.prompt(`Enter ${promptText}:`);
-        if (url && url.trim() !== '') {
-            let parsedUrl = url.trim();
-            if (!parsedUrl.startsWith('http://') && !parsedUrl.startsWith('https://')) {
-                parsedUrl = 'https://' + parsedUrl; // Ensure absolute URL for links
-            }
-            setAttachments(prev => [...prev, { type, url: parsedUrl, name: parsedUrl }]);
-        }
+
+    const handleUrlAttachment = (type: 'Drive' | 'YouTube' | 'Link') => {
+        setResourceModal({ open: true, type });
+    };
+
+    const handleModalAdd = (url: string) => {
+        const type = resourceModal.type;
+        setAttachments(prev => [...prev, { type, url, name: url }]);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,23 +162,23 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
             <Paper
                 elevation={0}
                 sx={{
-                    p: 2.5,
+                    px: { xs: 2, sm: 3 },
+                    py: 2,
                     mb: 2,
                     borderRadius: "8px",
-                    border: "1px solid rgba(0,0,0,0.06)",
+                    border: "1px solid #dadce0",
                     display: "flex",
                     alignItems: "center",
-                    gap: 2,
+                    gap: { xs: 1.5, sm: 3 },
                     cursor: "pointer",
-                    boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
                     transition: "all 0.2s ease",
                     "&:hover": {
-                        boxShadow: "0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)",
+                        borderColor: "rgba(0,0,0,0.12)",
                     }
                 }}
                 onClick={handleExpand}
             >
-                <Avatar src={userAvatarUrl} sx={{ bgcolor: "#F1F5F9", color: "#64748B", width: 40, height: 40 }}>
+                <Avatar src={userAvatarUrl} sx={{ bgcolor: "#F1F3F4", color: "#5F6368", width: 40, height: 40 }}>
                     <AddIcon />
                 </Avatar>
                 <Typography
@@ -181,7 +189,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                         fontWeight: 500
                     }}
                 >
-                    Announce something to your class...
+                    Announce something to your organization...
                 </Typography>
             </Paper>
         );
@@ -193,8 +201,8 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
             sx={{
                 mb: 2,
                 borderRadius: "8px",
-                border: "1px solid rgba(0,0,0,0.06)",
-                boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
+                border: "1px solid #dadce0",
+
                 overflow: "hidden"
             }}
         >
@@ -213,7 +221,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                         position: "relative",
                         border: "1px solid transparent",
                         "&:focus-within": {
-                            borderColor: "#1a73e8",
+                            borderColor: "#0E7490",
                             bgcolor: "#fff"
                         }
                     }}
@@ -232,7 +240,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                             fontFamily: "'Roboto', 'Inter', sans-serif",
                             color: "#3c4043",
                             "&:empty:before": {
-                                content: '"Announce something to your class..."',
+                                content: '"Announce something to your organization..."',
                                 color: "#5f6368",
                                 pointerEvents: "none",
                                 display: "block"
@@ -246,7 +254,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                             size="small"
                             onMouseDown={(e) => handleFormat(e, "bold")}
                             color={activeFormats.bold ? "primary" : "default"}
-                            sx={{ color: activeFormats.bold ? "#1a73e8" : "#5f6368" }}
+                            sx={{ color: activeFormats.bold ? "#0E7490" : "#5f6368" }}
                         >
                             <FormatBoldIcon fontSize="small" />
                         </IconButton>
@@ -254,7 +262,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                             size="small"
                             onMouseDown={(e) => handleFormat(e, "italic")}
                             color={activeFormats.italic ? "primary" : "default"}
-                            sx={{ color: activeFormats.italic ? "#1a73e8" : "#5f6368" }}
+                            sx={{ color: activeFormats.italic ? "#0E7490" : "#5f6368" }}
                         >
                             <FormatItalicIcon fontSize="small" />
                         </IconButton>
@@ -262,7 +270,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                             size="small"
                             onMouseDown={(e) => handleFormat(e, "underline")}
                             color={activeFormats.underline ? "primary" : "default"}
-                            sx={{ color: activeFormats.underline ? "#1a73e8" : "#5f6368" }}
+                            sx={{ color: activeFormats.underline ? "#0E7490" : "#5f6368" }}
                         >
                             <FormatUnderlinedIcon fontSize="small" />
                         </IconButton>
@@ -270,7 +278,7 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                             size="small"
                             onMouseDown={(e) => handleFormat(e, "insertUnorderedList")}
                             color={activeFormats.insertUnorderedList ? "primary" : "default"}
-                            sx={{ color: activeFormats.insertUnorderedList ? "#1a73e8" : "#5f6368", ml: 1 }}
+                            sx={{ color: activeFormats.insertUnorderedList ? "#0E7490" : "#5f6368", ml: 1 }}
                         >
                             <FormatListBulletedIcon fontSize="small" />
                         </IconButton>
@@ -279,19 +287,19 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
             </Box>
 
             {/* Actions */}
-            
+
             {/* Render Attachments */}
             {attachments.length > 0 && (
                 <Box sx={{ px: 2, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Typography sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#3c4043", mb: 0.5 }}>Attached Files</Typography>
                     {attachments.map((att, idx) => (
-                         <Box key={idx} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, border: '1px solid #dadce0', borderRadius: 1 }}>
+                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, border: '1px solid #dadce0', borderRadius: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, overflow: 'hidden' }}>
                                 {att.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" width={20} alt="Drive" /> :
-                                 att.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width={20} alt="YouTube" /> :
-                                 att.type === 'Link' ? <Box component="span" sx={{ fontSize: 20 }}>🔗</Box> :
-                                 <AssignmentIcon sx={{ color: "#1967d2", fontSize: 20 }} />}
-                                <Typography sx={{ fontSize: "0.875rem", color: "#1967d2", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    att.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width={20} alt="YouTube" /> :
+                                        att.type === 'Link' ? <Box component="span" sx={{ fontSize: 20 }}>🔗</Box> :
+                                            <AssignmentIcon sx={{ color: "#0E7490", fontSize: 20 }} />}
+                                <Typography sx={{ fontSize: "0.875rem", color: "#0E7490", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {att.name}
                                 </Typography>
                             </Box>
@@ -302,17 +310,27 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                     ))}
                 </Box>
             )}
-            
-            <Box sx={{ px: 2, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "#fff", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+
+            <Box sx={{
+                px: 2,
+                py: 1.5,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                justifyContent: "space-between",
+                alignItems: { xs: "stretch", sm: "center" },
+                bgcolor: "#fff",
+                borderTop: "1px solid rgba(0,0,0,0.06)",
+                gap: 2
+            }}>
                 {/* Attachment Tools */}
-                <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, justifyContent: { xs: "center", sm: "flex-start" } }}>
                     <Tooltip title="Add Google Drive file">
-                        <IconButton size="small" onClick={() => handleUrlAttachment('Drive link', 'Drive')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
+                        <IconButton size="small" onClick={() => handleUrlAttachment('Drive')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
                             <AddToDriveIcon sx={{ color: "#5f6368", fontSize: 22 }} />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Add YouTube video">
-                        <IconButton size="small" onClick={() => handleUrlAttachment('YouTube link', 'YouTube')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
+                        <IconButton size="small" onClick={() => handleUrlAttachment('YouTube')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
                             <YouTubeIcon sx={{ color: "#5f6368", fontSize: 22 }} />
                         </IconButton>
                     </Tooltip>
@@ -322,60 +340,67 @@ const StreamComposer: React.FC<StreamComposerProps> = ({ organizationId, onCreat
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Add link">
-                        <IconButton size="small" onClick={() => handleUrlAttachment('External link', 'Link')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
+                        <IconButton size="small" onClick={() => handleUrlAttachment('Link')} sx={{ border: "1px solid #dadce0", width: 40, height: 40 }}>
                             <LinkIcon sx={{ color: "#5f6368", fontSize: 22 }} />
                         </IconButton>
                     </Tooltip>
-                    <input 
-                        type="file" 
-                        id="composer-file-upload" 
-                        multiple 
-                        style={{ display: 'none' }} 
-                        onChange={handleFileUpload} 
+                    <input
+                        type="file"
+                        id="composer-file-upload"
+                        multiple
+                        style={{ display: 'none' }}
+                        onChange={handleFileUpload}
                     />
                 </Box>
 
                 {/* Submit Actions */}
-                <Box sx={{ display: "flex", gap: 1 }}>
-                <Button
-                    variant="text"
-                    onClick={handleCancel}
-                    disabled={loading}
-                    sx={{
-                        color: "#5f6368",
-                        textTransform: "none",
-                        fontWeight: 500,
-                        borderRadius: 1
-                    }}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    variant="contained"
-                    onClick={handlePost}
-                    disabled={loading || content.replace(/<[^>]+>/g, '').trim().length === 0}
-                    sx={{
-                        bgcolor: "#1a73e8",
-                        color: "white",
-                        textTransform: "none",
-                        fontWeight: 500,
-                        borderRadius: 1,
-                        px: 3,
-                        boxShadow: "none",
-                        "&:hover": {
-                            bgcolor: "#1557b0",
-                            boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3)"
-                        },
-                        "&:disabled": {
-                            bgcolor: "rgba(0,0,0,0.12)",
-                            color: "rgba(0,0,0,0.38)"
-                        }
-                    }}
-                >
-                    {loading ? <CircularProgress size={20} color="inherit" /> : "Post"}
-                </Button>
+                <Box sx={{ display: "flex", gap: 1, justifyContent: { xs: "flex-end", sm: "flex-start" } }}>
+                    <Button
+                        variant="text"
+                        onClick={handleCancel}
+                        disabled={loading}
+                        sx={{
+                            color: "#5f6368",
+                            textTransform: "none",
+                            fontWeight: 500,
+                            borderRadius: 1
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handlePost}
+                        disabled={loading || content.replace(/<[^>]+>/g, '').trim().length === 0}
+                        sx={{
+                            bgcolor: "#3c4043",
+                            color: "white",
+                            textTransform: "none",
+                            fontWeight: 500,
+                            borderRadius: 1,
+                            px: 3,
+                            boxShadow: "none",
+                            "&:hover": {
+                                bgcolor: "#202124",
+                                boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3)"
+                            },
+                            "&:disabled": {
+                                bgcolor: "rgba(0,0,0,0.12)",
+                                color: "rgba(0,0,0,0.38)"
+                            }
+                        }}
+                    >
+                        {loading ? <CircularProgress size={20} color="inherit" /> : "Post"}
+                    </Button>
                 </Box>
             </Box>
+
+            <AddResourceModal
+                open={resourceModal.open}
+                type={resourceModal.type}
+                onClose={() => setResourceModal(prev => ({ ...prev, open: false }))}
+                onAdd={handleModalAdd}
+            />
         </Paper>
     );
 };

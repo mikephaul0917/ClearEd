@@ -14,7 +14,7 @@ import GlassButton from "./liquid-glass";
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
     white: "#FFFFFF",
-    black: "#000000",
+    black: "#3c4043",
     deep: "#0a0a0a",
     teal: "#5fcca0",
     lavender: "#cb9bfb",
@@ -22,28 +22,13 @@ const C = {
     orange: "#ff895d",
     muted: "#6B7280",
     subtle: "#9CA3AF",
-    font: "'Inter', system-ui, -apple-system, sans-serif",
+    font: '"Google Sans", "Product Sans", Roboto, sans-serif',
 };
 
 interface Quote {
     text: string;
     author: string;
 }
-
-const APP_QUOTES: Quote[] = [
-    {
-        text: "The illiterate of the 21st century will not be those who cannot read and write, but those who cannot learn, unlearn, and relearn.",
-        author: "Alvin Toffler"
-    },
-    {
-        text: "Education is not preparation for life; education is life itself.",
-        author: "John Dewey"
-    },
-    {
-        text: "One child, one teacher, one book, one pen can change the world.",
-        author: "Malala Yousafzai"
-    }
-];
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -62,23 +47,24 @@ const RegisterPage = () => {
     const [authUserName, setAuthUserName] = useState<string>("");
     const [authUserRole, setAuthUserRole] = useState<string>("");
     const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
-    const [quote, setQuote] = useState<Quote>(() => APP_QUOTES[Math.floor(Math.random() * APP_QUOTES.length)]);
+    const [quote, setQuote] = useState<Quote>({ text: "Loading inspiration...", author: "" });
     const [focusField, setFocusField] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const fetchQuote = async () => {
             try {
-                const quotes = await authService.getPublicQuotes("login");
-                const allQuotes = [...APP_QUOTES, ...(quotes || [])];
-                if (allQuotes.length > 0) {
-                    const randomQuote = allQuotes[Math.floor(Math.random() * allQuotes.length)];
+                const response = await authService.getPublicQuotes("login");
+                
+                // Handle both single quote object and array response
+                const fetchedQuotes = Array.isArray(response) ? response : (response ? [response] : []);
+                
+                if (fetchedQuotes.length > 0) {
+                    const randomQuote = fetchedQuotes[Math.floor(Math.random() * fetchedQuotes.length)];
                     setQuote(randomQuote);
                 }
             } catch (error) {
                 console.error("Failed to fetch quotes:", error);
-                const randomQuote = APP_QUOTES[Math.floor(Math.random() * APP_QUOTES.length)];
-                setQuote(randomQuote);
             }
         };
         fetchQuote();
@@ -233,7 +219,7 @@ const RegisterPage = () => {
             borderRadius: "14px",
             outline: "none",
             transition: "all 0.2s ease",
-            color: C.black,
+            color: '#000',
             boxShadow: (isFocused && !hasError) ? `0 0 0 4px rgba(0, 0, 0, 0.05)` : "none",
             boxSizing: "border-box",
         };
@@ -279,7 +265,7 @@ const RegisterPage = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "80px 40px",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                 position: "relative",
                 overflow: "hidden",
             }}>
@@ -334,7 +320,7 @@ const RegisterPage = () => {
                             fontWeight: 700,
                             letterSpacing: "-0.03em",
                             lineHeight: "1.0",
-                            color: C.black,
+                            color: '#000',
                             marginBottom: "12px"
                         }}>
                             Welcome back
@@ -397,8 +383,8 @@ const RegisterPage = () => {
                             >
                                 <motion.div
                                     animate={{
-                                        backgroundColor: formData.rememberMe ? C.black : "transparent",
-                                        borderColor: formData.rememberMe ? C.black : "#E2E8F0"
+                                        backgroundColor: formData.rememberMe ? '#000' : "transparent",
+                                        borderColor: formData.rememberMe ? '#000' : "#E2E8F0"
                                     }}
                                     transition={{ duration: 0.2 }}
                                     style={{
@@ -435,7 +421,7 @@ const RegisterPage = () => {
                                     Remember me
                                 </span>
                             </div>
-                            <a href="#" style={{ fontSize: "14px", color: C.black, fontWeight: 600, textDecoration: "none" }}>
+                            <a href="#" style={{ fontSize: "14px", color: '#000', fontWeight: 600, textDecoration: "none" }}>
                                 Forgot password?
                             </a>
                         </div>

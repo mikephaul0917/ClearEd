@@ -6,11 +6,17 @@ import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import SuccessMessage from "../../components/SuccessMessage";
 import { showGlobalModal } from "../../components/GlobalModal";
 import { api, authService } from '../../services';
 import { Divider } from "@mui/material";
-import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
+import GenericConfirmationModal from "../../components/modals/GenericConfirmationModal";
+import {
+  getAbsoluteUrl,
+  getInitials,
+  formatNameFromEmail
+} from "../../utils/avatarUtils";
 import StudentClearanceSlip from "./StudentClearanceSlip";
 import ClearanceRequirements from "../../components/student/ClearanceRequirements";
 import StudentProgress from "./StudentProgress";
@@ -33,10 +39,12 @@ import {
   SettingsRow,
   SettingsField,
   ProfilePictureSection,
-  SettingsHeader
+  SettingsHeader,
+  SettingsSkeleton
 } from "../../components/layout/SettingsLayout";
 import Footer from "../../components/layout/Footer";
 import SuccessModal from "../../components/SuccessModal";
+import PasswordConfirmModal from "../dean/components/PasswordConfirmModal";
 
 // --- MODERN BENTO DESIGN SYSTEM ---
 const COLORS = {
@@ -55,7 +63,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 const glassCard = {
   borderRadius: COLORS.cardRadius,
@@ -69,6 +77,7 @@ const glassCard = {
 export default function StudentPage() {
   const location = useLocation();
   const nav = useNavigate();
+  const { updateUser } = useAuth();
   const [notice, setNotice] = useState<any>((location.state as any)?.banner ?? null);
   const isSettings = location.pathname.includes("/settings");
   const isSlip = location.pathname.includes("/slip");
@@ -79,6 +88,7 @@ export default function StudentPage() {
   const isTodo = location.pathname.includes("/todo");
   const isLeaderboard = location.pathname.includes("/leaderboard");
   const isDashboard = location.pathname.includes("/dashboard") || (!isSettings && !isSlip && !isReq && !isProg && !isCert && !isTodo && !isLeaderboard && location.pathname.endsWith("/student"));
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const active: "dashboard" | "settings" | "slip" | "requirements" | "progress" | "certificate" | "todo" | "leaderboard" =
     isSettings ? "settings" : isSlip ? "slip" : isReq ? "requirements" : isProg ? "progress" : isCert ? "certificate" : isTodo ? "todo" : isLeaderboard ? "leaderboard" : "dashboard";
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
@@ -126,9 +136,20 @@ export default function StudentPage() {
   const [spStudentNumber, setSpStudentNumber] = useState("");
   const [spCourse, setSpCourse] = useState("");
   const [spYear, setSpYear] = useState("");
+  const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
   const [viewingOrg, setViewingOrg] = useState<any>(null);
   const [spSemester, setSpSemester] = useState("");
   const [spAcademicYear, setSpAcademicYear] = useState("");
+
+  useEffect(() => {
+    if (active === 'settings') {
+      setSettingsLoading(true);
+      const timer = setTimeout(() => setSettingsLoading(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [active]);
 
   useEffect(() => {
     try {
@@ -136,8 +157,8 @@ export default function StudentPage() {
       const fullUser = storedUserStr ? JSON.parse(storedUserStr) : null;
       // Prioritize the fullName from the structured 'user' object, then fallback to 'username' key
       const savedUsername = fullUser?.fullName || localStorage.getItem("username") || "";
-      const base = savedUsername || (email || "").split("@")[0];
-      const parts = base.replace(/[._-]+/g, " ").split(" ").filter(Boolean);
+      const baseName = savedUsername || formatNameFromEmail(email || "");
+      const parts = baseName.split(" ");
       const first = parts[0] || "";
       const last = parts.slice(1).join(" ") || "";
       setProfileFirst(first);
@@ -173,6 +194,21 @@ export default function StudentPage() {
       })();
     } catch { }
   }, [email]);
+
+  const handleDeleteAvatar = async () => {
+    setIsDeletingAvatar(true);
+    try {
+      await api.put("/auth/profile", { avatarUrl: "" });
+      setAvatarUrl("");
+      updateUser({ avatarUrl: "" });
+      updateLocalAvatar("");
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
 
   const fullName = useMemo(() => {
     const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
@@ -238,7 +274,7 @@ export default function StudentPage() {
     }
     if (newPass !== confirmPass) {
       showGlobalModal(
-        "Password Mismatch", 
+        "Password Mismatch",
         "New password and confirmation do not match. Please ensure both fields are identical.",
         "error"
       );
@@ -325,7 +361,10 @@ export default function StudentPage() {
       setMyClearances(res.organizations || []);
       setActiveTerm(res.term || null);
     } catch { }
-    setLoadingClearances(false);
+    // Add deliberate delay for premium feel
+    setTimeout(() => {
+      setLoadingClearances(false);
+    }, 2000);
   };
 
   useEffect(() => {
@@ -444,7 +483,7 @@ export default function StudentPage() {
               mb: 4
             }}>
               {loadingClearances ? (
-                [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={220} sx={{ borderRadius: '32px' }} />)
+                [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={220} sx={{ borderRadius: '32px', bgcolor: '#eaebec' }} />)
               ) : filteredClearances.map((org) => (
                 <Box
                   key={org._id}
@@ -541,7 +580,7 @@ export default function StudentPage() {
                         fontSize: "1.25rem",
                         fontWeight: 800,
                         color: "#111",
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                         display: "-webkit-box",
                         WebkitLineClamp: 1,
                         WebkitBoxOrient: "vertical",
@@ -565,7 +604,7 @@ export default function StudentPage() {
                           fontSize: "0.875rem",
                           color: "#6B7280",
                           lineHeight: 1.5,
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
@@ -593,7 +632,7 @@ export default function StudentPage() {
                           '&:hover': { bgcolor: '#E2E8F0' }
                         }}
                       >
-                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: "'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#4B5563", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', whiteSpace: 'nowrap' }}>
                           Learn more
                         </Typography>
                       </Box>
@@ -613,7 +652,7 @@ export default function StudentPage() {
                           fontSize: "0.725rem",
                           fontWeight: 800,
                           color: org.status === 'completed' ? '#059669' : "#4B5563",
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                           textTransform: 'uppercase',
                           letterSpacing: '0.02em'
                         }}>
@@ -746,175 +785,189 @@ export default function StudentPage() {
           </Box>
         </Box>
       ) : active === "settings" ? (
-        <SettingsContainer>
-          <SettingsHeader
-            title="Account Settings"
-            subtitle="Manage your profile information and security preferences"
-          />
-
-          <SettingsSection>
-            <ProfilePictureSection
-              avatarUrl={getAbsoluteUrl(avatarUrl)}
-              initials={getInitials(draftFullName)}
-              onFileSelect={async (file) => {
-                try {
-                  const formData = new FormData();
-                  formData.append('avatar', file);
-                  const res = await api.post("/auth/avatar", formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                  });
-                  setAvatarUrl(res.data.avatarUrl);
-                  updateLocalAvatar(res.data.avatarUrl);
-                } catch (err: any) {
-                  console.error("Upload failed:", err);
-                }
-              }}
-              onDelete={async () => {
-                try {
-                  // Update profile with empty avatarUrl
-                  await api.put("/auth/profile", { avatarUrl: "" });
-                  setAvatarUrl("");
-                  updateLocalAvatar("");
-                } catch (err) {
-                  console.error("Delete failed:", err);
-                }
-              }}
+        settingsLoading ? (
+          <SettingsSkeleton mode="student" />
+        ) : (
+          <SettingsContainer>
+            <SettingsHeader
+              title="Account Settings"
+              subtitle="Manage your profile information and security preferences"
             />
-          </SettingsSection>
-
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField label="First name">
-                <TextField
-                  fullWidth
-                  value={draftFirst}
-                  onChange={(e) => setDraftFirst(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                />
-              </SettingsField>
-              <SettingsField label="Last name">
-                <TextField
-                  fullWidth
-                  value={draftLast}
-                  onChange={(e) => setDraftLast(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
-
-          <SettingsSection>
-            <SettingsField label="Email">
-              <TextField
-                fullWidth
-                value={email}
-                disabled
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    backgroundColor: '#F8FAFC'
+            <SettingsSection>
+              <ProfilePictureSection
+                avatarUrl={getAbsoluteUrl(avatarUrl)}
+                initials={getInitials(draftFullName)}
+                onFileSelect={async (file) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    const res = await api.post("/auth/avatar", formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    setAvatarUrl(res.data.avatarUrl);
+                    updateUser({ avatarUrl: res.data.avatarUrl });
+                    updateLocalAvatar(res.data.avatarUrl);
+                  } catch (err: any) {
+                    console.error("Upload failed:", err);
                   }
                 }}
+                onDelete={() => setShowDeleteConfirm(true)}
               />
-            </SettingsField>
-          </SettingsSection>
 
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField label="Student Number">
-                <TextField fullWidth value={spStudentNumber} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-              </SettingsField>
-              <SettingsField label="Course">
-                <TextField fullWidth value={spCourse} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-              </SettingsField>
-            </SettingsRow>
-            <SettingsRow>
-              <SettingsField label="Year Level">
-                <TextField fullWidth value={`${spYear} Year`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-              </SettingsField>
-              <SettingsField label="Academic Period">
-                <TextField fullWidth value={`${spSemester} • ${spAcademicYear}`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
+              <GenericConfirmationModal
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDeleteAvatar}
+                loading={isDeletingAvatar}
+                title={
+                  <>
+                    Are You Sure <br /> Want To Remove?
+                  </>
+                }
+                description={
+                  <>
+                    You are about to remove your profile picture. <br />
+                    This action <strong>cannot be undone</strong>.
+                  </>
+                }
+                confirmText="Yes, Remove"
+              />
+            </SettingsSection>
 
-          <SettingsSection>
-            <SettingsRow>
-              <SettingsField label="New password">
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="First name">
+                  <TextField
+                    fullWidth
+                    value={draftFirst}
+                    onChange={(e) => setDraftFirst(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Last name">
+                  <TextField
+                    fullWidth
+                    value={draftLast}
+                    onChange={(e) => setDraftLast(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsField label="Email">
                 <TextField
-                  type="password"
                   fullWidth
-                  placeholder="Enter new password"
-                  autoComplete="new-password"
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  value={email}
+                  disabled
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      backgroundColor: '#F8FAFC'
+                    }
+                  }}
                 />
               </SettingsField>
-              <SettingsField label="Confirm password">
-                <TextField
-                  type="password"
-                  fullWidth
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                  value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
-                />
-              </SettingsField>
-            </SettingsRow>
-          </SettingsSection>
+            </SettingsSection>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-            <Button
-              variant="contained"
-              onClick={(e) => { e.preventDefault(); updateProfile(); }}
-              sx={{
-                backgroundColor: '#000',
-                color: '#FFF',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: '1rem',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                '&:hover': {
-                  backgroundColor: '#111',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Save Profile
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={updatePassword}
-              sx={{
-                color: '#000',
-                borderColor: '#000',
-                borderWidth: '1.2px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: '1rem',
-                backgroundColor: '#FFF',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                '&:hover': {
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="Student Number">
+                  <TextField fullWidth value={spStudentNumber} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+                <SettingsField label="Course">
+                  <TextField fullWidth value={spCourse} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+              </SettingsRow>
+              <SettingsRow>
+                <SettingsField label="Year Level">
+                  <TextField fullWidth value={`${spYear} Year`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+                <SettingsField label="Academic Period">
+                  <TextField fullWidth value={`${spSemester} • ${spAcademicYear}`} disabled sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#F8FAFC' } }} />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection>
+              <SettingsRow>
+                <SettingsField label="New password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+                <SettingsField label="Confirm password">
+                  <TextField
+                    type="password"
+                    fullWidth
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#FFF' } }}
+                  />
+                </SettingsField>
+              </SettingsRow>
+            </SettingsSection>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+              <Button
+                variant="contained"
+                onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                sx={{
+                  backgroundColor: '#3c4043',
+                  color: '#FFF',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                  '&:hover': {
+                    backgroundColor: '#202124',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)',
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Save Profile
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={updatePassword}
+                sx={{
+                  color: '#000',
                   borderColor: '#000',
-                  bgcolor: '#F8FAFC',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Update Password
-            </Button>
-          </Box>
-        </SettingsContainer>
+                  borderWidth: '1.2px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  backgroundColor: '#FFF',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                  '&:hover': {
+                    borderColor: '#000',
+                    bgcolor: '#F8FAFC',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Update Password
+              </Button>
+            </Box>
+          </SettingsContainer>
+        )
       ) : active === "slip" ? (
         <StudentClearanceSlip />
       ) : active === "requirements" ? (

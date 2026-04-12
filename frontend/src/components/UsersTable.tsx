@@ -44,7 +44,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface UserRow {
   _id: string;
@@ -576,11 +576,10 @@ export default function UsersTable({
                               sx={{
                                 width: 40,
                                 height: 40,
-                                fontSize: 14,
-                                bgcolor: '#020617', // Dark background like Sidebar
+                                fontSize: 13,
+                                bgcolor: '#5f6368',
                                 color: '#FFFFFF',
-                                fontWeight: 800,
-                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                fontWeight: 700
                               }}
                             >
                               {getInitials(u.fullName || u.username)}
@@ -842,10 +841,9 @@ export default function UsersTable({
                           width: 48,
                           height: 48,
                           fontSize: 16,
-                          bgcolor: '#020617',
+                          bgcolor: '#5F6368',
                           color: '#FFF',
-                          fontWeight: 800,
-                          textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                          fontWeight: 700,
                         }}
                       >
                         {getInitials(req.fullName)}
@@ -1024,10 +1022,9 @@ export default function UsersTable({
                                   width: 38,
                                   height: 38,
                                   fontSize: 13,
-                                  bgcolor: '#020617',
+                                  bgcolor: '#5f6368',
                                   color: '#FFFFFF',
-                                  fontWeight: 800,
-                                  textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
+                                  fontWeight: 700
                                 }}>
                                 {getInitials(user.fullName || user.username)}
                               </Avatar>
@@ -1203,12 +1200,12 @@ export default function UsersTable({
             exit={{ y: 100, opacity: 0 }}
             sx={{
               position: 'fixed',
-              bottom: { xs: 0, sm: 32 },
+              bottom: { xs: 16, sm: 72 }, // Increased to clear the 48px fixed footer
               left: '50%',
               transform: 'translateX(-50%)',
               width: { xs: '100%', sm: 'auto' },
               maxWidth: { xs: '100%', sm: 'calc(100% - 64px)' },
-              bgcolor: COLORS.black,
+              bgcolor: '#3c4043',
               color: '#FFF',
               py: { xs: 2.5, sm: 2 },
               px: { xs: 2, sm: 3 },
@@ -1707,10 +1704,10 @@ export default function UsersTable({
                       borderRadius: '8px',
                       textTransform: 'none',
                       fontWeight: 700,
-                      bgcolor: COLORS.black,
+                      bgcolor: '#3c4043',
                       padding: '12px 16px',
                       boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                      '&:hover': { bgcolor: '#222', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
+                      '&:hover': { bgcolor: '#202124', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
                     }}
                   >
                     Save Profile

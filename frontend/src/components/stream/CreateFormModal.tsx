@@ -27,6 +27,7 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Divider from "@mui/material/Divider";
 import { clearanceService } from "../../services";
 import AssignToModal from "./AssignToModal";
+import AddLinkModal from "./AddLinkModal";
 
 /**
  * CreateFormModal Component
@@ -66,6 +67,20 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
     const [attachments, setAttachments] = useState<Array<{ type: string, file?: File, url?: string, name: string }>>([]);
     const [status, setStatus] = useState("Pending");
     const [dueDate, setDueDate] = useState<string>("");
+    const [showBlankQuiz, setShowBlankQuiz] = useState(true);
+    const [linkModal, setLinkModal] = useState<{
+        open: boolean;
+        type: string;
+        title: string;
+        description: string;
+        placeholder: string;
+    }>({
+        open: false,
+        type: "Link",
+        title: "",
+        description: "",
+        placeholder: ""
+    });
 
     useEffect(() => {
         if (open) {
@@ -186,16 +201,28 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
         setStatus("Pending");
         setError(null);
         setAttachments([]);
+        setShowBlankQuiz(true);
         onClose();
     };
 
     const handleUrlAttachment = (promptMsg: string, type: string) => {
-        const url = window.prompt(`Enter ${promptMsg} URL:`);
-        if (url) {
-            let name = type + " Attachment";
-            try { name = new URL(url).hostname; } catch (e) { }
-            setAttachments(prev => [...prev, { type, url, name }]);
+        setLinkModal({
+            open: true,
+            type,
+            title: `Add ${type} Resource`,
+            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            placeholder: `${type} Link`
+        });
+    };
+
+    const onAddLinkResource = (url: string) => {
+        let parsedUrl = url.trim();
+        if (!parsedUrl.startsWith('http://') && !parsedUrl.startsWith('https://')) {
+            parsedUrl = 'https://' + parsedUrl;
         }
+        let name = linkModal.type + " Attachment";
+        try { name = new URL(parsedUrl).hostname; } catch (e) { }
+        setAttachments(prev => [...prev, { type: linkModal.type, url: parsedUrl, name }]);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,35 +241,50 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
             {/* Nav Bar */}
             <Box sx={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                px: 2, py: 1.5, bgcolor: '#fff', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 1100
+                px: { xs: 1.5, sm: 2 }, py: { xs: 1, sm: 1.5 }, bgcolor: '#fff', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 1100
             }}>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 2 }}>
                     <IconButton onClick={handleClose} size="small"><CloseIcon /></IconButton>
                     <Box display="flex" alignItems="center" gap={1.5}>
-                        <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#e8f0fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <AssignmentIcon sx={{ color: '#1a73e8', fontSize: 20 }} />
+                        <Box sx={{
+                            width: { xs: 32, sm: 36 },
+                            height: { xs: 32, sm: 36 },
+                            borderRadius: '50%',
+                            bgcolor: '#e8f0fe',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <AssignmentIcon sx={{ color: '#0D9488', fontSize: { xs: 18, sm: 20 } }} />
                         </Box>
                         <Box>
-                            <Typography sx={{ fontWeight: 500, fontSize: "1.125rem", color: "#202124", lineHeight: 1.2 }}>Form</Typography>
+                            <Typography sx={{ fontWeight: 500, fontSize: { xs: "1rem", sm: "1.125rem" }, color: "#202124", lineHeight: 1.2 }}>Form</Typography>
                         </Box>
                     </Box>
                 </Box>
                 <Box display="flex" alignItems="center" gap={2}>
                     <Button onClick={handleCreate} disabled={loading || !question.trim()} variant="contained"
-                        sx={{ bgcolor: "#1a73e8", color: "#fff", textTransform: "none", fontWeight: 500, borderRadius: "20px", px: 3, '&:hover': { bgcolor: "#1557b0" } }}>
+                        sx={{ bgcolor: "#3c4043", color: "#fff", textTransform: "none", fontWeight: 500, borderRadius: "20px", px: { xs: 2.5, sm: 3 }, '&:hover': { bgcolor: "#202124" } }}>
                         {loading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Save" : "Assign")}
                     </Button>
                 </Box>
             </Box>
 
-            <DialogContent sx={{ p: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: 'calc(100vh - 69px)', overflow: 'hidden' }}>
+            <DialogContent sx={{
+                p: 0,
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                height: 'calc(100vh - 69px)',
+                overflow: 'hidden',
+                bgcolor: '#f8f9fa'
+            }}>
                 {/* Left Content Area */}
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 2, md: 4 }, overflowY: 'auto' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 }, p: { xs: 1.5, md: 4 }, overflowY: 'auto' }}>
                     {error && <Alert severity="error">{error}</Alert>}
 
                     {/* Question & Instructions Box */}
-                    <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden' }}>
-                        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'visible' }}>
+                        <Box sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 } }}>
                             <TextField
                                 fullWidth variant="filled" label="Title" required
                                 value={question} onChange={(e) => setQuestion(e.target.value)}
@@ -276,29 +318,33 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                         </Box>
 
                         {/* Blank Quiz Element */}
-                        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #dadce0', borderBottom: '1px solid #dadce0' }}>
-                            <Box display="flex" alignItems="center" gap={2}>
-                                <Box sx={{
-                                    width: 48, height: 48, borderRadius: '4px', bgcolor: '#f1f3f4',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #dadce0'
-                                }}>
-                                    <AssignmentIcon sx={{ color: '#673ab7', fontSize: 24 }} />
+                        {showBlankQuiz && (
+                            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #dadce0', borderBottom: '1px solid #dadce0' }}>
+                                <Box display="flex" alignItems="center" gap={2}>
+                                    <Box sx={{
+                                        width: 48, height: 48, borderRadius: '4px', bgcolor: '#f1f3f4',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #dadce0'
+                                    }}>
+                                        <AssignmentIcon sx={{ color: '#673ab7', fontSize: 24 }} />
+                                    </Box>
+                                    <Box>
+                                        <Typography
+                                            component="a"
+                                            href="https://docs.google.com/forms/u/0/create"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#0D9488', textDecoration: 'underline', cursor: 'pointer', display: 'block', '&:hover': { color: '#1557b0' } }}
+                                        >
+                                            Blank Quiz
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.75rem', color: '#5f6368' }}>Google Forms</Typography>
+                                    </Box>
                                 </Box>
-                                <Box>
-                                    <Typography
-                                        component="a"
-                                        href="https://docs.google.com/forms/u/0/create"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#1a73e8', textDecoration: 'underline', cursor: 'pointer', display: 'block', '&:hover': { color: '#1557b0' } }}
-                                    >
-                                        Blank Quiz
-                                    </Typography>
-                                    <Typography sx={{ fontSize: '0.75rem', color: '#5f6368' }}>Google Forms</Typography>
-                                </Box>
+                                <IconButton size="small" onClick={() => setShowBlankQuiz(false)}>
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
                             </Box>
-                            <IconButton size="small"><CloseIcon fontSize="small" /></IconButton>
-                        </Box>
+                        )}
                     </Box>
 
                     {/* Attachments Area */}
@@ -338,8 +384,17 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
 
                 {/* Right Settings Sidebar */}
                 <Box sx={{
-                    width: { xs: '100%', md: 300 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3,
-                    p: { xs: 2, md: 3 }, borderLeft: { md: '1px solid #dadce0' }, bgcolor: '#fff', overflowY: 'auto'
+                    width: { xs: '100%', md: 300 },
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    p: { xs: 2, md: 3 },
+                    borderLeft: { md: '1px solid #dadce0' },
+                    borderTop: { xs: '1px solid #dadce0', md: 'none' },
+                    bgcolor: '#fff',
+                    overflowY: 'auto',
+                    maxHeight: { xs: '250px', md: 'none' }
                 }}>
                     {/* For Field */}
                     <Box>
@@ -368,9 +423,9 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                             variant="outlined"
                             fullWidth
                             onClick={() => setIsAssignModalOpen(true)}
-                            startIcon={<PeopleOutlineIcon sx={{ color: '#1a73e8' }} />}
+                            startIcon={<PeopleOutlineIcon sx={{ color: '#0D9488' }} />}
                             sx={{
-                                color: '#1a73e8',
+                                color: '#0D9488',
                                 borderColor: '#dadce0',
                                 borderRadius: '24px',
                                 textTransform: 'none',
@@ -392,12 +447,12 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                             displayEmpty
                             sx={{
                                 height: 48,
-                                width: '50%',
+                                width: { xs: '100%', md: '50%' },
                                 bgcolor: '#e8eaed',
                                 color: '#3c4043',
                                 borderRadius: '4px 4px 0 0',
                                 '.MuiOutlinedInput-notchedOutline': { border: 'none', borderBottom: '1px solid #5f6368' },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #1a73e8' },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #0D9488' },
                                 '&:hover': { bgcolor: '#dadce0' }
                             }}
                         >
@@ -450,7 +505,7 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                                     color: '#3c4043',
                                     borderRadius: '4px 4px 0 0',
                                     '.MuiOutlinedInput-notchedOutline': { border: 'none', borderBottom: '1px solid #5f6368' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #1a73e8' },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #0D9488' },
                                     '&:hover': { bgcolor: '#dadce0' }
                                 }}
                             >
@@ -459,7 +514,7 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                             </Select>
                         ) : (
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #1a73e8", width: "100%", display: "flex", alignItems: "center" }}>
+                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #0D9488", width: "100%", display: "flex", alignItems: "center" }}>
                                     <TextField
                                         fullWidth
                                         variant="standard"
@@ -513,6 +568,15 @@ const CreateFormModal: React.FC<CreateFormModalProps> = ({
                 selectedIds={selectedIds}
                 onToggleAll={handleToggleAllAssign}
                 onToggle={handleToggleAssign}
+            />
+
+            <AddLinkModal
+                open={linkModal.open}
+                onClose={() => setLinkModal(prev => ({ ...prev, open: false }))}
+                onAdd={onAddLinkResource}
+                title={linkModal.title}
+                description={linkModal.description}
+                placeholder={linkModal.placeholder}
             />
         </Dialog>
     );

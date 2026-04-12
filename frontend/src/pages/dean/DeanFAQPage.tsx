@@ -50,7 +50,7 @@ const CATEGORIES = [
   { id: "features", label: "Features & tools" }
 ];
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 export default function DeanFAQPage() {
   const [activeCategory, setActiveCategory] = useState("general");
@@ -66,7 +66,7 @@ export default function DeanFAQPage() {
     // We implement a minimum 1000ms delay as requested for a premium feel.
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [activeCategory]);
@@ -77,23 +77,26 @@ export default function DeanFAQPage() {
 
   const ContentSkeleton = () => (
     <Box flex={1}>
-      <Box mb={1}>
-        <Skeleton variant="text" width={60} height={20} />
+      {/* Badge Skeleton */}
+      <Box mb={2}>
+        <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '6px', bgcolor: "#eaebec" }} />
       </Box>
 
+      {/* Title Skeleton */}
       <Box mb={6}>
-        <Skeleton variant="text" width="70%" height={isMobile ? 45 : 60} sx={{ mb: 1 }} />
-        <Skeleton variant="text" width="50%" height={isMobile ? 45 : 60} />
+        <Skeleton variant="text" width="80%" height={isMobile ? 50 : 80} sx={{ bgcolor: "#eaebec" }} />
+        <Skeleton variant="text" width="60%" height={isMobile ? 50 : 80} sx={{ bgcolor: "#eaebec" }} />
       </Box>
 
+      {/* FAQ Items Skeleton */}
       <Box>
-        {[1, 2, 3].map((i) => (
-          <Box key={i} mb={2}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" py={2}>
-              <Skeleton variant="text" width="60%" height={30} />
-              <Skeleton variant="circular" width={24} height={24} />
+        {[1, 2, 3, 4].map((i) => (
+          <Box key={i} sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+              <Skeleton variant="text" width="60%" height={30} sx={{ bgcolor: "#eaebec" }} />
+              <Skeleton variant="text" width="20px" height={30} sx={{ bgcolor: "#eaebec" }} />
             </Box>
-            <Divider sx={{ borderColor: '#F1F5F9' }} />
+            <Divider sx={{ borderColor: '#eaebec' }} />
           </Box>
         ))}
       </Box>

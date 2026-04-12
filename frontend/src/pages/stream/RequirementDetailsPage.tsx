@@ -49,7 +49,7 @@ const getFileLabel = (file: any) => {
     if (file.type === 'Drive') return 'Google Drive';
     if (file.type === 'YouTube') return 'YouTube video';
     if (file.type === 'Link') return 'Link';
-    
+
     const name = (file.name || '').toLowerCase();
     if (name.endsWith('.pdf')) return 'PDF';
     if (name.endsWith('.doc') || name.endsWith('.docx')) return 'Microsoft Word';
@@ -58,8 +58,51 @@ const getFileLabel = (file: any) => {
     if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return 'Image';
     if (name.match(/\.(mp4|webm|avi|mov)$/)) return 'Video';
     if (name.endsWith('.zip') || name.endsWith('.rar')) return 'Archive';
-    
+
     return 'File';
+};
+
+const StatusPill = ({ status, dueDate }: { status: string; dueDate?: string }) => {
+    const getStyle = (s: string) => {
+        const isOverdue = dueDate && new Date(dueDate) < new Date() && s !== 'approved' && s !== 'pending';
+
+        switch (s?.toLowerCase()) {
+            case 'approved':
+                return { color: '#0D9488', bg: '#F0FDFA', label: 'Approved' };
+            case 'pending':
+            case 'turned_in':
+                return { color: '#D97706', bg: '#FFFBEB', label: 'Turned in' };
+            case 'rejected':
+            case 'returned':
+                return { color: '#DC2626', bg: '#FEF2F2', label: 'Returned' };
+            case 'missing':
+                return { color: '#DC2626', bg: '#FEF2F2', label: 'Missing' };
+            default:
+                if (isOverdue) return { color: '#DC2626', bg: '#FEF2F2', label: 'Missing' };
+                return { color: '#64748B', bg: '#F8FAFC', label: 'Assigned' };
+        }
+    };
+
+    const style = getStyle(status);
+
+    return (
+        <Box sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            px: 1.25,
+            py: 0.25,
+            borderRadius: '999px',
+            bgcolor: style.bg,
+            color: style.color,
+            fontSize: '0.675rem',
+            fontWeight: 700,
+            letterSpacing: '0.02em',
+            border: `1px solid ${style.color}20`,
+            textTransform: 'none'
+        }}>
+            {style.label}
+        </Box>
+    );
 };
 
 
@@ -201,7 +244,7 @@ const RequirementDetailsPage: React.FC = () => {
             window.open(file.url, "_blank");
             return;
         }
-        
+
         const absoluteUrl = getAbsoluteUrl(file.url);
         if (!absoluteUrl) return;
 
@@ -392,7 +435,7 @@ const RequirementDetailsPage: React.FC = () => {
                             value={tabValue}
                             onChange={(_, v) => setTabValue(v)}
                             textColor="inherit"
-                            TabIndicatorProps={{ sx: { bgcolor: "#000", height: 3 } }}
+                            TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                             sx={{
                                 px: { xs: 2, md: 0 },
                                 "& .MuiTab-root": {
@@ -403,7 +446,7 @@ const RequirementDetailsPage: React.FC = () => {
                                     color: "#5f6368"
                                 },
                                 "& .Mui-selected": {
-                                    color: "#000 !important"
+                                    color: "#0D9488 !important"
                                 }
                             }}
                         >
@@ -417,195 +460,205 @@ const RequirementDetailsPage: React.FC = () => {
                     {tabValue === 0 && (
                         <Container maxWidth="lg" sx={{ px: 0, display: "flex", gap: { xs: 3, md: 4 }, flexDirection: { xs: "column", md: "row" }, alignItems: 'flex-start' }}>
                             <Box sx={{ flex: 1, minWidth: 0, order: { xs: 2, md: 1 } }}>
-                            <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
-                                <Avatar sx={{ bgcolor: "#5f6368", width: 44, height: 44, mt: 0.5 }}>
-                                    {requirement?.type === 'poll' ? <LiveHelpIcon /> : requirement?.type === 'material' ? <BookIcon /> : <AssignmentIcon />}
-                                </Avatar>
-                                <Box sx={{ flex: 1 }}>
-                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                        <Typography variant="h4" sx={{ fontWeight: 400, color: "#000", mb: 1, fontSize: "1.75rem", letterSpacing: 0 }}>
-                                            {requirement.title}
-                                        </Typography>
-                                        <IconButton 
-                                            size="small" 
-                                            sx={{ color: "#5f6368", bgcolor: menuAnchorEl ? "rgba(0, 0, 0, 0.08)" : "transparent" }}
-                                            onClick={handleMenuClick}
-                                        >
-                                            <MoreVertIcon />
-                                        </IconButton>
-                                        <Menu
-                                            anchorEl={menuAnchorEl}
-                                            open={Boolean(menuAnchorEl)}
-                                            onClose={handleMenuClose}
-                                            PaperProps={{
-                                                elevation: 2,
-                                                sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
-                                            }}
-                                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                                        >
-                                            {isOfficer && <MenuItem onClick={handleEditClick}>Edit</MenuItem>}
-                                            {isOfficer && <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>}
-                                            <MenuItem onClick={handleCopyLink}>Copy link</MenuItem>
-                                        </Menu>
-                                        <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} message="Link copied" />
-                                    </Box>
-
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontWeight: 500, fontSize: "0.875rem" }}>
-                                            {requirement.createdBy?.fullName || "Author"}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>•</Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
-                                            {requirement.createdAt ? new Date(requirement.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : "Date"}
-                                        </Typography>
-                                    </Box>
-
-                                    {requirement?.type !== 'material' && (
-                                        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
-                                            <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
-                                                {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
+                                <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
+                                    <Avatar
+                                        src={getAbsoluteUrl(requirement.createdBy?.avatarUrl)}
+                                        sx={{
+                                            bgcolor: "#5f6368",
+                                            width: 44,
+                                            height: 44,
+                                            mt: 0.5,
+                                            fontSize: "1rem",
+                                            fontWeight: 700
+                                        }}
+                                    >
+                                        {requirement?.type === 'poll' ? <LiveHelpIcon /> : requirement?.type === 'material' ? <BookIcon /> : <AssignmentIcon />}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                                            <Typography variant="h4" sx={{ fontWeight: 400, color: "#000", mb: 1, fontSize: "1.75rem", letterSpacing: 0 }}>
+                                                {requirement.title}
                                             </Typography>
-                                            {requirement.dueDate && (
-                                                <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
-                                                    Due {new Date(requirement.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}{new Date(requirement.dueDate).getHours() === 23 && new Date(requirement.dueDate).getMinutes() === 59 ? '' : `, ${new Date(requirement.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    )}
-                                </Box>
-                            </Box>
-
-                            <Divider sx={{ mb: 4, borderColor: "#dadce0" }} />
-
-                            <Typography
-                                variant="body1"
-                                sx={{
-                                    whiteSpace: "pre-wrap",
-                                    fontFamily: "'Roboto', 'Inter', sans-serif",
-                                    color: "#3c4043",
-                                    lineHeight: 1.6,
-                                    mb: 4,
-                                    ml: { xs: 0, sm: 8.5 }
-                                }}
-                                dangerouslySetInnerHTML={{ __html: requirement.description }}
-                            />
-
-                            {requirement.instructions && requirement.instructions !== requirement.description && (
-                                <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
-                                    <Typography
-                                        variant="body1"
-                                        color="#3c4043"
-                                        sx={{ whiteSpace: "pre-wrap", fontFamily: "'Roboto', 'Inter', sans-serif", lineHeight: 1.6 }}
-                                        dangerouslySetInnerHTML={{ __html: requirement.instructions }}
-                                    />
-                                </Box>
-                            )}
-
-                            {requirement?.type === 'poll' && requirement.options && requirement.options.length > 0 && (
-                                <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
-                                    <RadioGroup>
-                                        {requirement.options.map((opt: string, idx: number) => (
-                                            <FormControlLabel 
-                                                key={idx} 
-                                                value={opt} 
-                                                control={<Radio color="primary" sx={{ '&.Mui-checked': { color: '#1a73e8' }, color: '#5f6368' }} />} 
-                                                label={<Typography variant="body2" sx={{ color: "#3c4043", ml: 1, my: 0.5 }}>{opt}</Typography>} 
-                                                disabled 
-                                                sx={{ mb: 1, '.MuiFormControlLabel-label.Mui-disabled': { color: '#3c4043' }, '.MuiRadio-root.Mui-disabled': { color: '#bdc1c6' } }}
-                                            />
-                                        ))}
-                                    </RadioGroup>
-                                </Box>
-                            )}
-
-                            {requirement.attachments && requirement.attachments.length > 0 && (
-                                <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
-                                    <Box display="flex" flexWrap="wrap" gap={2}>
-                                        {requirement.attachments.map((file: any, idx: number) => (
-                                            <Box
-                                                key={idx}
-                                                onClick={() => handleFileClick(file)}
-                                                sx={{
-                                                    width: { xs: "100%", sm: "calc(50% - 8px)" },
-                                                    minWidth: { xs: 0, sm: 260 },
-                                                    display: "flex",
-                                                    borderRadius: "8px",
-                                                    border: "1px solid #dadce0",
-                                                    overflow: "hidden",
-                                                    cursor: "pointer",
-                                                    bgcolor: "#fff",
-                                                    transition: "box-shadow 0.2s ease, background-color 0.2s ease",
-                                                    "&:hover": { bgcolor: "#f1f3f4" }
-                                                }}
+                                            <IconButton
+                                                size="small"
+                                                sx={{ color: "#5f6368", bgcolor: menuAnchorEl ? "rgba(0, 0, 0, 0.08)" : "transparent" }}
+                                                onClick={handleMenuClick}
                                             >
-                                                {/* Text Container (Left Column) */}
-                                                <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
-                                                    <Typography 
-                                                        variant="body2" 
-                                                        className="att-title"
-                                                        sx={{ 
-                                                            color: "#3c4043", 
-                                                            fontWeight: 500, 
-                                                            fontSize: "0.875rem",
-                                                            textOverflow: "ellipsis", 
-                                                            overflow: "hidden", 
-                                                            whiteSpace: "nowrap",
-                                                            lineHeight: 1.2,
-                                                            "&:hover": { textDecoration: "underline" }
-                                                        }}
-                                                    >
-                                                        {file.name}
-                                                    </Typography>
-                                                    <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                                                        {file.url?.includes('docs.google.com/forms') ? "Google Forms" : getFileLabel(file)}
-                                                    </Typography>
-                                                </Box>
+                                                <MoreVertIcon />
+                                            </IconButton>
+                                            <Menu
+                                                anchorEl={menuAnchorEl}
+                                                open={Boolean(menuAnchorEl)}
+                                                onClose={handleMenuClose}
+                                                PaperProps={{
+                                                    elevation: 2,
+                                                    sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
+                                                }}
+                                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                            >
+                                                {isOfficer && <MenuItem onClick={handleEditClick}>Edit</MenuItem>}
+                                                {isOfficer && <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>}
+                                                <MenuItem onClick={handleCopyLink}>Copy link</MenuItem>
+                                            </Menu>
+                                            <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} message="Link copied" />
+                                        </Box>
 
-                                                {/* Icon Container (Right Column) */}
-                                                <Box sx={{ 
-                                                    width: 72, 
-                                                    height: 72, 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center', 
-                                                    bgcolor: '#f8f9fa',
-                                                    flexShrink: 0,
-                                                    borderLeft: '1px solid #dadce0',
-                                                    overflow: 'hidden'
-                                                }}>
-                                                    {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
-                                                     file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
-                                                     file.url?.includes('docs.google.com/forms') ? (
-                                                         <Box sx={{ width: '100%', height: '100%', bgcolor: '#f0ebf8', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
-                                                             <Box sx={{ bgcolor: '#fff', width: '100%', height: '100%', borderRadius: '4px', borderTop: '6px solid #673ab7', boxShadow: '0 1px 3px rgba(0,0,0,0.12)', p: 0.5 }}>
-                                                                <Box sx={{ width: '60%', height: 4, bgcolor: '#dadce0', mb: 1, borderRadius: 1 }} />
-                                                                <Box sx={{ width: '40%', height: 4, bgcolor: '#dadce0', borderRadius: 1 }} />
-                                                             </Box>
-                                                         </Box>
-                                                     ) :
-                                                     file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
-                                                     (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
-                                                     <AttachmentIcon sx={{ color: '#1a73e8', fontSize: 28 }} />)}
-                                                </Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                            <Typography variant="body2" sx={{ color: "#5f6368", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                {requirement.createdBy?.fullName || "Author"}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>•</Typography>
+                                            <Typography variant="body2" sx={{ color: "#5f6368", fontSize: "0.875rem" }}>
+                                                {requirement.createdAt ? new Date(requirement.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : "Date"}
+                                            </Typography>
+                                        </Box>
+
+                                        {requirement?.type !== 'material' && (
+                                            <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
+                                                <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                    {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
+                                                </Typography>
+                                                {requirement.dueDate && (
+                                                    <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                        Due {new Date(requirement.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}{new Date(requirement.dueDate).getHours() === 23 && new Date(requirement.dueDate).getMinutes() === 59 ? '' : `, ${new Date(requirement.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                                                    </Typography>
+                                                )}
                                             </Box>
-                                        ))}
+                                        )}
                                     </Box>
                                 </Box>
-                            )}
 
-                            <Divider sx={{ mb: 4, borderColor: "#dadce0" }} />
+                                <Divider sx={{ mb: 4, borderColor: "#dadce0" }} />
 
-                            {/* Comments Section */}
-                            <Box sx={{ ml: { xs: 0, sm: 8.5 } }}>
-                                <Box display="flex" alignItems="center" gap={1} mb={comments.length > 0 ? 3 : 2}>
-                                    <GroupIcon sx={{ color: "#5f6368", fontSize: 20 }} />
-                                    <Typography sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
-                                        Class comments
-                                    </Typography>
-                                </Box>
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        whiteSpace: "pre-wrap",
+                                        fontFamily: "'Roboto', 'Inter', sans-serif",
+                                        color: "#3c4043",
+                                        lineHeight: 1.6,
+                                        mb: 4,
+                                        ml: { xs: 0, sm: 8.5 }
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: requirement.description }}
+                                />
 
-                                <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: comments.length > 0 ? 4 : 0 }}>
+                                {requirement.instructions && requirement.instructions !== requirement.description && (
+                                    <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
+                                        <Typography
+                                            variant="body1"
+                                            color="#3c4043"
+                                            sx={{ whiteSpace: "pre-wrap", fontFamily: "'Roboto', 'Inter', sans-serif", lineHeight: 1.6 }}
+                                            dangerouslySetInnerHTML={{ __html: requirement.instructions }}
+                                        />
+                                    </Box>
+                                )}
+
+                                {requirement?.type === 'poll' && requirement.options && requirement.options.length > 0 && (
+                                    <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
+                                        <RadioGroup>
+                                            {requirement.options.map((opt: string, idx: number) => (
+                                                <FormControlLabel
+                                                    key={idx}
+                                                    value={opt}
+                                                    control={<Radio color="primary" sx={{ '&.Mui-checked': { color: '#0D9488' }, color: '#5f6368' }} />}
+                                                    label={<Typography variant="body2" sx={{ color: "#3c4043", ml: 1, my: 0.5 }}>{opt}</Typography>}
+                                                    disabled
+                                                    sx={{ mb: 1, '.MuiFormControlLabel-label.Mui-disabled': { color: '#3c4043' }, '.MuiRadio-root.Mui-disabled': { color: '#bdc1c6' } }}
+                                                />
+                                            ))}
+                                        </RadioGroup>
+                                    </Box>
+                                )}
+
+                                {requirement.attachments && requirement.attachments.length > 0 && (
+                                    <Box sx={{ ml: { xs: 0, sm: 8.5 }, mb: 4 }}>
+                                        <Box display="flex" flexWrap="wrap" gap={2}>
+                                            {requirement.attachments.map((file: any, idx: number) => (
+                                                <Box
+                                                    key={idx}
+                                                    onClick={() => handleFileClick(file)}
+                                                    sx={{
+                                                        width: { xs: "100%", sm: "calc(50% - 8px)" },
+                                                        minWidth: { xs: 0, sm: 260 },
+                                                        display: "flex",
+                                                        borderRadius: "8px",
+                                                        border: "1px solid #dadce0",
+                                                        overflow: "hidden",
+                                                        cursor: "pointer",
+                                                        bgcolor: "#fff",
+                                                        transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+                                                        "&:hover": { bgcolor: "#f1f3f4" }
+                                                    }}
+                                                >
+                                                    {/* Text Container (Left Column) */}
+                                                    <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', justifyContent: 'center', borderRight: '1px solid #dadce0', height: 72 }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            className="att-title"
+                                                            sx={{
+                                                                color: "#3c4043",
+                                                                fontWeight: 500,
+                                                                fontSize: "0.875rem",
+                                                                textOverflow: "ellipsis",
+                                                                overflow: "hidden",
+                                                                whiteSpace: "nowrap",
+                                                                lineHeight: 1.2,
+                                                                "&:hover": { textDecoration: "underline" }
+                                                            }}
+                                                        >
+                                                            {file.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: "#5f6368", fontSize: "0.75rem", mt: 0.5, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                                            {file.url?.includes('docs.google.com/forms') ? "Google Forms" : getFileLabel(file)}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    {/* Icon Container (Right Column) */}
+                                                    <Box sx={{
+                                                        width: 72,
+                                                        height: 72,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        bgcolor: '#f8f9fa',
+                                                        flexShrink: 0,
+                                                        borderLeft: '1px solid #dadce0',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {file.type === 'Drive' ? <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" style={{ width: 24, height: 24, objectFit: 'contain' }} alt="Drive" /> :
+                                                            file.type === 'YouTube' ? <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" style={{ width: 32, height: 24, objectFit: 'contain' }} alt="YouTube" /> :
+                                                                file.url?.includes('docs.google.com/forms') ? (
+                                                                    <Box sx={{ width: '100%', height: '100%', bgcolor: '#f0ebf8', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1 }}>
+                                                                        <Box sx={{ bgcolor: '#fff', width: '100%', height: '100%', borderRadius: '4px', borderTop: '6px solid #673ab7', boxShadow: '0 1px 3px rgba(0,0,0,0.12)', p: 0.5 }}>
+                                                                            <Box sx={{ width: '60%', height: 4, bgcolor: '#dadce0', mb: 1, borderRadius: 1 }} />
+                                                                            <Box sx={{ width: '40%', height: 4, bgcolor: '#dadce0', borderRadius: 1 }} />
+                                                                        </Box>
+                                                                    </Box>
+                                                                ) :
+                                                                    file.type === 'Link' ? <LinkIcon sx={{ color: '#5f6368', fontSize: 28 }} /> :
+                                                                        (getFileLabel(file) === 'Image' ? <img src={getAbsoluteUrl(file.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" /> :
+                                                                            <AttachmentIcon sx={{ color: '#0E7490', fontSize: 28 }} />)}
+                                                    </Box>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
+
+                                <Divider sx={{ mb: 4, borderColor: "#dadce0" }} />
+
+                                {/* Comments Section */}
+                                <Box sx={{ ml: { xs: 0, sm: 8.5 } }}>
+                                    <Box display="flex" alignItems="center" gap={1} mb={comments.length > 0 ? 3 : 2}>
+                                        <GroupIcon sx={{ color: "#5f6368", fontSize: 20 }} />
+                                        <Typography sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                            Organization comments
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: comments.length > 0 ? 4 : 0 }}>
                                         {comments.map((comment: any) => {
                                             // Robust ID comparison
                                             const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
@@ -614,22 +667,21 @@ const RequirementDetailsPage: React.FC = () => {
 
                                             // Matching logic refined
                                             const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
-                                            
+
                                             // Fallback string matches the one used in the input area
                                             const avatarSrc = commentUser?.avatarUrl || "";
 
                                             return (
                                                 <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
-                                                    <Avatar 
-                                                        src={getAbsoluteUrl(avatarSrc)} 
-                                                        sx={{ 
-                                                            width: 32, 
-                                                            height: 32, 
-                                                            bgcolor: "#020617", 
+                                                    <Avatar
+                                                        src={getAbsoluteUrl(avatarSrc)}
+                                                        sx={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            bgcolor: "#5f6368",
                                                             color: "#FFFFFF",
-                                                            fontSize: "0.875rem",
-                                                            fontWeight: 800,
-                                                            textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 700
                                                         }}
                                                     >
                                                         {getInitials(commentUser?.fullName, commentUser?.email)}
@@ -650,98 +702,97 @@ const RequirementDetailsPage: React.FC = () => {
                                                 </Box>
                                             );
                                         })}
-                                </Box>
-
-                                <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
-                                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                                        <Avatar 
-                                            src={getAbsoluteUrl(fullUser?.avatarUrl)} 
-                                            sx={{ 
-                                                width: 32, 
-                                                height: 32, 
-                                                bgcolor: "#020617", 
-                                                color: "#FFFFFF",
-                                                fontSize: "0.875rem", 
-                                                fontWeight: 800,
-                                                textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
-                                                mt: 0.5 
-                                            }}
-                                        >
-                                            {userInitial}
-                                        </Avatar>
-                                        
-                                        <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
-                                            <Box 
-                                                sx={{ 
-                                                    flex: 1, 
-                                                    border: `1px solid ${isCommentFocused ? '#1a73e8' : '#dadce0'}`, 
-                                                    borderRadius: "24px", 
-                                                    bgcolor: "#fff",
-                                                    px: 2,
-                                                    py: isCommentFocused ? 1.5 : 0.5,
-                                                    minHeight: isCommentFocused ? 80 : 40,
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    transition: 'all 0.2s',
-                                                    boxShadow: isCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none'
-                                                }}
-                                                onClick={() => !isCommentFocused && setIsCommentFocused(true)}
-                                            >
-                                                <InputBase
-                                                    fullWidth
-                                                    multiline={isCommentFocused}
-                                                    minRows={isCommentFocused ? 2 : 1}
-                                                    placeholder="Add class comment..."
-                                                    value={newComment}
-                                                    onChange={(e) => setNewComment(e.target.value)}
-                                                    onFocus={() => setIsCommentFocused(true)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                                            e.preventDefault();
-                                                            handleAddComment();
-                                                            setIsCommentFocused(false);
-                                                        }
-                                                    }}
-                                                    sx={{ 
-                                                        typography: 'body2',
-                                                        '& .MuiInputBase-input': { 
-                                                            py: 0.5,
-                                                            fontSize: '0.875rem' 
-                                                        } 
-                                                    }}
-                                                />
-                                                {isCommentFocused && (
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
-                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
-                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
-                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
-                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
-                                                        <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                            
-                                            <IconButton
-                                                onClick={() => {
-                                                    handleAddComment();
-                                                    setIsCommentFocused(false);
-                                                }}
-                                                disabled={!newComment.trim() || isSubmittingComment}
-                                                sx={{
-                                                    color: newComment.trim() ? "#1a73e8" : "#ccc",
-                                                    p: 1,
-                                                    mb: 0.5,
-                                                    display: (isCommentFocused || newComment.trim() !== "") ? 'inline-flex' : 'none'
-                                                }}
-                                            >
-                                                {isSubmittingComment ? <CircularProgress size={20} /> : <SendOutlinedIcon />}
-                                            </IconButton>
-                                        </Box>
                                     </Box>
-                                </ClickAwayListener>
+
+                                    <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
+                                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                                            <Avatar
+                                                src={getAbsoluteUrl(fullUser?.avatarUrl)}
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    bgcolor: "#5f6368",
+                                                    color: "#FFFFFF",
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 700,
+                                                    mt: 0.5
+                                                }}
+                                            >
+                                                {userInitial}
+                                            </Avatar>
+
+                                            <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        flex: 1,
+                                                        border: `1px solid ${isCommentFocused ? '#0E7490' : '#dadce0'}`,
+                                                        borderRadius: "24px",
+                                                        bgcolor: "#fff",
+                                                        px: 2,
+                                                        py: isCommentFocused ? 1.5 : 0.5,
+                                                        minHeight: isCommentFocused ? 80 : 40,
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        transition: 'all 0.2s',
+                                                        boxShadow: isCommentFocused ? '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)' : 'none'
+                                                    }}
+                                                    onClick={() => !isCommentFocused && setIsCommentFocused(true)}
+                                                >
+                                                    <InputBase
+                                                        fullWidth
+                                                        multiline={isCommentFocused}
+                                                        minRows={isCommentFocused ? 2 : 1}
+                                                        placeholder="Add organization comment..."
+                                                        value={newComment}
+                                                        onChange={(e) => setNewComment(e.target.value)}
+                                                        onFocus={() => setIsCommentFocused(true)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                e.preventDefault();
+                                                                handleAddComment();
+                                                                setIsCommentFocused(false);
+                                                            }
+                                                        }}
+                                                        sx={{
+                                                            typography: 'body2',
+                                                            '& .MuiInputBase-input': {
+                                                                py: 0.5,
+                                                                fontSize: '0.875rem'
+                                                            }
+                                                        }}
+                                                    />
+                                                    {isCommentFocused && (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 'auto', pt: 1 }}>
+                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatBoldIcon fontSize="small" /></IconButton>
+                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatItalicIcon fontSize="small" /></IconButton>
+                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatUnderlinedIcon fontSize="small" /></IconButton>
+                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatListBulletedIcon fontSize="small" /></IconButton>
+                                                            <IconButton size="small" sx={{ p: 0.5, color: '#5f6368' }}><FormatClearIcon fontSize="small" /></IconButton>
+                                                        </Box>
+                                                    )}
+                                                </Box>
+
+                                                <IconButton
+                                                    onClick={() => {
+                                                        handleAddComment();
+                                                        setIsCommentFocused(false);
+                                                    }}
+                                                    disabled={!newComment.trim() || isSubmittingComment}
+                                                    sx={{
+                                                        color: newComment.trim() ? "#0E7490" : "#ccc",
+                                                        p: 1,
+                                                        mb: 0.5,
+                                                        display: (isCommentFocused || newComment.trim() !== "") ? 'inline-flex' : 'none'
+                                                    }}
+                                                >
+                                                    {isSubmittingComment ? <CircularProgress size={20} /> : <SendOutlinedIcon />}
+                                                </IconButton>
+                                            </Box>
+                                        </Box>
+                                    </ClickAwayListener>
+                                </Box>
                             </Box>
-                        </Box>
-                            
+
                             {/* Right Column: Student Submission Card */}
                             {!isOfficer && requirement?.type !== 'material' && (
                                 <Box sx={{ width: { xs: "100%", md: 320 }, flexShrink: 0, order: { xs: 1, md: 2 } }}>
@@ -750,20 +801,20 @@ const RequirementDetailsPage: React.FC = () => {
                                             <Typography variant="h6" sx={{ fontSize: "1.25rem", color: "#3c4043", fontWeight: 400 }}>
                                                 Your submission
                                             </Typography>
-                                            <Typography variant="body2" sx={{ 
-                                                color: requirement?.submission?.status === "approved" ? "#0E7490" : 
-                                                       requirement?.submission?.status === "pending" ? "#188038" : 
-                                                       requirement?.submission?.status === "rejected" ? "#EF4444" : 
-                                                       (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "#d93025" : "#188038", 
-                                                fontWeight: 500 
+                                            <Typography variant="body2" sx={{
+                                                color: requirement?.submission?.status === "approved" ? "#0E7490" :
+                                                    requirement?.submission?.status === "pending" ? "#188038" :
+                                                        requirement?.submission?.status === "rejected" ? "#EF4444" :
+                                                            (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "#d93025" : "#188038",
+                                                fontWeight: 500
                                             }}>
-                                                {requirement?.submission?.status === "approved" ? "Approved" : 
-                                                 requirement?.submission?.status === "pending" ? "Turned in" : 
-                                                 requirement?.submission?.status === "rejected" ? "Returned" : 
-                                                 (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "Missing" : "Assigned"}
+                                                {requirement?.submission?.status === "approved" ? "Approved" :
+                                                    requirement?.submission?.status === "pending" ? "Turned in" :
+                                                        requirement?.submission?.status === "rejected" ? "Returned" :
+                                                            (requirement?.dueDate && new Date(requirement.dueDate) < new Date()) ? "Missing" : "Assigned"}
                                             </Typography>
                                         </Box>
-                                        
+
                                         <Box sx={{ px: 2.5, pb: 2.5 }}>
                                             {/* File List */}
                                             <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
@@ -779,7 +830,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                             >
                                                                 <Box display="flex" alignItems="center" gap={1.5} sx={{ overflow: "hidden" }}>
                                                                     <Box sx={{ width: 32, height: 32, bgcolor: "#f1f3f4", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                                        <InsertDriveFileIcon sx={{ color: "#1a73e8", fontSize: 20 }} />
+                                                                        <InsertDriveFileIcon sx={{ color: "#0E7490", fontSize: 20 }} />
                                                                     </Box>
                                                                     <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                                                                         <Typography variant="body2" sx={{ fontWeight: 500, color: "#3c4043", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
@@ -797,7 +848,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                             >
                                                                 <Box display="flex" alignItems="center" gap={1.5} sx={{ overflow: "hidden" }}>
                                                                     <Box sx={{ width: 32, height: 32, bgcolor: "#f1f3f4", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                                        <InsertDriveFileIcon sx={{ color: "#1a73e8", fontSize: 20 }} />
+                                                                        <InsertDriveFileIcon sx={{ color: "#0E7490", fontSize: 20 }} />
                                                                     </Box>
                                                                     <Typography variant="body2" sx={{ fontWeight: 500, color: "#3c4043", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
                                                                         {file.name}
@@ -811,25 +862,25 @@ const RequirementDetailsPage: React.FC = () => {
                                                     </>
                                                 ) : null}
                                             </Box>
-                                            
+
                                             {/* Action Buttons */}
                                             {requirement?.submission?.status === "approved" ? (
                                                 <Button fullWidth disabled variant="contained" sx={{ textTransform: "none", fontWeight: 500, fontSize: '0.875rem', py: 1, borderRadius: 1, boxShadow: 'none', '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                     Approved
                                                 </Button>
                                             ) : requirement?.submission?.status === "pending" ? (
-                                                <Button fullWidth variant="outlined" disabled={isSubmittingWork} sx={{ textTransform: "none", fontSize: '0.875rem', borderRadius: 1, py: 1, borderColor: "#dadce0", color: "#1a73e8", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)" } }}>
+                                                <Button fullWidth variant="outlined" disabled={isSubmittingWork} sx={{ textTransform: "none", fontSize: '0.875rem', borderRadius: 1, py: 1, borderColor: "#dadce0", color: "#0E7490", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)" } }}>
                                                     Unsubmit
                                                 </Button>
                                             ) : (
                                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
                                                     <input type="file" id="file-upload" multiple style={{ display: "none" }} onChange={handleStudentFileChange} />
                                                     <label htmlFor="file-upload" style={{ width: '100%' }}>
-                                                        <Button component="span" fullWidth variant="outlined" startIcon={<AddIcon />} sx={{ textTransform: 'none', borderRadius: 1, py: 1, fontSize: '0.875rem', borderColor: "#dadce0", color: "#1a73e8", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)", borderColor: "#dadce0" } }}>
+                                                        <Button component="span" fullWidth variant="outlined" startIcon={<AddIcon />} sx={{ textTransform: 'none', borderRadius: 1, py: 1, fontSize: '0.875rem', borderColor: "#dadce0", color: "#0E7490", fontWeight: 500, "&:hover": { bgcolor: "rgba(26,115,232,0.04)", borderColor: "#dadce0" } }}>
                                                             Add or create
                                                         </Button>
                                                     </label>
-                                                    
+
                                                     <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (requirement?.requiredFiles?.includes('File') && studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#000", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                         {isSubmittingWork ? <CircularProgress size={24} color="inherit" /> : requirement?.submission?.status === "rejected" || requirement?.submission?.status === "resubmission_required" ? "Resubmit" : "Mark as done"}
                                                     </Button>
@@ -837,11 +888,11 @@ const RequirementDetailsPage: React.FC = () => {
                                             )}
                                         </Box>
                                     </Paper>
-                                    
+
                                     {studentSubError && (
                                         <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{studentSubError}</Alert>
                                     )}
-                                    
+
                                     {/* Private Comments Card */}
                                     <Paper elevation={0} sx={{ border: "1px solid #dadce0", borderRadius: 2, overflow: "hidden" }}>
                                         <Box sx={{ px: 2.5, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
@@ -850,7 +901,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                 Private comments
                                             </Typography>
                                         </Box>
-                                        
+
                                         <Box sx={{ px: 2.5, pb: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
                                             {/* Render Private Comments List */}
                                             {privateComments.map((comment: any) => {
@@ -860,11 +911,11 @@ const RequirementDetailsPage: React.FC = () => {
 
                                                 const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
                                                 const avatarSrc = commentUser?.avatarUrl || "";
-                                                
+
                                                 return (
                                                     <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                        <Avatar 
-                                                            src={getAbsoluteUrl(avatarSrc)} 
+                                                        <Avatar
+                                                            src={getAbsoluteUrl(avatarSrc)}
                                                             sx={{ width: 28, height: 28, bgcolor: "#5f6368", fontSize: "0.875rem" }}
                                                         >
                                                             {getInitials(commentUser?.fullName)}
@@ -889,27 +940,26 @@ const RequirementDetailsPage: React.FC = () => {
                                             {/* Input Area */}
                                             <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                <Avatar 
-                                                    src={getAbsoluteUrl(fullUser?.avatarUrl)} 
-                                                    sx={{ 
-                                                        width: 28, 
-                                                        height: 28, 
-                                                        bgcolor: "#020617", 
-                                                        color: "#FFFFFF",
-                                                        fontSize: "0.75rem", 
-                                                        fontWeight: 800,
-                                                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
-                                                        mt: 0.5 
-                                                    }}
-                                                >
+                                                    <Avatar
+                                                        src={getAbsoluteUrl(fullUser?.avatarUrl)}
+                                                        sx={{
+                                                            width: 28,
+                                                            height: 28,
+                                                            bgcolor: "#5f6368",
+                                                            color: "#FFFFFF",
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 700,
+                                                            mt: 0.5
+                                                        }}
+                                                    >
                                                         {userInitial}
                                                     </Avatar>
                                                     <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
-                                                        <Box 
-                                                            sx={{ 
-                                                                flex: 1, 
-                                                                border: `1px solid ${isPrivateCommentFocused ? '#1a73e8' : '#dadce0'}`, 
-                                                                borderRadius: "24px", 
+                                                        <Box
+                                                            sx={{
+                                                                flex: 1,
+                                                                border: `1px solid ${isPrivateCommentFocused ? '#0E7490' : '#dadce0'}`,
+                                                                borderRadius: "24px",
                                                                 bgcolor: "#fff",
                                                                 px: 2,
                                                                 py: isPrivateCommentFocused ? 1.5 : 0.5,
@@ -937,12 +987,12 @@ const RequirementDetailsPage: React.FC = () => {
                                                                         setIsPrivateCommentFocused(false);
                                                                     }
                                                                 }}
-                                                                sx={{ 
+                                                                sx={{
                                                                     typography: 'body2',
-                                                                    '& .MuiInputBase-input': { 
+                                                                    '& .MuiInputBase-input': {
                                                                         py: 0.5,
-                                                                        fontSize: '0.875rem' 
-                                                                    } 
+                                                                        fontSize: '0.875rem'
+                                                                    }
                                                                 }}
                                                             />
                                                             {isPrivateCommentFocused && (
@@ -955,7 +1005,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                                 </Box>
                                                             )}
                                                         </Box>
-                                                        
+
                                                         <IconButton
                                                             onClick={() => {
                                                                 handleAddPrivateComment((user as any)._id || (user as any).id);
@@ -963,7 +1013,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                             }}
                                                             disabled={!newPrivateComment.trim() || isSubmittingPrivateComment}
                                                             sx={{
-                                                                color: newPrivateComment.trim() ? "#1a73e8" : "#ccc",
+                                                                color: newPrivateComment.trim() ? "#0E7490" : "#ccc",
                                                                 p: 0.5,
                                                                 mb: 0.5,
                                                                 display: (isPrivateCommentFocused || newPrivateComment.trim() !== "") ? 'inline-flex' : 'none'
@@ -1064,7 +1114,14 @@ const RequirementDetailsPage: React.FC = () => {
                                 <Box sx={{ width: 300, borderRight: "1px solid #e0e0e0", overflowY: "auto", bgcolor: "#fff", display: "flex", flexDirection: "column" }}>
                                     <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
                                         <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-                                            <Checkbox size="small" color="primary" defaultChecked />
+                                            <Checkbox
+                                                size="small"
+                                                defaultChecked
+                                                sx={{
+                                                    color: '#dadce0',
+                                                    '&.Mui-checked': { color: '#0D9488' }
+                                                }}
+                                            />
                                             <GroupIcon sx={{ color: '#5f6368', fontSize: 20 }} />
                                             <Typography variant="body2" sx={{ fontWeight: 500, color: '#3c4043' }}>All members</Typography>
                                         </Box>
@@ -1089,63 +1146,55 @@ const RequirementDetailsPage: React.FC = () => {
                                             </Box>
                                         ) : (
                                             <List disablePadding>
-                                                        {submissions.map((sub) => {
-                                                            // Robust ID comparison
-                                                            const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
-                                                            const subAuthorId = sub.userId?._id || sub.userId?.id || (typeof sub.userId === 'string' ? sub.userId : null);
-                                                            const isCurrentUser = !!currentId && currentId === subAuthorId;
+                                                {submissions.map((sub) => {
+                                                    // Robust ID comparison
+                                                    const currentId = (user as any)?.id || fullUser?._id || fullUser?.id;
+                                                    const subAuthorId = sub.userId?._id || sub.userId?.id || (typeof sub.userId === 'string' ? sub.userId : null);
+                                                    const isCurrentUser = !!currentId && currentId === subAuthorId;
 
-                                                            const subUser = isCurrentUser ? { ...sub.userId, ...fullUser } : sub.userId;
-                                                            const avatarSrc = subUser?.avatarUrl || "";
+                                                    const subUser = isCurrentUser ? { ...sub.userId, ...fullUser } : sub.userId;
+                                                    const avatarSrc = subUser?.avatarUrl || "";
 
-                                                            return (
-                                                                <React.Fragment key={sub._id}>
-                                                                    <ListItem
-                                                                        button
-                                                                        onClick={() => setSelectedSub(sub)}
-                                                                        selected={selectedSub?._id === sub._id}
+                                                    return (
+                                                        <React.Fragment key={sub._id}>
+                                                            <ListItem
+                                                                button
+                                                                onClick={() => setSelectedSub(sub)}
+                                                                selected={selectedSub?._id === sub._id}
+                                                                sx={{
+                                                                    py: 2,
+                                                                    borderLeft: selectedSub?._id === sub._id ? "4px solid #0E7490" : "4px solid transparent"
+                                                                }}
+                                                            >
+                                                                <ListItemAvatar>
+                                                                    <Avatar
+                                                                        src={getAbsoluteUrl(avatarSrc)}
                                                                         sx={{
-                                                                            py: 2,
-                                                                            borderLeft: selectedSub?._id === sub._id ? "4px solid #1a73e8" : "4px solid transparent"
+                                                                            bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.4)" : "#5f6368",
+                                                                            color: "#FFFFFF",
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            fontWeight: 700,
+                                                                            fontSize: '0.875rem'
                                                                         }}
                                                                     >
-                                                                        <ListItemAvatar>
-                                                                            <Avatar 
-                                                                                src={getAbsoluteUrl(avatarSrc)}
-                                                                                sx={{ 
-                                                                                    bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.4)" : "#020617",
-                                                                                    color: "#FFFFFF",
-                                                                                    width: 40,
-                                                                                    height: 40,
-                                                                                    fontWeight: 800,
-                                                                                    textShadow: '-1px 0 0 rgba(0,255,255,0.4), 1px 0 0 rgba(255,165,0,0.4)'
-                                                                                }}
-                                                                            >
-                                                                                {getInitials(subUser?.fullName, subUser?.email)}
-                                                                            </Avatar>
-                                                                        </ListItemAvatar>
-                                                                        <ListItemText
-                                                                            primary={subUser?.fullName || "Student"}
-                                                                            secondary={
-                                                                                <Chip
-                                                                                    label={sub.status.toUpperCase()}
-                                                                                    size="small"
-                                                                                    sx={{
-                                                                                        height: 16,
-                                                                                        fontSize: 9,
-                                                                                        mt: 0.5,
-                                                                                        bgcolor: sub.status === 'approved' ? "rgba(176, 224, 230, 0.2)" : sub.status === 'pending' ? "#FFFBEB" : "#FEF2F2",
-                                                                                        color: sub.status === 'approved' ? "#0E7490" : sub.status === 'pending' ? "#F59E0B" : "#EF4444"
-                                                                                    }}
-                                                                                />
-                                                                            }
-                                                                            primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
-                                                                        />
-                                                                    </ListItem>
-                                                                    <Divider />
-                                                                </React.Fragment>
-                                                            );
-                                                        })}
+                                                                        {getInitials(subUser?.fullName, subUser?.email)}
+                                                                    </Avatar>
+                                                                </ListItemAvatar>
+                                                                <ListItemText
+                                                                    primary={subUser?.fullName || "Student"}
+                                                                    secondary={
+                                                                        <Box sx={{ mt: 0.5 }}>
+                                                                            <StatusPill status={sub.status} dueDate={requirement?.dueDate} />
+                                                                        </Box>
+                                                                    }
+                                                                    primaryTypographyProps={{ fontWeight: 600, variant: "body2", color: '#3c4043' }}
+                                                                />
+                                                            </ListItem>
+                                                            <Divider />
+                                                        </React.Fragment>
+                                                    );
+                                                })}
                                             </List>
                                         )}
                                     </Box>
@@ -1234,8 +1283,8 @@ const RequirementDetailsPage: React.FC = () => {
                                                             color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#fff',
                                                             border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
                                                             '&:hover': { backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#f8f9fa' : '#333' },
-                                                            '&.Mui-disabled': { 
-                                                                backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#E2E8F0', 
+                                                            '&.Mui-disabled': {
+                                                                backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#E2E8F0',
                                                                 color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#94A3B8',
                                                                 border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
                                                             }
@@ -1280,7 +1329,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                         Private comments
                                                     </Typography>
                                                 </Box>
-                                                
+
                                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                                     {/* Render Private Comments List */}
                                                     {privateComments.map((comment: any) => {
@@ -1290,19 +1339,18 @@ const RequirementDetailsPage: React.FC = () => {
 
                                                         const commentUser = isCurrentUser ? { ...comment.userId, ...fullUser } : comment.userId;
                                                         const avatarSrc = commentUser?.avatarUrl || "";
-                                                        
+
                                                         return (
                                                             <Box key={comment._id} sx={{ display: "flex", gap: 1.5 }}>
-                                                                <Avatar 
-                                                                    src={getAbsoluteUrl(avatarSrc)} 
-                                                                    sx={{ 
-                                                                        width: 28, 
-                                                                        height: 28, 
-                                                                        bgcolor: "#020617", 
+                                                                <Avatar
+                                                                    src={getAbsoluteUrl(avatarSrc)}
+                                                                    sx={{
+                                                                        width: 28,
+                                                                        height: 28,
+                                                                        bgcolor: "#5f6368",
                                                                         color: "#FFFFFF",
                                                                         fontSize: "0.75rem",
-                                                                        fontWeight: 800,
-                                                                        textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)'
+                                                                        fontWeight: 700
                                                                     }}
                                                                 >
                                                                     {getInitials(commentUser?.fullName)}
@@ -1327,27 +1375,26 @@ const RequirementDetailsPage: React.FC = () => {
                                                     {/* Input Area */}
                                                     <ClickAwayListener onClickAway={() => { if (!newPrivateComment.trim()) setIsPrivateCommentFocused(false); }}>
                                                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mt: privateComments.length > 0 ? 1 : 0 }}>
-                                                            <Avatar 
-                                                                src={getAbsoluteUrl(fullUser?.avatarUrl)} 
-                                                                sx={{ 
-                                                                    width: 28, 
-                                                                    height: 28, 
-                                                                    bgcolor: "#020617", 
+                                                            <Avatar
+                                                                src={getAbsoluteUrl(fullUser?.avatarUrl)}
+                                                                sx={{
+                                                                    width: 28,
+                                                                    height: 28,
+                                                                    bgcolor: "#5f6368",
                                                                     color: "#FFFFFF",
-                                                                    fontSize: "0.75rem", 
-                                                                    fontWeight: 800,
-                                                                    textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
-                                                                    mt: 0.5 
+                                                                    fontSize: "0.75rem",
+                                                                    fontWeight: 700,
+                                                                    mt: 0.5
                                                                 }}
                                                             >
                                                                 {userInitial}
                                                             </Avatar>
                                                             <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 1 }}>
-                                                                <Box 
-                                                                    sx={{ 
-                                                                        flex: 1, 
-                                                                        border: `1px solid ${isPrivateCommentFocused ? '#1a73e8' : '#dadce0'}`, 
-                                                                        borderRadius: "24px", 
+                                                                <Box
+                                                                    sx={{
+                                                                        flex: 1,
+                                                                        border: `1px solid ${isPrivateCommentFocused ? '#0E7490' : '#dadce0'}`,
+                                                                        borderRadius: "24px",
                                                                         bgcolor: "#fff",
                                                                         px: 2,
                                                                         py: isPrivateCommentFocused ? 1.5 : 0.5,
@@ -1375,12 +1422,12 @@ const RequirementDetailsPage: React.FC = () => {
                                                                                 setIsPrivateCommentFocused(false);
                                                                             }
                                                                         }}
-                                                                        sx={{ 
+                                                                        sx={{
                                                                             typography: 'body2',
-                                                                            '& .MuiInputBase-input': { 
+                                                                            '& .MuiInputBase-input': {
                                                                                 py: 0.5,
-                                                                                fontSize: '0.875rem' 
-                                                                            } 
+                                                                                fontSize: '0.875rem'
+                                                                            }
                                                                         }}
                                                                     />
                                                                     {isPrivateCommentFocused && (
@@ -1393,7 +1440,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                                         </Box>
                                                                     )}
                                                                 </Box>
-                                                                
+
                                                                 <IconButton
                                                                     onClick={() => {
                                                                         handleAddPrivateComment(selectedSub.userId._id || selectedSub.userId.id);
@@ -1401,7 +1448,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                                     }}
                                                                     disabled={!newPrivateComment.trim() || isSubmittingPrivateComment}
                                                                     sx={{
-                                                                        color: newPrivateComment.trim() ? "#1a73e8" : "#ccc",
+                                                                        color: newPrivateComment.trim() ? "#0D9488" : "#ccc",
                                                                         p: 0.5,
                                                                         mb: 0.5,
                                                                         display: (isPrivateCommentFocused || newPrivateComment.trim() !== "") ? 'inline-flex' : 'none'
@@ -1435,7 +1482,14 @@ const RequirementDetailsPage: React.FC = () => {
                                             </Box>
 
                                             <Box display="flex" alignItems="center" gap={1} mb={4}>
-                                                <Switch defaultChecked color="primary" size="small" />
+                                                <Switch
+                                                    defaultChecked
+                                                    size="small"
+                                                    sx={{
+                                                        '& .MuiSwitch-switchBase.Mui-checked': { color: '#0D9488' },
+                                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#0D9488' }
+                                                    }}
+                                                />
                                                 <Typography variant="body2" color="text.secondary">Accepting submissions</Typography>
                                             </Box>
 
@@ -1443,8 +1497,8 @@ const RequirementDetailsPage: React.FC = () => {
                                                 <Select
                                                     size="small"
                                                     defaultValue="all"
-                                                    sx={{ 
-                                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, 
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' },
                                                         typography: 'body2',
                                                         color: '#3c4043',
                                                         fontWeight: 500,

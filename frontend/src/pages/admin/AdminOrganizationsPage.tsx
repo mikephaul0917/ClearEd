@@ -34,7 +34,7 @@ const COLORS = {
   tealLight: 'rgba(45, 212, 191, 0.15)',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface OrganizationRow {
   _id: string;
@@ -1029,10 +1029,10 @@ export default function AdminOrganizationsPage({
         onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
         PaperProps={{
           sx: {
-            borderRadius: '40px',
-            p: 4,
+            borderRadius: '32px',
+            padding: '48px 32px',
             maxWidth: '440px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            boxShadow: '0 25px 70px -12px rgba(0,0,0,0.18)',
             textAlign: 'center'
           }
         }}
@@ -1044,8 +1044,9 @@ export default function AdminOrganizationsPage({
             color: COLORS.textPrimary,
             letterSpacing: '-0.03em',
             lineHeight: 1.2,
-            mb: 2,
-            px: 2
+            mb: 0.5,
+            px: 2,
+            fontFamily: fontStack
           }}>
             {confirmDialog.title}
           </Typography>
@@ -1055,12 +1056,13 @@ export default function AdminOrganizationsPage({
             fontWeight: 500,
             lineHeight: 1.5,
             mb: 5,
-            px: 2
+            px: 2,
+            fontFamily: fontStack
           }}>
             {confirmDialog.message}
           </Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <Button
               variant="contained"
               disableElevation
@@ -1069,8 +1071,8 @@ export default function AdminOrganizationsPage({
                 setConfirmDialog(prev => ({ ...prev, open: false }));
               }}
               sx={{
-                borderRadius: COLORS.pillRadius,
-                bgcolor: COLORS.black,
+                borderRadius: '16px',
+                bgcolor: '#3c4043',
                 color: '#FFF',
                 textTransform: 'none',
                 width: '100%',
@@ -1078,13 +1080,14 @@ export default function AdminOrganizationsPage({
                 fontSize: '18px',
                 fontWeight: 900,
                 letterSpacing: '-0.01em',
-                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.3)',
                 '&:hover': {
-                  bgcolor: '#000',
+                  bgcolor: '#202124',
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 15px 35px -5px rgba(0,0,0,0.4)',
+                  boxShadow: '0 20px 35px -10px rgba(15, 23, 42, 0.4)',
                 },
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                fontFamily: fontStack
               }}
             >
               {confirmDialog.confirmText || "Yes, Confirm"}
@@ -1097,7 +1100,9 @@ export default function AdminOrganizationsPage({
                 fontSize: '16px',
                 fontWeight: 800,
                 py: 1,
-                '&:hover': { color: COLORS.textPrimary, bgcolor: 'transparent' }
+                '&:hover': { color: COLORS.textPrimary, bgcolor: 'transparent', transform: 'scale(1.02)' },
+                transition: 'all 0.2s ease',
+                fontFamily: fontStack
               }}
             >
               Not Now

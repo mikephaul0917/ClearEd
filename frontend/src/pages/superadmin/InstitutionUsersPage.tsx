@@ -12,7 +12,7 @@ const COLORS = {
   border: '#E2E8F0',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 export default function InstitutionUsersPage() {
   const { institutionId } = useParams<{ institutionId: string }>();

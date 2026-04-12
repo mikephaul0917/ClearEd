@@ -60,6 +60,7 @@ import {
   History as HistoryIcon,
   Tune as TuneIcon,
   Badge as BadgeIcon,
+  AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -81,7 +82,7 @@ const COLORS = {
   pillRadius: '999px',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Announcement {
@@ -130,24 +131,27 @@ const getAnnouncementDate = (d: string) => {
   const date = new Date(d);
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
-  
+
+  const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = date.toLocaleDateString('en-US', { day: '2-digit' });
+  const year = date.getFullYear().toString();
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
   if (isToday) {
-    return { part1: 'Today', part2: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) };
+    return { day: 'Today', month: time, year: '', isToday: true };
   }
-  
-  return { 
-    part1: date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }), 
-    part2: date.getFullYear().toString() 
-  };
+
+  return { day, month, year, isToday: false };
 };
 
-const getTypeIcon = (type: Announcement['type']) => {
-  const iconSx = { fontSize: 16 };
-  switch (type) {
-    case 'maintenance': return <BuildIcon sx={{ ...iconSx, color: COLORS.lavender }} />;
-    case 'policy': return <InfoIcon sx={{ ...iconSx, color: COLORS.teal }} />;
-    default: return <NotificationsIcon sx={{ ...iconSx, color: COLORS.textSecondary }} />;
-  }
+const getTypeStyle = (type: Announcement['type']) => {
+  const iconSx = { fontSize: 13 };
+  const styles: Record<string, { bg: string, color: string, icon: any, label: string }> = {
+    maintenance: { bg: '#F5F3FF', color: '#7E22CE', icon: <BuildIcon sx={iconSx} />, label: 'Maintenance' },
+    policy: { bg: '#F0FDFA', color: '#0F766E', icon: <InfoIcon sx={iconSx} />, label: 'Policy' },
+    general: { bg: '#F8FAFC', color: '#444', icon: <NotificationsIcon sx={iconSx} />, label: 'News' },
+  };
+  return styles[type] || styles.general;
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -190,20 +194,42 @@ const SuperAdminAnnouncements: React.FC = () => {
   });
   const [showPreview, setShowPreview] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleFormatText = (format: 'bold' | 'italic' | 'underline', event?: React.MouseEvent) => {
-    const textarea = textareaRef.current;
+  const handleFormatText = (type: 'bold' | 'italic', e: React.MouseEvent) => {
+    e.preventDefault();
+    const textarea = contentRef.current;
     if (!textarea) return;
-    if (event) event.preventDefault();
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selected = formData.content.substring(start, end);
-    const wrap = format === 'bold' ? '**' : format === 'italic' ? '*' : '__';
-    const formatted = `${wrap}${selected}${wrap}`;
-    const newContent = formData.content.substring(0, start) + formatted + formData.content.substring(end);
+    const text = formData.content;
+    const before = text.substring(0, start);
+    const selection = text.substring(start, end);
+    const after = text.substring(end);
+
+    const wrapper = type === 'bold' ? '**' : '*';
+    const wrapped = `${wrapper}${selection}${wrapper}`;
+    const newContent = before + wrapped + after;
+
     setFormData({ ...formData, content: newContent });
-    setTimeout(() => { textarea.focus(); textarea.setSelectionRange(start + formatted.length, start + formatted.length); }, 50);
+
+    // Re-focus and keep selection
+    setTimeout(() => {
+      textarea.focus();
+      const offset = wrapper.length;
+      textarea.setSelectionRange(start + offset, end + offset);
+    }, 0);
+  };
+
+  const renderContent = (text: string) => {
+    if (!text) return 'No content provided.';
+    let html = text
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<i>$1</i>')
+      .replace(/\n/g, '<br/>');
+    return <span dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
   const handleFileAttachment = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,12 +239,12 @@ const SuperAdminAnnouncements: React.FC = () => {
   const removeAttachment = (index: number) => setAttachments(attachments.filter((_, i) => i !== index));
 
   // ─── Data fetching ─────────────────────────────────────────────────────────
-  useEffect(() => { 
-    setTimeout(() => { 
-      fetchAnnouncements(); 
-      fetchStats(); 
+  useEffect(() => {
+    setTimeout(() => {
+      fetchAnnouncements();
+      fetchStats();
       fetchInstitutions();
-    }, 1000); 
+    }, 1000);
   }, []);
   useEffect(() => { setFilterLoading(true); setTimeout(() => { fetchAnnouncements(); }, 1000); }, [filters]);
 
@@ -311,34 +337,69 @@ const SuperAdminAnnouncements: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   if (initialLoading) {
     return (
-      <Box sx={{ p: isMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', mb: 3, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0 }}>
-          <Box>
-            <Skeleton variant="rounded" width={isMobile ? 180 : 320} height={isMobile ? 32 : 48} sx={{ mb: 1, borderRadius: '8px' }} />
-            <Skeleton variant="rounded" width={isMobile ? 220 : 380} height={20} sx={{ borderRadius: '8px' }} />
+      <Box sx={{ px: isMobile ? 2 : 4, pb: isMobile ? 2 : 4, pt: isMobile ? 1 : 2, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+        <Box sx={{ maxWidth: '900px', mx: 'auto', width: '100%' }}>
+          {/* Header Skeleton */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', mb: 3, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0 }}>
+            <Box>
+              <Skeleton variant="rounded" width={isMobile ? 180 : 320} height={isMobile ? 32 : 48} sx={{ mb: 1.5, borderRadius: '8px' }} />
+              <Skeleton variant="rounded" width={isMobile ? 140 : 240} height={20} sx={{ borderRadius: '8px' }} />
+            </Box>
+            <Skeleton variant="rounded" width={isMobile ? '100%' : 180} height={42} sx={{ borderRadius: COLORS.pillRadius }} />
           </Box>
-          <Box sx={{ display: 'flex', gap: 1.5, width: isMobile ? '100%' : 'auto' }}>
-            <Skeleton variant="rounded" width={isMobile ? '100%' : 160} height={42} sx={{ borderRadius: COLORS.pillRadius }} />
+
+          {/* Tabs Skeleton */}
+          <Box sx={{ display: 'flex', gap: 4, mb: 5, pb: 1.5, borderBottom: `1px solid ${COLORS.border}` }}>
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="rounded" width={60} height={20} sx={{ borderRadius: '4px' }} />
+            ))}
+          </Box>
+
+          {/* List Skeleton */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2.5, sm: 4 } }}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Box key={i} sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1.5, sm: 5 },
+                p: { xs: 2.5, sm: 3 },
+                borderRadius: '24px',
+                bgcolor: '#FFFFFF',
+                border: `1px solid #f1f5f9`,
+                boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+              }}>
+                {/* Mobile Header Row Skeleton */}
+                {isMobile && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Skeleton variant="text" width={100} height={18} />
+                    <Skeleton variant="circular" width={24} height={24} />
+                  </Box>
+                )}
+
+                {/* Simulated Date Block (Desktop Only) */}
+                {!isMobile && (
+                  <Box sx={{ width: 70, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Skeleton variant="text" width="60%" height={12} />
+                    <Skeleton variant="text" width="80%" height={32} />
+                  </Box>
+                )}
+
+                {/* Simulated Content Block */}
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1.5 }} />
+                  <Skeleton variant="text" width="95%" height={16} />
+                  <Skeleton variant="text" width="85%" height={16} />
+
+                  {/* Pills Shimmer */}
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
+                    <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: '8px' }} />
+                    <Skeleton variant="rounded" width={100} height={24} sx={{ borderRadius: '8px' }} />
+                  </Box>
+                </Box>
+              </Box>
+            ))}
           </Box>
         </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} variant="rounded" height={105} sx={{ borderRadius: COLORS.cardRadius }} />
-          ))}
-        </Box>
-
-        <Box sx={{ borderRadius: COLORS.cardRadius, p: 3, backgroundColor: 'rgba(0,0,0,0.02)', border: `1px solid ${COLORS.border}`, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: '10px', mr: 1.5 }} />
-            <Box><Skeleton variant="text" width={100} /><Skeleton variant="text" width={180} /></Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" width={140} height={40} sx={{ borderRadius: '12px' }} />)}
-          </Box>
-        </Box>
-
-        <Skeleton variant="rounded" height={400} sx={{ borderRadius: COLORS.cardRadius }} />
       </Box>
     );
   }
@@ -346,529 +407,753 @@ const SuperAdminAnnouncements: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // MAIN RENDER
   return (
-    <Box sx={{ p: isMobile ? 2 : 4, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+    <Box sx={{ px: isMobile ? 2 : 4, pb: isMobile ? 2 : 4, pt: isMobile ? 1 : 2, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
       <Box sx={{ maxWidth: '900px', mx: 'auto', width: '100%' }}>
 
         {/* ── Header ──────────────────────────────────────────────────── */}
-      <Box sx={{
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: isMobile ? 'flex-start' : 'center', mb: 3,
-        flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0,
-      }}>
-        <Box>
-          <Typography sx={{
-            fontFamily: fontStack, fontWeight: 800,
-            fontSize: isMobile ? '1.5rem' : '2.25rem',
-            letterSpacing: '-0.03em', color: COLORS.textPrimary, lineHeight: 1.15,
-          }}>
-            System Announcements
-          </Typography>
-          <Typography sx={{ fontFamily: fontStack, fontSize: isMobile ? 12 : 14, color: COLORS.textSecondary, mt: 0.5 }}>
-            Manage platform-wide communications
-          </Typography>
+        <Box sx={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: isMobile ? 'flex-start' : 'center', mb: 3,
+          flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0,
+        }}>
+          <Box>
+            <Typography sx={{
+              fontFamily: fontStack, fontWeight: 800,
+              fontSize: isMobile ? '1.25rem' : '2.25rem',
+              letterSpacing: '-0.03em', color: COLORS.textPrimary, lineHeight: 1.15,
+            }}>
+              System Announcements
+            </Typography>
+            <Typography sx={{ fontFamily: fontStack, fontSize: isMobile ? 11 : 14, color: COLORS.textSecondary, mt: 0.5 }}>
+              Manage platform-wide communications
+            </Typography>
+          </Box>
+          <Button
+            disableElevation startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+            onClick={() => { resetForm(); setShowModal(true); }}
+            sx={{
+              fontFamily: fontStack, fontWeight: 700, fontSize: 13,
+              borderRadius: '100px', textTransform: 'none',
+              bgcolor: COLORS.black, color: '#FFFFFF', px: isMobile ? 2.5 : 3, py: 1.5,
+              minWidth: isMobile ? 'auto' : 160,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.12)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                bgcolor: '#111',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+                boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
+              }
+            }}
+          >
+            {isMobile ? 'Create' : 'Create Announcement'}
+          </Button>
         </Box>
-        <Button
-          disableElevation startIcon={<AddIcon />}
-          onClick={() => { resetForm(); setShowModal(true); }}
-          fullWidth={isMobile}
-          sx={{
-            fontFamily: fontStack, fontWeight: 700, fontSize: 13,
-            borderRadius: COLORS.pillRadius, textTransform: 'none',
-            bgcolor: COLORS.black, color: '#FFFFFF', px: 3, py: 1.2,
-            '&:hover': { bgcolor: '#222' },
-          }}
-        >
-          {isMobile ? 'Create' : 'Create Announcement'}
-        </Button>
-      </Box>
 
-      {/* ── Tabs Navigation ────────────────────────────────────────── */}
-      <Box sx={{ borderBottom: `1px solid ${COLORS.border}`, mb: 5, display: 'flex', gap: { xs: 2.5, sm: 4 }, overflowX: 'auto', px: { xs: 1, sm: 0 }, '&::-webkit-scrollbar': { display: 'none' } }}>
-        {[
-          { label: 'All', value: '' },
-          { label: 'News', value: 'general' },
-          { label: 'Policy', value: 'policy' },
-          { label: 'Maintenance', value: 'maintenance' },
-        ].map((tab) => {
-          const active = filters.type === tab.value;
-          return (
-            <Box
-              key={tab.label}
-              onClick={() => setFilters({ ...filters, type: tab.value })}
-              sx={{
-                position: 'relative',
-                pb: 1.5,
-                cursor: 'pointer',
-                transition: 'color 0.2s ease',
-                color: active ? COLORS.black : '#94A3B8',
-                '&:hover': { color: COLORS.black }
-              }}
-            >
-              <Typography sx={{ fontFamily: fontStack, fontWeight: active ? 700 : 500, fontSize: 13, whiteSpace: 'nowrap' }}>
-                {tab.label}
-              </Typography>
-              {active && (
-                <motion.div
-                  layoutId="tabUnderline"
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '2px',
-                    backgroundColor: COLORS.black,
-                  }}
-                />
-              )}
-            </Box>
-          );
-        })}
+        {/* ── Tabs Navigation ────────────────────────────────────────── */}
+        <Box sx={{ borderBottom: `1px solid ${COLORS.border}`, mb: 5, display: 'flex', gap: { xs: 2.5, sm: 4 }, overflowX: 'auto', px: { xs: 1, sm: 0 }, '&::-webkit-scrollbar': { display: 'none' } }}>
+          {[
+            { label: 'All', value: '', color: COLORS.black },
+            { label: 'News', value: 'general', color: getTypeStyle('general').color },
+            { label: 'Policy', value: 'policy', color: getTypeStyle('policy').color },
+            { label: 'Maintenance', value: 'maintenance', color: getTypeStyle('maintenance').color },
+          ].map((tab) => {
+            const active = filters.type === tab.value;
+            const activeColor = tab.color;
+            return (
+              <Box
+                key={tab.label}
+                onClick={() => setFilters({ ...filters, type: tab.value })}
+                sx={{
+                  position: 'relative',
+                  pb: 1.5,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  color: active ? activeColor : '#94A3B8',
+                  '&:hover': { color: activeColor }
+                }}
+              >
+                <Typography sx={{ fontFamily: fontStack, fontWeight: active ? 700 : 500, fontSize: 13, whiteSpace: 'nowrap' }}>
+                  {tab.label}
+                </Typography>
+                {active && (
+                  <motion.div
+                    layoutId="tabUnderline"
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2.5px',
+                      backgroundColor: activeColor,
+                      borderRadius: '2px'
+                    }}
+                  />
+                )}
+              </Box>
+            );
+          })}
         </Box>
 
         {/* ── Main List ───────────────────────────────────────────────── */}
         <Box sx={{ width: '100%' }}>
           {loading || filterLoading ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[1, 2, 3, 4, 5].map((i) => (
-                <Box key={i} sx={{ display: 'flex', gap: { xs: 2, sm: 5 } }}>
-                  <Box sx={{ width: { xs: 50, sm: 80 }, flexShrink: 0 }}>
-                  <Skeleton variant="text" width="90%" height={16} />
-                  <Skeleton variant="text" width="80%" height={16} />
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        ) : announcements.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 10 }}>
-            <NotificationsIcon sx={{ fontSize: 48, color: '#E2E8F0', mb: 2 }} />
-            <Typography sx={{ fontFamily: fontStack, color: COLORS.textSecondary, fontWeight: 600 }}>No announcements found</Typography>
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {announcements.map((a) => {
-              const { part1, part2 } = getAnnouncementDate(a.createdAt);
-              return (
-                <Box 
-                  key={a._id}
-                  sx={{ 
-                    display: 'flex', 
-                    gap: { xs: 3, sm: 6 },
-                    position: 'relative',
-                    transition: 'opacity 0.2s ease',
-                    '&:hover .action-buttons': { opacity: 1 }
-                  }}
-                >
-                    {/* Date Block */}
-                    <Box sx={{ 
-                      width: { xs: 50, sm: 80 }, 
-                      flexShrink: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      pt: 0.5
-                    }}>
-                    <Typography sx={{ 
-                      fontFamily: fontStack, 
-                      fontSize: 12, 
-                      fontWeight: 700, 
-                      color: '#94A3B8',
-                      lineHeight: 1.2
-                    }}>
-                      {part1}
-                    </Typography>
-                    <Typography sx={{ 
-                      fontFamily: fontStack, 
-                      fontSize: 12, 
-                      fontWeight: 700, 
-                      color: '#94A3B8' 
-                    }}>
-                      {part2}
-                    </Typography>
+                <Box key={i} sx={{ display: 'flex', gap: { xs: 2.5, sm: 5 }, p: 2 }}>
+                  <Box sx={{ width: { xs: 60, sm: 70 }, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Skeleton variant="text" width="60%" height={12} />
+                    <Skeleton variant="text" width="80%" height={32} />
+                    <Skeleton variant="text" width="40%" height={10} />
                   </Box>
-
-                  {/* Content Block */}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Typography sx={{ 
-                        fontFamily: fontStack, 
-                        fontSize: { xs: 16, sm: 18 }, 
-                        fontWeight: 800, 
-                        color: COLORS.black,
-                        lineHeight: 1.3
-                      }}>
-                        {a.title}
-                      </Typography>
-                    </Box>
-                    <Typography sx={{ 
-                      fontFamily: fontStack, 
-                      fontSize: 13, 
-                      color: '#64748B', 
-                      lineHeight: 1.6,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      mb: 1
-                    }}>
-                      {a.content}
-                    </Typography>
-                    
-                    {/* Meta info & Chips */}
-                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 2 }}>
-                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {getTypeIcon(a.type)}
-                          <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            {a.type}
-                          </Typography>
-                       </Box>
-                       <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#CBD5E1' }} />
-                       <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>
-                          {(a.targetAudience === 'all' ? 'All Users' : a.targetAudience?.replace('_', ' ')).toUpperCase()}
-                       </Typography>
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1.5 }} />
+                    <Skeleton variant="text" width="95%" height={16} />
+                    <Skeleton variant="text" width="85%" height={16} />
+                    <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
+                      <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: '8px' }} />
+                      <Skeleton variant="rounded" width={100} height={24} sx={{ borderRadius: '8px' }} />
                     </Box>
                   </Box>
-
-                  {/* Hover Action Buttons */}
-                  <Box className="action-buttons" sx={{ 
-                    position: 'absolute', 
-                    top: -4, 
-                    right: -40, 
-                    opacity: 0, 
-                    display: { xs: 'none', md: 'flex' },
-                    flexDirection: 'column',
-                    gap: 0.5,
-                    transition: 'all 0.2s ease',
-                  }}>
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black, bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, '&:hover': { bgcolor: '#F8FAFC' } }}>
-                        <EditIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626', bgcolor: '#FFF', border: `1px solid ${COLORS.border}`, '&:hover': { bgcolor: '#FEE2E2' } }}>
-                        <DeleteIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-
-                  {/* Mobile Actions */}
-                  <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, position: 'absolute', top: 0, right: 0 }}>
-                    <IconButton size="small" onClick={() => openEditModal(a)} sx={{ color: COLORS.black }}><EditIcon sx={{ fontSize: 16 }} /></IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ color: '#DC2626' }}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
-                  </Box>
                 </Box>
-              );
-            })}
-          </Box>
-        )}
-      </Box>
-
-      {/* ═══ CREATE / EDIT DIALOG ═════════════════════════════════════ */}
-      {/* ═══ CREATE / EDIT DIALOG (PREMIUM BENTO REDESIGN) ══════════════ */}
-      <Dialog
-        open={showModal} onClose={() => setShowModal(false)}
-        maxWidth="md" fullWidth fullScreen={isMobile}
-        PaperProps={{
-          component: 'form', onSubmit: handleSubmit,
-          sx: { 
-            borderRadius: isMobile ? 0 : '24px', 
-            maxHeight: isMobile ? '100vh' : '90vh', 
-            m: isMobile ? 0 : 2,
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
-            overflow: 'hidden'
-          },
-        }}
-      >
-        {/* Modal Header */}
-        <Box sx={{ p: 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: 32, color: COLORS.textPrimary, letterSpacing: '-0.04em' }}>
-                {formData.title || (editingAnnouncement ? 'Edit Announcement' : 'New Announcement')}
-              </Typography>
-              <Chip 
-                label={formData.isActive ? 'Live' : 'Draft'} 
-                size="small"
-                sx={{ 
-                  fontFamily: fontStack, fontWeight: 700, fontSize: 11, 
-                  bgcolor: formData.isActive ? '#f1f5f9' : '#fff7ed',
-                  color: formData.isActive ? '#475569' : '#c2410c',
-                  border: '1px solid currentColor',
-                  borderRadius: '6px', height: 22
-                }}
-              />
+              ))}
             </Box>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
-              Created: {editingAnnouncement ? new Date(editingAnnouncement.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
-              {formData.expiresAt && `  •  Due: ${new Date(formData.expiresAt).toLocaleDateString()}`}
-            </Typography>
-          </Box>
-          <IconButton onClick={() => setShowModal(false)} sx={{ color: '#94a3b8', mt: -1 }}><CloseIcon /></IconButton>
+          ) : announcements.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 10 }}>
+              <NotificationsIcon sx={{ fontSize: 48, color: '#E2E8F0', mb: 2 }} />
+              <Typography sx={{ fontFamily: fontStack, color: COLORS.textSecondary, fontWeight: 600 }}>No announcements found</Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {announcements.map((a) => {
+                const { day, month, year, isToday } = getAnnouncementDate(a.createdAt);
+                const typeStyle = getTypeStyle(a.type);
+
+                return (
+                  <Box
+                    key={a._id}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      gap: { xs: 2.5, sm: 5 },
+                      position: 'relative',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      p: { xs: 2.5, sm: 3 },
+                      borderRadius: '24px',
+                      bgcolor: '#FFFFFF',
+                      border: `1px solid #f1f5f9`,
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                      '&:hover': {
+                        boxShadow: '0 12px 30px rgba(0,0,0,0.06)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    {/* Mobile Card Header (Date + Actions) */}
+                    {isMobile && (
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography sx={{ fontFamily: fontStack, fontSize: 10, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>{month}</Typography>
+                            <Typography sx={{ fontFamily: fontStack, fontSize: 13, fontWeight: 900, color: COLORS.black }}>{day}</Typography>
+                          </Box>
+                          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#E2E8F0' }} />
+                          <Box sx={{
+                            display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25,
+                            borderRadius: '6px', bgcolor: typeStyle.bg, color: typeStyle.color,
+                            border: `1px solid ${typeStyle.color}15`
+                          }}>
+                            {typeStyle.icon}
+                            <Typography sx={{ fontFamily: fontStack, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                              {typeStyle.label}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <IconButton size="small" onClick={() => openEditModal(a)} sx={{ bgcolor: '#fff', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', color: '#64748B' }}><EditIcon sx={{ fontSize: 14 }} /></IconButton>
+                          <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ bgcolor: '#fff', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', color: '#64748B' }}><DeleteIcon sx={{ fontSize: 14 }} /></IconButton>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Desktop Date Block */}
+                    {!isMobile && (
+                      <Box sx={{
+                        width: 70,
+                        flexShrink: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        pt: 0.5
+                      }}>
+                        <Typography sx={{
+                          fontFamily: fontStack,
+                          fontSize: isToday ? 11 : 12,
+                          fontWeight: 800,
+                          color: isToday ? '#2563EB' : '#94A3B8',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          lineHeight: 1
+                        }}>
+                          {month}
+                        </Typography>
+                        <Typography sx={{
+                          fontFamily: fontStack,
+                          fontSize: isToday ? 15 : 28,
+                          fontWeight: 900,
+                          color: isToday ? '#2563EB' : COLORS.black,
+                          lineHeight: 1.1,
+                          mt: 0.5
+                        }}>
+                          {day}
+                        </Typography>
+                        {!isToday && (
+                          <Typography sx={{
+                            fontFamily: fontStack,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: '#CBD5E1',
+                            mt: 0.2
+                          }}>
+                            {year}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+
+                    {/* Vertical Timeline Divider */}
+                    <Box sx={{
+                      width: '1px',
+                      bgcolor: COLORS.border,
+                      my: 1,
+                      display: { xs: 'none', sm: 'block' },
+                      opacity: 0.6
+                    }} />
+
+                    {/* Content Block */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ mb: isMobile ? 1 : 1.5 }}>
+                        <Typography sx={{
+                          fontFamily: fontStack,
+                          fontSize: { xs: 17, sm: 19 },
+                          fontWeight: 800,
+                          color: COLORS.black,
+                          lineHeight: 1.3,
+                          letterSpacing: '-0.01em',
+                          mb: 0.25
+                        }}>
+                          {a.title}
+                        </Typography>
+                        <Typography sx={{
+                          fontFamily: fontStack,
+                          fontSize: isMobile ? 13 : 14,
+                          color: COLORS.textSecondary,
+                          lineHeight: isMobile ? 1.5 : 1.6,
+                          display: '-webkit-box',
+                          WebkitLineClamp: isMobile ? 2 : 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {a.content}
+                        </Typography>
+                      </Box>
+
+                      {/* Meta info Pills */}
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {/* Type Pill - Desktop Only (Mobile integrated in header) */}
+                        {!isMobile && (
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: '8px',
+                            bgcolor: typeStyle.bg,
+                            color: typeStyle.color,
+                            border: `1px solid ${typeStyle.color}15`
+                          }}>
+                            {typeStyle.icon}
+                            <Typography sx={{
+                              fontFamily: fontStack,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.03em'
+                            }}>
+                              {typeStyle.label}
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {/* Audience Pill */}
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.75,
+                          px: 1.25,
+                          py: 0.5,
+                          borderRadius: '8px',
+                          bgcolor: '#F8FAFC',
+                          color: '#64748B',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          <PeopleAltIcon sx={{ fontSize: 13 }} />
+                          <Typography sx={{
+                            fontFamily: fontStack,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.03em'
+                          }}>
+                            {a.targetAudience === 'all' ? 'All Users' : a.targetAudience?.replace('_', ' ')}
+                          </Typography>
+                        </Box>
+
+                        {/* Status/Priority if needed */}
+                        {a.priority === 'urgent' && (
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: '4px',
+                            bgcolor: '#FEF2F2',
+                            color: '#DC2626'
+                          }}>
+                            <Typography sx={{ fontFamily: fontStack, fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }}>
+                              Urgent
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Action Buttons */}
+                    <Box sx={{
+                      position: 'absolute',
+                      top: 24,
+                      right: 24,
+                      display: { xs: 'none', md: 'flex' },
+                      gap: 1.5,
+                    }}>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          onClick={() => openEditModal(a)}
+                          sx={{
+                            color: '#64748B',
+                            bgcolor: '#FFF',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                            border: `1px solid #f1f5f9`,
+                            p: 1.25,
+                            '&:hover': { bgcolor: '#F8FAFC', color: '#2563EB', transform: 'translateY(-2px)' },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <EditIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDelete(a._id)}
+                          sx={{
+                            color: '#64748B',
+                            bgcolor: '#FFF',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                            border: `1px solid #f1f5f9`,
+                            p: 1.25,
+                            '&:hover': { bgcolor: '#FEF2F2', color: '#EF4444', border: '1px solid #FEE2E2', transform: 'translateY(-2px)' },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <DeleteIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+
+                    {/* Mobile Actions (Removed from absolute to integrated in Card Header) */}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
         </Box>
 
-        <DialogContent sx={{ px: 4, py: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                  Title
-                </Typography>
-                <TextField 
-                  fullWidth label="Announcement Title" required 
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Enter title..."
-                  variant="outlined"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' },
-                    '& .MuiInputLabel-root': { fontFamily: fontStack, fontSize: 13 }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                  Category
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select 
-                    value={formData.type} 
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    sx={selectSx}
-                  >
-                    <MenuItem value="general">News & Updates</MenuItem>
-                    <MenuItem value="policy">Policy & Rules</MenuItem>
-                    <MenuItem value="maintenance">Maintenance</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-
-            {/* 2. Recipients Section */}
-            <Box sx={{ 
-              p: 2.5, borderRadius: '16px', border: `1px solid ${COLORS.border}`, 
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              bgcolor: '#ffffff', transition: 'all 0.2s ease',
-              '&:hover': { borderColor: COLORS.black, bgcolor: '#fafafa' }
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                <Box sx={{ 
-                  width: 48, height: 48, borderRadius: '14px', bgcolor: '#f1f5f9', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' 
-                }}>
-                  <PeopleAltIcon />
-                </Box>
-                <Box>
-                  <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
-                    {formData.targetAudience === 'all' ? 'Add Recipients' : `Target: ${formData.targetAudience}`}
-                  </Typography>
-                  <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
-                    {formData.targetInstitutions.length > 0 
-                      ? `${formData.targetInstitutions.length} Specific Institutions selected`
-                      : 'Select to whom you need to send this announcement'}
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <Select
-                    multiple
-                    displayEmpty
-                    value={formData.targetInstitutions}
-                    onChange={(e) => setFormData({ ...formData, targetInstitutions: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value })}
-                    renderValue={(selected) => selected.length === 0 ? 'All Institutions' : `${selected.length} Institutions`}
-                    sx={{ ...selectSx, height: 40, bgcolor: '#fff' }}
-                  >
-                    {institutions.map((inst) => (
-                      <MenuItem key={inst._id} value={inst._id}>
-                        <Checkbox checked={formData.targetInstitutions.indexOf(inst._id) > -1} size="small" />
-                        <Typography sx={{ fontFamily: fontStack, fontSize: 13 }}>{inst.name}</Typography>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Button 
-                  startIcon={<AddIcon />}
-                  sx={{ 
-                    bgcolor: '#2563eb', color: '#fff', borderRadius: '10px', px: 2, py: 1,
-                    textTransform: 'none', fontWeight: 700, fontFamily: fontStack,
-                    '&:hover': { bgcolor: '#1d4ed8' }
-                  }}
-                >
-                  Add
-                </Button>
-              </Box>
-            </Box>
-
-            {/* 3. Priority & Timing */}
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={4}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                  Priority Level
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select 
-                    value={formData.priority} 
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    sx={selectSx}
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <Box sx={{ 
-                          width: 8, height: 8, borderRadius: '50%', mr: 1,
-                          bgcolor: formData.priority === 'urgent' ? '#dc2626' : formData.priority === 'high' ? '#ea580c' : '#059669' 
-                        }} />
-                      </InputAdornment>
-                    }
-                  >
-                    <MenuItem value="low">Low Priority</MenuItem>
-                    <MenuItem value="medium">Medium Priority</MenuItem>
-                    <MenuItem value="high">High Priority</MenuItem>
-                    <MenuItem value="urgent">Urgent</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                  Send On
-                </Typography>
-                <TextField 
-                  fullWidth type="datetime-local" size="small" 
-                  value={formData.scheduledAt}
-                  onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' } }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                  Due On
-                </Typography>
-                <TextField 
-                  fullWidth type="datetime-local" size="small" 
-                  value={formData.expiresAt}
-                  onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontFamily: fontStack, bgcolor: '#fcfcfc' } }}
-                />
-              </Grid>
-            </Grid>
-
-            {/* 4. Notes Section */}
+        {/* ═══ CREATE / EDIT DIALOG ═════════════════════════════════════ */}
+        {/* ═══ CREATE / EDIT DIALOG (PREMIUM BENTO REDESIGN) ══════════════ */}
+        <Dialog
+          open={showModal} onClose={() => setShowModal(false)}
+          maxWidth="sm" fullWidth fullScreen={isMobile}
+          PaperProps={{
+            component: 'form', onSubmit: handleSubmit,
+            sx: {
+              borderRadius: isMobile ? 0 : '32px',
+              maxWidth: isMobile ? '100%' : '720px !important',
+              maxHeight: isMobile ? '100vh' : '90vh',
+              m: isMobile ? 0 : 2,
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+              overflow: 'hidden'
+            },
+          }}
+        >
+          {/* Modal Header (Minimalist) */}
+          <Box sx={{ p: isMobile ? 2.5 : 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Box>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary, mb: 1.5 }}>
-                Notes
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 24 : 32, color: COLORS.textPrimary, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
+                {editingAnnouncement ? 'Edit Announcement' : 'New Announcement'}
               </Typography>
-              <Box sx={{ border: `1px solid ${COLORS.border}`, borderRadius: '16px', overflow: 'hidden' }}>
-                <Box sx={{ px: 2, py: 1, borderBottom: `1px solid ${COLORS.border}`, bgcolor: '#fafafa', display: 'flex', gap: 1 }}>
-                  <IconButton size="small" onClick={(e) => handleFormatText('bold', e)}><FormatBoldIcon sx={{ fontSize: 18 }} /></IconButton>
-                  <IconButton size="small" onClick={(e) => handleFormatText('italic', e)}><FormatItalicIcon sx={{ fontSize: 18 }} /></IconButton>
-                  <IconButton size="small" onClick={(e) => handleFormatText('underline', e)}><FormatUnderlinedIcon sx={{ fontSize: 18 }} /></IconButton>
-                  <Box sx={{ width: 1, height: 18, bgcolor: '#e2e8f0', mx: 1, alignSelf: 'center' }} />
-                  <IconButton size="small" component="label">
-                    <input type="file" multiple hidden onChange={handleFileAttachment} />
-                    <LinkIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
+              <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 400, mt: 0.5 }}>
+                Configure system alerts and broadcast notifications.
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setShowModal(false)} sx={{ color: '#94a3b8', mt: -1, '&:hover': { bgcolor: '#f1f5f9' } }}><CloseIcon /></IconButton>
+          </Box>
+
+          <DialogContent sx={{ px: isMobile ? 2.5 : 4, py: 1, '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: '#f1f5f9', borderRadius: '10px' } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+
+              {/* 1. CORE Section */}
+              <Box>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                  Basic Details
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                      Headline
+                    </Typography>
+                    <TextField
+                      fullWidth required
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Announcement title"
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack, border: '1px solid #f1f5f9' },
+                        '& .MuiInputBase-input': { p: 1.5, fontSize: 14 }
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                      Category
+                    </Typography>
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={formData.type}
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                        sx={{ ...selectSx, height: 42, borderRadius: '10px', border: '1px solid #f1f5f9' }}
+                      >
+                        <MenuItem value="general">News</MenuItem>
+                        <MenuItem value="policy">Policy</MenuItem>
+                        <MenuItem value="maintenance">Maintenance</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* 2. RECIPIENTS Minimalist Section */}
+              <Box>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                  Target Recipients
+                </Typography>
+                <Box sx={{
+                  p: 2.5, borderRadius: '14px', border: '1px solid #f1f5f9',
+                  bgcolor: '#ffffff', display: 'flex', alignItems: 'center', gap: 3
+                }}>
+                  <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <PeopleAltIcon sx={{ color: '#94a3b8', fontSize: 20 }} />
+                    <Box>
+                      <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                        {formData.targetAudience === 'all' ? 'All Institutions' : `Target: ${formData.targetAudience?.replace('_', ' ')}`}
+                      </Typography>
+                      <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: '#CBD5E1' }}>
+                        Notification will be visible to selected targets.
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <Select
+                      multiple displayEmpty
+                      value={formData.targetInstitutions}
+                      onChange={(e) => setFormData({ ...formData, targetInstitutions: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value })}
+                      renderValue={(selected) => selected.length === 0 ? 'All' : `${selected.length} Institutions`}
+                      sx={{ ...selectSx, height: 38, borderRadius: '8px' }}
+                    >
+                      {institutions.map((inst) => (
+                        <MenuItem key={inst._id} value={inst._id}>
+                          <Checkbox checked={formData.targetInstitutions.indexOf(inst._id) > -1} size="small" />
+                          <Typography sx={{ fontFamily: fontStack, fontSize: 13 }}>{inst.name}</Typography>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Box>
-                <TextField 
-                  fullWidth multiline rows={4}
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Write your message here..."
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { border: 'none', borderRadius: 0, '& fieldset': { border: 'none' } },
-                    '& .MuiInputBase-input': { fontFamily: fontStack, fontSize: 15, p: 2.5 }
-                  }}
-                />
+              </Box>
+
+              {/* 3. SCHEDULING Section */}
+              <Box>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                  Schedule & Importance
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={4}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                      Priority
+                    </Typography>
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={formData.priority}
+                        onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                        sx={{ ...selectSx, height: 42, borderRadius: '10px' }}
+                      >
+                        <MenuItem value="low">Low</MenuItem>
+                        <MenuItem value="medium">Medium</MenuItem>
+                        <MenuItem value="high">High</MenuItem>
+                        <MenuItem value="urgent">Urgent</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={4}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                      Post On
+                    </Typography>
+                    <TextField
+                      fullWidth type="datetime-local" size="small"
+                      value={formData.scheduledAt}
+                      onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                      InputLabelProps={{ shrink: true }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack } }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={4}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                      Expire On
+                    </Typography>
+                    <TextField
+                      fullWidth type="datetime-local" size="small"
+                      value={formData.expiresAt}
+                      onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                      InputLabelProps={{ shrink: true }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack } }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* 4. CONTENT Minimalist Section */}
+              <Box>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                  Message Content
+                </Typography>
+                <Box sx={{ border: '1px solid #f1f5f9', borderRadius: '14px', overflow: 'hidden' }}>
+                  <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 1 }}>
+                    <IconButton size="small" onClick={(e) => handleFormatText('bold', e)}><FormatBoldIcon sx={{ fontSize: 16 }} /></IconButton>
+                    <IconButton size="small" onClick={(e) => handleFormatText('italic', e)}><FormatItalicIcon sx={{ fontSize: 16 }} /></IconButton>
+                    <Box sx={{ width: 1, height: 14, bgcolor: '#f1f5f9', mx: 0.5, alignSelf: 'center' }} />
+                    <IconButton size="small" component="label">
+                      <input type="file" multiple hidden onChange={handleFileAttachment} />
+                      <AttachFileIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                  <TextField
+                    fullWidth multiline rows={4}
+                    inputRef={contentRef}
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    placeholder="Main message content..."
+                    sx={{
+                      '& .MuiOutlinedInput-root': { border: 'none', '& fieldset': { border: 'none' } },
+                      '& .MuiInputBase-input': { fontFamily: fontStack, fontSize: 14, p: 2.5 }
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              {/* 5. DELIVERY Minimalist Section */}
+              <Box sx={{ mb: 1 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                  Delivery Channels
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 1 : 5 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        size="small" sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#0E7490' } }}
+                      />
+                    }
+                    label={<Typography sx={{ fontFamily: fontStack, fontSize: 13, fontWeight: 600, color: formData.isActive ? '#0E7490' : '#475569' }}>In-app Popup</Typography>}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.sendEmail}
+                        onChange={(e) => setFormData({ ...formData, sendEmail: e.target.checked })}
+                        size="small" sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#0E7490' } }}
+                      />
+                    }
+                    label={<Typography sx={{ fontFamily: fontStack, fontSize: 13, fontWeight: 600, color: formData.sendEmail ? '#0E7490' : '#475569' }}>Email Notification</Typography>}
+                  />
+                </Box>
               </Box>
             </Box>
+          </DialogContent>
 
-            {/* 5. Delivery Methods */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pt: 1 }}>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 14, color: COLORS.textPrimary }}>
-                Send Announcement as:
+          <DialogActions sx={{ p: isMobile ? 2.5 : 4, pt: 1, display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: 2 }}>
+            <Button
+              onClick={() => setShowModal(false)}
+              fullWidth={isMobile}
+              sx={{
+                fontFamily: fontStack, fontWeight: 600, color: '#94a3b8', textTransform: 'none',
+                fontSize: 14, py: 1.5, borderRadius: '12px', flex: 1,
+                '&:hover': { bgcolor: '#F8FAFC' }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit" disableElevation
+              fullWidth={isMobile}
+              disabled={!formData.title.trim() || !formData.content.trim()}
+              sx={{
+                bgcolor: '#1E293B', color: '#fff', borderRadius: '12px', py: 1.5, flex: 2,
+                textTransform: 'none', fontWeight: 700, fontFamily: fontStack, fontSize: 14,
+                '&:hover': { bgcolor: '#0F172A' },
+                '&.Mui-disabled': { bgcolor: '#f1f5f9', color: '#CBD5E1' }
+              }}
+            >
+              {editingAnnouncement ? 'Finalize & Update' : 'Broadcast Announcement'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* ═══ PREVIEW DIALOG ═══════════════════════════════════════════ */}
+        <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="sm" fullWidth
+          fullScreen={isMobile}
+          PaperProps={{
+            sx: {
+              borderRadius: isMobile ? 0 : '32px',
+              maxWidth: isMobile ? '100%' : '720px !important',
+              maxHeight: isMobile ? '100vh' : '85vh',
+              m: isMobile ? 0 : 2,
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <Box sx={{ p: isMobile ? 2.5 : 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 22 : 28, color: COLORS.textPrimary, letterSpacing: '-0.03em' }}>
+                Quick Preview
               </Typography>
-              <FormControlLabel
-                control={<Checkbox checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />}
-                label={<Typography sx={{ fontFamily: fontStack, fontSize: 14, fontWeight: 600 }}>In-app Popup</Typography>}
-              />
-              <FormControlLabel
-                control={<Checkbox checked={formData.sendEmail} onChange={(e) => setFormData({ ...formData, sendEmail: e.target.checked })} />}
-                label={<Typography sx={{ fontFamily: fontStack, fontSize: 14, fontWeight: 600 }}>Email Notification</Typography>}
-              />
+              <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 400 }}>
+                Live appearance for recipients.
+              </Typography>
             </Box>
+            <IconButton onClick={() => setShowPreview(false)} sx={{ color: '#94a3b8', '&:hover': { bgcolor: '#f1f5f9' } }}><CloseIcon /></IconButton>
           </Box>
-        </DialogContent>
 
-        <DialogActions sx={{ p: 4, pt: 2 }}>
-          <Button 
-            onClick={() => setShowModal(false)}
-            sx={{ 
-              fontFamily: fontStack, fontWeight: 700, color: '#64748b', textTransform: 'none',
-              fontSize: 14, mr: 1
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" disableElevation
-            disabled={!formData.title.trim() || !formData.content.trim()}
-            sx={{ 
-              bgcolor: '#2563eb', color: '#fff', borderRadius: '10px', px: 4, py: 1.5,
-              textTransform: 'none', fontWeight: 800, fontFamily: fontStack, fontSize: 15,
-              '&:hover': { bgcolor: '#1d4ed8' },
-              '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' }
-            }}
-          >
-            {editingAnnouncement ? 'Update Announcement' : 'Send Announcement'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <DialogContent sx={{ px: isMobile ? 2.5 : 4, py: 2 }}>
+            <Box sx={{ p: isMobile ? 2.5 : 3.5, borderRadius: isMobile ? '0' : '20px', border: isMobile ? 'none' : '1px solid #f1f5f9', backgroundColor: '#FFFFFF' }}>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 20 : 24, color: COLORS.textPrimary, mb: 2, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+                {formData.title || 'Untitled Announcement'}
+              </Typography>
 
-      {/* ═══ PREVIEW DIALOG ═══════════════════════════════════════════ */}
-      <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="md" fullWidth
-        PaperProps={{ sx: { borderRadius: COLORS.cardRadius, maxHeight: '80vh', m: 2 } }}
-      >
-        <DialogTitle sx={{ pb: 2, px: 3, borderBottom: `1px solid ${COLORS.border}` }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 36, height: 36, borderRadius: '10px', backgroundColor: `${COLORS.lavender}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <PreviewIcon sx={{ fontSize: 18, color: COLORS.lavender }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', mb: 4 }}>
+                {/* Type Pill */}
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.25,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  bgcolor: getTypeStyle(formData.type).bg,
+                  color: getTypeStyle(formData.type).color,
+                  border: `1px solid ${getTypeStyle(formData.type).color}15`
+                }}>
+                  {getTypeStyle(formData.type).icon}
+                  <Typography sx={{ fontFamily: fontStack, fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>
+                    {getTypeStyle(formData.type).label}
+                  </Typography>
+                </Box>
+
+                {/* Priority Pill */}
+                {(() => {
+                  const ps = getPriorityStyle(formData.priority);
+                  return (
+                    <Chip
+                      label={formData.priority}
+                      size="small"
+                      sx={{
+                        fontFamily: fontStack,
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: 10,
+                        textTransform: 'uppercase',
+                        backgroundColor: ps.bg,
+                        color: ps.color,
+                        border: `1px solid ${ps.border}`
+                      }}
+                    />
+                  );
+                })()}
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, py: 0.5, borderRadius: '8px', bgcolor: '#F8FAFC', color: '#64748B', border: '1px solid #E2E8F0' }}>
+                  <PeopleAltIcon sx={{ fontSize: 13 }} />
+                  <Typography sx={{ fontFamily: fontStack, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>
+                    Target: {formData.targetAudience === 'all' ? 'All Users' : formData.targetAudience?.replace('_', ' ')}
+                  </Typography>
+                </Box>
               </Box>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: 20, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>Preview</Typography>
+
+              <Typography sx={{
+                fontFamily: fontStack, fontSize: 15, color: COLORS.textSecondary,
+                lineHeight: 1.7, whiteSpace: 'pre-wrap', mb: 4
+              }}>
+                {renderContent(formData.content)}
+              </Typography>
+
+              <Box sx={{ pt: 3, borderTop: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {formData.scheduledAt && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CalendarMonthIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                    <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>Planned for {formatDate(formData.scheduledAt)}</Typography>
+                  </Box>
+                )}
+                {formData.expiresAt && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <HistoryIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                    <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>Expires on {formatDate(formData.expiresAt)}</Typography>
+                  </Box>
+                )}
+              </Box>
             </Box>
-            <IconButton onClick={() => setShowPreview(false)} sx={{ color: COLORS.textSecondary }}><CloseIcon /></IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ px: 3, py: 3 }}>
-          <Box sx={{ p: 3, borderRadius: '12px', border: `1px solid ${COLORS.border}`, backgroundColor: '#FAFBFC' }}>
-            <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: 22, color: COLORS.textPrimary, mb: 1.5, letterSpacing: '-0.02em' }}>
-              {formData.title || 'Untitled Announcement'}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>{getTypeIcon(formData.type)}<Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary, textTransform: 'capitalize' }}>{formData.type}</Typography></Box>
-              {(() => { const ps = getPriorityStyle(formData.priority); return <Chip label={formData.priority} size="small" sx={{ fontFamily: fontStack, borderRadius: COLORS.pillRadius, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', backgroundColor: ps.bg, color: ps.color, border: `1px solid ${ps.border}` }} />; })()}
-              <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>Target: {formData.targetAudience === 'all' ? 'All Users' : formData.targetAudience?.replace('_', ' ')}</Typography>
-            </Box>
-            <Typography sx={{ fontFamily: fontStack, fontSize: 14, lineHeight: 1.7, color: COLORS.textPrimary, whiteSpace: 'pre-wrap', mb: 3 }}>
-              {formData.content || 'No content provided...'}
-            </Typography>
-            <Box sx={{ pt: 2, borderTop: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {formData.scheduledAt && <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>📅 Scheduled: {formatDate(formData.scheduledAt)}</Typography>}
-              {formData.expiresAt && <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>⏰ Expires: {formatDate(formData.expiresAt)}</Typography>}
-              {formData.requiresAcknowledgment && <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>✅ Requires acknowledgment</Typography>}
-              {formData.tags.length > 0 && <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>🏷️ {formData.tags.join(', ')}</Typography>}
-              {attachments.length > 0 && <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: COLORS.textSecondary }}>📎 {attachments.length} file(s)</Typography>}
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${COLORS.border}` }}>
-          <Button onClick={() => setShowPreview(false)} disableElevation
-            sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, textTransform: 'none', borderRadius: COLORS.pillRadius, bgcolor: COLORS.black, color: '#FFFFFF', px: 3, '&:hover': { bgcolor: '#222' } }}
-          >Close</Button>
-        </DialogActions>
+          </DialogContent>
+
+          <DialogActions sx={{ p: isMobile ? 2.5 : 4, pt: 1, pb: isMobile ? 3 : 4 }}>
+            <Button
+              fullWidth onClick={() => setShowPreview(false)} disableElevation
+              sx={{
+                bgcolor: '#1E293B', color: '#fff', borderRadius: '12px', py: 1.5,
+                textTransform: 'none', fontWeight: 700, fontFamily: fontStack, fontSize: 14,
+                '&:hover': { bgcolor: '#0F172A' }
+              }}
+            >
+              Close Preview
+            </Button>
+          </DialogActions>
         </Dialog>
       </Box>
     </Box>

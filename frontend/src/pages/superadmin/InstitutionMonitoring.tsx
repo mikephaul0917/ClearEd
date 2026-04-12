@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, FormControl,
@@ -13,7 +13,7 @@ import {
   ChevronLeft, ChevronRight, History, Domain
 } from '@mui/icons-material';
 import { superAdminService } from '../../services';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { getInitials } from "../../utils/avatarUtils";
 
 const COLORS = {
@@ -31,7 +31,7 @@ const COLORS = {
   tealLight: 'rgba(14, 116, 144, 0.15)',
 };
 
-const fontStack = "'Inter', 'Plus Jakarta Sans', 'Montserrat', sans-serif";
+const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
 interface Institution {
   _id: string;
@@ -280,6 +280,11 @@ export default function InstitutionMonitoring() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const prevStatusRef = useRef(filters.status);
+  const [direction, setDirection] = useState(0);
+
+  const statusOrder = ['', 'approved', 'pending', 'suspended'];
+
 
   const fetchData = useCallback(async (initial = false) => {
     if (initial) setLoading(true);
@@ -326,6 +331,11 @@ export default function InstitutionMonitoring() {
   useEffect(() => { if (!loading) fetchData(); }, [filters, page]);
 
   const handleFilterChange = (field: string, value: string) => {
+    if (field === 'status') {
+      const prevIndex = statusOrder.indexOf(filters.status);
+      const nextIndex = statusOrder.indexOf(value);
+      setDirection(nextIndex > prevIndex ? 1 : -1);
+    }
     setFilters(prev => ({ ...prev, [field]: value }));
     setPage(1);
   };
@@ -550,42 +560,45 @@ export default function InstitutionMonitoring() {
               '&::-webkit-scrollbar': { display: 'none' }, /* Chrome, Safari and Opera */
               gap: 0.5
             }}>
-              {(['', 'approved', 'pending', 'suspended'] as const).map((status) => (
-                <Button
-                  key={status}
-                  onClick={() => handleFilterChange('status', status)}
-                  sx={{
-                    flex: { xs: '1 0 100px', md: 'none' },
-                    textTransform: 'none', px: 2.5, py: 1.25, borderRadius: '12px', fontSize: 13, fontWeight: 700,
-                    bgcolor: 'transparent',
-                    color: filters.status === status ? COLORS.textPrimary : COLORS.textSecondary,
-                    whiteSpace: 'nowrap',
-                    position: 'relative',
-                    zIndex: 1,
-                    minWidth: 'max-content',
-                    '&:hover': { bgcolor: 'transparent' }
-                  }}
-                >
-                  {filters.status === status && (
-                    <motion.div
-                      layoutId="activeStatusTab"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: '#FFF',
-                        borderRadius: '10px',
-                        zIndex: -1,
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
-                      }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  {status === '' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              ))}
+              <LayoutGroup id="status-tabs">
+                {(['', 'approved', 'pending', 'suspended'] as const).map((status) => (
+                  <Button
+                    key={status}
+                    onClick={() => handleFilterChange('status', status)}
+                    sx={{
+                      flex: { xs: '1 0 100px', md: 'none' },
+                      textTransform: 'none', px: 2.5, py: 1.25, borderRadius: '12px', fontSize: 13, fontWeight: 700,
+                      bgcolor: 'transparent',
+                      color: filters.status === status ? COLORS.textPrimary : COLORS.textSecondary,
+                      whiteSpace: 'nowrap',
+                      position: 'relative',
+                      zIndex: 1,
+                      minWidth: 'max-content',
+                      transition: 'color 0.4s ease-in-out',
+                      '&:hover': { bgcolor: 'transparent' }
+                    }}
+                  >
+                    {filters.status === status && (
+                      <motion.div
+                        layoutId="activeStatusTab"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: '#FFF',
+                          borderRadius: '10px',
+                          zIndex: -1,
+                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                        }}
+                        transition={{ type: 'spring', stiffness: 80, damping: 18, mass: 1 }}
+                      />
+                    )}
+                    {status === '' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Button>
+                ))}
+              </LayoutGroup>
             </Box>
           </Box>
         </Box>
@@ -607,18 +620,44 @@ export default function InstitutionMonitoring() {
               </Typography>
             </Box>
           ) : (
-            <>
-              <Grid container spacing={{ xs: 2.5, sm: 3 }}>
-                {institutions.map((inst) => (
-                  <Grid item xs={12} sm={6} lg={4} key={inst._id}>
-                    <InstitutionBentoCard
-                      inst={inst}
-                      onDetails={(i) => { setSelectedInstitution(i); setShowDetails(true); }}
-                      onManageUsers={(i) => { window.location.href = `/super-admin/institution-monitoring/${i._id}`; }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={filters.status}
+                custom={direction}
+                variants={{
+                  enter: (direction: number) => ({
+                    x: direction > 0 ? 50 : -50,
+                    opacity: 0
+                  }),
+                  center: {
+                    x: 0,
+                    opacity: 1
+                  },
+                  exit: (direction: number) => ({
+                    x: direction < 0 ? 50 : -50,
+                    opacity: 0
+                  })
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 150, damping: 22 },
+                  opacity: { duration: 0.4 }
+                }}
+              >
+                <Grid container spacing={{ xs: 2.5, sm: 3 }}>
+                  {institutions.map((inst) => (
+                    <Grid item xs={12} sm={6} lg={4} key={inst._id}>
+                      <InstitutionBentoCard
+                        inst={inst}
+                        onDetails={(i) => { setSelectedInstitution(i); setShowDetails(true); }}
+                        onManageUsers={(i) => { window.location.href = `/super-admin/institution-monitoring/${i._id}`; }}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </motion.div>
 
               {totalPages > 1 && (
                 <Box sx={{ mt: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 4, borderTop: `1px solid ${COLORS.border}` }}>
@@ -696,7 +735,7 @@ export default function InstitutionMonitoring() {
                   </Box>
                 </Box>
               )}
-            </>
+            </AnimatePresence>
           )}
         </Box>
       </Box>

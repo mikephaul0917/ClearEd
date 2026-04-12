@@ -175,7 +175,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               sx: {
                 borderRadius: '6px',
                 bgcolor: '#F8FAFC',
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                 '& .MuiOutlinedInput-notchedOutline': {
                   border: '1px solid transparent',
                   transition: 'border-color 0.2s'
@@ -216,11 +216,10 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                         sx={{
                           width: 44,
                           height: 44,
-                          bgcolor: '#020617', // Dark background
+                          bgcolor: '#5F6368',
                           color: '#FFFFFF',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           fontSize: '1.1rem',
-                          textShadow: '-0.5px 0 0 rgba(0,255,255,0.4), 0.5px 0 0 rgba(255,165,0,0.4)',
                         }}>
                         {getInitials(user.fullName || user.username)}
                       </Avatar>

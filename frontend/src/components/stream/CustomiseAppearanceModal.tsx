@@ -39,7 +39,7 @@ export interface CustomiseAppearanceModalProps {
 }
 
 const THEME_COLORS = [
-  '#1967d2', // Blue (default)
+  '#0E7490', // Blue (default)
   '#188038', // Green
   '#c5221f', // Red
   '#d50000', // Crimson
@@ -68,7 +68,7 @@ export default function CustomiseAppearanceModal({
         alert("File is too large. Maximum size is 5MB.");
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result as string);
@@ -109,192 +109,194 @@ export default function CustomiseAppearanceModal({
         {showGallery ? (
           <Box sx={{ px: 3, pt: 1, pb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <IconButton onClick={() => setShowGallery(false)} sx={{ mr: 1, ml: -1 }}>
-                    <ArrowBackIcon />
-                </IconButton>
-                <Typography variant="body1" fontWeight={500}>Gallery</Typography>
+              <IconButton onClick={() => setShowGallery(false)} sx={{ mr: 1, ml: -1 }}>
+                <ArrowBackIcon />
+              </IconButton>
+              <Typography variant="body1" fontWeight={500}>Gallery</Typography>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-                {PRESET_BANNERS.map((url, idx) => (
-                    <Box
-                      key={idx}
-                      onClick={() => {
-                          setSelectedImage(url);
-                          setShowGallery(false);
-                      }}
-                      sx={{
-                          height: 80,
-                          borderRadius: 2,
-                          backgroundImage: `url(${url})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s',
-                          border: selectedImage === url ? '3px solid #1a73e8' : 'none',
-                          '&:hover': { opacity: 0.9, transform: 'scale(1.02)' }
-                      }}
-                    />
-                ))}
+              {PRESET_BANNERS.map((url, idx) => (
+                <Box
+                  key={idx}
+                  onClick={() => {
+                    setSelectedImage(url);
+                    setShowGallery(false);
+                  }}
+                  sx={{
+                    height: 80,
+                    borderRadius: 2,
+                    backgroundImage: `url(${url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    border: selectedImage === url ? '3px solid #007B83' : 'none',
+                    '&:hover': { opacity: 0.9, transform: 'scale(1.02)' }
+                  }}
+                />
+              ))}
             </Box>
           </Box>
         ) : (
-        <Box sx={{ px: 3, pt: 1, pb: 3 }}>
-          {/* Header Preview Container */}
-          <Box
-            sx={{
-              height: 120,
-              borderRadius: 2,
-              mb: 3,
-              bgcolor: selectedColor,
-              backgroundImage: selectedImage ? `url(${selectedImage})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
+          <Box sx={{ px: 3, pt: 1, pb: 3 }}>
+            {/* Header Preview Container */}
+            <Box
+              sx={{
+                height: 120,
+                borderRadius: 2,
+                mb: 3,
+                bgcolor: selectedColor,
+                backgroundImage: selectedImage ? `url(${selectedImage})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            />
 
-          {/* Select Image */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              Select stream header image
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="text"
-                startIcon={<ImageOutlinedIcon />}
-                onClick={() => setShowGallery(true)}
-                sx={{
-                  bgcolor: '#e8f0fe',
-                  color: '#1967d2',
-                  textTransform: 'none',
-                  borderRadius: 20,
-                  px: 2,
-                  '&:hover': { bgcolor: '#d2e3fc' },
-                }}
-              >
-                Select photo
-              </Button>
-              <Button
-                variant="text"
-                startIcon={<UploadFileOutlinedIcon />}
-                component="label"
-                sx={{
-                  bgcolor: '#e8f0fe',
-                  color: '#1967d2',
-                  textTransform: 'none',
-                  borderRadius: 20,
-                  px: 2,
-                  '&:hover': { bgcolor: '#d2e3fc' },
-                }}
-              >
-                Upload photo
-                <input type="file" hidden accept="image/*" onChange={handleFileUpload} />
-              </Button>
+            {/* Select Image */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                Select stream header image
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="text"
+                  startIcon={<ImageOutlinedIcon />}
+                  onClick={() => setShowGallery(true)}
+                  sx={{
+                    bgcolor: '#E6F2F2',
+                    color: '#007B83',
+                    textTransform: 'none',
+                    borderRadius: 20,
+                    px: 2,
+                    fontWeight: 600,
+                    '&:hover': { bgcolor: '#D2E8E8' },
+                  }}
+                >
+                  Select photo
+                </Button>
+                <Button
+                  variant="text"
+                  startIcon={<UploadFileOutlinedIcon />}
+                  component="label"
+                  sx={{
+                    bgcolor: '#E6F2F2',
+                    color: '#007B83',
+                    textTransform: 'none',
+                    borderRadius: 20,
+                    px: 2,
+                    fontWeight: 600,
+                    '&:hover': { bgcolor: '#D2E8E8' },
+                  }}
+                >
+                  Upload photo
+                  <input type="file" hidden accept="image/*" onChange={handleFileUpload} />
+                </Button>
+              </Box>
             </Box>
-          </Box>
 
-          <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: 3 }} />
 
-          {/* Theme Color */}
-          <Box>
-            <Typography variant="body2" color="text.secondary" fontWeight={500} mb={1.5}>
-              Select theme colour
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              {THEME_COLORS.map((color) => (
+            {/* Theme Color */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" fontWeight={500} mb={1.5}>
+                Select theme colour
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                {THEME_COLORS.map((color) => (
+                  <Box
+                    key={color}
+                    onClick={() => handleColorSelect(color)}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      bgcolor: color,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: selectedColor === color && !selectedImage ? '2px solid #007B83' : '2px solid transparent',
+                      boxShadow: selectedColor === color && !selectedImage ? '0 0 0 2px #fff inset' : 'none',
+                    }}
+                  >
+                    {selectedColor === color && !selectedImage && <CheckIcon sx={{ color: '#fff', fontSize: 20 }} />}
+                  </Box>
+                ))}
+
                 <Box
-                  key={color}
-                  onClick={() => handleColorSelect(color)}
+                  component="label"
+                  title="Custom Color"
                   sx={{
                     width: 40,
                     height: 40,
                     borderRadius: '50%',
-                    bgcolor: color,
+                    bgcolor: !THEME_COLORS.includes(selectedColor) ? selectedColor : '#f1f3f4',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: selectedColor === color && !selectedImage ? '2px solid #1a73e8' : '2px solid transparent',
-                    boxShadow: selectedColor === color && !selectedImage ? '0 0 0 2px #fff inset' : 'none',
+                    border: !THEME_COLORS.includes(selectedColor) && !selectedImage ? '2px solid #007B83' : '2px solid transparent',
+                    boxShadow: !THEME_COLORS.includes(selectedColor) && !selectedImage ? '0 0 0 2px #fff inset' : 'none',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}
                 >
-                  {selectedColor === color && !selectedImage && <CheckIcon sx={{ color: '#fff', fontSize: 20 }} />}
+                  <input
+                    type="color"
+                    value={selectedColor.length === 7 ? selectedColor : '#000000'}
+                    onChange={(e) => handleColorSelect(e.target.value)}
+                    style={{
+                      position: 'absolute',
+                      opacity: 0,
+                      width: '100%',
+                      height: '100%',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  {(!THEME_COLORS.includes(selectedColor) && !selectedImage) ? (
+                    <CheckIcon sx={{ color: '#fff', fontSize: 20 }} />
+                  ) : (
+                    <AddIcon sx={{ color: '#5f6368', fontSize: 24 }} />
+                  )}
                 </Box>
-              ))}
-              
-              <Box
-                component="label"
-                title="Custom Color"
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  bgcolor: !THEME_COLORS.includes(selectedColor) ? selectedColor : '#f1f3f4',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: !THEME_COLORS.includes(selectedColor) && !selectedImage ? '2px solid #1a73e8' : '2px solid transparent',
-                  boxShadow: !THEME_COLORS.includes(selectedColor) && !selectedImage ? '0 0 0 2px #fff inset' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                <input
-                  type="color"
-                  value={selectedColor.length === 7 ? selectedColor : '#000000'}
-                  onChange={(e) => handleColorSelect(e.target.value)}
-                  style={{
-                    position: 'absolute',
-                    opacity: 0,
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'pointer'
-                  }}
-                />
-                {(!THEME_COLORS.includes(selectedColor) && !selectedImage) ? (
-                  <CheckIcon sx={{ color: '#fff', fontSize: 20 }} />
-                ) : (
-                  <AddIcon sx={{ color: '#5f6368', fontSize: 24 }} />
-                )}
               </Box>
-            </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 3 }}>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
                   Custom hex colour:
                 </Typography>
-                <TextField 
-                  size="small" 
-                  value={selectedColor} 
+                <TextField
+                  size="small"
+                  value={selectedColor}
                   onChange={(e) => handleColorSelect(e.target.value)}
                   sx={{ width: 120 }}
                   inputProps={{ maxLength: 7 }}
                 />
+              </Box>
             </Box>
           </Box>
-        </Box>
         )}
       </DialogContent>
 
       <DialogActions sx={{ p: 2, pt: 0 }}>
         {showGallery ? (
-            <Box flex={1} />
+          <Box flex={1} />
         ) : (
-            <>
-        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#1a73e8', fontWeight: 500 }}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          sx={{ textTransform: 'none', color: '#1a73e8', fontWeight: 500 }}
-        >
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-        </>
+          <>
+            <Button onClick={onClose} sx={{ textTransform: 'none', color: '#007B83', fontWeight: 600 }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              sx={{ textTransform: 'none', color: '#007B83', fontWeight: 600 }}
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </>
         )}
       </DialogActions>
     </Dialog>

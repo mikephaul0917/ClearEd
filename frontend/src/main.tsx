@@ -10,9 +10,12 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#1976d2" },
+    primary: { main: "#0D9488" },
     secondary: { main: "#dc004e" },
     background: { default: "#F9FAFB" },
+  },
+  typography: {
+    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
   },
 });
 

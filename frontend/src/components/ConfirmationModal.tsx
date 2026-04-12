@@ -59,7 +59,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     fontSize: '1.85rem',
                     letterSpacing: '-0.03em',
                     lineHeight: 1.2,
-                    fontFamily: "'Inter', sans-serif"
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   {title}
@@ -71,7 +71,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     lineHeight: 1.6,
                     px: 1,
                     fontWeight: 500,
-                    fontFamily: "'Inter', sans-serif"
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   {description}

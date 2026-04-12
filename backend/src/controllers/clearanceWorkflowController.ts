@@ -43,12 +43,12 @@ export const getOrganizationClearanceOverview = async (req: AuthRequest, res: Re
       organizationId,
       role: 'member',
       status: 'active'
-    }).populate("userId", "fullName email");
+    }).populate("userId", "fullName email avatarUrl");
 
     const requests = await ClearanceRequest.find({
       organizationId,
       termId: term._id
-    }).populate("userId", "fullName email")
+    }).populate("userId", "fullName email avatarUrl")
       .sort({ submittedAt: -1 });
 
     // For each request, calculate progress based on requirements vs submissions

@@ -395,7 +395,8 @@ export default function RequestInstitutionAccess() {
                   borderColor: "#E2E8F0",
                   borderRadius: '999px',
                   textTransform: 'none',
-                  px: 4,
+                  px: 5,
+                  py: 1.5,
                   fontWeight: 700,
                   boxShadow: '0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)',
                   backgroundColor: '#FFF',
@@ -417,7 +418,7 @@ export default function RequestInstitutionAccess() {
                 disabled={isLoading}
                 startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 sx={{
-                  backgroundColor: "#0F172A",
+                  backgroundColor: "#3c4043",
                   color: "#FFFFFF",
                   px: 5,
                   py: 1.5,
@@ -427,7 +428,7 @@ export default function RequestInstitutionAccess() {
                   boxShadow: '0 20px 30px -10px rgba(15,23,42,0.35), 0 10px 15px -5px rgba(15,23,42,0.15)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   "&:hover": {
-                    backgroundColor: "#1e293b",
+                    backgroundColor: "#3c4043",
                     boxShadow: '0 30px 45px -12px rgba(15,23,42,0.45), 0 15px 20px -8px rgba(15,23,42,0.25)',
                     transform: 'translateY(-3px)'
                   },
@@ -449,9 +450,9 @@ export default function RequestInstitutionAccess() {
           </Box>
         </Paper>
       </Box>
-      
-      <SuccessActionModal 
-        open={isSuccessOpen} 
+
+      <SuccessActionModal
+        open={isSuccessOpen}
         onClose={() => navigate('/')}
         title="Email Confirmation"
         description={`We have sent an email to ${formData.administratorEmail} to confirm the validity of your administrative request. Please follow the link provided in that mail to complete your registration.`}

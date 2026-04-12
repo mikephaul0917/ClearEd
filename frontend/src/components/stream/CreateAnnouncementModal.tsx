@@ -183,12 +183,12 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                             variant="outlined"
                             sx={{
                                 borderRadius: 20,
-                                borderColor: "#1967d2",
-                                color: "#1967d2",
+                                borderColor: "#0E7490",
+                                color: "#0E7490",
                                 fontWeight: 500,
                                 fontSize: "0.875rem",
                                 height: 36,
-                                '& .MuiChip-icon': { color: '#1967d2' },
+                                '& .MuiChip-icon': { color: '#0E7490' },
                                 '& .MuiChip-label': { px: 1 }
                             }}
                         />
@@ -221,8 +221,8 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                             fontSize: "0.9375rem",
                             color: "#3c4043",
                             "&:empty:before": {
-                                content: '"Announce something to your class"',
-                                color: "#1967d2",
+                                content: '"Announce something to your organization"',
+                                color: "#0E7490",
                                 pointerEvents: "none",
                                 display: "block",
                             }
@@ -239,19 +239,19 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                             borderTop: "1px solid #dadce0"
                         }}
                     >
-                        <IconButton size="small" sx={{ color: activeFormats.bold ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.bold ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "bold")}>
+                        <IconButton size="small" sx={{ color: activeFormats.bold ? "#0E7490" : "#5f6368", bgcolor: activeFormats.bold ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "bold")}>
                             <FormatBoldIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: activeFormats.italic ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.italic ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "italic")}>
+                        <IconButton size="small" sx={{ color: activeFormats.italic ? "#0E7490" : "#5f6368", bgcolor: activeFormats.italic ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "italic")}>
                             <FormatItalicIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: activeFormats.underline ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.underline ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "underline")}>
+                        <IconButton size="small" sx={{ color: activeFormats.underline ? "#0E7490" : "#5f6368", bgcolor: activeFormats.underline ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "underline")}>
                             <FormatUnderlinedIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: activeFormats.insertUnorderedList ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.insertUnorderedList ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "insertUnorderedList")}>
+                        <IconButton size="small" sx={{ color: activeFormats.insertUnorderedList ? "#0E7490" : "#5f6368", bgcolor: activeFormats.insertUnorderedList ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "insertUnorderedList")}>
                             <FormatListBulletedIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: activeFormats.strikeThrough ? "#1a73e8" : "#5f6368", bgcolor: activeFormats.strikeThrough ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "strikeThrough")}>
+                        <IconButton size="small" sx={{ color: activeFormats.strikeThrough ? "#0E7490" : "#5f6368", bgcolor: activeFormats.strikeThrough ? "#e8f0fe" : "transparent" }} onMouseDown={(e) => handleFormat(e, "strikeThrough")}>
                             <FormatStrikethroughIcon fontSize="small" />
                         </IconButton>
                     </Box>
@@ -271,7 +271,7 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                     sx={{
                         textTransform: "none",
                         fontWeight: 500,
-                        color: "#1967d2",
+                        color: "#0E7490",
                         fontSize: "0.875rem",
                         borderRadius: '8px',
                         '&:hover': { bgcolor: "#e8f0fe" }
@@ -286,14 +286,14 @@ const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = ({
                     sx={{
                         textTransform: "none",
                         fontWeight: 500,
-                        bgcolor: !content.trim() ? "#dadce0" : "#1967d2",
+                        bgcolor: !content.trim() ? "#dadce0" : "#3c4043",
                         color: !content.trim() ? "#80868b" : "#fff",
                         borderRadius: '8px',
                         px: 3,
                         fontSize: "0.875rem",
                         boxShadow: "none",
                         "&:hover": {
-                            bgcolor: !content.trim() ? "#dadce0" : "#1557b0",
+                            bgcolor: !content.trim() ? "#dadce0" : "#202124",
                             boxShadow: "none"
                         },
                         "&.Mui-disabled": {

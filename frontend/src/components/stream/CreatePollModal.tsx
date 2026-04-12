@@ -26,6 +26,7 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { clearanceService } from "../../services";
 import AssignToModal from "./AssignToModal";
+import AddLinkModal from "./AddLinkModal";
 
 /**
  * CreatePollModal Component
@@ -69,6 +70,19 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
     const [dueDate, setDueDate] = useState<string>("");
     const [studentsCanReply, setStudentsCanReply] = useState(true);
     const [studentsCanEdit, setStudentsCanEdit] = useState(false);
+    const [linkModal, setLinkModal] = useState<{
+        open: boolean;
+        type: string;
+        title: string;
+        description: string;
+        placeholder: string;
+    }>({
+        open: false,
+        type: "Link",
+        title: "",
+        description: "",
+        placeholder: ""
+    });
 
     useEffect(() => {
         if (open) {
@@ -205,12 +219,23 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
     };
 
     const handleUrlAttachment = (promptMsg: string, type: string) => {
-        const url = window.prompt(`Enter ${promptMsg} URL:`);
-        if (url) {
-            let name = type + " Attachment";
-            try { name = new URL(url).hostname; } catch (e) { }
-            setAttachments(prev => [...prev, { type, url, name }]);
+        setLinkModal({
+            open: true,
+            type,
+            title: `Add ${type} Resource`,
+            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            placeholder: `${type} Link`
+        });
+    };
+
+    const onAddLinkResource = (url: string) => {
+        let parsedUrl = url.trim();
+        if (!parsedUrl.startsWith('http://') && !parsedUrl.startsWith('https://')) {
+            parsedUrl = 'https://' + parsedUrl;
         }
+        let name = linkModal.type + " Attachment";
+        try { name = new URL(parsedUrl).hostname; } catch (e) { }
+        setAttachments(prev => [...prev, { type: linkModal.type, url: parsedUrl, name }]);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,37 +255,45 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
             {/* Header / Nav Bar */}
             <Box sx={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                px: 2, py: 1.5, bgcolor: '#fff', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 1100
+                px: { xs: 1.5, sm: 2 }, py: { xs: 1, sm: 1.5 }, bgcolor: '#fff', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 1100
             }}>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 2 }}>
                     <IconButton onClick={handleClose} size="small" sx={{ color: "#5f6368" }}><CloseIcon /></IconButton>
                     <Box display="flex" alignItems="center" gap={1.5}>
-                        <Box sx={{ width: 36, height: 36, borderRadius: '4px', bgcolor: '#f1f3f4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <HelpOutlineIcon sx={{ color: '#5f6368', fontSize: 24 }} />
+                        <Box sx={{
+                            width: { xs: 32, sm: 36 },
+                            height: { xs: 32, sm: 36 },
+                            borderRadius: '4px',
+                            bgcolor: '#f1f3f4',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <HelpOutlineIcon sx={{ color: '#5f6368', fontSize: { xs: 20, sm: 24 } }} />
                         </Box>
                         <Box>
-                            <Typography sx={{ fontWeight: 400, fontSize: "1.375rem", color: "#3c4043", lineHeight: 1.2 }}>Poll</Typography>
+                            <Typography sx={{ fontWeight: 400, fontSize: { xs: "1.125rem", sm: "1.375rem" }, color: "#3c4043", lineHeight: 1.2 }}>Poll</Typography>
                         </Box>
                     </Box>
                 </Box>
                 <Box display="flex" alignItems="center" gap={2}>
                     <Button onClick={handleCreate} disabled={loading || !question.trim()} variant="contained"
-                        sx={{ bgcolor: "#1a73e8", color: "#fff", textTransform: "none", fontWeight: 500, borderRadius: "20px", px: 4, '&:hover': { bgcolor: "#1557b0" }, boxShadow: 'none' }}>
+                        sx={{ bgcolor: "#3c4043", color: "#fff", textTransform: "none", fontWeight: 500, borderRadius: "20px", px: { xs: 2.5, sm: 4 }, '&:hover': { bgcolor: "#202124" }, boxShadow: 'none' }}>
                         {loading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Save" : "Ask")}
                     </Button>
                 </Box>
             </Box>
 
-            <DialogContent sx={{ p: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: 'calc(100vh - 65px)', overflow: 'hidden' }}>
+            <DialogContent sx={{ p: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: 'calc(100vh - 69px)', overflow: 'hidden' }}>
                 {/* Left Content Area (Main) */}
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 2, md: 4, lg: 6 }, pb: 10, overflowY: 'auto', alignItems: 'center' }}>
-                    <Box sx={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 }, p: { xs: 1.5, md: 4, lg: 6 }, pb: 10, overflowY: 'auto', alignItems: 'center' }}>
+                    <Box sx={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 } }}>
                         {error && <Alert severity="error">{error}</Alert>}
 
                         {/* Question Input Card */}
-                        <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 2 }, overflow: 'visible' }}>
                             {/* Top Row: Question & Type */}
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', sm: 'row' } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <TextField
                                         fullWidth
@@ -270,12 +303,12 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                                         onChange={(e) => setQuestion(e.target.value)}
                                         InputProps={{
                                             disableUnderline: true,
-                                            sx: { bgcolor: '#f1f3f4', borderRadius: '4px 4px 0 0', pt: 2, pb: 1, borderBottom: '1px solid #5f6368', '&.Mui-focused': { borderBottom: '2px solid #1a73e8', bgcolor: '#f1f3f4' } }
+                                            sx: { bgcolor: '#f1f3f4', borderRadius: '4px 4px 0 0', pt: 2, pb: 1, borderBottom: '1px solid #5f6368', '&.Mui-focused': { borderBottom: '2px solid #0D9488', bgcolor: '#f1f3f4' } }
                                         }}
                                     />
                                     <Typography variant="caption" sx={{ color: '#5f6368', mt: 0.5, display: 'block' }}>*Required</Typography>
                                 </Box>
-                                <Box sx={{ width: 220 }}>
+                                <Box sx={{ width: { xs: '100%', sm: 220 } }}>
                                     <Select
                                         fullWidth
                                         value={pollType}
@@ -331,7 +364,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                                                 }}
                                                 InputProps={{
                                                     disableUnderline: true,
-                                                    sx: { bgcolor: '#f1f3f4', borderRadius: '4px', borderBottom: '1px solid #5f6368', '&.Mui-focused': { borderBottom: '2px solid #1a73e8', bgcolor: '#f1f3f4' } },
+                                                    sx: { bgcolor: '#f1f3f4', borderRadius: '4px', borderBottom: '1px solid #5f6368', '&.Mui-focused': { borderBottom: '2px solid #0D9488', bgcolor: '#f1f3f4' } },
                                                     endAdornment: options.length > 1 && (
                                                         <IconButton size="small" onClick={() => setOptions(options.filter((_, i) => i !== idx))} sx={{ color: '#5f6368' }}>
                                                             <CloseIcon fontSize="small" />
@@ -344,7 +377,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                                     <Button
                                         startIcon={<AddIcon />}
                                         onClick={() => setOptions([...options, `Option ${options.length + 1}`])}
-                                        sx={{ alignSelf: 'flex-start', color: '#1a73e8', textTransform: 'none', fontWeight: 500, mt: 0.5, pt: 1, pb: 1, pl: 1, pr: 2, borderRadius: '4px', '&:hover': { bgcolor: '#f8f9fa' } }}
+                                        sx={{ alignSelf: 'flex-start', color: '#0D9488', textTransform: 'none', fontWeight: 500, mt: 0.5, pt: 1, pb: 1, pl: 1, pr: 2, borderRadius: '4px', '&:hover': { bgcolor: '#f8f9fa' } }}
                                         disableRipple
                                     >
                                         Add option
@@ -367,9 +400,9 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                         </Box>
 
                         {/* Attachments Card */}
-                        <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', p: 3 }}>
-                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3c4043', mb: 3 }}>Attach</Typography>
-                            <Box display="flex" gap={4} flexWrap="wrap" justifyContent="center">
+                        <Box sx={{ bgcolor: '#fff', borderRadius: '8px', border: '1px solid #dadce0', p: { xs: 2, sm: 3 } }}>
+                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3c4043', mb: { xs: 2, sm: 3 } }}>Attach</Typography>
+                            <Box display="flex" gap={{ xs: 2, sm: 4 }} flexWrap="wrap" justifyContent="center">
                                 {[
                                     { src: "https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png", label: "Drive", action: () => handleUrlAttachment('Drive link', 'Drive') },
                                     { src: "https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg", label: "YouTube", action: () => handleUrlAttachment('YouTube link', 'YouTube') },
@@ -404,8 +437,17 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
 
                 {/* Right Settings Sidebar */}
                 <Box sx={{
-                    width: { xs: '100%', md: 300 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3,
-                    p: { xs: 2, md: 3 }, borderLeft: { md: '1px solid #dadce0' }, bgcolor: '#fff', overflowY: 'auto'
+                    width: { xs: '100%', md: 300 },
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    p: { xs: 2, md: 3 },
+                    borderLeft: { md: '1px solid #dadce0' },
+                    borderTop: { xs: '1px solid #dadce0', md: 'none' },
+                    bgcolor: '#fff',
+                    overflowY: 'auto',
+                    maxHeight: { xs: '250px', md: 'none' }
                 }}>
                     {/* For Field */}
                     <Box>
@@ -435,9 +477,9 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                             variant="outlined"
                             fullWidth
                             onClick={() => setIsAssignModalOpen(true)}
-                            startIcon={<PeopleOutlineIcon sx={{ color: '#1a73e8' }} />}
+                            startIcon={<PeopleOutlineIcon sx={{ color: '#0D9488' }} />}
                             sx={{
-                                color: '#1a73e8',
+                                color: '#0D9488',
                                 borderColor: '#dadce0',
                                 borderRadius: '24px',
                                 textTransform: 'none',
@@ -460,13 +502,13 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                             IconComponent={ArrowDropDownIcon}
                             sx={{
                                 height: 48,
-                                width: '50%',
+                                width: { xs: '100%', md: '50%' },
                                 minWidth: '120px',
                                 bgcolor: '#e8eaed',
                                 color: '#3c4043',
                                 borderRadius: '4px 4px 0 0',
                                 '.MuiOutlinedInput-notchedOutline': { border: 'none', borderBottom: '1px solid #5f6368' },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #1a73e8' },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #0D9488' },
                                 '&:hover': { bgcolor: '#dadce0' }
                             }}
                         >
@@ -520,7 +562,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                                     color: '#3c4043',
                                     borderRadius: '4px 4px 0 0',
                                     '.MuiOutlinedInput-notchedOutline': { border: 'none', borderBottom: '1px solid #5f6368' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #1a73e8' },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderBottom: '2px solid #0D9488' },
                                     '&:hover': { bgcolor: '#dadce0' }
                                 }}
                             >
@@ -529,7 +571,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                             </Select>
                         ) : (
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #1a73e8", width: "100%", display: "flex", alignItems: "center" }}>
+                                <Box sx={{ position: "relative", bgcolor: "#f1f3f4", borderRadius: "4px 4px 0 0", borderBottom: "2px solid #0D9488", width: "100%", display: "flex", alignItems: "center" }}>
                                     <TextField
                                         fullWidth
                                         variant="standard"
@@ -568,11 +610,11 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                     {/* Permissions Checkboxes */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
                         <FormControlLabel
-                            control={<Checkbox checked={studentsCanReply} onChange={(e) => setStudentsCanReply(e.target.checked)} color="primary" sx={{ color: '#5f6368', '&.Mui-checked': { color: '#1a73e8' } }} />}
+                            control={<Checkbox checked={studentsCanReply} onChange={(e) => setStudentsCanReply(e.target.checked)} color="primary" sx={{ color: '#5f6368', '&.Mui-checked': { color: '#0D9488' } }} />}
                             label={<Typography sx={{ fontSize: '0.875rem', color: '#3c4043' }}>Students can reply to each other</Typography>}
                         />
                         <FormControlLabel
-                            control={<Checkbox checked={studentsCanEdit} onChange={(e) => setStudentsCanEdit(e.target.checked)} color="primary" sx={{ color: '#5f6368', '&.Mui-checked': { color: '#1a73e8' } }} />}
+                            control={<Checkbox checked={studentsCanEdit} onChange={(e) => setStudentsCanEdit(e.target.checked)} color="primary" sx={{ color: '#5f6368', '&.Mui-checked': { color: '#0D9488' } }} />}
                             label={<Typography sx={{ fontSize: '0.875rem', color: '#3c4043' }}>Students can edit answer</Typography>}
                         />
                     </Box>
@@ -586,6 +628,15 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                 selectedIds={selectedIds}
                 onToggleAll={handleToggleAllAssign}
                 onToggle={handleToggleAssign}
+            />
+
+            <AddLinkModal
+                open={linkModal.open}
+                onClose={() => setLinkModal(prev => ({ ...prev, open: false }))}
+                onAdd={onAddLinkResource}
+                title={linkModal.title}
+                description={linkModal.description}
+                placeholder={linkModal.placeholder}
             />
         </Dialog>
     );

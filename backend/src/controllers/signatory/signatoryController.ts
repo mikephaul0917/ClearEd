@@ -7,6 +7,7 @@ import OrganizationMember from "../../models/OrganizationMember";
 import ClearanceRequirement from "../../models/ClearanceRequirement";
 import User from "../../models/User";
 import Term from "../../models/Term";
+import FinalClearance from "../../models/FinalClearance";
 import AuditLog from "../../models/AuditLog";
 
 /**
@@ -295,7 +296,7 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
     const { id } = req.params;
-    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, attachments: rawUrlAttachments, options, dueDate, points } = req.body;
+    const { title, description, instructions, requiredFiles, isMandatory, isAnnouncement, isActive, isReviewed, attachments: rawUrlAttachments, options, dueDate, points } = req.body;
 
     const requirement = await ClearanceRequirement.findOne({ _id: id, institutionId });
     if (!requirement) return res.status(404).json({ message: "Requirement not found" });
@@ -321,6 +322,7 @@ export const updateSignatoryRequirement = async (req: Request, res: Response) =>
     if (isActive !== undefined) requirement.isActive = isActive === "true" || isActive === true;
     if (dueDate !== undefined) requirement.dueDate = dueDate || undefined;
     if (points !== undefined) requirement.points = points || undefined;
+    if (isReviewed !== undefined) requirement.isReviewed = isReviewed === "true" || isReviewed === true;
 
     if (options !== undefined) {
       try {
@@ -476,5 +478,258 @@ export const markAsOfficerCleared = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('Mark as officer cleared error:', err);
     res.status(500).json({ message: err.message || "Failed to mark student as cleared" });
+  }
+};
+
+export const bulkMarkAsOfficerCleared = async (req: Request, res: Response) => {
+  try {
+    const officerId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId } = req.params;
+    const { studentIds, signatureData } = req.body;
+
+    if (!officerId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ message: "No students selected" });
+    }
+
+    const membership = await OrganizationMember.findOne({
+      userId: officerId,
+      organizationId,
+      institutionId,
+      role: "officer",
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You do not have permission to mark students as cleared for this organization" });
+    }
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active term found" });
+
+    const officer = await User.findById(officerId);
+    const finalSignature = signatureData || officer?.signatureUrl;
+
+    const results = [];
+
+    for (const studentId of studentIds) {
+      let clearanceRequest = await ClearanceRequest.findOne({
+        userId: studentId,
+        organizationId,
+        institutionId,
+        termId: term._id
+      });
+
+      if (!clearanceRequest) {
+        clearanceRequest = new ClearanceRequest({
+          userId: studentId,
+          organizationId,
+          institutionId,
+          termId: term._id,
+          status: "officer_cleared",
+          signatureUrl: finalSignature,
+          officerId: officerId,
+          finalApprovalDate: new Date()
+        });
+      } else {
+        if (clearanceRequest.status === "completed") continue;
+        
+        clearanceRequest.status = "officer_cleared";
+        clearanceRequest.officerId = officerId;
+        clearanceRequest.finalApprovalDate = new Date();
+        if (finalSignature) {
+          clearanceRequest.signatureUrl = finalSignature;
+        }
+      }
+
+      await clearanceRequest.save();
+      results.push(studentId);
+
+      await AuditLog.create({
+        userId: officerId,
+        institutionId,
+        action: "officer_marked_cleared",
+        category: "clearance_workflow",
+        resource: "ClearanceRequest",
+        resourceId: clearanceRequest._id as any,
+        details: { studentId, batch: true },
+        severity: "medium",
+        ipAddress: req.ip || "unknown"
+      });
+    }
+
+    res.json({ 
+      message: `Successfully cleared ${results.length} students`, 
+      clearedCount: results.length 
+    });
+  } catch (err: any) {
+    console.error('Bulk mark as officer cleared error:', err);
+    res.status(500).json({ message: err.message || "Failed to process bulk clearance" });
+  }
+};
+
+export const revokeOfficerClearance = async (req: Request, res: Response) => {
+  try {
+    const officerId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId, studentId } = req.params;
+
+    if (!officerId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const membership = await OrganizationMember.findOne({
+      userId: officerId,
+      organizationId,
+      institutionId,
+      role: "officer",
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You do not have permission to revoke clearance for this organization" });
+    }
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active term found" });
+
+    // Check if Final Clearance is already approved
+    const finalClearance = await FinalClearance.findOne({
+      userId: studentId,
+      institutionId,
+      termId: term._id,
+      status: 'approved'
+    });
+
+    if (finalClearance) {
+      return res.status(400).json({ message: "Cannot revoke: Final Clearance has already been approved by the Dean." });
+    }
+
+    const clearanceRequest = await ClearanceRequest.findOne({
+      userId: studentId,
+      organizationId,
+      institutionId,
+      termId: term._id
+    });
+
+    if (!clearanceRequest) {
+      return res.status(404).json({ message: "Clearance record not found" });
+    }
+
+    clearanceRequest.status = "in_progress";
+    clearanceRequest.signatureUrl = undefined;
+    clearanceRequest.officerId = undefined;
+    clearanceRequest.finalApprovalDate = undefined;
+
+    await clearanceRequest.save();
+
+    await AuditLog.create({
+      userId: officerId,
+      institutionId,
+      action: "officer_revoked_clearance",
+      category: "clearance_workflow",
+      resource: "ClearanceRequest",
+      resourceId: clearanceRequest._id as any,
+      details: { studentId },
+      severity: "medium",
+      ipAddress: req.ip || "unknown"
+    });
+
+    res.json({ message: "Clearance revoked successfully", status: clearanceRequest.status });
+  } catch (err: any) {
+    console.error('Revoke officer clearance error:', err);
+    res.status(500).json({ message: err.message || "Failed to revoke clearance" });
+  }
+};
+
+export const bulkRevokeOfficerClearance = async (req: Request, res: Response) => {
+  try {
+    const officerId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const { organizationId } = req.params;
+    const { studentIds } = req.body;
+
+    if (!officerId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ message: "No students selected" });
+    }
+
+    const membership = await OrganizationMember.findOne({
+      userId: officerId,
+      organizationId,
+      institutionId,
+      role: "officer",
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You do not have permission to revoke clearance for this organization" });
+    }
+
+    const term = await Term.findOne({ institutionId, isActive: true });
+    if (!term) return res.status(400).json({ message: "No active term found" });
+
+    const results = [];
+    const skipped = [];
+
+    for (const studentId of studentIds) {
+      // Check if Final Clearance is already approved
+      const finalClearance = await FinalClearance.findOne({
+        userId: studentId,
+        institutionId,
+        termId: term._id,
+        status: 'approved'
+      });
+
+      if (finalClearance) {
+        skipped.push(studentId);
+        continue;
+      }
+
+      const clearanceRequest = await ClearanceRequest.findOne({
+        userId: studentId,
+        organizationId,
+        institutionId,
+        termId: term._id
+      });
+
+      if (!clearanceRequest) continue;
+
+      clearanceRequest.status = "in_progress";
+      clearanceRequest.signatureUrl = undefined;
+      clearanceRequest.officerId = undefined;
+      clearanceRequest.finalApprovalDate = undefined;
+
+      await clearanceRequest.save();
+      results.push(studentId);
+
+      await AuditLog.create({
+        userId: officerId,
+        institutionId,
+        action: "officer_revoked_clearance",
+        category: "clearance_workflow",
+        resource: "ClearanceRequest",
+        resourceId: clearanceRequest._id as any,
+        details: { studentId, batch: true },
+        severity: "medium",
+        ipAddress: req.ip || "unknown"
+      });
+    }
+
+    res.json({ 
+      message: `Successfully revoked clearance for ${results.length} students. ${skipped.length > 0 ? skipped.length + ' skipped (already approved by Dean).' : ''}`, 
+      revokedCount: results.length,
+      skippedCount: skipped.length
+    });
+  } catch (err: any) {
+    console.error('Bulk revoke officer clearance error:', err);
+    res.status(500).json({ message: err.message || "Failed to process bulk revocation" });
   }
 };

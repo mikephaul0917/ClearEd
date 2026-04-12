@@ -261,7 +261,7 @@ export const getOfficerSubmissions = async (req: Request, res: Response) => {
       institutionId: new mongoose.Types.ObjectId(institutionId as string),
       organizationId: { $in: organizationIds }
     })
-      .populate('userId', 'fullName email studentId name')
+      .populate('userId', 'fullName email studentId name avatarUrl')
       .populate('clearanceRequirementId', 'title description')
       .populate('organizationId', 'name')
       .sort({ submittedAt: -1 });
@@ -291,7 +291,7 @@ export const getRequirementSubmissions = async (req: Request, res: Response) => 
       clearanceRequirementId: requirementId,
       institutionId
     })
-      .populate('userId', 'fullName email studentId')
+      .populate('userId', 'fullName email studentId avatarUrl')
       .sort({ submittedAt: 1 });
 
     res.json({
