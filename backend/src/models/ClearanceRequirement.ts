@@ -26,6 +26,7 @@ export interface IClearanceRequirement extends Document {
     officeId?: mongoose.Types.ObjectId; // Link to institutional office
     organizationId: mongoose.Types.ObjectId;
     institutionId: mongoose.Types.ObjectId;
+    termId: mongoose.Types.ObjectId; // Link to academic term
     createdBy: mongoose.Types.ObjectId; // The Clearance Officer
     isReviewed: boolean; // Manual override for the To Review / Reviewed tabs
     isActive: boolean;
@@ -91,6 +92,11 @@ const ClearanceRequirementSchema = new Schema<IClearanceRequirement>({
         ref: "Institution",
         required: true
     },
+    termId: {
+        type: Schema.Types.ObjectId,
+        ref: "Term",
+        required: true
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -113,8 +119,9 @@ const ClearanceRequirementSchema = new Schema<IClearanceRequirement>({
 });
 
 // Indexes for performance
-ClearanceRequirementSchema.index({ organizationId: 1, isActive: 1 });
+ClearanceRequirementSchema.index({ organizationId: 1, termId: 1, isActive: 1 });
 ClearanceRequirementSchema.index({ organizationId: 1, order: 1 });
+ClearanceRequirementSchema.index({ termId: 1 });
 ClearanceRequirementSchema.index({ createdBy: 1 });
 
 export default mongoose.model<IClearanceRequirement>("ClearanceRequirement", ClearanceRequirementSchema);

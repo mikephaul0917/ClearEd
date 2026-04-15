@@ -13,6 +13,8 @@ import Divider from "@mui/material/Divider";
 import Checkbox from "@mui/material/Checkbox";
 import Avatar from "@mui/material/Avatar";
 import TableContainer from "@mui/material/TableContainer";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 import { api, authService } from '../../services';
 import { useEffect, useState, useMemo, useRef } from "react";
 import { showGlobalModal } from "../../components/GlobalModal";
@@ -36,6 +38,7 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import TableBody from "@mui/material/TableBody";
 import TablePagination from "@mui/material/TablePagination";
+import LinearProgress from "@mui/material/LinearProgress";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Alert from "@mui/material/Alert";
@@ -47,6 +50,8 @@ import ListItemText from "@mui/material/ListItemText";
 import { getAbsoluteUrl, getInitials, formatNameFromEmail } from "../../utils/avatarUtils";
 import CircularProgress from "@mui/material/CircularProgress";
 import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import UndoIcon from "@mui/icons-material/Undo";
 import { EmptyState } from "../../components/layout/EmptyState";
 import SignatureModal from "../../components/stream/SignatureModal";
 import Card from "@mui/material/Card";
@@ -115,92 +120,128 @@ const DeanDashboardSkeleton = () => {
     <Box sx={{ width: '100%', animation: 'fadeIn 0.5s ease-in-out' }}>
       {/* Stats Grid Skeleton */}
       <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }} gap={3} mb={4}>
-        {[1, 2, 3].map((i) => (
-          <Box
-            key={i}
-            sx={{
-              p: 3,
-              bgcolor: '#FFF',
-              border: '1px solid #E5E7EB',
-              borderRadius: '16px',
-              minHeight: 180,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
-            }}
-          >
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-              <Box sx={{ width: '100%' }}>
-                <Skeleton variant="text" width="60%" height={24} sx={{ mb: 0.5 }} />
-                {i === 3 && <Skeleton variant="text" width="40%" height={16} />}
-              </Box>
-              <Skeleton variant="circular" width={24} height={24} />
-            </Box>
-            <Box display="flex" alignItems="flex-end" justifyContent="space-between">
-              <Skeleton variant="text" width="30%" height={56} />
-              <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '12px' }} />
-            </Box>
-            {i === 3 && (
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box display="flex">
-                  {[1, 2, 3].map(n => (
-                    <Skeleton key={n} variant="circular" width={32} height={32} sx={{ ml: n > 1 ? -1 : 0, border: '2px solid #FFF' }} />
-                  ))}
-                </Box>
-                <Skeleton variant="circular" width={32} height={32} />
-              </Box>
-            )}
+        {/* Card 1: Total Students */}
+        <Box sx={{ p: 3, bgcolor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', minHeight: { xs: 140, sm: 180 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
+          <Box>
+            <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="30%" height={48} />
           </Box>
-        ))}
+          <Box display="flex" alignItems="center" gap={1}>
+            <Skeleton variant="rectangular" width={22} height={22} sx={{ borderRadius: '6px' }} />
+            <Skeleton variant="text" width={120} height={20} />
+          </Box>
+        </Box>
+
+        {/* Card 2: Pending */}
+        <Box sx={{ p: 3, bgcolor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', minHeight: { xs: 140, sm: 180 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
+          <Box>
+            <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="30%" height={48} />
+          </Box>
+          <Box display="flex" alignItems="flex-end" justifyContent="space-between">
+            <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: '999px' }} />
+            <Skeleton variant="rectangular" width={100} height={40} sx={{ borderRadius: '4px' }} />
+          </Box>
+        </Box>
+
+        {/* Card 3: Active Recently */}
+        <Box sx={{ p: 3, bgcolor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', minHeight: { xs: 140, sm: 180 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
+          <Box>
+            <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="30%" height={48} />
+          </Box>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-end">
+            <Box display="flex">
+              {[1, 2, 3].map(n => (
+                <Skeleton key={n} variant="circular" width={36} height={36} sx={{ ml: n > 1 ? -1 : 0, border: '2px solid #FFF' }} />
+              ))}
+            </Box>
+            <Skeleton variant="circular" width={42} height={42} />
+          </Box>
+        </Box>
       </Box>
 
       {/* Table Section Skeleton */}
       <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <Skeleton variant="rectangular" width={36} height={36} sx={{ borderRadius: '8px' }} />
-            <Box>
-              <Skeleton variant="text" width={150} height={20} />
-              <Skeleton variant="text" width={200} height={16} />
-            </Box>
+        <Box display="flex" alignItems="center" gap={1.5} mb={3}>
+          <Skeleton variant="rectangular" width={36} height={36} sx={{ borderRadius: '8px' }} />
+          <Box>
+            <Skeleton variant="text" width={150} height={20} />
+            <Skeleton variant="text" width={200} height={16} />
           </Box>
         </Box>
 
-        <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
-          <Box display="flex" gap={1.5}>
-            <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: '8px' }} />
-            <Skeleton variant="rectangular" width={140} height={36} sx={{ borderRadius: '8px' }} />
-            <Skeleton variant="rectangular" width={120} height={36} sx={{ borderRadius: '8px' }} />
+        <Box display="flex" flexDirection={{ xs: 'column', lg: 'row' }} gap={2} alignItems={{ xs: 'stretch', lg: 'center' }} mb={3} justifyContent="space-between">
+          <Box display="flex" gap={1.5} flexWrap="wrap">
+            <Skeleton variant="rectangular" sx={{ width: { xs: '100%', sm: 100 }, height: 36, borderRadius: '8px' }} />
+            <Skeleton variant="rectangular" sx={{ width: { xs: '100%', sm: 140 }, height: 36, borderRadius: '8px' }} />
+            <Skeleton variant="rectangular" sx={{ width: { xs: '100%', sm: 120 }, height: 36, borderRadius: '8px' }} />
           </Box>
-          <Skeleton variant="rectangular" width={280} height={40} sx={{ borderRadius: '8px' }} />
+          <Skeleton variant="rectangular" sx={{ width: { xs: '100%', lg: 280 }, height: 40, borderRadius: '12px' }} />
         </Box>
+
 
         <Box sx={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', bgcolor: '#FFF' }}>
-          <Box sx={{ p: 2, bgcolor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', display: 'flex', gap: 2 }}>
-            <Skeleton variant="rectangular" width={20} height={20} />
-            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} variant="text" width="15%" height={20} />)}
+          <Box sx={{ p: 2, bgcolor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Skeleton variant="rectangular" width={22} height={22} sx={{ borderRadius: '6px' }} />
+            <Skeleton variant="text" sx={{ width: { xs: '60%', md: '26%' } }} height={20} />
+            <Skeleton variant="text" sx={{ width: '12%' }} height={20} />
+            <Skeleton variant="text" sx={{ display: { xs: 'none', md: 'block' }, width: '18%' }} height={20} />
+            <Skeleton variant="text" sx={{ display: { xs: 'none', sm: 'block' }, width: '14%' }} height={20} />
+            <Skeleton variant="text" sx={{ display: { xs: 'none', lg: 'block' }, width: '14%' }} height={20} />
+            <Skeleton variant="text" sx={{ width: '12%' }} height={20} />
+            <Skeleton variant="text" sx={{ width: '4%' }} height={20} />
           </Box>
           {[1, 2, 3, 4, 5].map(i => (
             <Box key={i} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, borderBottom: '1px solid #F3F4F6' }}>
-              <Skeleton variant="rectangular" width={20} height={20} />
-              <Box display="flex" alignItems="center" gap={1.5} sx={{ flex: 2 }}>
+              <Skeleton variant="rectangular" width={22} height={22} sx={{ borderRadius: '6px' }} />
+
+              {/* Student */}
+              <Box display="flex" alignItems="center" gap={1.5} sx={{ width: { xs: '60%', md: '26%' } }}>
                 <Skeleton variant="circular" width={40} height={40} />
                 <Box sx={{ width: '100%' }}>
+                  <Skeleton variant="text" width="100%" />
                   <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="text" width="40%" />
                 </Box>
               </Box>
-              <Skeleton variant="text" width="10%" sx={{ flex: 1 }} />
-              <Skeleton variant="text" width="15%" sx={{ flex: 1 }} />
-              <Skeleton variant="rectangular" width="15%" height={8} sx={{ borderRadius: 4, flex: 1 }} />
-              <Box display="flex" gap={1} sx={{ flex: 1, justifyContent: 'flex-end' }}>
-                <Skeleton variant="circular" width={24} height={24} />
-                <Skeleton variant="circular" width={24} height={24} />
+
+              {/* Status */}
+              <Box sx={{ width: '12%', display: 'flex', justifyContent: 'center' }}>
+                <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '999px' }} />
+              </Box>
+
+              {/* Timestamp */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, width: '18%', justifyContent: 'center' }}>
+                <Skeleton variant="text" width={100} />
+              </Box>
+
+              {/* Course & Year */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '14%' }}>
+                <Skeleton variant="text" width="100%" />
+                <Skeleton variant="text" width="60%" />
+              </Box>
+
+              {/* Signatures */}
+              <Box sx={{ display: { xs: 'none', lg: 'flex' }, width: '14%', justifyContent: 'center' }}>
+                {[1, 2, 3].map(n => (
+                  <Skeleton key={n} variant="circular" width={32} height={32} sx={{ ml: n > 1 ? -1.25 : 0, border: '2px solid #FFF' }} />
+                ))}
+              </Box>
+
+              {/* Progress */}
+              <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Skeleton variant="rectangular" sx={{ width: { xs: 40, sm: 60, md: 80 }, borderRadius: 3 }} height={6} />
+                <Skeleton variant="text" width={24} />
+              </Box>
+
+              {/* Action */}
+              <Box sx={{ width: '4%', display: 'flex', justifyContent: 'flex-end' }}>
+                <Skeleton variant="circular" width={32} height={32} />
               </Box>
             </Box>
           ))}
         </Box>
+
       </Box>
     </Box>
   );
@@ -314,6 +355,20 @@ export default function DeanPage() {
   const [revokeLoading, setRevokeLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [rowActionAnchor, setRowActionAnchor] = useState<null | HTMLElement>(null);
+  const [rowActionRow, setRowActionRow] = useState<any>(null);
+
+  const handleRowActionClick = (e: React.MouseEvent<HTMLElement>, row: any) => {
+    e.stopPropagation();
+    setRowActionAnchor(e.currentTarget);
+    setRowActionRow(row);
+  };
+
+  const handleRowActionClose = () => {
+    setRowActionAnchor(null);
+    setRowActionRow(null);
+  };
 
 
   const theme = useTheme();
@@ -679,6 +734,49 @@ export default function DeanPage() {
     }
   };
 
+  useEffect(() => {
+    const handleClear = () => setSelectedIds([]);
+    window.addEventListener('clear-bulk-selections', handleClear);
+    return () => window.removeEventListener('clear-bulk-selections', handleClear);
+  }, []);
+
+  const handleBulkRevoke = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Are you sure you want to revoke final approval for ${selectedIds.length} students?`)) {
+      try {
+        setActionState('loading');
+        const currentSelected = [...selectedIds];
+        let processedCount = 0;
+
+        for (const id of currentSelected) {
+          const student = readyRows.find(r => r.id === id);
+          if (student) {
+            try {
+              await api.post("/dean/revoke-final-approval", { studentId: student.studentId });
+              processedCount++;
+            } catch (e) {
+              console.error(`Failed to revoke student ${id}`, e);
+            }
+          }
+        }
+
+        setActionState('success');
+        setTimeout(() => {
+          setSuccessModalTitle("Bulk Revocation Complete");
+          setSuccessModalDescription(`Final clearances for ${processedCount} students have been successfully revoked.`);
+          setSuccessModalOpen(true);
+          loadData();
+          setSelectedIds([]);
+          setActionState('idle');
+        }, 800);
+      } catch (err: any) {
+        setActionState('idle');
+        const msg = err.response?.data?.message || "Failed to process bulk revocation";
+        setNotice({ message: msg, variant: "error" });
+      }
+    }
+  };
+
   const filteredReady = (() => {
     const q = query.trim().toLowerCase();
     let list = readyRows;
@@ -743,121 +841,49 @@ export default function DeanPage() {
       )}
       {active === "final" ? (
         <>
-          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between" gap={2} mb={4}>
-            <Box sx={{ mb: { xs: 0, md: 2 }, width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: 'center' }}>
-              <Box sx={{
-                position: 'relative',
-                display: 'inline-flex',
-                alignItems: 'center',
-                bgcolor: '#FFFFFF',
-                borderRadius: '999px',
-                p: '6px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.08), inset 0 2px 5px rgba(255,255,255,1)'
-              }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: '6px',
-                    bottom: '6px',
-                    left: filterStatus === 'pending' ? '6px' : 'calc(100% - 116px)',
-                    width: '110px',
-                    bgcolor: '#18181B',
-                    borderRadius: '999px',
-                    boxShadow: '0 12px 24px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.15)',
-                    transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    zIndex: 1
-                  }}
-                />
-                {["Pending", "Approved"].map((tab) => {
-                  const val = tab.toLowerCase();
-                  const isActive = filterStatus === val;
-                  return (
-                    <Box
-                      key={tab}
-                      onClick={() => {
-                        if (val !== filterStatus) {
-                          setFilterStatus(val as any);
-                          setPage(0);
-                        }
-                      }}
-                      sx={{
-                        position: 'relative',
-                        zIndex: 2,
-                        width: '110px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        py: 1.25,
-                        borderRadius: '999px',
-                        cursor: 'pointer',
-                        transition: 'color 0.4s ease',
-                        color: isActive ? '#FFFFFF' : '#52525B',
-                        fontWeight: 500,
-                        fontSize: '0.9rem',
-                        '&:hover': {
-                          color: isActive ? '#FFFFFF' : '#18181B'
-                        }
-                      }}
-                    >
-                      {tab}
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Box>
-            <Box display="flex" flexWrap="wrap" gap={1.5} justifyContent={{ xs: 'center', md: 'flex-end' }}>
-              <Button
-                variant="outlined"
-                onClick={handleExport}
-                startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>}
+          <Box
+            display="flex"
+            flexDirection={{ xs: 'column', md: 'row' }}
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+            justifyContent="space-between"
+            gap={2}
+            mb={4}
+            sx={{
+              px: { xs: 0, md: 0 },
+              pb: { xs: 1, sm: 0 }
+            }}
+          >
+            <Box sx={{ borderBottom: 1, borderColor: "divider", width: '100%', mb: { xs: 2, md: 4 } }}>
+              <Tabs
+                value={filterStatus === 'approved' ? 1 : 0}
+                onChange={(_, v) => {
+                  setFilterStatus(v === 1 ? 'approved' : 'pending');
+                  setPage(0);
+                }}
+                textColor="primary"
+                variant={isSmallMobile ? "fullWidth" : "standard"}
+                TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                 sx={{
-                  textTransform: 'none',
-                  borderRadius: '999px',
-                  color: selectedIds.length > 0 ? '#000' : '#374151',
-                  borderColor: '#E5E7EB',
-                  bgcolor: selectedIds.length > 0 ? '#F9FAFB' : 'transparent',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  px: 3,
-                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04)',
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    borderColor: '#D1D5DB',
-                    bgcolor: '#F9FAFB',
-                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.08)',
-                    transform: 'translateY(-2px)'
+                  px: { xs: 0, md: 0 },
+                  minHeight: "auto",
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    minWidth: { xs: 'auto', md: 110 },
+                    py: 2,
+                    color: "#5f6368",
+                    opacity: 1,
+                    transition: 'all 0.2s ease',
+                    '&.Mui-selected': {
+                      color: "#0D9488 !important",
+                    }
                   }
                 }}
               >
-                {selectedIds.length > 0 ? `Export Selected (${selectedIds.length})` : 'Export All'}
-              </Button>
-              {selectedIds.length > 0 && filterStatus === 'pending' && (
-                <Button
-                  variant="contained"
-                  onClick={handleBulkApprove}
-                  startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>}
-                  sx={{
-                    textTransform: 'none',
-                    borderRadius: '999px',
-                    bgcolor: '#000000',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    fontSize: '0.875rem',
-                    px: 3,
-                    height: 42,
-                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25), 0 10px 10px -5px rgba(0,0,0,0.15)',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      bgcolor: '#18181B',
-                      boxShadow: '0 25px 30px -5px rgba(0,0,0,0.35), 0 15px 15px -5px rgba(0,0,0,0.25)',
-                      transform: 'translateY(-2px)'
-                    },
-                    '&:active': { transform: 'translateY(0)' }
-                  }}
-                >
-                  Approve All ({selectedIds.length})
-                </Button>
-              )}
+                <Tab label="Pending" />
+                <Tab label="Approved" />
+              </Tabs>
             </Box>
           </Box>
 
@@ -875,11 +901,11 @@ export default function DeanPage() {
                   <Box
                     key={card.label}
                     sx={{
-                      p: 3,
+                      p: { xs: 2.5, sm: 3 },
                       bgcolor: '#FFFFFF',
                       border: '1px solid #E5E7EB',
                       borderRadius: '16px',
-                      minHeight: 180,
+                      minHeight: { xs: 140, sm: 180 },
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
@@ -900,16 +926,22 @@ export default function DeanPage() {
                           </Box>
                         )}
                       </Box>
-
-                      {!card.efficiency && (
-                        <IconButton size="small" sx={{ p: 0.5 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></IconButton>
-                      )}
                     </Box>
                     <Box display="flex" alignItems="flex-end" justifyContent="space-between">
                       {card.isPendingFinal ? (
-                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#fef08a', px: 1, py: 0.5, borderRadius: '8px', width: 'fit-content' }}>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 0.5, sm: 1 } }}>
+                          <Typography sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', sm: '2.5rem' }, color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            bgcolor: '#FFFBEB',
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: '999px',
+                            border: '1px solid rgba(217, 119, 6, 0.2)',
+                            width: 'fit-content'
+                          }}>
                             <Box sx={{ width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#854d0e" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                             </Box>
@@ -917,8 +949,8 @@ export default function DeanPage() {
                           </Box>
                         </Box>
                       ) : card.isTotalStudents ? (
-                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 0.5, sm: 1 } }}>
+                          <Typography sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', sm: '2.5rem' }, color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '6px', border: '1.5px solid #0D9488', bgcolor: '#ECFDF5' }}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -929,7 +961,7 @@ export default function DeanPage() {
                           </Box>
                         </Box>
                       ) : (
-                        <Typography sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
+                        <Typography sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', sm: '2.5rem' }, color: '#111827', lineHeight: 1 }}>{card.value}</Typography>
                       )}
 
                       {card.isPendingFinal ? (
@@ -977,8 +1009,11 @@ export default function DeanPage() {
                                   border: '2px solid #FFF',
                                   ml: i === 0 ? 0 : -1,
                                   zIndex: 3 - i,
-                                  fontSize: '0.75rem',
-                                  bgcolor: '#374151'
+                                  fontSize: '0.8125rem',
+                                  fontWeight: 800,
+                                  bgcolor: '#5f6368',
+                                  color: '#FFF',
+                                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
                                 }}
                               >
                                 {getInitials(r.name || "User")}
@@ -998,13 +1033,13 @@ export default function DeanPage() {
                               sx={{
                                 width: 42,
                                 height: 42,
-                                bgcolor: '#000',
+                                bgcolor: '#3c4043',
                                 color: '#FFF',
                                 borderRadius: '50%',
                                 boxShadow: '0 10px 20px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.15)',
                                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                 '&:hover': {
-                                  bgcolor: '#27272a',
+                                  bgcolor: '#3c4043',
                                   boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.2)',
                                   transform: 'scale(1.1) translateY(-2px)'
                                 },
@@ -1021,7 +1056,7 @@ export default function DeanPage() {
                 ))}
               </Box>
 
-              <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: 3, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ backgroundColor: "#FAFAFA", borderRadius: '16px', p: { xs: 2, sm: 3 }, mb: 4, position: 'relative', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap={1.5} mb={3}>
                   <Box display="flex" alignItems="center" gap={1.5}>
                     <Box sx={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1034,7 +1069,7 @@ export default function DeanPage() {
                   </Box>
                 </Box>
 
-                <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" mb={3} justifyContent="space-between">
+                <Box display="flex" flexDirection={{ xs: 'column', lg: 'row' }} gap={2} alignItems={{ xs: 'stretch', lg: 'center' }} mb={3} justifyContent="space-between">
                   <Box display="flex" gap={1.5} flexWrap="wrap">
                     <Button
                       variant="outlined"
@@ -1084,7 +1119,7 @@ export default function DeanPage() {
                       value={filterCourse}
                       onChange={(e) => { setFilterCourse(e.target.value as string); setPage(0); }}
                       sx={{
-                        minWidth: 140, height: 36, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0E7490',
+                        minWidth: { xs: '100%', sm: 140 }, height: 36, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, color: '#0E7490',
                         '& .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
                         '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' },
@@ -1161,14 +1196,14 @@ export default function DeanPage() {
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setPage(0); }}
                     sx={{
-                      width: { xs: '100%', sm: 280 },
+                      width: { xs: '100%', lg: 280 },
                       flexShrink: 0,
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
                         bgcolor: '#FFF',
                         height: 40,
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9', borderWidth: '2px' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9cd2d9' }
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0D9488', borderWidth: '2px' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#0D9488' }
                       }
                     }}
                     InputProps={{
@@ -1201,43 +1236,40 @@ export default function DeanPage() {
                             }}
                             icon={
                               <Box sx={{
-                                width: 26, height: 26, borderRadius: '8px',
-                                bgcolor: '#EBEBEB',
-                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                width: 22, height: 22, borderRadius: '6px',
+                                border: '2px solid #E5E7EB',
+                                bgcolor: '#F9FAFB',
+                                transition: 'all 0.2s ease'
                               }} />
                             }
                             checkedIcon={
                               <Box sx={{
-                                width: 26, height: 26, borderRadius: '8px',
-                                bgcolor: '#000',
+                                width: 22, height: 22, borderRadius: '6px',
+                                bgcolor: '#0D9488',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                transition: 'all 0.2s ease'
                               }}>
-                                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                                <CheckIcon sx={{ fontSize: 16, color: '#FFF' }} />
                               </Box>
                             }
                             indeterminateIcon={
                               <Box sx={{
-                                width: 26, height: 26, borderRadius: '8px',
-                                bgcolor: '#5eead4',
+                                width: 22, height: 22, borderRadius: '6px',
+                                bgcolor: '#0D9488',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                transition: 'all 0.2s ease'
                               }}>
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2.5 6H9.5" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />
-                                </svg>
+                                <Box sx={{ width: 10, height: 2, bgcolor: '#FFF', borderRadius: 1 }} />
                               </Box>
                             }
-                            sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
+                            sx={{ p: 0 }}
                           />
                         </TableCell>
-                        <TableCell sx={{ width: '26%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
+                        <TableCell sx={{ width: { xs: '60%', md: '26%' }, fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STUDENT</TableCell>
                         <TableCell align="center" sx={{ width: '12%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>STATUS</TableCell>
-                        <TableCell sx={{ width: '18%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>TIMESTAMP</TableCell>
-                        <TableCell align="center" sx={{ width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>COURSE & YEAR</TableCell>
-                        <TableCell align="center" sx={{ width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>SIGNATURES</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, width: '18%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}>TIMESTAMP</TableCell>
+                        <TableCell align="center" sx={{ display: { xs: 'none', sm: 'table-cell' }, width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>COURSE & YEAR</TableCell>
+                        <TableCell align="center" sx={{ display: { xs: 'none', lg: 'table-cell' }, width: '14%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>SIGNATURES</TableCell>
                         <TableCell align="center" sx={{ width: '12%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none', whiteSpace: 'nowrap' }}>PROGRESS</TableCell>
                         <TableCell align="right" sx={{ width: '4%', fontWeight: 600, color: "#6B7280", fontSize: '0.75rem', py: 2, borderBottom: 'none' }}></TableCell>
                       </TableRow>
@@ -1258,33 +1290,32 @@ export default function DeanPage() {
                               }}
                               icon={
                                 <Box sx={{
-                                  width: 26, height: 26, borderRadius: '8px',
-                                  bgcolor: '#EBEBEB',
-                                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                  width: 22, height: 22, borderRadius: '6px',
+                                  border: '2px solid #E5E7EB',
+                                  bgcolor: '#FFF',
+                                  transition: 'all 0.2s ease'
                                 }} />
                               }
                               checkedIcon={
                                 <Box sx={{
-                                  width: 26, height: 26, borderRadius: '8px',
-                                  bgcolor: '#000',
+                                  width: 22, height: 22, borderRadius: '6px',
+                                  bgcolor: '#0D9488',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                  transition: 'all 0.2s ease'
                                 }}>
-                                  <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                                    <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
+                                  <CheckIcon sx={{ fontSize: 16, color: '#FFF' }} />
                                 </Box>
                               }
-                              sx={{ p: 0, transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)', '&:hover': { transform: 'scale(1.08)' } }}
+                              sx={{ p: 0 }}
                             />
                           </TableCell>
                           <TableCell sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box display="flex" alignItems="center" gap={2}>
                               <Avatar
                                 src={getAbsoluteUrl(r.avatarUrl)}
-                                sx={{ width: 40, height: 40, bgcolor: '#5F6368', color: '#FFF', fontWeight: 700, fontSize: '0.875rem' }}
+                                sx={{ width: 40, height: 40, bgcolor: '#5f6368', color: '#FFF', fontWeight: 800, fontSize: '0.875rem' }}
                               >
-                                {r.name.substring(0, 2).toUpperCase()}
+                                {getInitials(r.name)}
                               </Avatar>
                               <Box>
                                 <Typography sx={{ fontWeight: 600, color: "#111827", fontSize: '0.875rem' }}>{r.name}</Typography>
@@ -1294,16 +1325,23 @@ export default function DeanPage() {
                           </TableCell>
                           <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
                             <Box sx={{
-                              display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25, borderRadius: '999px',
-                              bgcolor: filterStatus === "approved" ? "rgba(176, 224, 230, 0.2)" : "#fef08a"
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: '999px',
+                              bgcolor: filterStatus === "approved" ? '#F0FDFA' : '#FFFBEB',
+                              color: filterStatus === "approved" ? '#0D9488' : '#D97706',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              letterSpacing: '0.01em',
+                              border: `1px solid ${filterStatus === "approved" ? '#0D9488' : '#D97706'}20`,
+                              transition: 'all 0.2s ease'
                             }}>
-                              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: filterStatus === "approved" ? "#0E7490" : "#eab308" }} />
-                              <Typography sx={{ color: filterStatus === "approved" ? "#0E7490" : "#854d0e", fontSize: '0.75rem', fontWeight: 600 }}>
-                                {filterStatus === "approved" ? "Approved" : "Pending"}
-                              </Typography>
+                              {filterStatus === "approved" ? "Cleared" : "In Progress"}
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ py: 2, verticalAlign: 'middle' }}>
+                          <TableCell sx={{ display: { xs: 'none', md: 'table-cell' }, py: 2, verticalAlign: 'middle' }}>
                             <Typography sx={{ color: "#64748B", fontSize: '0.75rem', fontWeight: 500 }}>
                               {new Date(r.dateApproved || r.dateSubmitted).toLocaleString('en-US', {
                                 month: 'short',
@@ -1314,13 +1352,13 @@ export default function DeanPage() {
                               })}
                             </Typography>
                           </TableCell>
-                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
+                          <TableCell align="center" sx={{ display: { xs: 'none', md: 'table-cell' }, py: 2, verticalAlign: 'middle' }}>
                             <Box>
                               <Typography sx={{ fontWeight: 500, color: "#111827", fontSize: '0.875rem' }}>{r.course}</Typography>
                               <Typography sx={{ color: "#6B7280", fontSize: '0.8125rem' }}>{r.year}</Typography>
                             </Box>
                           </TableCell>
-                          <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
+                          <TableCell align="center" sx={{ display: { xs: 'none', lg: 'table-cell' }, py: 2, verticalAlign: 'middle' }}>
                             <Box display="flex" alignItems="center" justifyContent="center">
                               {(r.organizations || []).filter((o: any) => o.status === 'completed' || o.status === 'officer_cleared').slice(0, 3).map((org: any, idx: number) => (
                                 <Tooltip key={idx} title={org.name} arrow>
@@ -1359,57 +1397,39 @@ export default function DeanPage() {
                               )}
                             </Box>
                           </TableCell>
+
                           <TableCell align="center" sx={{ py: 2, verticalAlign: 'middle' }}>
-                            <Tooltip title={`${Math.round((r.reqCompleted / r.reqTotal) * 100)}% Complete (${r.reqCompleted}/${r.reqTotal})`} arrow>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', cursor: 'pointer' }}>
-                                <Box sx={{ flex: 1, height: 8, bgcolor: 'rgba(176, 224, 230, 0.2)', borderRadius: '4px', overflow: 'hidden' }}>
-                                  <Box sx={{ width: `${(r.reqCompleted / r.reqTotal) * 100}%`, height: '100%', bgcolor: '#B0E0E6', borderRadius: '4px' }} />
-                                </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 100 }}>
+                              <Box sx={{ flexGrow: 1 }}>
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={(r.reqCompleted / r.reqTotal) * 100}
+                                  sx={{
+                                    height: 6,
+                                    borderRadius: 3,
+                                    bgcolor: '#F1F5F9',
+                                    '& .MuiLinearProgress-bar': { bgcolor: '#0D9488' }
+                                  }}
+                                />
                               </Box>
-                            </Tooltip>
+                              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
+                                {r.reqCompleted}/{r.reqTotal}
+                              </Typography>
+                            </Box>
                           </TableCell>
                           <TableCell align="right" sx={{ py: 2, verticalAlign: 'middle' }}>
-                            <Box display="flex" justifyContent="flex-end" gap={0.5}>
-                              {filterStatus === "approved" ? (
-                                <Tooltip title="Revoke Approval" arrow>
-                                  <IconButton
-                                    size="small"
-                                    sx={{ color: '#6B7280', '&:hover': { color: '#EF4444' } }}
-                                    onClick={() => handleRevoke(r)}
-                                    disabled={actionState !== 'idle' && actionRowId === r.id}
-                                  >
-                                    {actionState === 'loading' && actionRowId === r.id ? (
-                                      <CircularProgress size={16} color="inherit" />
-                                    ) : actionState === 'success' && actionRowId === r.id ? (
-                                      <CheckIcon sx={{ fontSize: 18, color: '#5EEAD4' }} />
-                                    ) : (
-                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-                                    )}
-                                  </IconButton>
-                                </Tooltip>
-                              ) : (
-                                <Tooltip title="Approve Final" arrow>
-                                  <IconButton
-                                    size="small"
-                                    sx={{ color: '#6B7280' }}
-                                    onClick={() => { setStudentToApprove(r); setSignatureModalOpen(true); }}
-                                    disabled={actionState !== 'idle' && actionRowId === r.id}
-                                  >
-                                    {actionState === 'loading' && actionRowId === r.id ? (
-                                      <CircularProgress size={16} color="inherit" />
-                                    ) : actionState === 'success' && actionRowId === r.id ? (
-                                      <CheckIcon sx={{ fontSize: 18, color: '#5EEAD4' }} />
-                                    ) : (
-                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                    )}
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                              <Tooltip title="View Details" arrow>
-                                <IconButton size="small" sx={{ color: '#6B7280' }} onClick={() => setSelected(r)}>
-                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </IconButton>
-                              </Tooltip>
+                            <Box display="flex" justifyContent="flex-end">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleRowActionClick(e, r)}
+                                sx={{ color: '#94A3B8', '&:hover': { color: '#0F172A', bgcolor: '#F1F5F9' } }}
+                              >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                                  <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" />
+                                  <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none" />
+                                </svg>
+                              </IconButton>
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -1465,15 +1485,15 @@ export default function DeanPage() {
                           width: 36, height: 36,
                           borderRadius: '10px',
                           border: 'none',
-                          bgcolor: page === pageNum ? '#111827' : 'transparent',
+                          bgcolor: page === pageNum ? '#3c4043' : 'transparent',
                           color: page === pageNum ? '#FFFFFF' : '#6B7280',
                           fontWeight: page === pageNum ? 700 : 500,
                           fontSize: '0.875rem',
                           cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: page === pageNum ? '0 4px 12px rgba(0,0,0,0.25)' : 'none',
+                          boxShadow: page === pageNum ? '0 4px 12px rgba(60, 64, 67, 0.25)' : 'none',
                           transition: 'all 0.2s ease',
-                          '&:hover': page === pageNum ? {} : { bgcolor: '#E5E7EB', color: '#111827' }
+                          '&:hover': page === pageNum ? {} : { bgcolor: '#E5E7EB', color: '#3c4043' }
                         }}
                       >
                         {pageNum + 1}
@@ -1567,7 +1587,7 @@ export default function DeanPage() {
                       </Box>
                     </InputAdornment>
                   ),
-                  sx: { bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#CBD5E1' } }
+                  sx: { bgcolor: '#F8FAFC', borderRadius: '8px', px: 2, py: 1, fontSize: '0.875rem', border: '1px solid #E2E8F0', transition: 'all 0.2s', '&:hover': { borderColor: '#0D9488' }, '&:focus-within': { borderColor: '#0D9488' } }
                 }}
               />
               <Select
@@ -2050,8 +2070,9 @@ export default function DeanPage() {
                                   height: 24,
                                   fontSize: '0.75rem',
                                   fontWeight: 700,
-                                  bgcolor: isCleared ? 'rgba(176, 224, 230, 0.2)' : '#FEF2F2',
-                                  color: isCleared ? '#0E7490' : '#EF4444',
+                                  bgcolor: isCleared ? '#F0FDFA' : '#FFFBEB',
+                                  color: isCleared ? '#0D9488' : '#D97706',
+                                  border: `1px solid ${isCleared ? '#0D9488' : '#D97706'}20`,
                                   borderRadius: '999px'
                                 }}
                               />
@@ -2136,16 +2157,16 @@ export default function DeanPage() {
               sx={{
                 borderRadius: '20px',
                 py: 2,
-                bgcolor: '#0F172A',
+                bgcolor: '#3c4043',
                 color: '#FFF',
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '1rem',
-                boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
+                boxShadow: '0 10px 15px -3px rgba(60,64,67,0.3)',
                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  bgcolor: '#1E293B',
-                  boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
+                  bgcolor: '#2d3034',
+                  boxShadow: '0 20px 25px -5px rgba(60,64,67,0.4)',
                   transform: 'translateY(-2px)'
                 },
                 '&:active': {
@@ -2247,6 +2268,161 @@ export default function DeanPage() {
         onConfirm={handleConfirmPasswordUpdate}
         loading={passwordUpdateLoading}
       />
+
+      <Menu
+        anchorEl={rowActionAnchor}
+        open={Boolean(rowActionAnchor)}
+        onClose={handleRowActionClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            minWidth: 200,
+            borderRadius: '16px',
+            mt: 1,
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02)'
+          }
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            setSelected(rowActionRow);
+            handleRowActionClose();
+          }}
+          sx={{ gap: 1.5, py: 1.5 }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#1E293B' }}>View Full Record</Typography>
+        </MenuItem>
+
+        {filterStatus === "approved" ? (
+          <MenuItem
+            onClick={() => {
+              handleRevoke(rowActionRow);
+              handleRowActionClose();
+            }}
+            sx={{ gap: 1.5, py: 1.5, color: '#EF4444' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>Revoke Approval</Typography>
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              setStudentToApprove(rowActionRow);
+              setSignatureModalOpen(true);
+              handleRowActionClose();
+            }}
+            sx={{ gap: 1.5, py: 1.5, color: '#0D9488' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>Approve Final</Typography>
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* Bulk Actions Overlay - Root Level for Viewport Centering */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <Box
+            component={motion.div}
+            initial={{ y: 100, opacity: 0, x: '-40%' }}
+            animate={{ y: 0, opacity: 1, x: '-40%' }}
+            exit={{ y: 100, opacity: 0, x: '-40%' }}
+            sx={{
+              position: 'fixed',
+              bottom: { xs: 24, sm: 80 },
+              left: '50%',
+              width: { xs: 'calc(100% - 32px)', sm: 'auto' },
+              maxWidth: '95vw',
+              bgcolor: '#3c4043',
+              color: '#FFF',
+              py: { xs: 1.25, sm: 2 },
+              px: { xs: 2.5, sm: 3 },
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: { xs: 1, sm: 3 },
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+              zIndex: 9999
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: 11, sm: 13 }, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                {selectedIds.length} {selectedIds.length === 1 ? 'student' : 'students'}
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}> selected</Box>
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.15)', height: 20, my: 'auto' }} />
+            <Box sx={{ display: 'flex', gap: { xs: 0, sm: 1 } }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={handleBulkApprove}
+                disabled={filterStatus === 'approved'}
+                sx={{
+                  color: filterStatus === 'pending' ? '#FFF' : 'rgba(255,255,255,0.3)',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.8125rem',
+                  bgcolor: 'transparent',
+                  px: { xs: 0.75, sm: 1.5 },
+                  minWidth: { xs: 0, sm: 'auto' },
+                  borderRadius: '8px',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
+                }}
+              >
+                <CheckCircleIcon sx={{ fontSize: 18 }} />
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>Mark as Cleared</Box>
+              </Button>
+              <Button
+                variant="text"
+                size="small"
+                onClick={handleBulkRevoke}
+                disabled={filterStatus === 'pending'}
+                sx={{
+                  color: filterStatus === 'approved' ? '#FFF' : 'rgba(255,255,255,0.3)',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.8125rem',
+                  bgcolor: 'transparent',
+                  px: { xs: 0.75, sm: 1.5 },
+                  minWidth: { xs: 0, sm: 'auto' },
+                  borderRadius: '8px',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
+                }}
+              >
+                <UndoIcon sx={{ fontSize: 18 }} />
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>Revoke</Box>
+              </Button>
+              <Button
+                variant="text"
+                size="small"
+                onClick={handleExport}
+                sx={{
+                  color: '#FFF',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.8125rem',
+                  bgcolor: 'transparent',
+                  px: { xs: 0.75, sm: 1.5 },
+                  minWidth: { xs: 0, sm: 'auto' },
+                  borderRadius: '8px',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' }
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>Export</Box>
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }

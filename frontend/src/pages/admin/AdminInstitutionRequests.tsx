@@ -222,15 +222,25 @@ export default function AdminInstitutionRequests({
   };
 
   const getStatusChip = (status: string) => (
-    <Chip
-      label={STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
-      size="small"
-      sx={{
-        backgroundColor: STATUS_COLORS[status as keyof typeof STATUS_COLORS],
-        color: 'white',
-        fontWeight: 500
-      }}
-    />
+    <Box sx={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      px: 1.5,
+      py: 0.5,
+      borderRadius: '99px',
+      bgcolor: `${STATUS_COLORS[status as keyof typeof STATUS_COLORS]}15`,
+      border: `1px solid ${STATUS_COLORS[status as keyof typeof STATUS_COLORS]}30`,
+      height: 22
+    }}>
+      <Typography sx={{ 
+        fontSize: 10, 
+        fontWeight: 800, 
+        color: STATUS_COLORS[status as keyof typeof STATUS_COLORS],
+        lineHeight: 1
+      }}>
+        {STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+      </Typography>
+    </Box>
   );
 
   return (

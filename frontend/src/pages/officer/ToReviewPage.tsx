@@ -106,7 +106,7 @@ export default function ToReviewPage() {
 
         const pending = req.stats?.pending || 0;
         const marked = (req.stats?.approved || 0) + (req.stats?.rejected || 0);
-        const assigned = pending + marked; // Simplify assigned logic assuming every member has one submission or count of actual assignments pending. Or if Assigned implies total class members, we don't have that yet, so Handed In + Marked + Missing. We'll mirror current logic.
+        const assigned = pending + marked;
 
         return (
             <Box
@@ -114,46 +114,71 @@ export default function ToReviewPage() {
                 sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    py: 2,
+                    py: { xs: 2.5, sm: 2 },
                     borderBottom: '1px solid #f1f3f4',
                     '&:hover': { bgcolor: '#f8f9fa' },
                     cursor: 'pointer',
-                    px: 1,
+                    px: { xs: 1.5, sm: 1 },
                     borderRadius: 1
                 }}
                 onClick={() => nav(`/organization/${req.organizationId?._id}/requirement/${req._id}`)}
             >
-                <Avatar sx={{ bgcolor: '#f1f3f4', width: 40, height: 40, mr: 2 }}>
-                    <Icon sx={{ color: '#5f6368', fontSize: 24 }} />
+                <Avatar sx={{ bgcolor: '#f1f3f4', width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, mr: { xs: 1.5, sm: 2 }, mt: 0.5 }}>
+                    <Icon sx={{ color: '#5f6368', fontSize: { xs: 18, sm: 24 } }} />
                 </Avatar>
 
-                <Box sx={{ flex: 1, minWidth: 0, pt: 0.5 }}>
-                    <Typography sx={{ color: '#3c4043', fontWeight: 500, fontSize: '0.875rem', mb: 0.5, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {req.title}
-                    </Typography>
-                    <Typography sx={{ color: '#5f6368', fontSize: '0.75rem' }}>
-                        {orgName} • Posted {dateStr}
-                    </Typography>
-                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {/* Top Row: Title & Info */}
+                    <Box sx={{ mb: { xs: 2, sm: 0 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ color: '#3c4043', fontWeight: 600, fontSize: { xs: '0.9rem', sm: '0.875rem' }, mb: 0.25, pr: 2 }}>
+                                {req.title}
+                            </Typography>
+                            <Typography sx={{ color: '#5f6368', fontSize: '0.75rem', mb: { xs: 1.5, sm: 0 } }}>
+                                {orgName} • Posted {dateStr}
+                            </Typography>
+                        </Box>
 
-                <Box sx={{ display: 'flex', gap: { xs: 2, sm: 4 }, pr: 2, textAlign: 'center' }}>
-                    <Box>
-                        <Typography sx={{ fontSize: '2rem', color: '#3c4043', lineHeight: 1, fontWeight: 400 }}>{pending}</Typography>
-                        <Typography sx={{ fontSize: '0.75rem', color: '#5f6368', mt: 0.5 }}>Handed in</Typography>
-                    </Box>
-                    <Box sx={{ borderLeft: '1px solid #dadce0', pl: { xs: 2, sm: 4 } }}>
-                        <Typography sx={{ fontSize: '2rem', color: '#3c4043', lineHeight: 1, fontWeight: 400 }}>{assigned}</Typography>
-                        <Typography sx={{ fontSize: '0.75rem', color: '#5f6368', mt: 0.5 }}>Assigned</Typography>
-                    </Box>
-                    <Box sx={{ borderLeft: '1px solid #dadce0', pl: { xs: 2, sm: 4 } }}>
-                        <Typography sx={{ fontSize: '2rem', color: '#3c4043', lineHeight: 1, fontWeight: 400 }}>{marked}</Typography>
-                        <Typography sx={{ fontSize: '0.75rem', color: '#5f6368', mt: 0.5 }}>Marked</Typography>
+                        {/* Stats Row: Stacks on mobile, stays right on desktop */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            gap: { xs: 0, sm: 4 }, 
+                            pr: { xs: 0, sm: 2 }, 
+                            textAlign: 'center',
+                            justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                            width: { xs: '100%', sm: 'auto' },
+                            pt: { xs: 1, sm: 0 },
+                            borderTop: { xs: '1px solid #f1f3f4', sm: 'none' }
+                        }}>
+                            <Box sx={{ flex: { xs: 1, sm: 'none' }, py: { xs: 1, sm: 0 } }}>
+                                <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.75rem' }, color: '#3c4043', lineHeight: 1, fontWeight: 500 }}>{pending}</Typography>
+                                <Typography sx={{ fontSize: '10px', color: '#5f6368', mt: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Handed in</Typography>
+                            </Box>
+                            <Box sx={{ 
+                                flex: { xs: 1, sm: 'none' }, 
+                                py: { xs: 1, sm: 0 },
+                                borderLeft: '1px solid #dadce0', 
+                                pl: { xs: 0, sm: 4 } 
+                            }}>
+                                <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.75rem' }, color: '#3c4043', lineHeight: 1, fontWeight: 500 }}>{assigned}</Typography>
+                                <Typography sx={{ fontSize: '10px', color: '#5f6368', mt: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assigned</Typography>
+                            </Box>
+                            <Box sx={{ 
+                                flex: { xs: 1, sm: 'none' }, 
+                                py: { xs: 1, sm: 0 },
+                                borderLeft: '1px solid #dadce0', 
+                                pl: { xs: 0, sm: 4 } 
+                            }}>
+                                <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.75rem' }, color: '#3c4043', lineHeight: 1, fontWeight: 500 }}>{marked}</Typography>
+                                <Typography sx={{ fontSize: '10px', color: '#5f6368', mt: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Marked</Typography>
+                            </Box>
+                        </Box>
                     </Box>
                 </Box>
 
                 <IconButton 
                     size="small" 
-                    sx={{ color: '#5f6368', mt: 1 }} 
+                    sx={{ color: '#5f6368', ml: 1, mt: 0.25 }} 
                     onClick={(e) => {
                         e.stopPropagation();
                         setAnchorEl(e.currentTarget);
@@ -174,8 +199,6 @@ export default function ToReviewPage() {
     const handleToggleReviewed = async () => {
         if (!menuReq) return;
         try {
-            // If we are in To Review (tab 0), we want to mark it as reviewed (true)
-            // If we are in Reviewed (tab 1), we want to mark it as not reviewed (false)
             await api.put(`/signatory/requirements/${menuReq._id}`, {
                 isReviewed: tabValue === 0
             });
@@ -187,22 +210,24 @@ export default function ToReviewPage() {
     };
 
     return (
-        <>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#F9FAFB' }}>
             <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
+                <Box sx={{ borderBottom: 1, borderColor: "divider", mb: { xs: 2, md: 4 } }}>
                     <Tabs
                         value={tabValue}
                         onChange={(_, v) => setTabValue(v)}
                         textColor="primary"
+                        variant={useMediaQuery('(max-width:600px)') ? "fullWidth" : "standard"}
                         TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                         sx={{
-                            px: { xs: 2, md: 0 },
+                            px: { xs: 0, md: 0 },
                             "& .MuiTab-root": {
                                 textTransform: "none",
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 fontSize: "0.875rem",
-                                minWidth: 100,
-                                color: "black"
+                                minWidth: { xs: 'auto', md: 100 },
+                                py: 2,
+                                color: "#5f6368"
                             },
                             "& .Mui-selected": {
                                 color: "#0D9488 !important"
@@ -220,10 +245,11 @@ export default function ToReviewPage() {
                         onChange={(e) => setSelectedOrg(e.target.value)}
                         size="small"
                         sx={{
-                            width: 250,
+                            width: { xs: '100%', sm: 250 },
                             mb: 4,
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             color: '#3c4043',
+                            bgcolor: '#fff',
                             '& .MuiOutlinedInput-notchedOutline': {
                                 borderColor: '#dadce0',
                                 borderWidth: 1
@@ -245,35 +271,25 @@ export default function ToReviewPage() {
 
                     {loading ? (
                         <Box pb={8}>
-                            {/* Filter Skeleton */}
-                            <Skeleton variant="rectangular" width={250} height={40} sx={{ mb: 4, borderRadius: '4px', bgcolor: "#eaebec" }} />
-
-                            {/* Accordion Header Skeleton */}
+                            <Skeleton variant="rectangular" width="100%" height={40} sx={{ width: { xs: '100%', sm: 250 }, mb: 4, borderRadius: '8px', bgcolor: "#f1f3f4" }} />
                             {[1, 2].map((group) => (
                                 <Box key={group} sx={{ mb: 4 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', py: 1, mb: 1 }}>
-                                        <Skeleton variant="text" width="20%" height={32} sx={{ bgcolor: "#eaebec", mr: 'auto' }} />
-                                        <Skeleton variant="circular" width={20} height={20} sx={{ bgcolor: "#eaebec" }} />
+                                        <Skeleton variant="text" width="40%" height={32} sx={{ bgcolor: "#f1f3f4", mr: 'auto' }} />
                                     </Box>
                                     <Divider sx={{ mb: 1 }} />
-                                    
-                                    {/* Item Skeletons */}
                                     {[1, 2].map((i) => (
-                                        <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', py: 2, borderBottom: '1px solid #f1f3f4', px: 1 }}>
-                                            <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: "#eaebec", mr: 2 }} />
-                                            <Box sx={{ flex: 1, pt: 0.5 }}>
-                                                <Skeleton variant="text" width="60%" height={20} sx={{ bgcolor: "#eaebec", mb: 0.5 }} />
-                                                <Skeleton variant="text" width="30%" height={16} sx={{ bgcolor: "#eaebec" }} />
+                                        <Box key={i} sx={{ py: 2, borderBottom: '1px solid #f1f3f4' }}>
+                                            <Box sx={{ display: 'flex', mb: 2 }}>
+                                                <Skeleton variant="circular" width={32} height={32} sx={{ bgcolor: "#f1f3f4", mr: 2 }} />
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: "#f1f3f4" }} />
+                                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: "#f1f3f4" }} />
+                                                </Box>
                                             </Box>
-                                            <Box sx={{ display: 'flex', gap: 4, pr: 2 }}>
-                                                {[1, 2, 3].map((s) => (
-                                                    <Box key={s} sx={{ textAlign: 'center' }}>
-                                                        <Skeleton variant="text" width={40} height={40} sx={{ bgcolor: "#eaebec" }} />
-                                                        <Skeleton variant="text" width={40} height={16} sx={{ bgcolor: "#eaebec" }} />
-                                                    </Box>
-                                                ))}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                {[1, 2, 3].map(s => <Skeleton key={s} variant="rectangular" width="30%" height={50} sx={{ borderRadius: 1, bgcolor: "#f1f3f4" }} />)}
                                             </Box>
-                                            <Skeleton variant="circular" width={24} height={24} sx={{ bgcolor: "#eaebec", mt: 1, ml: 1 }} />
                                         </Box>
                                     ))}
                                 </Box>
@@ -281,7 +297,6 @@ export default function ToReviewPage() {
                         </Box>
                     ) : tabValue === 0 ? (
                         <Box pb={8}>
-                            {/* No Due Date Accordion */}
                             <Accordion
                                 disableGutters
                                 elevation={0}
@@ -296,12 +311,14 @@ export default function ToReviewPage() {
                                     expandIcon={<ExpandMoreIcon sx={{ color: '#5f6368' }} />}
                                     sx={{ px: 0, minHeight: '48px', '& .MuiAccordionSummary-content': { my: 1, alignItems: 'center' } }}
                                 >
-                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 400, flex: 1, fontSize: '1.25rem' }}>
+                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 600, flex: 1, fontSize: '1rem' }}>
                                         No due date
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: 'black', fontWeight: 500, mr: 1, fontSize: '0.875rem' }}>
-                                        {noDueDateReqs.length}
-                                    </Typography>
+                                    <Box sx={{ bgcolor: '#f1f3f4', px: 1, py: 0.25, borderRadius: 1, mr: 1 }}>
+                                        <Typography variant="body2" sx={{ color: '#3c4043', fontWeight: 700, fontSize: '0.75rem' }}>
+                                            {noDueDateReqs.length}
+                                        </Typography>
+                                    </Box>
                                 </AccordionSummary>
                                 <AccordionDetails sx={{ px: 0, py: 0 }}>
                                     <Box sx={{ borderTop: '1px solid #f1f3f4' }}>
@@ -312,7 +329,6 @@ export default function ToReviewPage() {
 
                             <Box sx={{ height: 24 }} />
 
-                            {/* Work in progress Accordion */}
                             <Accordion
                                 disableGutters
                                 elevation={0}
@@ -326,12 +342,14 @@ export default function ToReviewPage() {
                                     expandIcon={<ExpandMoreIcon sx={{ color: '#5f6368' }} />}
                                     sx={{ px: 0, minHeight: '48px', '& .MuiAccordionSummary-content': { my: 1, alignItems: 'center' } }}
                                 >
-                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 400, flex: 1, fontSize: '1.25rem' }}>
+                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 600, flex: 1, fontSize: '1rem' }}>
                                         Work in progress
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: '#5f6368', fontWeight: 500, mr: 1, fontSize: '0.875rem' }}>
-                                        {workInProgressReqs.length}
-                                    </Typography>
+                                    <Box sx={{ bgcolor: '#f1f3f4', px: 1, py: 0.25, borderRadius: 1, mr: 1 }}>
+                                        <Typography variant="body2" sx={{ color: '#3c4043', fontWeight: 700, fontSize: '0.75rem' }}>
+                                            {workInProgressReqs.length}
+                                        </Typography>
+                                    </Box>
                                 </AccordionSummary>
                                 <AccordionDetails sx={{ px: 0, py: 0 }}>
                                     <Box sx={{ borderTop: '1px solid #f1f3f4' }}>
@@ -341,11 +359,11 @@ export default function ToReviewPage() {
                             </Accordion>
                         </Box>
                     ) : tabValue === 1 && reviewedReqs.length === 0 ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 12, pb: 10 }}>
-                            <Typography sx={{ color: '#3c4043', mb: 1, fontWeight: 500, fontSize: '1rem' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 12, pb: 10, textAlign: 'center' }}>
+                            <Typography sx={{ color: '#3c4043', mb: 1, fontWeight: 600, fontSize: '1.1rem' }}>
                                 No reviewed work yet
                             </Typography>
-                            <Typography sx={{ color: '#5f6368', fontSize: '0.875rem' }}>
+                            <Typography sx={{ color: '#5f6368', fontSize: '0.875rem', maxWidth: 400 }}>
                                 Assignments move here automatically when there are no more pending student submissions left to review.
                             </Typography>
                         </Box>
@@ -364,12 +382,14 @@ export default function ToReviewPage() {
                                     expandIcon={<ExpandMoreIcon sx={{ color: '#5f6368' }} />}
                                     sx={{ px: 0, minHeight: '48px', '& .MuiAccordionSummary-content': { my: 1, alignItems: 'center' } }}
                                 >
-                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 400, flex: 1, fontSize: '1.25rem' }}>
+                                    <Typography variant="h6" sx={{ color: '#3c4043', fontWeight: 600, flex: 1, fontSize: '1rem' }}>
                                         Completed Reviews
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: '#5f6368', fontWeight: 500, mr: 1, fontSize: '0.875rem' }}>
-                                        {reviewedReqs.length}
-                                    </Typography>
+                                    <Box sx={{ bgcolor: '#f1f3f4', px: 1, py: 0.25, borderRadius: 1, mr: 1 }}>
+                                        <Typography variant="body2" sx={{ color: '#3c4043', fontWeight: 700, fontSize: '0.75rem' }}>
+                                            {reviewedReqs.length}
+                                        </Typography>
+                                    </Box>
                                 </AccordionSummary>
                                 <AccordionDetails sx={{ px: 0, py: 0 }}>
                                     <Box sx={{ borderTop: '1px solid #f1f3f4' }}>
@@ -395,18 +415,34 @@ export default function ToReviewPage() {
                         borderRadius: 2, 
                         mt: 0.5,
                         border: "1px solid #e0e0e0",
-                        boxShadow: "none"
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
                     }
                 }}
             >
                 <MenuItem onClick={handleToggleReviewed} sx={{ py: 1.5 }}>
+                    <ListItemIcon>
+                        <HistoryIcon fontSize="small" />
+                    </ListItemIcon>
                     <ListItemText 
-                        primaryTypographyProps={{ fontWeight: 500, fontSize: "0.875rem", color: "#3c4043" }}
+                        primaryTypographyProps={{ fontWeight: 600, fontSize: "0.875rem", color: "#3c4043" }}
                     >
                         {tabValue === 1 ? "Mark as not reviewed" : "Mark as reviewed"}
                     </ListItemText>
                 </MenuItem>
             </Menu>
-        </>
+        </Box>
     );
+}
+
+// Helper to use media queries
+function useMediaQuery(query: string) {
+    const [matches, setMatches] = useState(window.matchMedia(query).matches);
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        if (media.matches !== matches) setMatches(media.matches);
+        const listener = () => setMatches(media.matches);
+        media.addListener(listener);
+        return () => media.removeListener(listener);
+    }, [matches, query]);
+    return matches;
 }

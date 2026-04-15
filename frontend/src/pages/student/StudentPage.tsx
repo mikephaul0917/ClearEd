@@ -40,6 +40,7 @@ import {
   SettingsField,
   ProfilePictureSection,
   SettingsHeader,
+  SettingsActions,
   SettingsSkeleton
 } from "../../components/layout/SettingsLayout";
 import Footer from "../../components/layout/Footer";
@@ -496,14 +497,6 @@ export default function StudentPage() {
                     position: "relative",
                     transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                     opacity: org.orgStatus === 'archived' ? 0.7 : 1,
-                    "&:hover": {
-                      transform: "translateY(-6px)",
-                      "& .card-description": {
-                        maxHeight: "100px",
-                        opacity: 1,
-                        mt: 1,
-                      }
-                    }
                   }}
                 >
                   {/* Header Background Container (Rounded and Clipped) */}
@@ -525,7 +518,7 @@ export default function StudentPage() {
                     <Box
                       className="card-header"
                       sx={{
-                        height: "100%",
+                        height: "60%",
                         bgcolor: org.themeColor || COLORS.black,
                         backgroundImage: org.headerImage ? `url(${org.headerImage})` : 'none',
                         backgroundSize: 'cover',
@@ -572,7 +565,15 @@ export default function StudentPage() {
                       transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                       display: "flex",
                       flexDirection: "column",
-                      zIndex: 3
+                      zIndex: 3,
+                      "&:hover": {
+                        transform: "translateY(-6px)",
+                        "& .card-description": {
+                          maxHeight: "100px",
+                          opacity: 1,
+                          mt: 1,
+                        }
+                      }
                     }}
                   >
                     <Typography
@@ -917,10 +918,11 @@ export default function StudentPage() {
               </SettingsRow>
             </SettingsSection>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+            <SettingsActions showBorder={false}>
               <Button
                 variant="contained"
                 onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                fullWidth={isSmallMobile}
                 sx={{
                   backgroundColor: '#3c4043',
                   color: '#FFF',
@@ -943,6 +945,7 @@ export default function StudentPage() {
               <Button
                 variant="outlined"
                 onClick={updatePassword}
+                fullWidth={isSmallMobile}
                 sx={{
                   color: '#000',
                   borderColor: '#000',
@@ -965,7 +968,7 @@ export default function StudentPage() {
               >
                 Update Password
               </Button>
-            </Box>
+            </SettingsActions>
           </SettingsContainer>
         )
       ) : active === "slip" ? (

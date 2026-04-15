@@ -376,13 +376,14 @@ export default function LandingPage() {
         >
           <Typography
             sx={{
-              fontSize: { xs: "48px", md: "140px" },
+              fontSize: { xs: "40px", sm: "60px", md: "140px" },
               fontWeight: 800,
-              lineHeight: 0.85,
+              lineHeight: { xs: 1.1, md: 0.85 },
               letterSpacing: "-0.04em",
               textAlign: "center",
               color: C.black,
               mb: { xs: 6, md: 10 },
+              px: { xs: 2, md: 0 }
             }}
           >
             A Path <br /> for Seamless Approval
@@ -397,80 +398,90 @@ export default function LandingPage() {
           transition={{ duration: 1.2, delay: 0.3 }}
           sx={{
             width: "100%",
-            height: { xs: "300px", md: "700px" },
+            height: { xs: "480px", sm: "400px", md: "550px" },
             backgroundColor: C.blueAccent,
-            borderRadius: { xs: "40px", md: "60px" },
-            overflow: "hidden",
+            borderRadius: { xs: "32px", md: "60px" },
             position: "relative",
             display: "flex",
+            flexDirection: { xs: 'column', md: 'row' },
             alignItems: "center",
             justifyContent: "center",
-            mb: { xs: 10, md: 15 },
-            boxShadow: "0 40px 100px rgba(94, 234, 212, 0.3)"
+            mb: { xs: 10, md: 18 },
+            boxShadow: "0 40px 100px rgba(176, 224, 230, 0.4)",
+            overflow: 'visible'
           }}
         >
-          {/* Mockup Overlay (Floating Phone vibe) */}
+          {/* Mockup Overlay (Floating Phone) */}
           <Box
-            sx={{
-              width: { xs: "180px", md: "320px" },
-              height: { xs: "360px", md: "640px" },
-              backgroundColor: C.white,
-              borderRadius: "48px",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.3)",
-              border: { xs: "8px solid #111", md: "12px solid #111" },
-              zIndex: 2,
-              transform: { xs: "translateY(80px) rotate(-5deg)", md: "translateY(50px) rotate(-5deg)" },
-              position: "relative",
-              overflow: 'hidden'
+            component={motion.img}
+            src="/mobile.png"
+            alt="Mobile Mockup"
+            initial={{ y: 200, opacity: 0, rotate: -5 }}
+            whileInView={{ y: isMobile ? 110 : -60, opacity: 1, rotate: -5 }}
+            viewport={{ once: true }}
+            transition={{ 
+              type: "spring",
+              stiffness: 40,
+              damping: 20,
+              mass: 1.2,
+              duration: 1.5 
             }}
-          >
-            <Box sx={{ p: { xs: 3, md: 4 } }}>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: "18px", md: "24px" }, color: C.black, mb: 1 }}>Clearance</Typography>
-              <Typography sx={{ fontWeight: 700, fontSize: { xs: "12px", md: "14px" }, color: C.textSub }}>Status: Pending Approval</Typography>
-              <Box sx={{ mt: 3, height: 120, bgcolor: C.gray, borderRadius: 4 }} />
-            </Box>
-          </Box>
+            sx={{
+              width: { xs: "220%", sm: "80%", md: "1100px" },
+              maxWidth: { xs: "none", sm: "600px", md: "none" },
+              height: "auto",
+              filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
+              zIndex: 2,
+              userSelect: 'none',
+              pointerEvents: 'none',
+              willChange: "transform, opacity, filter",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden"
+            }}
+          />
 
           <Box sx={{
             position: "absolute",
-            bottom: { xs: 20, md: 60 },
-            left: { xs: 20, md: 60 },
+            top: { xs: 30, md: 'auto' },
+            bottom: { xs: 'auto', md: 60 },
+            left: { xs: 30, md: 60 },
             color: "#0d6b63",
-            zIndex: 3
+            zIndex: 3,
+            pr: 4
           }}>
             <Typography variant="h3" sx={{
               fontWeight: 900,
               mb: 1,
               letterSpacing: "-0.02em",
-              fontSize: { xs: "24px", md: "48px" }
+              fontSize: { xs: "28px", md: "48px" }
             }}>
               ClearEd
             </Typography>
             <Typography sx={{
-              opacity: 0.8,
-              maxWidth: { xs: 180, md: 300 },
-              fontSize: { xs: "12px", md: "14px" },
-              fontWeight: 500,
-              lineHeight: 1.6
+              opacity: 0.9,
+              maxWidth: { xs: "260px", md: "300px" },
+              fontSize: { xs: "13px", md: "14px" },
+              fontWeight: 600,
+              lineHeight: 1.5
             }}>
               A digital record-keeping project to support seamless institutional workflows.
             </Typography>
           </Box>
         </Box>
       </Container>
-
       {/* ── Sub Content Section (Two Columns) ── */}
-      <Box sx={{ px: { xs: 3, md: 8 }, pb: 20 }}>
+      <Box sx={{ px: { xs: 3, md: 8 }, pb: { xs: 10, md: 20 } }}>
         <Grid container spacing={{ xs: 6, md: 10 }}>
           <Grid item xs={12} md={5}>
             <motion.div {...fadeInUp}>
               <Typography
                 sx={{
-                  fontSize: { xs: "28px", md: "48px" },
+                  fontSize: { xs: "24px", sm: "32px", md: "48px" },
                   fontWeight: 700,
-                  lineHeight: 1.1,
+                  lineHeight: { xs: 1.2, md: 1.1 },
                   letterSpacing: "-0.03em",
                   color: C.black,
+                  textAlign: { xs: 'center', md: 'left' }
                 }}
               >
                 ClearEd is Institutional <br />
@@ -481,12 +492,12 @@ export default function LandingPage() {
           </Grid>
           <Grid item xs={12} md={7}>
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #ddd", pt: 4, flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #ddd", pt: 4, flexDirection: { xs: "column", sm: "row" }, gap: 3 }}>
                 <Typography sx={{ fontWeight: 700, fontSize: "12px", color: C.black }}>[OVERVIEW]</Typography>
                 <Typography
                   sx={{
                     maxWidth: 450,
-                    fontSize: "15px",
+                    fontSize: { xs: "14px", md: "15px" },
                     lineHeight: 1.6,
                     color: C.textSub,
                   }}
@@ -506,21 +517,21 @@ export default function LandingPage() {
       <Box id="how-it-works" sx={{ py: { xs: 10, md: 20 }, bgcolor: C.gray }}>
         <Container maxWidth="lg">
           <motion.div {...fadeInUp}>
-            <Typography variant="h2" sx={{ fontWeight: 900, mb: 5, letterSpacing: "-0.04em", fontSize: { xs: "36px", md: "60px" } }}>
+            <Typography variant="h2" sx={{ fontWeight: 900, mb: { xs: 4, md: 5 }, letterSpacing: "-0.04em", fontSize: { xs: "28px", md: "60px" }, textAlign: { xs: 'center', md: 'left' } }}>
               The Workflow
             </Typography>
           </motion.div>
-          <Grid container spacing={4}>
+          <Grid container spacing={3}>
             {["Verify Official Domain", "Digital Clearance Path", "One-Click Approval"].map((step, i) => (
-              <Grid item xs={12} md={4} key={i}>
+              <Grid item xs={12} sm={6} md={4} key={i}>
                 <motion.div
                   {...fadeInUp}
                   transition={{ ...fadeInUp.transition, delay: i * 0.1 }}
                   style={{ height: '100%' }}
                 >
-                  <Box sx={{ p: 4, bgcolor: C.white, borderRadius: "24px", height: "100%" }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: "14px", mb: 2 }}>STEP 0{i + 1}</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>{step}</Typography>
+                  <Box sx={{ p: { xs: 3, md: 4 }, bgcolor: C.white, borderRadius: "24px", height: "100%" }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: "12px", mb: 1.5, color: '#94A3B8' }}>STEP 0{i + 1}</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.1rem', md: '1.5rem' } }}>{step}</Typography>
                     <Typography sx={{ fontSize: "14px", color: C.textSub }}>Institutional security meets user-centric speed.</Typography>
                   </Box>
                 </motion.div>
@@ -531,9 +542,9 @@ export default function LandingPage() {
       </Box>
 
       {/* ── Redesigned Impact Section & CTA ── */}
-      <Box sx={{ py: { xs: 12, md: 18 }, bgcolor: "#FFFFFF" }}>
+      <Box sx={{ py: { xs: 8, md: 18 }, bgcolor: "#FFFFFF" }}>
         <Container maxWidth="lg">
-          <Grid container spacing={8} alignItems="flex-start">
+          <Grid container spacing={{ xs: 6, md: 8 }} alignItems="flex-start">
             {/* Left Header */}
             <Grid item xs={12} md={7}>
               <motion.div {...fadeInUp}>
@@ -541,12 +552,13 @@ export default function LandingPage() {
                   variant="h1"
                   sx={{
                     fontWeight: 800,
-                    fontSize: { xs: "32px", md: "48px" },
-                    lineHeight: 1.1,
+                    fontSize: { xs: "28px", sm: "36px", md: "48px" },
+                    lineHeight: 1.2,
                     textTransform: 'none',
                     letterSpacing: "-0.055em",
                     color: "#000000",
-                    mb: { xs: 4, md: 0 },
+                    mb: { xs: 1, md: 0 },
+                    textAlign: { xs: 'center', md: 'left' },
                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
@@ -565,6 +577,8 @@ export default function LandingPage() {
                     mb: 4,
                     lineHeight: 1.7,
                     maxWidth: 420,
+                    textAlign: { xs: 'center', md: 'left' },
+                    mx: { xs: 'auto', md: 0 },
                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                     fontWeight: 450
                   }}
@@ -573,37 +587,39 @@ export default function LandingPage() {
                   we bring the ultimate digital framework for speed and accuracy
                   to every administrative project.
                 </Typography>
-                <Button
-                  component={RouterLink}
-                  to="/how-it-works"
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#3c4043",
-                    color: "#FFFFFF",
-                    borderRadius: "100px",
-                    px: { xs: 4, md: 5 },
-                    py: 1.8,
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    textTransform: "none",
-                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
-                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
-                    "&:hover": {
+                <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+                  <Button
+                    component={RouterLink}
+                    to="/how-it-works"
+                    variant="contained"
+                    sx={{
                       bgcolor: "#3c4043",
-                      boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)",
-                      transform: 'translateY(-2px)'
-                    },
-                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-                  }}
-                >
-                  Know More About Us
-                </Button>
+                      color: "#FFFFFF",
+                      borderRadius: "100px",
+                      px: { xs: 4, md: 5 },
+                      py: { xs: 1.5, md: 1.8 },
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      textTransform: "none",
+                      boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
+                      fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
+                      "&:hover": {
+                        bgcolor: "#3c4043",
+                        boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)",
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                  >
+                    Know More About Us
+                  </Button>
+                </Box>
               </motion.div>
             </Grid>
 
             {/* Bottom Statistics Row */}
-            <Grid item xs={12} sx={{ mt: { xs: 8, md: 12 } }}>
-              <Grid container spacing={{ xs: 4, md: 6 }}>
+            <Grid item xs={12} sx={{ mt: { xs: 4, md: 12 } }}>
+              <Grid container spacing={{ xs: 2, md: 6 }}>
                 {[
                   { label: "INSTITUTIONS VERIFIED", value: stats.totalInstitutions > 0 ? `${stats.totalInstitutions}+` : '---' },
                   {
@@ -624,11 +640,11 @@ export default function LandingPage() {
                     >
                       <Typography
                         sx={{
-                          fontSize: "11px",
+                          fontSize: { xs: "9px", md: "11px" },
                           fontWeight: 800,
                           color: "#64748B",
                           letterSpacing: "0.1em",
-                          mb: 1.5,
+                          mb: 1,
                           textTransform: 'uppercase',
                           fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                         }}
@@ -639,7 +655,7 @@ export default function LandingPage() {
                         variant="h2"
                         sx={{
                           fontWeight: 800,
-                          fontSize: { xs: "32px", md: "52px" },
+                          fontSize: { xs: "28px", md: "52px" },
                           color: "#000000",
                           letterSpacing: "-0.055em",
                           fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
@@ -657,16 +673,16 @@ export default function LandingPage() {
       </Box>
 
       {/* ── About Section ── */}
-      <Box id="about" sx={{ py: { xs: 10, md: 20 } }}>
+      <Box id="about" sx={{ py: { xs: 10, md: 20 }, px: { xs: 3, md: 0 } }}>
         <Container maxWidth="lg">
           <motion.div {...fadeInUp}>
-            <Typography variant="h2" sx={{ fontWeight: 900, mb: 5, letterSpacing: "-0.04em", textAlign: 'center', fontSize: { xs: "36px", md: "60px" } }}>
+            <Typography variant="h2" sx={{ fontWeight: 900, mb: { xs: 3, md: 5 }, letterSpacing: "-0.04em", textAlign: 'center', fontSize: { xs: "32px", md: "60px" } }}>
               About ClearEd
             </Typography>
           </motion.div>
           <Box display="flex" justifyContent="center">
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
-              <Typography sx={{ maxWidth: 700, fontSize: "18px", color: C.textSub, textAlign: 'center', mx: 'auto', lineHeight: 1.8 }}>
+              <Typography sx={{ maxWidth: 700, fontSize: { xs: "15px", md: "18px" }, color: C.textSub, textAlign: 'center', mx: 'auto', lineHeight: 1.8 }}>
                 Born out of necessity, ClearEd re-imagines how institutions manage administrative data.
                 Our mission is to replace manual paper trails with verified digital record-keeping,
                 ensuring compliance while respecting the time of every individual.
@@ -677,7 +693,7 @@ export default function LandingPage() {
       </Box>
 
       {/* ── Redesigned Footer ── */}
-      <Box sx={{ bgcolor: "#FFFFFF", color: "#000000", py: { xs: 8, md: 10 }, px: { xs: 4, md: 10 }, borderTop: "1px solid #F1F5F9" }}>
+      <Box sx={{ bgcolor: "#FFFFFF", color: "#000000", py: { xs: 8, md: 10 }, px: { xs: 3, md: 10 }, borderTop: "1px solid #F1F5F9" }}>
         <Container maxWidth="xl">
           <Grid container spacing={6} justifyContent="space-between">
             {/* Column 1: Brand */}
@@ -703,7 +719,7 @@ export default function LandingPage() {
             </Grid>
 
             {/* Column 2: Links */}
-            <Grid item xs={12} sm={6} md={2}>
+            <Grid item xs={6} md={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3, color: "#000", textTransform: 'uppercase', letterSpacing: "0.1em" }}>Product</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {navLinks.map((link) => (
@@ -727,13 +743,13 @@ export default function LandingPage() {
             </Grid>
 
             {/* Column 3: Legal */}
-            <Grid item xs={12} sm={6} md={2}>
+            <Grid item xs={6} md={2}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3, color: "#000", textTransform: 'uppercase', letterSpacing: "0.1em" }}>Legal</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {[
-                  { label: 'Terms of Service', path: '/terms' },
-                  { label: 'Privacy Policy', path: '/privacy' },
-                  { label: 'Cookie Policy', path: '/cookies' }
+                  { label: 'Terms', path: '/terms' },
+                  { label: 'Privacy', path: '/privacy' },
+                  { label: 'Cookies', path: '/cookies' }
                 ].map((link) => (
                   <Typography
                     key={link.label}
@@ -755,11 +771,11 @@ export default function LandingPage() {
             </Grid>
           </Grid>
 
-          <Box sx={{ borderTop: "1px solid #F1F5F9", mt: 10, pt: 4, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 3 }}>
-            <Typography sx={{ color: "#94A3B8", fontSize: "11px", fontWeight: 700, letterSpacing: '0.05em' }}>
+          <Box sx={{ borderTop: "1px solid #F1F5F9", mt: 6, pt: 4, display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+            <Typography sx={{ color: "#94A3B8", fontSize: "11px", fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'center', sm: 'left' } }}>
               © 2026 CLEARED. ALL RIGHTS RESERVED.
             </Typography>
-            <Typography sx={{ color: "#94A3B8", fontSize: "11px", textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'left', md: 'right' } }}>
+            <Typography sx={{ color: "#94A3B8", fontSize: "10px", textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'center', sm: 'right' }, maxWidth: { xs: '100%', sm: 400 } }}>
               DEVELOPED BY MIKE PHAUL BANDERADA, ERROLLE ARDIENTE, AND BRAD DEL MORO
             </Typography>
           </Box>

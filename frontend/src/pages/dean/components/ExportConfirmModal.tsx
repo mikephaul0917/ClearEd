@@ -48,7 +48,7 @@ const ExportConfirmModal: React.FC<ExportConfirmModalProps> = ({
                 variant="h4" 
                 sx={{ 
                   fontWeight: 800, 
-                  color: '#0F172A', 
+                  color: '#3c4043', 
                   fontSize: '1.75rem',
                   lineHeight: 1.2,
                   mb: 1
@@ -78,15 +78,15 @@ const ExportConfirmModal: React.FC<ExportConfirmModalProps> = ({
                   sx={{
                     borderRadius: '999px',
                     py: 2,
-                    bgcolor: '#0F172A', // Premium Black/Slate
+                    bgcolor: '#3c4043', // Premium Black/Slate
                     color: '#FFF',
                     textTransform: 'none',
                     fontWeight: 700,
                     fontSize: '1.1rem',
-                    boxShadow: '0 10px 15px -3px rgba(15, 23, 42, 0.3)',
+                    boxShadow: '0 10px 15px -3px rgba(60, 64, 67, 0.3)',
                     '&:hover': {
-                      bgcolor: '#1E293B',
-                      boxShadow: '0 20px 25px -5px rgba(15, 23, 42, 0.4)',
+                      bgcolor: '#202124',
+                      boxShadow: '0 20px 25px -5px rgba(60, 64, 67, 0.4)',
                       transform: 'translateY(-1px)'
                     },
                     '&:active': { transform: 'translateY(0)' },

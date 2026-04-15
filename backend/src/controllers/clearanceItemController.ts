@@ -34,10 +34,17 @@ export const getClearanceRequirements = async (req: Request, res: Response) => {
     const isAdmin = (req as any).user.role === 'admin' || (req as any).user.role === 'super_admin';
     const isOfficer = member?.role === 'officer' || isAdmin;
 
-    // 2. Fetch requirements for the organization
+    // 1. Get active term
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // 2. Fetch requirements for the organization and term
     const query: any = {
       organizationId: new mongoose.Types.ObjectId(organizationId as string),
       institutionId: new mongoose.Types.ObjectId(institutionId as string),
+      termId: activeTerm._id, // FILTER BY TERM
       isActive: true
     };
 
@@ -54,19 +61,29 @@ export const getClearanceRequirements = async (req: Request, res: Response) => {
       .populate('createdBy', 'fullName avatarUrl')
       .sort({ order: 1 });
 
-    // 2. Fetch submissions for this user in this organization
+    // 2. Fetch submissions for this user in this organization for the active term
+    let requestIds: any[] = [];
+    if (activeTerm) {
+      const activeRequests = await ClearanceRequest.find({ userId, institutionId, termId: activeTerm._id }).select('_id');
+      requestIds = activeRequests.map(r => r._id);
+    }
+
     const submissions = await ClearanceSubmission.find({
       userId: new mongoose.Types.ObjectId(userId as string),
       organizationId: new mongoose.Types.ObjectId(organizationId as string),
-      institutionId: new mongoose.Types.ObjectId(institutionId as string)
+      institutionId: new mongoose.Types.ObjectId(institutionId as string),
+      clearanceRequestId: { $in: requestIds }
     });
 
     // 3. Fetch stats if officer
     let stats: any[] = [];
     let totalMembers = 0;
-    if (isOfficer) {
+    if (isOfficer && activeTerm) {
       stats = await ClearanceSubmission.aggregate([
-        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId as string) } },
+        { $match: { 
+            organizationId: new mongoose.Types.ObjectId(organizationId as string),
+            clearanceRequestId: { $in: requestIds } // All requests in this term
+        } },
         { $group: { _id: { requirementId: "$clearanceRequirementId", status: "$status" }, count: { $sum: 1 } } }
       ]);
       totalMembers = await OrganizationMember.countDocuments({
@@ -256,19 +273,43 @@ export const getOfficerSubmissions = async (req: Request, res: Response) => {
       return res.json({ success: true, data: [] });
     }
 
-    // 2. Fetch submissions for these organizations (return ALL statuses so frontend can show stats)
+    // 2. Fetch submissions for these organizations for the active term
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const activeRequests = await ClearanceRequest.find({ termId: activeTerm._id }).select('_id userId organizationId');
+    const activeRequestIds = activeRequests.map(r => r._id);
+
+    // 3. Filter by Active Members only
+    const activeMembers = await OrganizationMember.find({
+      organizationId: { $in: organizationIds },
+      status: 'active'
+    }).select('userId organizationId');
+
+    // Create a set of composite keys (userId + organizationId) for efficient filtering
+    const activeMemberKeys = new Set(activeMembers.map(m => `${m.userId.toString()}_${m.organizationId.toString()}`));
+
     const submissions = await ClearanceSubmission.find({
       institutionId: new mongoose.Types.ObjectId(institutionId as string),
-      organizationId: { $in: organizationIds }
+      organizationId: { $in: organizationIds },
+      clearanceRequestId: { $in: activeRequestIds }
     })
       .populate('userId', 'fullName email studentId name avatarUrl')
       .populate('clearanceRequirementId', 'title description')
       .populate('organizationId', 'name')
       .sort({ submittedAt: -1 });
 
+    // Filter submissions to ensure they belong to an active membership
+    const filteredSubmissions = submissions.filter(sub => {
+      const key = `${(sub.userId as any)?._id?.toString()}_${(sub.organizationId as any)?._id?.toString() || sub.organizationId.toString()}`;
+      return activeMemberKeys.has(key);
+    });
+
     res.json({
       success: true,
-      data: submissions
+      data: filteredSubmissions
     });
   } catch (error: any) {
     console.error('Error fetching officer submissions:', error);
@@ -287,9 +328,28 @@ export const getRequirementSubmissions = async (req: Request, res: Response) => 
     const { requirementId } = req.params;
     const institutionId = (req as any).user.institutionId;
 
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const activeRequests = await ClearanceRequest.find({ termId: activeTerm._id }).select('_id');
+    const activeRequestIds = activeRequests.map(r => r._id);
+
+    // 3. Filter by Active Members
+    const requirement = await ClearanceRequirement.findById(requirementId);
+    if (!requirement) return res.status(404).json({ success: false, message: "Requirement not found" });
+
+    const activeMemberUserIds = await OrganizationMember.find({
+      organizationId: requirement.organizationId,
+      status: 'active'
+    }).distinct('userId');
+
     const submissions = await ClearanceSubmission.find({
       clearanceRequirementId: requirementId,
-      institutionId
+      institutionId,
+      clearanceRequestId: { $in: activeRequestIds },
+      userId: { $in: activeMemberUserIds }
     })
       .populate('userId', 'fullName email studentId avatarUrl')
       .sort({ submittedAt: 1 });
@@ -355,23 +415,31 @@ export const getClearanceRequirementById = async (req: Request, res: Response) =
       return res.status(404).json({ success: false, message: "Requirement not found" });
     }
 
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
     let submissionData = null;
-    const submission = await ClearanceSubmission.findOne({
-      userId: new mongoose.Types.ObjectId(userId as string),
-      clearanceRequirementId: requirement._id,
-      institutionId: new mongoose.Types.ObjectId(institutionId as string)
-    });
+    if (activeTerm) {
+      const activeRequest = await ClearanceRequest.findOne({ userId, termId: activeTerm._id, organizationId: requirement.organizationId });
+      
+      if (activeRequest) {
+        const submission = await ClearanceSubmission.findOne({
+          userId: new mongoose.Types.ObjectId(userId as string),
+          clearanceRequirementId: requirement._id,
+          clearanceRequestId: activeRequest._id,
+          institutionId: new mongoose.Types.ObjectId(institutionId as string)
+        });
 
-    if (submission) {
-      submissionData = {
-        id: submission._id,
-        status: submission.status,
-        submittedAt: submission.submittedAt,
-        files: submission.files,
-        studentNotes: submission.studentNotes,
-        rejectionReason: submission.rejectionReason,
-        reviewedAt: submission.reviewedAt
-      };
+        if (submission) {
+          submissionData = {
+            id: submission._id,
+            status: submission.status,
+            submittedAt: submission.submittedAt,
+            files: submission.files,
+            studentNotes: submission.studentNotes,
+            rejectionReason: submission.rejectionReason,
+            reviewedAt: submission.reviewedAt
+          };
+        }
+      }
     }
 
     res.json({

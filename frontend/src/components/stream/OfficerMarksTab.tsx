@@ -19,7 +19,7 @@ const COLORS = {
     textSecondary: '#64748B',
     border: '#F1F5F9',
     surface: '#FFFFFF',
-    black: '#000000'
+    black: '#3c4043'
 };
 
 const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
@@ -131,6 +131,12 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
             fetchOverview();
         }
     }, [organizationId]);
+
+    useEffect(() => {
+        const handleClear = () => setSelectedStudentIds([]);
+        window.addEventListener('clear-bulk-selections', handleClear);
+        return () => window.removeEventListener('clear-bulk-selections', handleClear);
+    }, []);
 
     const handleOpenSignatureModal = (studentId: string) => {
         setSelectedStudentId(studentId);
@@ -498,39 +504,41 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                 </DialogActions>
             </Dialog>
 
-            {/* Bulk Actions Overlay */}
+            {/* Bulk Actions Overlay - Root Level for Viewport Centering */}
             <AnimatePresence>
                 {selectedStudentIds.length > 0 && (
                     <Box
                         component={motion.div}
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
+                        initial={{ y: 100, opacity: 0, x: '-50%' }}
+                        animate={{ y: 0, opacity: 1, x: '-50%' }}
+                        exit={{ y: 100, opacity: 0, x: '-50%' }}
                         sx={{
                             position: 'fixed',
-                            bottom: { xs: 16, sm: 72 }, // Match UsersTable.tsx to clear fixed footer
+                            bottom: { xs: 24, sm: 80 },
                             left: '50%',
-                            transform: 'translateX(-50%)',
                             width: { xs: 'calc(100% - 32px)', sm: 'auto' },
+                            maxWidth: '95vw',
                             bgcolor: '#3c4043',
                             color: '#FFF',
-                            py: 2,
-                            px: 3,
+                            py: { xs: 1.25, sm: 2 },
+                            px: { xs: 2.5, sm: 3 },
                             borderRadius: '20px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 3,
+                            justifyContent: 'center',
+                            gap: { xs: 1, sm: 3 },
                             boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                            zIndex: 1000
+                            zIndex: 9999
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Typography sx={{ fontWeight: 800, fontSize: 13, letterSpacing: '0.01em' }}>
-                                {selectedStudentIds.length} students selected
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: { xs: 11, sm: 13 }, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                                {selectedStudentIds.length} {selectedStudentIds.length === 1 ? 'student' : 'students'}
+                                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}> selected</Box>
                             </Typography>
                         </Box>
                         <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.15)', height: 20, my: 'auto' }} />
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: { xs: 0, sm: 1 } }}>
                             <Button
                                 variant="text"
                                 size="small"
@@ -542,15 +550,15 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                                     fontWeight: 700,
                                     fontSize: '0.8125rem',
                                     bgcolor: 'transparent',
-                                    px: 1.5,
+                                    px: { xs: 0.75, sm: 1.5 },
+                                    minWidth: { xs: 0, sm: 'auto' },
                                     borderRadius: '8px',
                                     '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
-                                    '& .MuiButton-startIcon': { color: 'inherit' },
                                     '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
                                 }}
-                                startIcon={<CheckCircleIcon sx={{ fontSize: 18 }} />}
                             >
-                                Mark as Cleared
+                                <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                <Box component="span" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>Mark as Cleared</Box>
                             </Button>
                             <Button
                                 variant="text"
@@ -563,15 +571,15 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                                     fontWeight: 700,
                                     fontSize: '0.8125rem',
                                     bgcolor: 'transparent',
-                                    px: 1.5,
+                                    px: { xs: 0.75, sm: 1.5 },
+                                    minWidth: { xs: 0, sm: 'auto' },
                                     borderRadius: '8px',
                                     '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
-                                    '& .MuiButton-startIcon': { color: 'inherit' },
                                     '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
                                 }}
-                                startIcon={<UndoIcon sx={{ fontSize: 18 }} />}
                             >
-                                Revoke
+                                <UndoIcon sx={{ fontSize: 18 }} />
+                                <Box component="span" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>Revoke</Box>
                             </Button>
                         </Box>
                     </Box>

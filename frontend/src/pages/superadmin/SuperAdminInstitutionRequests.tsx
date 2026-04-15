@@ -56,7 +56,7 @@ const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
   black: '#0a0a0a',
-  textPrimary: '#000000',
+  textPrimary: '#3c4043',
   textSecondary: '#64748B',
   teal: '#5fcca0',
   lavender: '#cb9bfb',
@@ -585,7 +585,7 @@ export default function SuperAdminInstitutionRequests() {
           {[1, 2, 3].map(i => (
             <Box key={i} sx={{ p: 3, bgcolor: '#FFFFFF', borderRadius: COLORS.cardRadius, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px' }} />
+                <Skeleton variant="circular" width={40} height={40} />
                 <Skeleton variant="text" width={100} height={20} />
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>

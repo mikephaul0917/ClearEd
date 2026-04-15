@@ -37,8 +37,8 @@ export default function StudentCertificate() {
       } catch { }
 
       setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+        setLoading(false);
+      }, 2000);
     };
 
     setTimeout(fetchData, 1000);
@@ -381,7 +381,7 @@ export default function StudentCertificate() {
               onClick={printReceipt}
               fullWidth
               sx={{
-                bgcolor: '#000',
+                bgcolor: '#3c4043',
                 color: '#FFF',
                 borderRadius: '100px',
                 fontWeight: 700,
@@ -391,7 +391,7 @@ export default function StudentCertificate() {
                 maxWidth: { sm: 210 },
                 textTransform: 'none',
                 boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                '&:hover': { bgcolor: '#222', transform: 'translateY(-1px)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)' },
+                '&:hover': { bgcolor: '#3c4043', transform: 'translateY(-1px)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)' },
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >

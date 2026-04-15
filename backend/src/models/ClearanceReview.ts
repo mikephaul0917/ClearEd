@@ -8,7 +8,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IClearanceReview extends Document {
     submissionId: mongoose.Types.ObjectId;
     reviewerId: mongoose.Types.ObjectId;
-    decision: "approved" | "rejected";
+    decision: "approved" | "rejected" | "pending";
     level: "officer" | "dean";
     remarks?: string; // Required if decision is 'rejected'
     institutionId: mongoose.Types.ObjectId;
@@ -29,7 +29,7 @@ const ClearanceReviewSchema = new Schema<IClearanceReview>({
     },
     decision: {
         type: String,
-        enum: ["approved", "rejected"],
+        enum: ["approved", "rejected", "pending"],
         required: true
     },
     level: {

@@ -9,7 +9,8 @@ import {
     markAsOfficerCleared,
     bulkMarkAsOfficerCleared,
     revokeOfficerClearance,
-    bulkRevokeOfficerClearance
+    bulkRevokeOfficerClearance,
+    bulkReviewSubmissions
 } from "../controllers/signatory/signatoryController";
 import { auth } from "../middleware/authMiddleware";
 import { officer } from "../middleware/roleMiddleware";
@@ -23,6 +24,9 @@ router.get("/pending", auth, officer, listPending);
 
 // Review (approve/reject) a specific clearance submission
 router.post("/review/:submissionId", auth, officer, reviewSubmission);
+
+// Review multiple submissions in bulk
+router.post("/review-bulk", auth, officer, bulkReviewSubmissions);
 
 // Requirement Management for Officers
 router.get("/requirements", auth, officer, getSignatoryRequirements);

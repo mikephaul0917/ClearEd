@@ -64,8 +64,8 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
       case 'student': return { bg: '#FEF9C3', text: '#854D0E' }; // Yellow
-      case 'admin': return { bg: '#DBEAFE', text: '#1E40AF' }; // Blue
-      case 'dean': return { bg: '#F3E8FF', text: '#6B21A8' }; // Purple
+      case 'admin': return { bg: '#CCFBF1', text: '#115E59' }; // Forest Teal
+      case 'dean': return { bg: '#ECFEFF', text: '#0E7490' }; // Cyan-Teal
       case 'officer': return { bg: '#DCFCE7', text: '#166534' }; // Green
       default: return { bg: '#F1F5F9', text: '#475569' };
     }
@@ -132,7 +132,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '14px',
+          borderRadius: '24px',
           padding: 0,
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -140,14 +140,14 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         }
       }}
     >
-      <Box p={4} sx={{ position: 'relative' }}>
+      <Box p={{ xs: 2.5, sm: 4 }} pb={{ xs: 4, sm: 8 }} sx={{ position: 'relative' }}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 1, letterSpacing: '-0.02em' }}>
+            <Typography sx={{ fontWeight: 800, color: '#0F172A', mb: 1, letterSpacing: '-0.02em', fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
               {roleLabel} Directory
             </Typography>
-            <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500, lineHeight: 1.5, maxWidth: '90%' }}>
+            <Typography sx={{ color: '#64748B', fontWeight: 500, lineHeight: 1.5, maxWidth: '100%', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
               View and manage {roleLabel.toLowerCase()}s currently active in the clearance system. Review their progress and profiles.
             </Typography>
           </Box>
@@ -157,8 +157,8 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         </Box>
 
         {/* Search Section */}
-        <Box mb={4}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#334155', mb: 1.5 }}>
+        <Box mb={{ xs: 2.5, sm: 4 }}>
+          <Typography sx={{ fontWeight: 700, color: '#334155', mb: 1.5, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
             Search for {roleLabel.toLowerCase()}s
           </Typography>
           <TextField
@@ -173,7 +173,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 </InputAdornment>
               ),
               sx: {
-                borderRadius: '6px',
+                borderRadius: '12px',
                 bgcolor: '#F8FAFC',
                 fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -186,6 +186,9 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                   borderColor: '#0E7490',
                   borderWidth: '1.5px'
+                },
+                '& .MuiInputBase-input': {
+                  fontSize: { xs: '13px', sm: '15px' }
                 }
               }
             }}
@@ -193,11 +196,11 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         </Box>
 
         {/* Directory List */}
-        <Box mb={4}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#334155', mb: 2 }}>
+        <Box mb={{ xs: 2.5, sm: 4 }}>
+          <Typography sx={{ fontWeight: 700, color: '#334155', mb: 2, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
             In this directory
           </Typography>
-          <Box sx={{ maxHeight: '320px', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ maxHeight: { xs: '200px', sm: '280px' }, overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {filteredUsers.length > 0 ? filteredUsers.map((user) => (
               <Box key={user._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -206,7 +209,12 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                       size="small"
                       checked={selectedIds.includes(user._id)}
                       onChange={() => toggleSelect(user._id)}
-                      sx={{ color: '#CBD5E1', '&.Mui-checked': { color: '#0F172A' } }}
+                      icon={<Box sx={{ width: 18, height: 18, borderRadius: '6px', border: '2px solid #E2E8F0' }} />}
+                      checkedIcon={
+                        <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: '#0E7490', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Check sx={{ color: '#FFF', fontSize: 14 }} />
+                        </Box>
+                      }
                     />
                   )}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -223,44 +231,36 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                         }}>
                         {getInitials(user.fullName || user.username)}
                       </Avatar>
-                      {user.enabled && (
-                        <Box sx={{ position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: '2px', zIndex: 2 }}>
-                          <Box sx={{
-                            width: 14,
-                            height: 14,
-                            bgcolor: '#0E7490', // Deep Teal matching sidebar
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}>
-                            <Check sx={{ fontSize: 10, color: '#FFF', fontWeight: 950 }} />
-                          </Box>
-                        </Box>
-                      )}
                     </Box>
                     <Box>
-                      <Typography sx={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem', lineHeight: 1.2 }}>
+                      <Typography sx={{ fontWeight: 800, color: '#0F172A', fontSize: { xs: '0.85rem', sm: '0.95rem' }, lineHeight: 1.2 }}>
                         {user.fullName || user.username}
                       </Typography>
-                      <Typography sx={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 500 }}>
+                      <Typography sx={{ color: '#94A3B8', fontSize: { xs: '0.7rem', sm: '0.8rem' }, fontWeight: 500 }}>
                         @{user.username || user.email.split('@')[0]}
                       </Typography>
                     </Box>
                   </Box>
                 </Box>
-                <Chip
-                  label={roleLabel}
-                  sx={{
-                    bgcolor: roleColors.bg,
-                    color: roleColors.text,
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    borderRadius: '6px',
-                    height: '24px'
-                  }}
-                />
+                <Box sx={{
+                  bgcolor: roleColors.bg,
+                  color: roleColors.text,
+                  px: isManageMode ? 1 : 1.5,
+                  py: 0.5,
+                  borderRadius: '99px',
+                  border: `1px solid ${roleColors.text}20`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Typography sx={{
+                    fontWeight: 800,
+                    fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                    lineHeight: 1
+                  }}>
+                    {roleLabel}
+                  </Typography>
+                </Box>
               </Box>
             )) : (
               <Typography sx={{ color: '#94A3B8', fontSize: '0.9rem', textAlign: 'center', py: 4, fontStyle: 'italic' }}>
@@ -273,12 +273,12 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         {/* Bulk Selection Header */}
         {isManageMode && filteredUsers.length > 0 && (
           <Box sx={{
-            mb: 2,
+            mb: { xs: 1.5, sm: 2 },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             bgcolor: '#F8FAFC',
-            p: 1.5,
+            p: { xs: 1, sm: 1.5 },
             borderRadius: '6px',
             border: '1px solid #F1F5F9'
           }}>
@@ -289,11 +289,21 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                   checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
                   indeterminate={selectedIds.length > 0 && selectedIds.length < filteredUsers.length}
                   onChange={toggleSelectAll}
-                  sx={{ color: '#CBD5E1', '&.Mui-checked': { color: '#0F172A' } }}
+                  icon={<Box sx={{ width: 18, height: 18, borderRadius: '6px', border: '2px solid #E2E8F0' }} />}
+                  checkedIcon={
+                    <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: '#0E7490', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check sx={{ color: '#FFF', fontSize: 14 }} />
+                    </Box>
+                  }
+                  indeterminateIcon={
+                    <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: '#0E7490', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Box sx={{ width: 10, height: 2, bgcolor: '#FFF', borderRadius: '1px' }} />
+                    </Box>
+                  }
                 />
               }
               label={
-                <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+                <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' }, fontWeight: 700, color: '#334155' }}>
                   {selectedIds.length > 0 ? `${selectedIds.length} Selected` : 'Select All'}
                 </Typography>
               }
@@ -356,16 +366,16 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
           }}
         >
           <MenuItem onClick={() => handleBulkStatus(true)}>
-            <CheckCircle sx={{ fontSize: 18, color: '#10B981' }} />
+            <CheckCircle sx={{ fontSize: 18, color: '#3c4043' }} />
             Enable Accounts
           </MenuItem>
           <MenuItem onClick={() => handleBulkStatus(false)}>
-            <DoNotDisturb sx={{ fontSize: 18, color: '#EF4444' }} />
+            <DoNotDisturb sx={{ fontSize: 18, color: '#3c4043' }} />
             Disable Accounts
           </MenuItem>
           <Divider />
           <MenuItem onClick={(e) => setRoleMenuAnchor(e.currentTarget)}>
-            <Edit sx={{ fontSize: 18, color: '#3B82F6' }} />
+            <Edit sx={{ fontSize: 18, color: '#3c4043' }} />
             Change Role
           </MenuItem>
         </Menu>
@@ -456,8 +466,8 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               fullWidth
               onClick={onExport}
               sx={{
-                borderRadius: '8px',
-                bgcolor: '#0F172A',
+                borderRadius: '100px',
+                bgcolor: '#3c4043',
                 color: '#FFFFFF',
                 py: 1.5,
                 fontWeight: 800,
@@ -466,7 +476,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 border: 'none',
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
                 '&:hover': {
-                  bgcolor: '#1E293B',
+                  bgcolor: '#202124',
                   transform: 'translateY(-2px)',
                   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
                 },

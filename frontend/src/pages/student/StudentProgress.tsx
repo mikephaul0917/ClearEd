@@ -532,7 +532,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           onClick={() => window.print()}
           fullWidth={window.innerWidth < 640}
           sx={{
-            bgcolor: '#000',
+            bgcolor: '#3c4043',
             color: '#FFF',
             borderRadius: '100px',
             fontWeight: 700,
@@ -542,7 +542,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
             maxWidth: { sm: 210 },
             textTransform: 'none',
             boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-            '&:hover': { bgcolor: '#222', transform: 'translateY(-1px)' },
+            '&:hover': { bgcolor: '#3c4043', transform: 'translateY(-1px)' },
             transition: 'all 0.2s'
           }}
         >

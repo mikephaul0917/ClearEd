@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#1E293B',
+  black: '#3c4043',
   textPrimary: '#1E293B',
   textSecondary: '#64748B',
   teal: '#0E7490',      // Deep professional tone
@@ -51,7 +51,7 @@ const OrgBentoCard = ({
   onDetails,
   onRestore,
   onMenuOpen,
-  isArchived
+  isArchived = false
 }: {
   org: OrganizationRow;
   onDetails: (org: OrganizationRow) => void;
@@ -59,10 +59,19 @@ const OrgBentoCard = ({
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, org: OrganizationRow) => void;
   isArchived?: boolean;
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(org.joinCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <Box sx={{
       p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
-      border: `1px solid ${COLORS.border}`,
+      border: isArchived ? '1px solid #EF444430' : `1px solid ${COLORS.border}`,
       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
       position: 'relative',
       height: '100%',
@@ -72,8 +81,8 @@ const OrgBentoCard = ({
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       '&:hover': {
         transform: 'translateY(-4px)',
-        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
-        borderColor: COLORS.tealLight
+        boxShadow: '0 12px 20px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+        borderColor: isArchived ? '#EF444480' : COLORS.teal + '50'
       }
     }}>
       <Box sx={{ mb: 2 }}>
@@ -81,8 +90,8 @@ const OrgBentoCard = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar sx={{
               width: 44, height: 44,
-              bgcolor: org.isFinal ? 'rgba(13, 148, 136, 0.1)' : COLORS.tealLight,
-              color: org.isFinal ? '#0D9488' : COLORS.teal,
+              bgcolor: '#5f6368',
+              color: '#FFFFFF',
               fontWeight: 800, fontSize: 16, borderRadius: '12px'
             }}>
               {org.name?.charAt(0)}
@@ -93,17 +102,25 @@ const OrgBentoCard = ({
             </Box>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Chip
-              label={isArchived ? "Archived" : "Active"}
-              size="small"
-              sx={{
-                fontWeight: 700,
-                fontSize: 10,
-                bgcolor: isArchived ? '#FEE2E2' : COLORS.tealLight,
+            <Box sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: '99px',
+              bgcolor: isArchived ? '#FEE2E2' : COLORS.tealLight,
+              border: isArchived ? '1px solid #EF444420' : `1px solid ${COLORS.teal}20`,
+              height: 22
+            }}>
+              <Typography sx={{
+                fontSize: 12,
+                fontWeight: 800,
                 color: isArchived ? '#EF4444' : COLORS.teal,
-                height: 20
-              }}
-            />
+                lineHeight: 1
+              }}>
+                {isArchived ? "Archived" : "Active"}
+              </Typography>
+            </Box>
             <IconButton
               size="small"
               onClick={(e) => onMenuOpen(e, org)}
@@ -132,7 +149,22 @@ const OrgBentoCard = ({
 
       <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>
-          Code: <Box component="span" sx={{ fontWeight: 800, color: COLORS.teal }}>{org.joinCode}</Box>
+          Code:{" "}
+          <Tooltip title={copied ? "Copied!" : "Click to copy"} arrow placement="top">
+            <Box
+              component="span"
+              onClick={handleCopy}
+              sx={{
+                fontWeight: 800,
+                color: COLORS.teal,
+                cursor: 'pointer',
+                '&:hover': { textDecoration: 'underline' },
+                transition: 'all 0.2s'
+              }}
+            >
+              {org.joinCode}
+            </Box>
+          </Tooltip>
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
@@ -268,7 +300,7 @@ export default function AdminOrganizationsPage({
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [activeMenuOrg, setActiveMenuOrg] = useState<any>(null);
   const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
+  const rowsPerPage = 9;
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -388,16 +420,36 @@ export default function AdminOrganizationsPage({
           </>
         ) : (
           <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+              <Box sx={{
+                bgcolor: '#F1F5F9',
+                color: '#475569',
+                p: { xs: 0.5, sm: 1 },
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Business sx={{ fontSize: { xs: 24, sm: 28 } }} />
+              </Box>
+              <Typography sx={{
+                fontFamily: fontStack,
+                fontWeight: 600,
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                color: '#000',
+                lineHeight: 1.2,
+              }}>
+                Institutional Organizations
+              </Typography>
+            </Box>
             <Typography sx={{
-              fontWeight: 700,
-              fontSize: { xs: '1.75rem', sm: '2.25rem' },
-              color: COLORS.textPrimary,
-              letterSpacing: '-0.05em',
-              lineHeight: 1.1
+              fontFamily: fontStack,
+              fontSize: { xs: '0.8rem', sm: '0.95rem' },
+              fontWeight: 400,
+              color: '#6B7280',
+              maxWidth: 600,
+              lineHeight: 1.5
             }}>
-              Institutional Organizations
-            </Typography>
-            <Typography sx={{ fontSize: { xs: 13, sm: 15 }, color: COLORS.textSecondary, mt: 1, fontWeight: 500, lineHeight: 1.4 }}>
               Manage institutional departments, signatories, and official access codes.
             </Typography>
           </>
@@ -546,15 +598,21 @@ export default function AdminOrganizationsPage({
                 justifyContent: 'center'
               }}>
                 <Button
+                  disableRipple
                   onClick={() => { setView('active'); setPage(1); }}
                   sx={{
                     flex: { xs: 1, md: 'none' },
                     textTransform: 'none', px: 2, py: 1, borderRadius: '10px', fontSize: 13, fontWeight: 700,
-                    bgcolor: 'transparent',
                     color: view === 'active' ? COLORS.textPrimary : COLORS.textSecondary,
                     position: 'relative',
                     zIndex: 1,
-                    '&:hover': { bgcolor: 'transparent' }
+                    transition: 'color 0.2s ease',
+                    minWidth: { xs: 0, sm: 100 },
+                    '&:hover': {
+                      color: view === 'active' ? COLORS.textPrimary : COLORS.black,
+                      bgcolor: 'transparent'
+                    },
+                    backgroundColor: 'transparent !important',
                   }}
                 >
                   {view === 'active' && (
@@ -571,21 +629,27 @@ export default function AdminOrganizationsPage({
                         zIndex: -1,
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
                       }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
                   Active
                 </Button>
                 <Button
+                  disableRipple
                   onClick={() => { setView('deleted'); setPage(1); }}
                   sx={{
                     flex: { xs: 1, md: 'none' },
                     textTransform: 'none', px: 2, py: 1, borderRadius: '10px', fontSize: 13, fontWeight: 700,
-                    bgcolor: 'transparent',
                     color: view === 'deleted' ? COLORS.textPrimary : COLORS.textSecondary,
                     position: 'relative',
                     zIndex: 1,
-                    '&:hover': { bgcolor: 'transparent' }
+                    transition: 'color 0.2s ease',
+                    minWidth: { xs: 0, sm: 100 },
+                    '&:hover': {
+                      color: view === 'deleted' ? COLORS.textPrimary : COLORS.black,
+                      bgcolor: 'transparent'
+                    },
+                    backgroundColor: 'transparent !important',
                   }}
                 >
                   {view === 'deleted' && (
@@ -602,7 +666,7 @@ export default function AdminOrganizationsPage({
                         zIndex: -1,
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
                       }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
                   Archived
@@ -672,16 +736,16 @@ export default function AdminOrganizationsPage({
               <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 600, mb: 2 }}>
                 Showing <Box component="span" sx={{ color: COLORS.textPrimary }}>{paginatedRows.length}</Box> of <Box component="span" sx={{ color: COLORS.textPrimary }}>{filtered.length}</Box> entries
               </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 1.5, 
-                alignItems: 'center', 
-                bgcolor: '#F1F5F9', 
+              <Box sx={{
+                display: 'flex',
+                gap: 1.5,
+                alignItems: 'center',
+                bgcolor: '#F1F5F9',
                 px: 1,
-                py: 0.5, 
-                borderRadius: '40px' 
+                py: 0.5,
+                borderRadius: '40px'
               }}>
-                <IconButton 
+                <IconButton
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
                   sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
@@ -733,7 +797,7 @@ export default function AdminOrganizationsPage({
                   });
                 })()}
 
-                <IconButton 
+                <IconButton
                   disabled={page === totalPages}
                   onClick={() => setPage(page + 1)}
                   sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}
@@ -754,23 +818,23 @@ export default function AdminOrganizationsPage({
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: '24px', p: 1, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+            borderRadius: 3, p: 1, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
             border: `1px solid ${COLORS.border}`
           }
         }}
       >
         <DialogTitle sx={{ p: 4, pb: 1 }}>
-          <Typography sx={{ fontWeight: 900, fontSize: 22, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+          <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 22, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
             {manageOrg?._id ? "Organization Settings" : "New Organization"}
           </Typography>
-          <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5 }}>
+          <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, fontWeight: 400, mt: 0.5 }}>
             {manageOrg?._id ? "Update department details and signatory configurations." : "Establish a new institutional office for the clearance workflow."}
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ p: 4 }}>
           <Box display="flex" flexDirection="column" gap={3.5}>
             <Box>
-              <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
                 Full Name
               </FormLabel>
               <TextField
@@ -778,12 +842,12 @@ export default function AdminOrganizationsPage({
                 placeholder="e.g. Registrar's Office"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC', border: 'none', px: 0.5 } }}
+                InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC', border: 'none', px: 0.5 } }}
                 sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
             <Box>
-              <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
                 Internal Description
               </FormLabel>
               <TextField
@@ -793,13 +857,13 @@ export default function AdminOrganizationsPage({
                 placeholder="Briefly describe the purpose of this organization..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
+                InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC' } }}
                 sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
                   System Signatory
                 </FormLabel>
                 <TextField
@@ -807,12 +871,12 @@ export default function AdminOrganizationsPage({
                   placeholder="e.g. Juan Dela Cruz"
                   value={signatoryName}
                   onChange={(e) => setSignatoryName(e.target.value)}
-                  InputProps={{ sx: { borderRadius: '12px', bgcolor: '#F8FAFC' } }}
+                  InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC' } }}
                   sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
                   Access Code
                 </FormLabel>
                 <TextField
@@ -821,7 +885,7 @@ export default function AdminOrganizationsPage({
                   disabled
                   InputProps={{
                     sx: {
-                      borderRadius: '12px', bgcolor: '#F1F5F9', fontWeight: 900,
+                      fontFamily: fontStack, borderRadius: 2, bgcolor: '#F1F5F9', fontWeight: 700,
                       color: COLORS.accentBlue, textAlign: 'center', fontSize: 14
                     },
                   }}
@@ -829,13 +893,13 @@ export default function AdminOrganizationsPage({
               </Grid>
             </Grid>
             <Box sx={{
-              display: 'flex', alignItems: 'center', gap: 2, p: 2.5, borderRadius: '16px',
+              display: 'flex', alignItems: 'center', gap: 2, p: 2.5, borderRadius: 2,
               bgcolor: isFinal ? '#F0FDFA' : '#F8FAFC', border: `1px solid ${isFinal ? '#CCFBF1' : '#E2E8F0'}`,
               transition: '0.3s'
             }}>
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary }}>Final Milestone</Typography>
-                <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 14, color: COLORS.textPrimary }}>Final Milestone</Typography>
+                <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 400 }}>
                   Mark this as the final required signatory in the sequence.
                 </Typography>
               </Box>
@@ -853,7 +917,7 @@ export default function AdminOrganizationsPage({
         <DialogActions sx={{ p: 4, pt: 1, gap: 1.5 }}>
           <Button
             onClick={() => setManageOrg(null)}
-            sx={{ color: COLORS.textSecondary, textTransform: 'none', fontWeight: 800, fontSize: 14 }}
+            sx={{ fontFamily: fontStack, color: COLORS.textSecondary, textTransform: 'none', fontWeight: 600, fontSize: 14 }}
           >
             Go Back
           </Button>
@@ -886,8 +950,8 @@ export default function AdminOrganizationsPage({
               }
             }}
             sx={{
-              borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
-              textTransform: 'none', px: 4, py: 1.2, fontWeight: 800, fontSize: 14,
+              fontFamily: fontStack, borderRadius: '8px', bgcolor: COLORS.black,
+              textTransform: 'none', px: 4, py: 1.2, fontWeight: 600, fontSize: 14,
               boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
               '&:hover': {
                 bgcolor: '#000',
@@ -908,7 +972,7 @@ export default function AdminOrganizationsPage({
         onClose={() => setMenuAnchorEl(null)}
         PaperProps={{
           sx: {
-            borderRadius: COLORS.cardRadius,
+            borderRadius: 3,
             mt: 1.5,
             minWidth: 180,
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02)',
@@ -918,7 +982,7 @@ export default function AdminOrganizationsPage({
               fontWeight: 700,
               py: 1.5,
               px: 2.5,
-              borderRadius: '12px',
+              borderRadius: 2,
               mx: 1,
               my: 0.5,
               color: COLORS.textPrimary,
@@ -1029,7 +1093,7 @@ export default function AdminOrganizationsPage({
         onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
         PaperProps={{
           sx: {
-            borderRadius: '32px',
+            borderRadius: 3,
             padding: '48px 32px',
             maxWidth: '440px',
             boxShadow: '0 25px 70px -12px rgba(0,0,0,0.18)',
@@ -1071,7 +1135,7 @@ export default function AdminOrganizationsPage({
                 setConfirmDialog(prev => ({ ...prev, open: false }));
               }}
               sx={{
-                borderRadius: '16px',
+                borderRadius: '8px',
                 bgcolor: '#3c4043',
                 color: '#FFF',
                 textTransform: 'none',
@@ -1117,7 +1181,7 @@ export default function AdminOrganizationsPage({
         onClose={() => setSuccessDialog(prev => ({ ...prev, open: false }))}
         PaperProps={{
           sx: {
-            borderRadius: '40px',
+            borderRadius: 3,
             p: 4,
             maxWidth: '440px',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
@@ -1126,32 +1190,81 @@ export default function AdminOrganizationsPage({
         }}
       >
         <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Box sx={{
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mb: 3,
-            background: 'radial-gradient(circle, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0) 70%)',
-            border: '1px solid rgba(14, 116, 144, 0.1)'
-          }}>
-            <Box sx={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              bgcolor: 'rgba(14, 116, 144, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <CheckCircleRounded sx={{ fontSize: 36, color: COLORS.teal }} />
+          {/* Animated Checkmark Icon with Glow (SuccessActionModal Style) */}
+          <Box display="flex" flexDirection="column" alignItems="center" gap={4} sx={{ mb: 2, pt: 2 }}>
+            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 160, height: 160 }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+              >
+                <Box
+                  sx={{
+                    width: 160,
+                    height: 160,
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, rgba(176, 224, 230, 0.4) 0%, rgba(176, 224, 230, 0) 70%)`,
+                    filter: 'blur(16px)',
+                    zIndex: 1
+                  }}
+                />
+              </motion.div>
+
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: 110,
+                  height: 110,
+                  borderRadius: '50%',
+                  bgcolor: 'rgba(176, 224, 230, 0.1)',
+                  border: `1px solid rgba(176, 224, 230, 0.2)`,
+                  zIndex: 2
+                }}
+              />
+
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: 78,
+                  height: 78,
+                  borderRadius: '50%',
+                  bgcolor: '#B0E0E6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '3px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: `
+                    0 10px 25px rgba(176, 224, 230, 0.4),
+                    inset 0 -4px 6px rgba(0, 0, 0, 0.05)
+                  `,
+                  zIndex: 3
+                }}
+              >
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
+                >
+                  <motion.path
+                    d="M20 6L9 17L4 12"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={successDialog.open ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+                    transition={{ delay: 0.5, duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                  />
+                </svg>
+              </Box>
             </Box>
           </Box>
 
           <Typography sx={{
-            fontWeight: 900,
+            fontFamily: fontStack,
+            fontWeight: 750,
             fontSize: '28px',
             color: COLORS.textPrimary,
             letterSpacing: '-0.03em',
@@ -1162,6 +1275,7 @@ export default function AdminOrganizationsPage({
             {successDialog.title}
           </Typography>
           <Typography sx={{
+            fontFamily: fontStack,
             fontSize: '16px',
             color: COLORS.textSecondary,
             fontWeight: 500,
@@ -1176,14 +1290,15 @@ export default function AdminOrganizationsPage({
             disableElevation
             onClick={() => setSuccessDialog(prev => ({ ...prev, open: false }))}
             sx={{
-              borderRadius: COLORS.pillRadius,
+              fontFamily: fontStack,
+              borderRadius: '8px',
               bgcolor: '#F1F5F9',
               color: COLORS.textPrimary,
               textTransform: 'none',
               width: '100%',
               py: 2.2,
               fontSize: '18px',
-              fontWeight: 900,
+              fontWeight: 700,
               letterSpacing: '-0.01em',
               '&:hover': {
                 bgcolor: '#E2E8F0',
@@ -1204,7 +1319,7 @@ export default function AdminOrganizationsPage({
         maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: '24px',
+            borderRadius: 3,
             p: 0,
             maxHeight: '90vh',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -1260,7 +1375,7 @@ export default function AdminOrganizationsPage({
                     </InputAdornment>
                   ),
                   sx: {
-                    borderRadius: '12px',
+                    borderRadius: 2,
                     bgcolor: '#FFF',
                     fontFamily: fontStack,
                     color: '#101828',
@@ -1320,7 +1435,7 @@ export default function AdminOrganizationsPage({
                         alignItems: 'center',
                         gap: 1.5,
                         p: 1.5,
-                        borderRadius: '12px',
+                        borderRadius: 2,
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         '&:hover': {
@@ -1356,19 +1471,24 @@ export default function AdminOrganizationsPage({
 
                       <Box
                         sx={{
-                          bgcolor: member.role === 'officer' ? '#E0F2FE' : '#FEF9C3',
-                          color: member.role === 'officer' ? '#0369A1' : '#854D0E',
+                          display: 'inline-flex',
+                          alignItems: 'center',
                           px: 1.5,
                           py: 0.5,
-                          borderRadius: '8px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          fontFamily: fontStack,
-                          letterSpacing: '0.025em',
-                          textTransform: 'capitalize'
+                          borderRadius: '99px',
+                          bgcolor: member.role === 'officer' ? '#E0F2FE' : '#FEF9C3',
+                          border: `1px solid ${member.role === 'officer' ? '#0369A120' : '#854D0E20'}`
                         }}
                       >
-                        {member.role === 'officer' ? 'Officer' : 'Student'}
+                        <Typography sx={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: member.role === 'officer' ? '#0369A1' : '#854D0E',
+                          fontFamily: fontStack,
+                          textTransform: 'capitalize'
+                        }}>
+                          {member.role === 'officer' ? 'Officer' : 'Student'}
+                        </Typography>
                       </Box>
                     </Box>
                   );
@@ -1419,7 +1539,7 @@ export default function AdminOrganizationsPage({
               sx={{
                 bgcolor: COLORS.black,
                 color: '#FFFFFF',
-                borderRadius: '100px',
+                borderRadius: '8px',
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '0.95rem',

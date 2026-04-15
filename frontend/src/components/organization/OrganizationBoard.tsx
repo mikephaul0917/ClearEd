@@ -24,6 +24,8 @@ interface OrganizationBoardProps {
     icon?: React.ReactNode;
     iconBgColor?: string;
     iconColor?: string;
+    onRefresh?: () => void;
+    isAdmin?: boolean;
 }
 
 const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
@@ -37,7 +39,9 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
     headerAction,
     icon,
     iconBgColor,
-    iconColor
+    iconColor,
+    onRefresh,
+    isAdmin = false
 }) => {
     // Rely on exactly what is passed via the organizations prop
     const displayedOrgs = organizations;
@@ -50,7 +54,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                         <Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: description ? 0.5 : 0 }}>
                                 {icon && (
-                                    <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: 2, bgcolor: "#eaebec" }} />
+                                    <Skeleton variant="circular" width={40} height={40} />
                                 )}
                                 <Skeleton variant="text" width={200} height={40} sx={{ bgcolor: "#eaebec" }} />
                             </Box>
@@ -76,7 +80,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     {/* Header Skeleton */}
                                     <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: "32px", overflow: "hidden", bgcolor: "#FFFFFF", border: '1px solid #eaebec' }}>
                                         <Box sx={{ height: "100%", display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: 6 }}>
-                                            <Skeleton variant="rectangular" width={60} height={60} sx={{ borderRadius: "16px", bgcolor: "#eaebec" }} />
+                                            <Skeleton variant="circular" width={60} height={60} sx={{ bgcolor: "#eaebec" }} />
                                         </Box>
                                     </Box>
  
@@ -163,7 +167,12 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                     <Grid container spacing={3}>
                         {displayedOrgs.map((org) => (
                             <Grid item key={org.id} xs={12} sm={6} md={4} lg={3}>
-                                <OrganizationCard {...org} onClick={onCardClick} />
+                                <OrganizationCard 
+                                    {...org} 
+                                    onClick={onCardClick} 
+                                    onRefresh={onRefresh}
+                                    isAdmin={isAdmin}
+                                />
                             </Grid>
                         ))}
                     </Grid>

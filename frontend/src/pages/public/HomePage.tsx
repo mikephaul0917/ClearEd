@@ -4,6 +4,8 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import AddIcon from "@mui/icons-material/Add";
 import BusinessIcon from "@mui/icons-material/Business";
 import { useNavigate } from "react-router-dom";
@@ -27,8 +29,29 @@ const HomePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const openMenu = Boolean(anchorEl);
 
     const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+    const isOfficerOrAdmin = isAdmin || user?.role === "officer";
+
+    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleJoinClick = () => {
+        handleMenuClose();
+        setIsJoinModalOpen(true);
+    };
+
+    const handleCreateClick = () => {
+        handleMenuClose();
+        setIsCreateModalOpen(true);
+    };
 
     const fetchOrgs = async () => {
         try {
@@ -82,32 +105,17 @@ const HomePage: React.FC = () => {
                     icon={<BusinessIcon />}
                     iconBgColor="#F1F5F9"
                     iconColor="#475569"
+                    onRefresh={fetchOrgs}
+                    isAdmin={isAdmin}
                     headerAction={
                         <Box display="flex" gap={1.5} flexDirection="row" alignItems="center" flexWrap="wrap">
-                            {isAdmin && (
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => setIsCreateModalOpen(true)}
-                                    sx={{
-                                        borderColor: "#0F172A",
-                                        color: "#0F172A",
-                                        borderRadius: "10px",
-                                        textTransform: "none",
-                                        px: 3,
-                                        fontWeight: 700,
-                                        "&:hover": { borderColor: "#1E293B", bgcolor: "rgba(15, 23, 42, 0.04)" }
-                                    }}
-                                >
-                                    Create Organization
-                                </Button>
-                            )}
-                            <Tooltip title="Join Organization" arrow placement="top">
+                            <Tooltip title="Create or join a class" arrow placement="top">
                                 <IconButton
-                                    onClick={() => setIsJoinModalOpen(true)}
+                                    onClick={handleMenuClick}
                                     sx={{
                                         position: { xs: 'fixed', sm: 'relative' },
-                                        bottom: { xs: 24, sm: 'auto' },
-                                        right: { xs: 24, sm: 'auto' },
+                                        bottom: { xs: 40, sm: 'auto' },
+                                        right: { xs: 40, sm: 'auto' },
                                         zIndex: 1000,
                                         bgcolor: "#3c4043",
                                         color: "#FFFFFF",
@@ -131,6 +139,45 @@ const HomePage: React.FC = () => {
                                     <AddIcon sx={{ fontSize: { xs: 28, sm: 24 } }} />
                                 </IconButton>
                             </Tooltip>
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={openMenu}
+                                onClose={handleMenuClose}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                PaperProps={{
+                                    elevation: 0,
+                                    sx: {
+                                        overflow: 'visible',
+                                        filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.1))',
+                                        mt: 0.5,
+                                        borderRadius: '8px',
+                                        minWidth: 160,
+                                        py: 0.5,
+                                        '& .MuiMenuItem-root': {
+                                            fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
+                                            py: 1.5,
+                                            px: 2.5,
+                                            fontSize: '0.95rem',
+                                            fontWeight: 500,
+                                            color: '#3c4043',
+                                            transition: 'background-color 0.2s',
+                                            '&:hover': {
+                                                bgcolor: 'rgba(0, 0, 0, 0.04)',
+                                            }
+                                        }
+                                    },
+                                }}
+                            >
+                                <MenuItem onClick={handleJoinClick}>
+                                    Join org
+                                </MenuItem>
+                                {isOfficerOrAdmin && (
+                                    <MenuItem onClick={handleCreateClick}>
+                                        Create org
+                                    </MenuItem>
+                                )}
+                            </Menu>
                         </Box>
                     }
                 />

@@ -227,6 +227,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
+        // Reset bulk selections in child components when opening/closing the sidebar
+        window.dispatchEvent(new CustomEvent('clear-bulk-selections'));
     };
 
     const handleNavClick = (path: string) => {
@@ -235,10 +237,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             setMobileOpen(false);
         }
     };
-
-    if (isLoading) {
-        return isMobile ? <MobileSidebarSkeleton /> : <SidebarSkeleton />;
-    }
 
     if (isMobile) {
         return (
@@ -979,15 +977,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                         sx={{
                             width: 40,
                             height: 40,
-                            bgcolor: "#5F6368",
+                            bgcolor: "#5f6368",
                             color: "#FFFFFF",
                             fontSize: 14,
-                            fontWeight: 700,
+                            fontWeight: 800,
                         }}
                     >
                         {initials}
                     </Avatar>
-                    {isAdmin && <VerifiedCheckIcon />}
                 </Box>
                 <Box sx={{ overflow: 'hidden' }}>
                     <Typography fontSize={14} fontWeight={700} sx={{ color: "#0F172A", lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

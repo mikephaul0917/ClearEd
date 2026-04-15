@@ -118,8 +118,8 @@ export default function HowItWorks() {
             sx={{
               fontFamily: fontStack,
               fontWeight: 800,
-              fontSize: { xs: "40px", md: "60px" },
-              letterSpacing: "-2px",
+              fontSize: { xs: "32px", sm: "40px", md: "60px" },
+              letterSpacing: { xs: "-1px", md: "-2px" },
               lineHeight: 1.1,
               color: '#000',
               mb: 3,
@@ -130,7 +130,7 @@ export default function HowItWorks() {
           <Typography
             sx={{
               fontFamily: fontStack,
-              fontSize: "18px",
+              fontSize: { xs: "16px", md: "18px" },
               color: "#555",
               lineHeight: 1.7,
               maxWidth: 560,
@@ -165,7 +165,7 @@ export default function HowItWorks() {
               sx={{
                 fontFamily: fontStack,
                 fontWeight: 800,
-                fontSize: "28px",
+                fontSize: { xs: "24px", md: "28px" },
                 letterSpacing: "-0.5px",
                 color: C.white,
                 lineHeight: 1.2,
@@ -176,11 +176,12 @@ export default function HowItWorks() {
             <Typography
               sx={{
                 fontFamily: fontStack,
-                fontSize: "15px",
+                fontSize: { xs: "14px", md: "15px" },
                 color: "rgba(255,255,255,0.65)",
                 lineHeight: 1.75,
-                mt: "auto",
-                pr: "48px",
+                mt: { xs: 2, md: "auto" },
+                pr: { xs: 0, md: "48px" },
+                pb: { xs: 4, md: 0 }
               }}
             >
               E-Clearance streamlines your academic clearance through a digital
@@ -197,7 +198,7 @@ export default function HowItWorks() {
               sx={{
                 fontFamily: fontStack,
                 fontWeight: 800,
-                fontSize: "22px",
+                fontSize: { xs: "20px", md: "22px" },
                 letterSpacing: "-0.3px",
                 color: '#000',
                 lineHeight: 1.3,
@@ -208,11 +209,12 @@ export default function HowItWorks() {
             <Typography
               sx={{
                 fontFamily: fontStack,
-                fontSize: "14px",
+                fontSize: { xs: "13px", md: "14px" },
                 color: "rgba(0,0,0,0.65)",
                 lineHeight: 1.75,
-                mt: "auto",
-                pr: "48px",
+                mt: { xs: 2, md: "auto" },
+                pr: { xs: 0, md: "48px" },
+                pb: { xs: 4, md: 0 }
               }}
             >
               Manage clearance requests efficiently with configurable roles.
@@ -229,7 +231,7 @@ export default function HowItWorks() {
               sx={{
                 fontFamily: fontStack,
                 fontWeight: 800,
-                fontSize: "22px",
+                fontSize: { xs: "20px", md: "22px" },
                 letterSpacing: "-0.3px",
                 color: '#000',
                 lineHeight: 1.3,
@@ -240,11 +242,12 @@ export default function HowItWorks() {
             <Typography
               sx={{
                 fontFamily: fontStack,
-                fontSize: "14px",
+                fontSize: { xs: "13px", md: "14px" },
                 color: "rgba(0,0,0,0.65)",
                 lineHeight: 1.75,
-                mt: "auto",
-                pr: "48px",
+                mt: { xs: 2, md: "auto" },
+                pr: { xs: 0, md: "48px" },
+                pb: { xs: 4, md: 0 }
               }}
             >
               All institution access requests are reviewed by system admins to
@@ -270,7 +273,7 @@ export default function HowItWorks() {
               sx={{
                 fontFamily: fontStack,
                 fontWeight: 800,
-                fontSize: "22px",
+                fontSize: { xs: "20px", md: "22px" },
                 letterSpacing: "-0.3px",
                 color: '#000',
                 lineHeight: 1.3,
@@ -281,10 +284,11 @@ export default function HowItWorks() {
             <Typography
               sx={{
                 fontFamily: fontStack,
-                fontSize: "14px",
+                fontSize: { xs: "13px", md: "14px" },
                 color: "rgba(0,0,0,0.65)",
                 lineHeight: 1.75,
-                pr: "48px",
+                pr: { xs: 0, md: "48px" },
+                pb: { xs: 4, md: 0 }
               }}
             >
               Personal email domains (gmail, yahoo, outlook) are automatically
@@ -309,7 +313,7 @@ export default function HowItWorks() {
               sx={{
                 fontFamily: fontStack,
                 fontWeight: 800,
-                fontSize: "26px",
+                fontSize: { xs: "22px", md: "26px" },
                 letterSpacing: "-0.5px",
                 color: '#000',
                 lineHeight: 1.25,
@@ -321,7 +325,7 @@ export default function HowItWorks() {
             <Typography
               sx={{
                 fontFamily: fontStack,
-                fontSize: "14px",
+                fontSize: { xs: "13px", md: "14px" },
                 color: "#555",
                 lineHeight: 1.75,
                 maxWidth: 460,

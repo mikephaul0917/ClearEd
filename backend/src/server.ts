@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { connectDB } from "./config/db";
 import { startStaleInstitutionCleanupJob } from "./cron/deleteStaleInstitutions";
+import { initTermScheduler } from "./cron/termScheduler";
 
 // Import all data models to register them with Mongoose
 import "./models/Quote"; // Inspirational quotes for login/register pages
@@ -93,6 +94,7 @@ app.use(errorHandler);
 
 // Start background tasks
 startStaleInstitutionCleanupJob();
+initTermScheduler();
 
 // Start server
 const PORT = process.env.PORT || 5000;

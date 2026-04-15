@@ -62,7 +62,7 @@ import { adminService } from '../../services';
 
 // --- DESIGN TOKENS (Matching AdminPage) ---
 const COLORS = {
-  black: '#0a0a0a',
+  black: '#3c4043',
   textPrimary: '#000000',
   textSecondary: '#64748B',
   accent: '#0a0a0a',
@@ -179,7 +179,7 @@ export default function AdminRecordsPage({
     // Filter categories and severities based on tabs
     let category = '';
     let severity = '';
-    
+
     if (newValue === 1) {
       category = 'security,auth';
       severity = 'high,critical';
@@ -278,15 +278,15 @@ export default function AdminRecordsPage({
   const filterLogsByTab = (logsToFilter: AuditLog[]) => {
     if (tabValue === 0) return logsToFilter;
     if (tabValue === 1) {
-      return logsToFilter.filter(l => 
-        l.category === 'security' || 
-        l.action.toUpperCase().includes('FAILED') || 
-        l.severity === 'critical' || 
+      return logsToFilter.filter(l =>
+        l.category === 'security' ||
+        l.action.toUpperCase().includes('FAILED') ||
+        l.severity === 'critical' ||
         l.severity === 'high'
       );
     }
     if (tabValue === 2) return logsToFilter.filter(l => l.action.includes('LOGIN'));
-    if (tabValue === 3) return logsToFilter.filter(l => 
+    if (tabValue === 3) return logsToFilter.filter(l =>
       ['user_management', 'organization_management', 'institution_management', 'system'].includes(l.category)
     );
     return logsToFilter;
@@ -295,39 +295,33 @@ export default function AdminRecordsPage({
 
   // --- Custom Skeleton Components ---
   const TabSkeleton = () => (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center',
-      width: '100%',
-      mb: 4
+    <Box sx={{
+      borderBottom: 1,
+      borderColor: "divider",
+      mb: 4,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
     }}>
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 1, 
-        bgcolor: '#FFFFFF', 
-        p: 0.8, 
-        borderRadius: '100px', 
-        border: '1px solid #E2E8F0',
-        width: 'fit-content',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
-      }}>
+      <Box sx={{ display: 'flex' }}>
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} variant="rectangular" width={110} height={40} sx={{ borderRadius: '100px' }} />
+          <Box key={i} sx={{ px: 3, py: 2 }}>
+            <Skeleton variant="text" width={80} height={20} />
+          </Box>
         ))}
       </Box>
-      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px' }} />
+      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px', mb: 1 }} />
     </Box>
   );
 
   const FilterBarSkeleton = () => (
-    <Box sx={{ 
-      mb: 3, 
-      display: 'flex', 
+    <Box sx={{
+      mb: 3,
+      display: 'flex',
       flexDirection: { xs: 'column', sm: 'row' },
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      gap: 2 
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 2
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Skeleton variant="circular" width={24} height={24} />
@@ -345,13 +339,13 @@ export default function AdminRecordsPage({
       p: 3, borderRadius: COLORS.cardRadius, bgcolor: '#FFFFFF',
       border: `1px solid ${COLORS.border}`, mb: 3
     }}>
-      <Box sx={{ 
-        display: 'grid', 
+      <Box sx={{
+        display: 'grid',
         gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
-        gap: 1.5, mb: 3 
+        gap: 1.5, mb: 3
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
-          <Box key={i} sx={{ 
+          <Box key={i} sx={{
             p: 2.5, bgcolor: '#F8FAFC', borderRadius: '14px', minHeight: 85,
             gridColumn: { xs: i === 5 ? 'span 2' : 'span 1', sm: 'span 1' }
           }}>
@@ -360,10 +354,10 @@ export default function AdminRecordsPage({
           </Box>
         ))}
       </Box>
-      <Box sx={{ 
-        display: 'grid', 
+      <Box sx={{
+        display: 'grid',
         gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
-        gap: 3, px: 2 
+        gap: 3, px: 2
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
           <Box key={i}>
@@ -444,13 +438,13 @@ export default function AdminRecordsPage({
         {/* Action & Participant Column */}
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
           <Box sx={{ position: 'relative', flexShrink: 0 }}>
-            <Avatar 
+            <Avatar
               sx={{ width: { xs: 38, sm: 44 }, height: { xs: 38, sm: 44 }, bgcolor: COLORS.black, color: '#FFF', fontSize: { xs: 14, sm: 16 }, fontWeight: 800 }}
               src={log.userName ? undefined : undefined}
             >
               {log.userName?.[0] || 'S'}
             </Avatar>
-            <Box sx={{ 
+            <Box sx={{
               position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: 0.3,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
@@ -459,13 +453,13 @@ export default function AdminRecordsPage({
             </Box>
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ 
+            <Typography sx={{
               fontWeight: 800, fontSize: { xs: 13, sm: 15 }, color: '#1E293B', lineHeight: 1.2,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
             }}>
               {log.action.replace(/_/g, ' ').toLowerCase()}
             </Typography>
-            <Typography sx={{ 
+            <Typography sx={{
               fontSize: { xs: 11, sm: 13 }, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
             }}>
@@ -489,8 +483,8 @@ export default function AdminRecordsPage({
         >
           Details
         </Button>
-        <IconButton 
-          sx={{ display: { xs: 'flex', md: 'none' }, bgcolor: '#F1F5F9', p: 1 }} 
+        <IconButton
+          sx={{ display: { xs: 'flex', md: 'none' }, bgcolor: '#F1F5F9', p: 1 }}
           onClick={() => { setSelectedLog(log); setDetailsOpen(true); }}
         >
           <MoreHoriz sx={{ fontSize: 20 }} />
@@ -500,92 +494,62 @@ export default function AdminRecordsPage({
   };
 
   return (
-    <Box sx={{ mt: 0 }}>
+    <Box sx={{ mt: 0, pt: 0 }}>
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
-
       {/* --- Tabs & Actions --- */}
       {loading && isInitialLoad ? (
         <TabSkeleton />
       ) : (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          borderBottom: 1,
+          borderColor: "divider",
           mb: 4,
           gap: { xs: 1.5, sm: 2 },
           width: '100%'
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            bgcolor: '#FFFFFF', 
-            p: 0.8, 
-            borderRadius: '100px', 
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-            flex: 1,
-            minWidth: 0,
-            overflowX: 'auto',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' }
-          }}>
-            {['System Records', 'Security & Alerts', 'Access Logs', 'Admin Actions'].map((label, idx) => {
-              const active = tabValue === idx;
-              return (
-                <Button
-                  key={label}
-                  onClick={() => handleTabChange({} as any, idx)}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    fontSize: { xs: 12, sm: 13 },
-                    px: { xs: 2.5, sm: 3.5 },
-                    py: 1.2,
-                    borderRadius: '100px',
-                    color: active ? '#FFFFFF' : '#64748B',
-                    bgcolor: 'transparent',
-                    position: 'relative',
-                    zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    '&:hover': {
-                      color: active ? '#FFFFFF' : '#1E293B'
-                    },
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="activeTabIndicator"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: '#1E293B',
-                        borderRadius: '100px',
-                        zIndex: -1,
-                        boxShadow: '0 10px 20px -5px rgba(0,0,0,0.2)'
-                      }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  {label}
-                </Button>
-              );
-            })}
-          </Box>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            textColor="primary"
+            variant="scrollable"
+            scrollButtons="auto"
+            TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+            sx={{
+              mb: "-1px", // Overlap the parent border
+              "& .MuiTab-root": {
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: "#5f6368",
+                minWidth: { xs: 'auto', sm: 120 },
+                px: { xs: 2, sm: 3 },
+                py: 2,
+              },
+              "& .Mui-selected": {
+                color: "#0D9488 !important",
+                fontWeight: 800
+              }
+            }}
+          >
+            <Tab label="System Records" />
+            <Tab label="Security & Alerts" />
+            <Tab label="Access Logs" />
+            <Tab label="Admin Actions" />
+          </Tabs>
 
           <Tooltip title="Export Logs">
-            <IconButton 
+            <IconButton
               onClick={handleExport}
-              sx={{ 
-                border: `1px solid ${COLORS.border}`, 
+              sx={{
+                mb: 1,
+                border: `1px solid ${COLORS.border}`,
                 borderRadius: '14px',
                 bgcolor: '#FFF',
                 width: { xs: 44, sm: 48 },
@@ -602,24 +566,25 @@ export default function AdminRecordsPage({
         </Box>
       )}
 
+
       {/* --- Consolidated Overview Card --- */}
       {loading ? (
         <OverviewSkeleton />
       ) : (
-        <Card sx={{ 
-          borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`, 
+        <Card sx={{
+          borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`,
           boxShadow: 'none', mb: 3, overflow: 'visible'
         }}>
           <CardContent sx={{ p: 3 }}>
             {/* Top Row: Metrics */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: 'repeat(2, 1fr)', 
-                sm: 'repeat(3, 1fr)', 
-                md: 'repeat(5, 1fr)' 
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(5, 1fr)'
               },
-              gap: 1.5, 
+              gap: 1.5,
               mb: 3
             }}>
               {[
@@ -629,9 +594,9 @@ export default function AdminRecordsPage({
                 { label: 'CRITICAL EVENTS', value: logs.filter(l => l.severity === 'critical').length },
                 { label: 'SYSTEM HEALTH', value: '100%', color: COLORS.darkTeal }
               ].map((stat, idx, arr) => (
-                <Box 
+                <Box
                   key={stat.label}
-                  sx={{ 
+                  sx={{
                     p: { xs: 2, sm: 2.5 }, bgcolor: '#F8FAFC', borderRadius: '14px',
                     display: 'flex', flexDirection: 'column', gap: 0.2,
                     position: 'relative',
@@ -650,7 +615,7 @@ export default function AdminRecordsPage({
                   </Typography>
                   {/* Vertical Divider for desktop only */}
                   {idx < arr.length - 1 && (
-                    <Box sx={{ 
+                    <Box sx={{
                       display: { xs: 'none', md: 'block' },
                       position: 'absolute', right: -6, top: '20%', bottom: '20%',
                       width: '1px', bgcolor: COLORS.border, zIndex: 1
@@ -661,18 +626,18 @@ export default function AdminRecordsPage({
             </Box>
 
             {/* Bottom Row: Context */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: '1fr 1fr', 
-                sm: 'repeat(3, 1fr)', 
-                md: 'repeat(5, 1fr)' 
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr 1fr',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(5, 1fr)'
               },
-              px: { xs: 1, md: 2 }, 
+              px: { xs: 1, md: 2 },
               gap: 3
             }}>
               {[
-                { label: 'START DATE', value: logs.length > 0 ? new Date(logs[logs.length-1].createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
+                { label: 'START DATE', value: logs.length > 0 ? new Date(logs[logs.length - 1].createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
                 { label: 'LAST UPDATED', value: logs[0] ? formatDate(logs[0].createdAt) + ', Today' : '—' },
                 { label: 'MONITORING', value: 'ACTIVE', color: COLORS.darkTeal },
                 { label: 'DATABASE', value: 'MONGODB' },
@@ -696,24 +661,24 @@ export default function AdminRecordsPage({
       {loading ? (
         <FilterBarSkeleton />
       ) : (
-        <Box sx={{ 
-          mb: 3, 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' }, 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'stretch', sm: 'center' }, 
-          gap: 2 
+        <Box sx={{
+          mb: 3,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: 2
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0, sm: 0 } }}>
             <History sx={{ fontSize: 20, color: COLORS.textSecondary }} />
             <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Activity Logs</Typography>
           </Box>
 
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1.5, 
-            width: { xs: '100%', sm: 'auto' }, 
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            width: { xs: '100%', sm: 'auto' },
             flexDirection: 'row' // Keep them on the same row on mobile for space efficiency
           }}>
             <TextField
@@ -723,19 +688,19 @@ export default function AdminRecordsPage({
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: <Search sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
-                sx: { 
-                  borderRadius: '10px', 
-                  bgcolor: '#FFF', 
-                  fontSize: 13, 
-                  height: 36, 
+                sx: {
+                  borderRadius: '10px',
+                  bgcolor: '#FFF',
+                  fontSize: 13,
+                  height: 36,
                   minWidth: { xs: 'none', sm: 240 },
                   flex: 1
                 }
               }}
-              sx={{ 
+              sx={{
                 flex: 1,
                 width: 'auto',
-                '& .MuiOutlinedInput-notchedOutline': { 
+                '& .MuiOutlinedInput-notchedOutline': {
                   border: '1px solid transparent',
                   transition: 'border-color 0.2s',
                   borderColor: '#E2E8F0'
@@ -754,7 +719,7 @@ export default function AdminRecordsPage({
               variant="outlined"
               onClick={handleFilterOpen}
               endIcon={<FilterIcon sx={{ fontSize: 18 }} />}
-              sx={{ 
+              sx={{
                 height: 36,
                 borderRadius: '10px',
                 px: { xs: 1.5, sm: 2 },
@@ -779,10 +744,10 @@ export default function AdminRecordsPage({
               open={Boolean(filterAnchorEl)}
               onClose={handleFilterClose}
               PaperProps={{
-                sx: { 
-                  mt: 1, 
-                  p: 1.5, 
-                  borderRadius: '16px', 
+                sx: {
+                  mt: 1,
+                  p: 1.5,
+                  borderRadius: '16px',
                   boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)',
                   minWidth: '240px',
                   border: '1px solid #F1F5F9'
@@ -792,19 +757,19 @@ export default function AdminRecordsPage({
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
               <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>DATE RANGE</Typography>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('dateRange', '1d'); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '1d' ? 800 : 500, bgcolor: filters.dateRange === '1d' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
               >
                 Last 24 Hours
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('dateRange', '7d'); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '7d' ? 800 : 500, bgcolor: filters.dateRange === '7d' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
               >
                 Last 7 Days
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('dateRange', '30d'); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === '30d' ? 800 : 500, bgcolor: filters.dateRange === '30d' ? '#F1F5F9' : 'transparent' }}
               >
@@ -814,19 +779,19 @@ export default function AdminRecordsPage({
               <Divider sx={{ my: 1.5, opacity: 0.5 }} />
 
               <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>SEVERITY</Typography>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('severity', ''); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.severity === '' ? 800 : 500, bgcolor: filters.severity === '' ? '#F1F5F9' : 'transparent', mb: 0.5 }}
               >
                 All Severities
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('severity', 'critical'); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, color: 'error.main', fontWeight: filters.severity === 'critical' ? 800 : 500, bgcolor: filters.severity === 'critical' ? '#FEE2E2' : 'transparent', mb: 0.5 }}
               >
                 Critical Only
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => { handleFilterChange('severity', 'high'); handleFilterClose(); }}
                 sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.severity === 'high' ? 800 : 500, bgcolor: filters.severity === 'high' ? '#F1F5F9' : 'transparent' }}
               >
@@ -850,9 +815,9 @@ export default function AdminRecordsPage({
               return (
                 <React.Fragment key={log._id}>
                   {showMonth && (
-                    <Typography sx={{ 
-                      fontSize: 14, fontWeight: 800, color: COLORS.textSecondary, 
-                      mt: 4, mb: 2, px: 1, textTransform: 'capitalize' 
+                    <Typography sx={{
+                      fontSize: 14, fontWeight: 800, color: COLORS.textSecondary,
+                      mt: 4, mb: 2, px: 1, textTransform: 'capitalize'
                     }}>
                       {currentMonth}
                     </Typography>
@@ -875,16 +840,16 @@ export default function AdminRecordsPage({
         {loading ? (
           <Skeleton variant="rectangular" width={240} height={44} sx={{ borderRadius: '40px' }} />
         ) : (
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 1.5, 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
             bgcolor: '#F1F5F9', // Light background pill
             px: 1,
-            py: 0.5, 
-            borderRadius: '40px' 
+            py: 0.5,
+            borderRadius: '40px'
           }}>
-            <IconButton 
+            <IconButton
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
               sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}
@@ -936,7 +901,7 @@ export default function AdminRecordsPage({
               });
             })()}
 
-            <IconButton 
+            <IconButton
               disabled={page === totalPages}
               onClick={() => setPage(page + 1)}
               sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}

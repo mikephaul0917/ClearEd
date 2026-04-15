@@ -98,7 +98,7 @@ const InstitutionBentoCard = ({
               width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 },
               bgcolor: currentStatus.bg,
               color: currentStatus.color,
-              fontWeight: 800, fontSize: { xs: 14, sm: 16 }, borderRadius: '12px'
+              fontWeight: 800, fontSize: { xs: 14, sm: 16 }
             }}>
               {getInitials(inst.name)}
             </Avatar>
@@ -218,7 +218,7 @@ const CardSkeleton = () => (
     <Box sx={{ mb: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: '12px' }} />
+          <Skeleton variant="circular" width={44} height={44} />
           <Box>
             <Skeleton variant="text" width={100} height={20} />
             <Skeleton variant="text" width={60} height={16} />

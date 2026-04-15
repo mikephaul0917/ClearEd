@@ -91,8 +91,8 @@ export const reviewSubmission = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!['approved', 'rejected'].includes(decision)) {
-      return res.status(400).json({ message: "Invalid decision. Must be 'approved' or 'rejected'" });
+    if (!['approved', 'rejected', 'pending'].includes(decision)) {
+      return res.status(400).json({ message: "Invalid decision. Must be 'approved', 'rejected', or 'pending'" });
     }
 
     if (decision === 'rejected' && (!remarks || remarks.trim() === '')) {
@@ -121,18 +121,25 @@ export const reviewSubmission = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "You do not have permission to review this submission" });
     }
 
-    // 3. Create Review Record
-    const review = await ClearanceReview.create({
-      submissionId,
-      reviewerId,
-      decision,
-      level: role === 'dean' ? 'dean' : 'officer',
-      remarks,
-      institutionId
-    });
+    // 3. Update or Create Review Record
+    const review = await ClearanceReview.findOneAndUpdate(
+      { 
+        submissionId, 
+        level: role === 'dean' ? 'dean' : 'officer' 
+      },
+      {
+        submissionId,
+        reviewerId,
+        decision,
+        level: role === 'dean' ? 'dean' : 'officer',
+        remarks,
+        institutionId
+      },
+      { upsert: true, new: true, runValidators: true }
+    );
 
     // 4. Update Submission Status
-    submission.status = decision === 'approved' ? 'approved' : 'rejected';
+    submission.status = decision;
     submission.reviewedBy = reviewerId;
     submission.reviewedAt = new Date();
     submission.notes = remarks;
@@ -142,7 +149,8 @@ export const reviewSubmission = async (req: Request, res: Response) => {
     await AuditLog.create({
       userId: reviewerId,
       institutionId,
-      action: decision === 'approved' ? 'clearance_approved' : 'clearance_rejected',
+      action: decision === 'approved' ? 'clearance_approved' : 
+              decision === 'rejected' ? 'clearance_rejected' : 'clearance_revoked',
       category: 'clearance_workflow',
       resource: 'ClearanceSubmission',
       resourceId: submission._id,
@@ -164,6 +172,103 @@ export const reviewSubmission = async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('Review submission error:', err);
     res.status(500).json({ message: err.message || "Failed to process review" });
+  }
+};
+
+/**
+ * Bulk review multiple clearance submissions
+ */
+export const bulkReviewSubmissions = async (req: Request, res: Response) => {
+  try {
+    const reviewerId = (req as any).user?.id;
+    const institutionId = (req as any).user?.institutionId;
+    const role = (req as any).user?.role;
+    const { submissionIds, decision, remarks } = req.body;
+
+    if (!reviewerId || !institutionId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!submissionIds || !Array.isArray(submissionIds) || submissionIds.length === 0) {
+      return res.status(400).json({ message: "No submissions selected" });
+    }
+
+    if (!['approved', 'rejected', 'pending'].includes(decision)) {
+      return res.status(400).json({ message: "Invalid decision" });
+    }
+
+    // Find all relevant submissions
+    const submissions = await ClearanceSubmission.find({
+      _id: { $in: submissionIds },
+      institutionId
+    });
+
+    const results = [];
+    for (const submission of submissions) {
+      // Verify authority for the organization of this submission
+      const membership = await OrganizationMember.findOne({
+        userId: reviewerId,
+        organizationId: submission.organizationId,
+        role: "officer",
+        status: "active"
+      });
+
+      if (!membership && role !== 'admin' && role !== 'super_admin') {
+        continue;
+      }
+
+      // Update or Create Review Record
+      await ClearanceReview.findOneAndUpdate(
+        { 
+          submissionId: submission._id, 
+          level: role === 'dean' ? 'dean' : 'officer' 
+        },
+        {
+          submissionId: submission._id,
+          reviewerId,
+          decision,
+          level: role === 'dean' ? 'dean' : 'officer',
+          remarks,
+          institutionId
+        },
+        { upsert: true, runValidators: true }
+      );
+
+      // Update Submission
+      submission.status = decision;
+      submission.reviewedBy = reviewerId;
+      submission.reviewedAt = new Date();
+      submission.notes = remarks;
+      await submission.save();
+
+      results.push(submission._id);
+    }
+
+    if (results.length > 0) {
+      await AuditLog.create({
+        userId: reviewerId,
+        institutionId,
+        action: decision === 'approved' ? 'clearance_approved_bulk' : 
+                decision === 'rejected' ? 'clearance_rejected_bulk' : 'clearance_revoked_bulk',
+        category: 'clearance_workflow',
+        resource: 'ClearanceSubmission',
+        details: {
+          decision,
+          count: results.length,
+          submissionIds: results
+        },
+        severity: 'medium',
+        ipAddress: req.ip || 'unknown'
+      });
+    }
+
+    res.json({
+      message: `Successfully processed ${results.length} submissions`,
+      processedCount: results.length
+    });
+  } catch (err: any) {
+    console.error('Bulk review error:', err);
+    res.status(500).json({ message: err.message || "Failed to process bulk review" });
   }
 };
 

@@ -13,7 +13,7 @@ import { ERROR_MESSAGES } from "../../utils/errorMessages";
 // Teal #5fcca0 · Deep Black #0a0a0a · Lavender #cb9bfb · Yellow #FEF08A · Orange #ff895d
 const C = {
   white: "#FFFFFF",
-  black: "#000000",
+  black: "#3c4043",
   deep: "#0a0a0a",
   teal: "#5fcca0",
   lavender: "#cb9bfb",
@@ -190,12 +190,12 @@ export default function SuperAdminLoginPage() {
                 boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#1a1a1a";
+                e.currentTarget.style.backgroundColor = "#4d5154";
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = C.black;
+                e.currentTarget.style.backgroundColor = "#3c4043";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
               }}

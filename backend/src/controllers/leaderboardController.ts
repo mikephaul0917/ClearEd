@@ -57,8 +57,16 @@ export const getLeaderboardStats = async (req: Request, res: Response) => {
             isCleared = true;
             
             // Find earliest activity (submission or requested)
+            const studentRequests = await ClearanceRequest.find({ userId: student._id, termId: term._id }).select('_id');
+            const studentRequestIds = studentRequests.map(r => r._id);
+
             const [firstSub, firstReq] = await Promise.all([
-                ClearanceSubmission.findOne({ userId: student._id, institutionId, status: { $ne: 'rejected' } }).sort({ submittedAt: 1 }),
+                ClearanceSubmission.findOne({ 
+                    userId: student._id, 
+                    institutionId, 
+                    status: { $ne: 'rejected' },
+                    clearanceRequestId: { $in: studentRequestIds }
+                }).sort({ submittedAt: 1 }),
                 ClearanceRequest.findOne({ userId: student._id, termId: term._id }).sort({ createdAt: 1 })
             ]);
 

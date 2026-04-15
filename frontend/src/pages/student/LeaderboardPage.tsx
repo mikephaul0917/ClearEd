@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Skeleton } from "@mui/material";
+import { Box, Typography, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Skeleton, useTheme, useMediaQuery, Tooltip } from "@mui/material";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { studentService } from "../../services/student.service";
@@ -34,6 +34,9 @@ export default function LeaderboardPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const userId = user?.id || null;
     const [fullUser, setFullUser] = useState<any>(() => {
         const str = localStorage.getItem("user");
@@ -220,14 +223,34 @@ export default function LeaderboardPage() {
                 borderRadius: '16px',
                 overflow: 'hidden'
             }}>
-                <Table sx={{ minWidth: 650 }}>
+                <Table>
                     <TableHead sx={{ bgcolor: '#F9FAFB' }}>
                         <TableRow>
-                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB' }}>RANK</TableCell>
-                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB' }}>USER</TableCell>
-                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB' }}>ORGS CLEARED</TableCell>
-                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB' }}>CLEARANCE TIME</TableCell>
-                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB' }}>STATUS</TableCell>
+                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB', px: { xs: 1.5, sm: 2 } }}>RANK</TableCell>
+                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB', px: { xs: 1, sm: 2 } }}>USER</TableCell>
+                            <TableCell sx={{ color: '#9CA3AF', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.05em', borderBottom: '1px solid #E5E7EB', px: { xs: 1, sm: 2 } }}>
+                                {isMobile ? "ORGS" : "ORGS CLEARED"}
+                            </TableCell>
+                            <TableCell sx={{ 
+                                color: '#9CA3AF', 
+                                fontWeight: 600, 
+                                fontSize: '0.75rem', 
+                                letterSpacing: '0.05em', 
+                                borderBottom: '1px solid #E5E7EB',
+                                px: { xs: 1, sm: 2 }
+                            }}>
+                                {isMobile ? "TIME" : "CLEARANCE TIME"}
+                            </TableCell>
+                            <TableCell sx={{ 
+                                color: '#9CA3AF', 
+                                fontWeight: 600, 
+                                fontSize: '0.75rem', 
+                                letterSpacing: '0.05em', 
+                                borderBottom: '1px solid #E5E7EB',
+                                px: { xs: 1, sm: 2 }
+                            }}>
+                                {isMobile ? "STAT" : "STATUS"}
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -246,12 +269,12 @@ export default function LeaderboardPage() {
 
                             return (
                                 <TableRow key={row._id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
+                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6', px: { xs: 1.5, sm: 2 } }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32 }}>
                                             {rankDisplay}
                                         </Box>
                                     </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
+                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6', px: { xs: 1, sm: 2 } }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                             {(() => {
                                                 // Robust ID comparison for reactive leaderboard updates
@@ -270,53 +293,60 @@ export default function LeaderboardPage() {
                                                         <Avatar
                                                             src={getAbsoluteUrl(avatarSrc)}
                                                             sx={{
-                                                                width: 32,
-                                                                height: 32,
+                                                                width: isMobile ? 24 : 32,
+                                                                height: isMobile ? 24 : 32,
                                                                 bgcolor: "#5f6368",
                                                                 color: "#FFFFFF",
-                                                                fontSize: "0.75rem",
+                                                                fontSize: "0.65rem",
                                                                 fontWeight: 700
                                                             }}
                                                         >
                                                             {getInitials(leaderboardUser?.name || leaderboardUser?.fullName, leaderboardUser?.email)}
                                                         </Avatar>
-                                                        <Typography sx={{ fontWeight: 500, color: '#111827', fontSize: '0.95rem' }}>
-                                                            {leaderboardUser?.name || leaderboardUser?.fullName}
+                                                        <Typography sx={{ fontWeight: 500, color: '#111827', fontSize: isMobile ? '0.8rem' : '0.95rem' }}>
+                                                            {isMobile ? (leaderboardUser?.name || leaderboardUser?.fullName)?.split(' ')[0] : (leaderboardUser?.name || leaderboardUser?.fullName)}
                                                         </Typography>
                                                     </>
                                                 );
                                             })()}
                                         </Box>
                                     </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6', px: { xs: 1, sm: 2 } }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                             <WorkspacePremiumIcon sx={{ fontSize: 18, color: '#0D9488' }} />
                                             <Typography sx={{ color: '#374151', fontSize: '0.95rem', fontWeight: 500 }}>
                                                 {row.certifications}
                                             </Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
-                                        <Typography sx={{ color: '#374151', fontSize: '0.95rem', fontWeight: 500 }}>
+                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6', px: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ color: '#374151', fontSize: isMobile ? '0.8rem' : '0.95rem', fontWeight: 500 }}>
                                             {row.clearanceTime}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell sx={{ borderBottom: '1px solid #F3F4F6' }}>
-                                        <Box sx={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: '999px',
-                                            bgcolor: row.status === 'Cleared' ? '#F0FDFA' : '#FFFBEB',
-                                            color: row.status === 'Cleared' ? '#0D9488' : '#D97706',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 700,
-                                            letterSpacing: '0.01em',
-                                            border: `1px solid ${row.status === 'Cleared' ? '#0D9488' : '#D97706'}20`
-                                        }}>
-                                            {row.status}
-                                        </Box>
+                                    <TableCell sx={{ 
+                                        borderBottom: '1px solid #F3F4F6',
+                                        px: { xs: 0.5, sm: 2 }
+                                    }}>
+                                        <Tooltip title={row.status} arrow placement="top">
+                                            <Box sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                px: isMobile ? 1 : 1.5,
+                                                py: 0.5,
+                                                borderRadius: '999px',
+                                                bgcolor: row.status === 'Cleared' ? '#F0FDFA' : '#FFFBEB',
+                                                color: row.status === 'Cleared' ? '#0D9488' : '#D97706',
+                                                fontSize: isMobile ? '0.65rem' : '0.75rem',
+                                                fontWeight: 800,
+                                                letterSpacing: '0.01em',
+                                                whiteSpace: 'nowrap',
+                                                cursor: 'help',
+                                                border: `1px solid ${row.status === 'Cleared' ? '#0D9488' : '#D97706'}20`
+                                            }}>
+                                                {isMobile ? row.status.charAt(0) : row.status}
+                                            </Box>
+                                        </Tooltip>
                                     </TableCell>
                                 </TableRow>
                             );

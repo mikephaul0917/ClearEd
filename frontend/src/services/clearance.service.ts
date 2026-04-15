@@ -44,8 +44,17 @@ export const clearanceService = {
         return response.data;
     },
 
-    reviewSubmission: async (submissionId: string, decision: 'approved' | 'rejected', remarks?: string) => {
+    reviewSubmission: async (submissionId: string, decision: 'approved' | 'rejected' | 'pending', remarks?: string) => {
         const response = await api.post(`/signatory/review/${submissionId}`, {
+            decision,
+            remarks
+        });
+        return response.data;
+    },
+
+    bulkReviewSubmissions: async (submissionIds: string[], decision: 'approved' | 'rejected' | 'pending', remarks?: string) => {
+        const response = await api.post('/signatory/review-bulk', {
+            submissionIds,
             decision,
             remarks
         });

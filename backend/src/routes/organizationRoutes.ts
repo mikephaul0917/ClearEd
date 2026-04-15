@@ -15,7 +15,7 @@ import {
 } from "../controllers/organizationController";
 import { getOrganizationRequirements } from "../controllers/clearanceRequirementController";
 import { auth } from "../middleware/authMiddleware";
-import { admin } from "../middleware/roleMiddleware";
+import { admin, officer } from "../middleware/roleMiddleware";
 
 const router = express.Router();
 
@@ -38,7 +38,7 @@ router.post("/:organizationId/leave", auth, leaveOrganization);
 // Admin / Officer actions
 // Admin / Officer actions
 router.get("/", auth, admin, getInstitutionOrganizations);
-router.post("/", auth, admin, createOrganization);
+router.post("/", auth, officer, createOrganization);
 router.patch("/:organizationId/archive", auth, archiveOrganization);
 router.put("/:organizationId/restore", auth, restoreOrganization);
 router.post("/remove-member", auth, removeMember); // Officer check inside controller

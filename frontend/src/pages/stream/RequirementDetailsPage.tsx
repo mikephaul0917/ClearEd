@@ -4,7 +4,8 @@ import {
     Box, Typography, Avatar, Divider, Tabs, Tab, Container,
     CircularProgress, IconButton, TextField, Button, Paper,
     List, ListItem, ListItemAvatar, ListItemText, Chip, Alert,
-    InputBase, ClickAwayListener, RadioGroup, Radio, FormControlLabel
+    InputBase, ClickAwayListener, RadioGroup, Radio, FormControlLabel,
+    useTheme, useMediaQuery
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import LiveHelpIcon from "@mui/icons-material/LiveHelp";
@@ -29,6 +30,8 @@ import Checkbox from "@mui/material/Checkbox";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
+import FormControl from "@mui/material/FormControl";
+import OutlinedInput from "@mui/material/OutlinedInput";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import GroupIcon from "@mui/icons-material/GroupOutlined";
 import LinkIcon from "@mui/icons-material/Link";
@@ -95,7 +98,7 @@ const StatusPill = ({ status, dueDate }: { status: string; dueDate?: string }) =
             bgcolor: style.bg,
             color: style.color,
             fontSize: '0.675rem',
-            fontWeight: 700,
+            fontWeight: 800,
             letterSpacing: '0.02em',
             border: `1px solid ${style.color}20`,
             textTransform: 'none'
@@ -110,6 +113,8 @@ const RequirementDetailsPage: React.FC = () => {
     const { orgId, reqId } = useParams<{ orgId: string; reqId: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [fullUser, setFullUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
     const userInitial = getInitials(fullUser?.fullName || fullUser?.firstName, user?.email);
 
@@ -122,7 +127,7 @@ const RequirementDetailsPage: React.FC = () => {
     }, []);
 
     const [loading, setLoading] = useState(true);
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useState<number>(0);
     const [requirement, setRequirement] = useState<any>(null);
     const [membership, setMembership] = useState<any>(null);
     const [organization, setOrganization] = useState<any>(null);
@@ -192,6 +197,7 @@ const RequirementDetailsPage: React.FC = () => {
     const [subRemarks, setSubRemarks] = useState("");
     const [subActionState, setSubActionState] = useState<'idle' | 'loading' | 'success'>('idle');
     const [subError, setSubError] = useState<string | null>(null);
+    const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
 
     // Student specific submission state
     const [studentFiles, setStudentFiles] = useState<File[]>([]);
@@ -340,7 +346,14 @@ const RequirementDetailsPage: React.FC = () => {
         setLoadingSubmissions(true);
         try {
             const data = await clearanceService.getOfficerRequirementSubmissions(reqId as string);
-            setSubmissions(data.data);
+            const subData = data.data || [];
+            setSubmissions(subData);
+
+            // Default selection: Select all students with "pending" (Turned in) status on first load
+            const pendingIds = subData.filter((s: any) => s.status === 'pending').map((s: any) => s._id);
+            if (pendingIds.length > 0) {
+                setSelectedSubIds(pendingIds);
+            }
         } catch (err) {
             console.error("Failed to fetch submissions", err);
         } finally {
@@ -376,7 +389,7 @@ const RequirementDetailsPage: React.FC = () => {
         }
     };
 
-    const handleReview = async (decision: "approved" | "rejected") => {
+    const handleReview = async (decision: "approved" | "rejected" | "pending") => {
         if (!selectedSub) return;
         if (decision === "rejected" && !subRemarks.trim()) {
             setSubError("Remarks are required for rejection.");
@@ -396,10 +409,82 @@ const RequirementDetailsPage: React.FC = () => {
                 setSubActionState('idle');
             }, 800);
         } catch (err: any) {
+            setSubError(err.response?.data?.message || "Failed to process review");
             setSubActionState('idle');
-            setSubError(err.response?.data?.message || "Failed to process review.");
         }
     };
+
+    const handleSubSelection = (subId: string) => {
+        setSelectedSubIds(prev =>
+            prev.includes(subId)
+                ? prev.filter(id => id !== subId)
+                : [...prev, subId]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedSubIds.length === submissions.length) {
+            setSelectedSubIds([]);
+        } else {
+            setSelectedSubIds(submissions.map(s => s._id));
+        }
+    };
+
+    const handleBulkReturn = async (decision: 'approved' | 'rejected' | 'pending') => {
+        if (selectedSubIds.length === 0) return;
+        
+        const confirmMsg = `Are you sure you want to ${decision} ${selectedSubIds.length} submissions?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setSubActionState('loading');
+        try {
+            await clearanceService.bulkReviewSubmissions(selectedSubIds, decision, subRemarks || "Bulk reviewed");
+            setSubActionState('success');
+
+            setTimeout(async () => {
+                await fetchOfficerSubmissions();
+                setSelectedSubIds([]);
+                setSubRemarks("");
+                setSubActionState('idle');
+            }, 800);
+        } catch (err: any) {
+            setSubError(err.response?.data?.message || `Failed to process bulk ${decision}`);
+            setSubActionState('idle');
+        }
+    };
+
+    const handleSelectByStatus = (status: 'all' | 'pending' | 'approved' | 'rejected') => {
+        if (status === 'all') {
+            handleSelectAll();
+            return;
+        }
+
+        const filteredSubIds = submissions
+            .filter(s => s.status === status)
+            .map(s => s._id);
+
+        if (filteredSubIds.length === 0) return;
+
+        const allAreSelected = filteredSubIds.every(id => selectedSubIds.includes(id));
+
+        if (allAreSelected) {
+            // Unselect all of this status
+            setSelectedSubIds(prev => prev.filter(id => !filteredSubIds.includes(id)));
+        } else {
+            // Select all of this status (ensure no duplicates)
+            setSelectedSubIds(prev => Array.from(new Set([...prev, ...filteredSubIds])));
+        }
+    };
+
+    const allSelectedApproved = selectedSubIds.length > 0 && selectedSubIds.every(id => {
+        const sub = submissions.find(s => s._id === id);
+        return sub?.status === 'approved';
+    });
+
+    const selectedStatuses = ['pending', 'approved', 'rejected'].filter(status => {
+        const filteredIds = submissions.filter(s => s.status === status).map(s => s._id);
+        return filteredIds.length > 0 && filteredIds.every(id => selectedSubIds.includes(id));
+    });
 
     const downloadFile = (filename: string, originalName: string) => {
         window.open(`${api.defaults.baseURL}/clearance-items/download/${filename}`, "_blank");
@@ -435,14 +520,15 @@ const RequirementDetailsPage: React.FC = () => {
                             value={tabValue}
                             onChange={(_, v) => setTabValue(v)}
                             textColor="inherit"
+                            variant={isMobile ? "fullWidth" : "standard"}
                             TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                             sx={{
-                                px: { xs: 2, md: 0 },
+                                px: { xs: 0, md: 0 },
                                 "& .MuiTab-root": {
                                     textTransform: "none",
                                     fontWeight: 600,
-                                    fontSize: "0.875rem",
-                                    minWidth: 100,
+                                    fontSize: isMobile ? "0.75rem" : "0.875rem",
+                                    minWidth: isMobile ? "auto" : 100,
                                     color: "#5f6368"
                                 },
                                 "& .Mui-selected": {
@@ -458,25 +544,32 @@ const RequirementDetailsPage: React.FC = () => {
 
                 <Box sx={{ py: 4, px: { xs: 2, md: 0 } }}>
                     {tabValue === 0 && (
-                        <Container maxWidth="lg" sx={{ px: 0, display: "flex", gap: { xs: 3, md: 4 }, flexDirection: { xs: "column", md: "row" }, alignItems: 'flex-start' }}>
-                            <Box sx={{ flex: 1, minWidth: 0, order: { xs: 2, md: 1 } }}>
+                        <Box sx={{ display: "flex", gap: { xs: 3, md: 4 }, flexDirection: { xs: "column", md: "row" }, alignItems: { xs: 'stretch', md: 'flex-start' } }}>
+                            <Box sx={{ flex: 1, minWidth: 0, order: { xs: 1, md: 1 }, width: '100%' }}>
                                 <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
                                     <Avatar
                                         src={getAbsoluteUrl(requirement.createdBy?.avatarUrl)}
                                         sx={{
-                                            bgcolor: "#5f6368",
-                                            width: 44,
-                                            height: 44,
+                                            bgcolor: "#F1F5F9",
+                                            width: { xs: 36, sm: 44 },
+                                            height: { xs: 36, sm: 44 },
                                             mt: 0.5,
                                             fontSize: "1rem",
                                             fontWeight: 700
                                         }}
                                     >
-                                        {requirement?.type === 'poll' ? <LiveHelpIcon /> : requirement?.type === 'material' ? <BookIcon /> : <AssignmentIcon />}
+                                        {requirement?.type === 'poll' ? <LiveHelpIcon sx={{ color: '#64748B' }} /> : requirement?.type === 'material' ? <BookIcon sx={{ color: '#64748B' }} /> : <AssignmentIcon sx={{ color: '#64748B' }} />}
                                     </Avatar>
                                     <Box sx={{ flex: 1 }}>
                                         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                            <Typography variant="h4" sx={{ fontWeight: 400, color: "#000", mb: 1, fontSize: "1.75rem", letterSpacing: 0 }}>
+                                            <Typography variant="h4" sx={{
+                                                fontWeight: 400,
+                                                color: "#000",
+                                                mb: 1,
+                                                fontSize: { xs: "1.25rem", sm: "1.75rem" },
+                                                letterSpacing: 0,
+                                                lineHeight: 1.2
+                                            }}>
                                                 {requirement.title}
                                             </Typography>
                                             <IconButton
@@ -491,8 +584,15 @@ const RequirementDetailsPage: React.FC = () => {
                                                 open={Boolean(menuAnchorEl)}
                                                 onClose={handleMenuClose}
                                                 PaperProps={{
-                                                    elevation: 2,
-                                                    sx: { minWidth: 160, borderRadius: '8px', mt: 0.5, '& .MuiList-root': { py: 1 }, '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } }
+                                                    elevation: 0,
+                                                    sx: { 
+                                                        minWidth: 160, 
+                                                        borderRadius: '8px', 
+                                                        mt: 0.5, 
+                                                        border: '1px solid #dadce0',
+                                                        '& .MuiList-root': { py: 1 }, 
+                                                        '& .MuiMenuItem-root': { py: 1.5, px: 3, typography: 'body2', color: '#3c4043' } 
+                                                    }
                                                 }}
                                                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
@@ -515,12 +615,16 @@ const RequirementDetailsPage: React.FC = () => {
                                         </Box>
 
                                         {requirement?.type !== 'material' && (
-                                            <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
-                                                <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                            <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" sx={{
+                                                flexDirection: { xs: 'column', sm: 'row' },
+                                                alignItems: { xs: 'flex-start', sm: 'center' },
+                                                gap: { xs: 0.5, sm: 0 }
+                                            }}>
+                                                <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 600, fontSize: "0.875rem" }}>
                                                     {requirement.points ? (requirement.points === 'Ungraded' ? 'Ungraded' : `${requirement.points} points`) : "100 points"}
                                                 </Typography>
                                                 {requirement.dueDate && (
-                                                    <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 500, fontSize: "0.875rem" }}>
+                                                    <Typography variant="body2" sx={{ color: "#3c4043", fontWeight: 600, fontSize: "0.8125rem" }}>
                                                         Due {new Date(requirement.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}{new Date(requirement.dueDate).getHours() === 23 && new Date(requirement.dueDate).getMinutes() === 59 ? '' : `, ${new Date(requirement.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
                                                     </Typography>
                                                 )}
@@ -795,7 +899,7 @@ const RequirementDetailsPage: React.FC = () => {
 
                             {/* Right Column: Student Submission Card */}
                             {!isOfficer && requirement?.type !== 'material' && (
-                                <Box sx={{ width: { xs: "100%", md: 320 }, flexShrink: 0, order: { xs: 1, md: 2 } }}>
+                                <Box sx={{ width: { xs: "100%", md: 320 }, flexShrink: 0, order: { xs: 2, md: 2 } }}>
                                     <Paper elevation={0} sx={{ border: "1px solid #dadce0", borderRadius: 2, mb: 3, overflow: "hidden" }}>
                                         <Box sx={{ p: 2.5, pb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                             <Typography variant="h6" sx={{ fontSize: "1.25rem", color: "#3c4043", fontWeight: 400 }}>
@@ -881,7 +985,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                         </Button>
                                                     </label>
 
-                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (requirement?.requiredFiles?.includes('File') && studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#000", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
+                                                    <Button onClick={handleStudentSubmit} variant="contained" disabled={isSubmittingWork || (requirement?.requiredFiles?.includes('File') && studentFiles.length === 0 && (requirement?.submission?.files || []).length === 0)} sx={{ textTransform: 'none', fontWeight: 500, fontSize: '0.875rem', py: 1, bgcolor: "#3c4043", color: "#fff", borderRadius: 1, boxShadow: 'none', "&:hover": { bgcolor: "#333", boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3)' }, '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9aa0a6' } }}>
                                                         {isSubmittingWork ? <CircularProgress size={24} color="inherit" /> : requirement?.submission?.status === "rejected" || requirement?.submission?.status === "resubmission_required" ? "Resubmit" : "Mark as done"}
                                                     </Button>
                                                 </Box>
@@ -1028,7 +1132,7 @@ const RequirementDetailsPage: React.FC = () => {
                                     </Paper>
                                 </Box>
                             )}
-                        </Container>
+                        </Box>
                     )}
 
                     {isOfficer && (
@@ -1090,51 +1194,119 @@ const RequirementDetailsPage: React.FC = () => {
 
                     {isOfficer && tabValue === 1 && (
                         <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", borderTop: "1px solid #e0e0e0" }}>
-                            {/* Top Action Bar */}
-                            <Box sx={{ display: "flex", alignItems: "center", borderBottom: "1px solid #e0e0e0", height: 56 }}>
-                                {/* Left Section (300px width) */}
-                                <Box sx={{ width: 300, borderRight: "1px solid #e0e0e0", height: "100%", display: "flex", alignItems: "center", px: 2, gap: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Button disabled variant="contained" sx={{ textTransform: 'none', borderRadius: '4px 0 0 4px', bgcolor: '#f1f3f4', color: '#3c4043', boxShadow: 'none', px: 2, '&.Mui-disabled': { bgcolor: '#f1f3f4', color: 'rgba(0,0,0,0.38)' } }}>
-                                            Return
+                            {/* Top Action Bar */}                            <Box sx={{ display: "flex", alignItems: "center", borderBottom: "1px solid #e0e0e0", height: isMobile ? 'auto' : 56, flexDirection: isMobile ? 'column' : 'row', py: isMobile ? 1 : 0 }}>
+                                {/* Left Section (300px width on desktop) */}
+                                <Box sx={{ width: isMobile ? '100%' : 300, borderRight: isMobile ? 'none' : "1px solid #e0e0e0", height: "100%", display: "flex", alignItems: "center", px: 2, gap: 1, mb: isMobile ? 1 : 0 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+                                        <Button 
+                                            onClick={() => handleBulkReturn('approved')}
+                                            disabled={selectedSubIds.length === 0 || subActionState !== 'idle'} 
+                                            variant="contained" 
+                                            sx={{ 
+                                                flex: isMobile ? 1 : 'none', 
+                                                textTransform: 'none', 
+                                                borderRadius: '4px 0 0 4px', 
+                                                bgcolor: selectedSubIds.length > 0 ? '#0E7490' : '#f1f3f4', 
+                                                color: selectedSubIds.length > 0 ? '#fff' : 'rgba(0,0,0,0.38)', 
+                                                boxShadow: 'none', 
+                                                px: 2, 
+                                                '&:hover': { bgcolor: '#0D9488' },
+                                                '&.Mui-disabled': { bgcolor: '#f1f3f4', color: 'rgba(0,0,0,0.38)' } 
+                                            }}
+                                        >
+                                            {subActionState === 'loading' ? <CircularProgress size={20} color="inherit" /> : 'Return'}
                                         </Button>
-                                        <Button disabled variant="contained" sx={{ minWidth: 0, padding: '6px 4px', borderRadius: '0 4px 4px 0', bgcolor: '#f1f3f4', boxShadow: 'none', borderLeft: '1px solid rgba(0,0,0,0.1)', '&.Mui-disabled': { bgcolor: '#f1f3f4' } }}>
+                                        <Button disabled variant="contained" sx={{ minWidth: 0, padding: '6px 4px', borderRadius: '0 4px 4px 0', bgcolor: selectedSubIds.length > 0 ? '#0E7490' : '#f1f3f4', color: selectedSubIds.length > 0 ? '#fff' : 'rgba(0,0,0,0.38)', boxShadow: 'none', borderLeft: '1px solid rgba(0,0,0,0.1)', '&.Mui-disabled': { bgcolor: '#f1f3f4' } }}>
                                             <ArrowDropDownIcon fontSize="small" />
                                         </Button>
                                     </Box>
                                 </Box>
                                 {/* Right Section */}
-                                <Box sx={{ flex: 1, px: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Box sx={{ flex: 1, px: 3, display: "flex", alignItems: "center", justifyContent: "space-between", width: '100%' }}>
                                 </Box>
                             </Box>
 
+
                             {/* Main Content Area */}
-                            <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+                            <Box sx={{ display: "flex", flex: 1, overflow: isMobile ? 'visible' : "hidden", flexDirection: isMobile ? 'column' : 'row' }}>
                                 {/* Left Sidebar: Student List */}
-                                <Box sx={{ width: 300, borderRight: "1px solid #e0e0e0", overflowY: "auto", bgcolor: "#fff", display: "flex", flexDirection: "column" }}>
-                                    <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
-                                        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-                                            <Checkbox
-                                                size="small"
-                                                defaultChecked
-                                                sx={{
-                                                    color: '#dadce0',
-                                                    '&.Mui-checked': { color: '#0D9488' }
+                                <Box sx={{ width: isMobile ? "100%" : 300, borderRight: isMobile ? 'none' : "1px solid #e0e0e0", borderBottom: isMobile ? "1px solid #e0e0e0" : 'none', overflowY: isMobile ? 'visible' : "auto", bgcolor: "#fff", display: "flex", flexDirection: "column", maxHeight: isMobile ? '40vh' : 'none' }}>
+                                    <Box sx={{ p: 1.5, borderBottom: "1px solid #e0e0e0" }}>
+                                        <Typography variant="caption" sx={{ px: 0.5, mb: 1, display: 'block', fontWeight: 700, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            Select by status
+                                        </Typography>
+                                        <FormControl fullWidth size="small">
+                                            <Select
+                                                multiple
+                                                value={selectedStatuses}
+                                                displayEmpty
+                                                onChange={(e) => {
+                                                    const value = e.target.value as string[];
+                                                    // Determine what changed to trigger the appropriate toggle
+                                                    const lastClicked = value.length > selectedStatuses.length 
+                                                        ? value.find(v => !selectedStatuses.includes(v))
+                                                        : selectedStatuses.find(v => !value.includes(v));
+                                                    
+                                                    if (lastClicked) {
+                                                        handleSelectByStatus(lastClicked as any);
+                                                    } else if (value.length === 0 && selectedStatuses.length > 0) {
+                                                        setSelectedSubIds([]);
+                                                    }
                                                 }}
-                                            />
-                                            <GroupIcon sx={{ color: '#5f6368', fontSize: 20 }} />
-                                            <Typography variant="body2" sx={{ fontWeight: 500, color: '#3c4043' }}>All members</Typography>
+                                                input={<OutlinedInput size="small" sx={{ borderRadius: 1.5, bgcolor: '#F8FAFC' }} />}
+                                                renderValue={(selected) => {
+                                                    if (selected.length === 0) return <Typography variant="body2" color="text.secondary">Select status</Typography>;
+                                                    if (selected.length === 3) return <Typography variant="body2" fontWeight={600}>All Members</Typography>;
+                                                    return (
+                                                        <Typography variant="body2" fontWeight={600}>
+                                                            {selected.map(s => s === 'pending' ? 'Turned in' : s.charAt(0).toUpperCase() + s.slice(1)).join(', ')}
+                                                        </Typography>
+                                                    );
+                                                }}
+                                                MenuProps={{
+                                                    PaperProps: { sx: { borderRadius: 2, mt: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }
+                                                }}
+                                            >
+                                                {[
+                                                    { label: 'Turned in', value: 'pending', color: '#D97706' },
+                                                    { label: 'Approved', value: 'approved', color: '#0D9488' },
+                                                    { label: 'Rejected', value: 'rejected', color: '#DC2626' }
+                                                ].map((item) => {
+                                                    const count = submissions.filter(s => s.status === item.value).length;
+                                                    const isChecked = selectedStatuses.includes(item.value);
+                                                    
+                                                    return (
+                                                        <MenuItem key={item.value} value={item.value} sx={{ py: 1 }}>
+                                                            <Checkbox 
+                                                                size="small" 
+                                                                checked={isChecked} 
+                                                                sx={{ 
+                                                                    p: 0.5, mr: 1,
+                                                                    color: '#dadce0',
+                                                                    '&.Mui-checked': { color: item.color }
+                                                                }} 
+                                                            />
+                                                            <ListItemText 
+                                                                primary={`${item.label} (${count})`} 
+                                                                primaryTypographyProps={{ variant: 'body2', fontWeight: isChecked ? 600 : 400 }}
+                                                            />
+                                                        </MenuItem>
+                                                    );
+                                                })}
+                                            </Select>
+                                        </FormControl>
+                                        <Box sx={{ mt: 1.5 }}>
+                                            <Select
+                                                size="small"
+                                                fullWidth
+                                                defaultValue="status"
+                                                sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, bgcolor: '#F1F5F9', borderRadius: 1.5, typography: 'body2' }}
+                                            >
+                                                <MenuItem value="status">Sort by status</MenuItem>
+                                                <MenuItem value="surname">Sort by surname</MenuItem>
+                                                <MenuItem value="firstName">Sort by first name</MenuItem>
+                                            </Select>
                                         </Box>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            defaultValue="status"
-                                            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' }, bgcolor: '#f1f3f4', borderRadius: 1, typography: 'body2' }}
-                                        >
-                                            <MenuItem value="status">Sort by status</MenuItem>
-                                            <MenuItem value="surname">Sort by surname</MenuItem>
-                                            <MenuItem value="firstName">Sort by first name</MenuItem>
-                                        </Select>
                                     </Box>
                                     {/* Submissions List */}
                                     <Box sx={{ flex: 1, overflowY: "auto" }}>
@@ -1162,10 +1334,23 @@ const RequirementDetailsPage: React.FC = () => {
                                                                 onClick={() => setSelectedSub(sub)}
                                                                 selected={selectedSub?._id === sub._id}
                                                                 sx={{
-                                                                    py: 2,
+                                                                    py: 1,
                                                                     borderLeft: selectedSub?._id === sub._id ? "4px solid #0E7490" : "4px solid transparent"
                                                                 }}
                                                             >
+                                                                <Checkbox
+                                                                    size="small"
+                                                                    checked={selectedSubIds.includes(sub._id)}
+                                                                    onChange={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleSubSelection(sub._id);
+                                                                    }}
+                                                                    sx={{
+                                                                        mr: 1,
+                                                                        color: '#dadce0',
+                                                                        '&.Mui-checked': { color: '#0E7490' }
+                                                                    }}
+                                                                />
                                                                 <ListItemAvatar>
                                                                     <Avatar
                                                                         src={getAbsoluteUrl(avatarSrc)}
@@ -1200,9 +1385,104 @@ const RequirementDetailsPage: React.FC = () => {
                                     </Box>
                                 </Box>
 
-                                {/* Right Panel: Submission Details / Overview */}
-                                <Box sx={{ flex: 1, overflowY: "auto", bgcolor: "#fff", p: selectedSub ? 4 : 0 }}>
-                                    {selectedSub ? (
+                                {/* Right Panel: Submission Details / Overview / Bulk View */}
+                                <Box sx={{ flex: 1, overflowY: "auto", bgcolor: "#fff", p: (selectedSub || selectedSubIds.length > 0) ? 4 : 0 }}>
+                                    {selectedSubIds.length > 0 ? (
+                                        <Box>
+                                            <Box sx={{ mb: 4 }}>
+                                                <Typography variant="h5" sx={{ color: "#3c4043", fontWeight: 700, mb: 1 }}>
+                                                    {selectedSubIds.length} students selected
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    You are about to bulk {selectedSubIds.length > 1 ? 'review' : 'review'} this requirement.
+                                                </Typography>
+                                            </Box>
+
+                                            <Box sx={{ mb: 4 }}>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Selected Members</Typography>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5, p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #edf2f7' }}>
+                                                    {submissions
+                                                        .filter(s => selectedSubIds.includes(s._id))
+                                                        .map(sub => {
+                                                            const sUser = sub.userId;
+                                                            return (
+                                                                <Chip
+                                                                    key={sub._id}
+                                                                    avatar={<Avatar src={getAbsoluteUrl(sUser?.avatarUrl)}>{getInitials(sUser?.fullName)}</Avatar>}
+                                                                    label={sUser?.fullName || "Student"}
+                                                                    onDelete={() => handleSubSelection(sub._id)}
+                                                                    sx={{ 
+                                                                        bgcolor: '#fff', 
+                                                                        border: '1px solid #e2e8f0',
+                                                                        '& .MuiChip-label': { fontWeight: 500, color: '#4a5568' }
+                                                                    }}
+                                                                />
+                                                            );
+                                                        })}
+                                                </Box>
+                                            </Box>
+
+                                            <Divider sx={{ my: 4 }} />
+
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Bulk Review Action</Typography>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    placeholder="Add a remark for all selected students..."
+                                                    value={subRemarks}
+                                                    onChange={(e) => setSubRemarks(e.target.value)}
+                                                    sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                                                />
+
+                                                {subError && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{subError}</Alert>}
+
+                                                <Box display="flex" gap={2}>
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        startIcon={subActionState === 'idle' ? (allSelectedApproved ? <ClearIcon /> : <CheckIcon />) : undefined}
+                                                        onClick={() => allSelectedApproved ? handleBulkReturn("pending") : handleBulkReturn("approved")}
+                                                        disabled={subActionState !== "idle"}
+                                                        sx={{
+                                                            borderRadius: "8px",
+                                                            textTransform: "none",
+                                                            py: 1.5,
+                                                            fontWeight: 600,
+                                                            backgroundColor: allSelectedApproved ? '#fff' : '#000',
+                                                            color: allSelectedApproved ? '#3c4043' : '#fff',
+                                                            border: allSelectedApproved ? '1.5px solid #dadce0' : 'none',
+                                                            '&:hover': { 
+                                                                backgroundColor: allSelectedApproved ? '#f8f9fa' : '#333',
+                                                                borderColor: allSelectedApproved ? '#3c4043' : 'none'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {subActionState === 'loading' ? 'Processing...' : allSelectedApproved ? `Revoke Selection` : `Approve ${selectedSubIds.length}`}
+                                                    </Button>
+                                                    <Button
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        startIcon={subActionState === 'idle' ? <ClearIcon /> : undefined}
+                                                        onClick={() => handleBulkReturn("rejected")}
+                                                        disabled={subActionState !== "idle" || !subRemarks.trim()}
+                                                        sx={{
+                                                            borderRadius: "8px",
+                                                            textTransform: "none",
+                                                            py: 1.5,
+                                                            fontWeight: 600,
+                                                            border: '1.5px solid #EF4444',
+                                                            color: '#EF4444',
+                                                            '&:hover': { bgcolor: '#FEF2F2', borderColor: '#DC2626' }
+                                                        }}
+                                                    >
+                                                        Reject
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    ) : selectedSub ? (
                                         <Box>
                                             <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
                                                 <Box>
@@ -1271,9 +1551,9 @@ const RequirementDetailsPage: React.FC = () => {
                                                 <Box display="flex" gap={2}>
                                                     <Button
                                                         fullWidth
-                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? <CheckIcon /> : undefined}
-                                                        onClick={() => handleReview("approved")}
-                                                        disabled={subActionState !== "idle" || selectedSub.status === 'approved'}
+                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? (selectedSub.status === 'approved' ? <ClearIcon /> : <CheckIcon />) : undefined}
+                                                        onClick={() => selectedSub.status === 'approved' ? handleReview("pending") : handleReview("approved")}
+                                                        disabled={subActionState !== "idle"}
                                                         sx={{
                                                             borderRadius: "8px",
                                                             textTransform: "none",
@@ -1290,7 +1570,7 @@ const RequirementDetailsPage: React.FC = () => {
                                                             }
                                                         }}
                                                     >
-                                                        {subActionState === 'loading' ? 'Approving...' : subActionState === 'success' || selectedSub.status === 'approved' ? 'Approved' : 'Approve'}
+                                                        {subActionState === 'loading' ? 'Processing...' : subActionState === 'success' ? 'Finished' : selectedSub.status === 'approved' ? 'Revoke Approval' : 'Approve'}
                                                     </Button>
                                                     <Button
                                                         fullWidth

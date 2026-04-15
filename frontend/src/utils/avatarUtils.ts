@@ -13,7 +13,9 @@ export const getAbsoluteUrl = (path: string | null | undefined): string | undefi
 export const getInitials = (name?: string, fallbackMail?: string): string => {
     if (name) {
         const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        if (parts.length === 1) {
+            return parts[0].slice(0, 2).toUpperCase();
+        }
         if (parts.length > 1) {
             return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
         }

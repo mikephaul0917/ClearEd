@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTheme, useMediaQuery } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
@@ -45,7 +46,6 @@ function TabPanel(props: TabPanelProps) {
 
 const TodoPage: React.FC = () => {
     const { user } = useAuth();
-    const isOfficer = user?.role === "officer";
 
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -59,37 +59,30 @@ const TodoPage: React.FC = () => {
     const allOrganizations = React.useMemo(() => {
         const orgMap = new Map();
         const allItems = [...todoData.assigned, ...todoData.missing, ...todoData.done];
-        
+
         allItems.forEach(item => {
-            const orgName = isOfficer ? item.organizationName : (item.organizationId?.name || "Organization");
-            const orgId = isOfficer ? item.organizationId : (item.organizationId?._id || item.organizationId || orgName);
-            
+            const orgName = item.organizationId?.name || "Organization";
+            const orgId = item.organizationId?._id || item.organizationId || orgName;
+
             if (orgId && !orgMap.has(orgId)) {
                 orgMap.set(orgId, orgName);
             }
         });
-        
+
         return Array.from(orgMap.entries()).map(([id, name]) => ({ id, name }));
-    }, [todoData, isOfficer]);
+    }, [todoData]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            if (isOfficer) {
-                // Officer logic: Assigned = Pending reviews
-                const data = await clearanceService.getOfficerSubmissions();
-                const submissions = data.data;
-                setTodoData({
-                    assigned: submissions.filter((s: any) => s.status === 'pending'),
-                    missing: [], // No strict "missing" for officers yet
-                    done: submissions.filter((s: any) => s.status === 'approved' || s.status === 'rejected')
-                });
-            } else {
-                // Student logic
-                const data = await clearanceService.getStudentTodo();
+            // Unify logic: To-do page always shows student requirements
+            const data = await clearanceService.getStudentTodo();
+            if (data?.todoList) {
                 const { assigned, missing, done } = data.todoList;
                 setTodoData({ assigned, missing, done });
+            } else {
+                setTodoData({ assigned: [], missing: [], done: [] });
             }
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to fetch to-do items.");
@@ -99,7 +92,7 @@ const TodoPage: React.FC = () => {
                 setLoading(false);
             }, 2000);
         }
-    }, [isOfficer]);
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -115,63 +108,38 @@ const TodoPage: React.FC = () => {
     }, [tabValue]);
 
     const renderEmptyState = (type: 'assigned' | 'missing' | 'done') => {
-        if (isOfficer) {
-            switch (type) {
-                case 'assigned':
-                    return (
-                        <EmptyState
-                            title="You're all caught up!"
-                            description="There are currently no student submissions waiting for your review. Great job staying on top of things."
-                        />
-                    );
-                case 'missing':
-                    return (
-                        <EmptyState
-                            title="No missing items"
-                            description="There are no missing requirements in your queue."
-                        />
-                    );
-                case 'done':
-                    return (
-                        <EmptyState
-                            title="No reviews completed yet"
-                            description="Once you approve or reject student submissions, they will appear here for your reference."
-                        />
-                    );
-            }
-        } else {
-            switch (type) {
-                case 'assigned':
-                    return (
-                        <EmptyState
-                            title="You're all caught up!"
-                            description="You have no pending tasks to complete at the moment. Take a deep breath and enjoy your day."
-                        />
-                    );
-                case 'missing':
-                    return (
-                        <EmptyState
-                            title="Looking good!"
-                            description="You don't have any missing or overdue requirements. Keep up the great work!"
-                        />
-                    );
-                case 'done':
-                    return (
-                        <EmptyState
-                            title="Nothing completed yet"
-                            description="You haven't completed any requirements yet. Check your assigned tasks to get started."
-                            action={
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => setTabValue(0)}
-                                    sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 600, mt: 1 }}
-                                >
-                                    View Assigned Tasks
-                                </Button>
-                            }
-                        />
-                    );
-            }
+        switch (type) {
+            case 'assigned':
+                return (
+                    <EmptyState
+                        title="You're all caught up!"
+                        description="You have no pending tasks to complete at the moment. Take a deep breath and enjoy your day."
+                    />
+                );
+            case 'missing':
+                return (
+                    <EmptyState
+                        title="Looking good!"
+                        description="You don't have any missing or overdue requirements. Keep up the great work!"
+                    />
+                );
+            case 'done':
+                return (
+                    <EmptyState
+                        title="Nothing completed yet"
+                        description="You haven't completed any requirements yet. Check your assigned tasks to get started."
+                        action={
+                            <Button
+                                variant="outlined"
+                                onClick={() => setTabValue(0)}
+                                sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 600, mt: 1 }}
+                            >
+                                View Assigned Tasks
+                            </Button>
+                        }
+                    />
+                );
+            default: return null;
         }
     };
 
@@ -179,8 +147,8 @@ const TodoPage: React.FC = () => {
         // Filter by organization
         const filteredItems = items.filter(item => {
             if (selectedOrg === "all") return true;
-            const itemOrgId = isOfficer ? item.organizationId : (item.organizationId?._id || item.organizationId);
-            const itemOrgName = isOfficer ? item.organizationName : (item.organizationId?.name || "Organization");
+            const itemOrgId = item.organizationId?._id || item.organizationId;
+            const itemOrgName = item.organizationId?.name || "Organization";
             return itemOrgId === selectedOrg || itemOrgName === selectedOrg;
         });
 
@@ -193,11 +161,11 @@ const TodoPage: React.FC = () => {
 
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
+
         // Find start of this week (Sunday)
         const startOfThisWeek = new Date(today);
         startOfThisWeek.setDate(today.getDate() - today.getDay());
-        
+
         const endOfThisWeek = new Date(startOfThisWeek);
         endOfThisWeek.setDate(startOfThisWeek.getDate() + 6);
         endOfThisWeek.setHours(23, 59, 59, 999);
@@ -217,7 +185,7 @@ const TodoPage: React.FC = () => {
         if (type === 'assigned') {
             groups = { noDueDate: [], thisWeek: [], nextWeek: [], later: [] };
             filteredItems.forEach(item => {
-                const dueDateStr = isOfficer ? item.dueDate : item.requirement?.dueDate;
+                const dueDateStr = item.requirement?.dueDate;
                 if (!dueDateStr) {
                     groups.noDueDate.push(item);
                 } else {
@@ -231,7 +199,7 @@ const TodoPage: React.FC = () => {
         } else if (type === 'missing') {
             groups = { thisWeek: [], lastWeek: [], earlier: [] };
             filteredItems.forEach(item => {
-                const dueDateStr = isOfficer ? item.dueDate : item.requirement?.dueDate;
+                const dueDateStr = item.requirement?.dueDate;
                 if (!dueDateStr) {
                     groups.earlier.push(item);
                 } else {
@@ -244,7 +212,7 @@ const TodoPage: React.FC = () => {
         } else if (type === 'done') {
             groups = { noDueDate: [], thisWeek: [], lastWeek: [], earlier: [] };
             filteredItems.forEach(item => {
-                const dueDateStr = isOfficer ? item.dueDate : item.requirement?.dueDate;
+                const dueDateStr = item.requirement?.dueDate;
                 if (!dueDateStr) {
                     groups.noDueDate.push(item);
                 } else {
@@ -288,14 +256,14 @@ const TodoPage: React.FC = () => {
                     </AccordionSummary>
                     <AccordionDetails sx={{ px: 2, pb: 3, pt: 0 }}>
                         {groupItems.map((item) => {
-                            const title = isOfficer ? item.requirementTitle : (item.requirement?.title || item.title);
-                            const orgName = isOfficer ? item.organizationName : (item.requirement?.organization || item.organizationId?.name || "Organization");
-                            const id = isOfficer ? item._id : (item.requirement?.id || item._id);
-                            const dueDateStr = isOfficer ? item.dueDate : item.requirement?.dueDate;
+                            const title = item.requirement?.title || item.title;
+                            const orgName = item.requirement?.organization || item.organizationId?.name || "Organization";
+                            const id = item.requirement?.id || item._id;
+                            const dueDateStr = item.requirement?.dueDate;
                             const formattedDueDate = dueDateStr ? new Date(dueDateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : undefined;
-                            
-                            const reqId = isOfficer ? (item.clearanceRequirementId?._id || item.clearanceRequirementId) : (item.requirement?._id || item.requirement?.id || item._id);
-                            const orgId = isOfficer ? (item.organizationId?._id || item.organizationId) : (item.requirement?.organizationId || item.organizationId?._id || item.organizationId);
+
+                            const reqId = item.requirement?._id || item.requirement?.id || item._id;
+                            const orgId = item.requirement?.organizationId || item.organizationId?._id || item.organizationId;
 
                             return (
                                 <TodoItem
@@ -306,7 +274,7 @@ const TodoPage: React.FC = () => {
                                     organizationName={orgName}
                                     dueDate={formattedDueDate}
                                     status={item.status || "not_started"}
-                                    isOfficer={isOfficer}
+                                    isOfficer={false} // Todo list is for personal student fulfillment
                                 />
                             );
                         })}
@@ -344,9 +312,13 @@ const TodoPage: React.FC = () => {
         );
     };
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
     return (
         <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', pt: 0, pb: 8 }}>
-            <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+            <Container maxWidth="lg" sx={{ px: { xs: 0, md: 4 } }}>
                 <Box sx={{ mb: 2 }}>
                     <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
                         <Tabs
@@ -354,10 +326,12 @@ const TodoPage: React.FC = () => {
                             onChange={(_, val) => setTabValue(val)}
                             textColor="inherit"
                             indicatorColor="primary"
+                            variant={isMobile ? "fullWidth" : "standard"}
                             sx={{
                                 minHeight: 48,
+                                px: { xs: 0, sm: 1 },
                                 "& .MuiTabs-flexContainer": {
-                                    gap: 2
+                                    gap: { xs: 0, sm: 2 }
                                 },
                                 "& .MuiTab-root": {
                                     textTransform: "none",
@@ -365,7 +339,7 @@ const TodoPage: React.FC = () => {
                                     minWidth: 'auto',
                                     px: 0,
                                     py: 1.5,
-                                    mr: 3,
+                                    mr: { xs: 0, sm: 3 },
                                     fontSize: "0.875rem",
                                     color: "#5F6368", // Google dark grey
                                     fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
@@ -391,8 +365,8 @@ const TodoPage: React.FC = () => {
                         </Tabs>
                     </Box>
 
-                    <Box sx={{ px: 1, mb: 4 }}>
-                        <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <Box sx={{ px: { xs: 2, sm: 1 }, mb: 4 }}>
+                        <FormControl size="small" sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 200 }}>
                             <Select
                                 value={selectedOrg}
                                 onChange={(e) => setSelectedOrg(e.target.value)}
@@ -431,20 +405,20 @@ const TodoPage: React.FC = () => {
                         </FormControl>
                     </Box>
 
-                    {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{error}</Alert>}
+                    {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px', mx: { xs: 2, sm: 0 } }}>{error}</Alert>}
                 </Box>
 
                 {loading ? (
                     <Box sx={{ mt: 2 }}>
                         {/* Skeleton Filter Box */}
                         <Box sx={{ px: 1, mb: 4, opacity: 0.5 }}>
-                             <Skeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: '6px', bgcolor: "#eaebec" }} />
+                            <Skeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: '6px', bgcolor: "#eaebec" }} />
                         </Box>
 
                         {/* Accordion Skeletons */}
                         {[1, 2, 3].map((i) => (
-                            <Box key={i} sx={{ 
-                                bgcolor: '#F9FAFB', 
+                            <Box key={i} sx={{
+                                bgcolor: '#F9FAFB',
                                 borderBottom: '1px solid #E5E7EB',
                                 py: 2.5,
                                 px: 2,
@@ -460,10 +434,10 @@ const TodoPage: React.FC = () => {
                         {/* Expanded Items Skeleton (simulating one open group) */}
                         <Box sx={{ px: 2, pt: 2 }}>
                             {[1, 2].map((i) => (
-                                <Box key={i} sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: 2, 
+                                <Box key={i} sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
                                     mb: 3,
                                     p: 2,
                                     bgcolor: 'white',

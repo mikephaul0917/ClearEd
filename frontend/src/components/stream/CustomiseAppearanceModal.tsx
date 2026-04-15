@@ -10,6 +10,8 @@ import {
   IconButton,
   Divider,
   TextField,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
@@ -60,6 +62,8 @@ export default function CustomiseAppearanceModal({
   const [selectedImage, setSelectedImage] = useState<string | null>(currentHeaderImage);
   const [isSaving, setIsSaving] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -107,7 +111,7 @@ export default function CustomiseAppearanceModal({
 
       <DialogContent sx={{ p: '0 !important' }}>
         {showGallery ? (
-          <Box sx={{ px: 3, pt: 1, pb: 3 }}>
+          <Box sx={{ px: isMobile ? 2 : 3, pt: 1, pb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <IconButton onClick={() => setShowGallery(false)} sx={{ mr: 1, ml: -1 }}>
                 <ArrowBackIcon />
@@ -156,13 +160,26 @@ export default function CustomiseAppearanceModal({
             />
 
             {/* Select Image */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'flex-start' : 'center', 
+              justifyContent: 'space-between', 
+              gap: isMobile ? 2 : 0,
+              mb: 3 
+            }}>
               <Typography variant="body2" color="text.secondary" fontWeight={500}>
                 Select stream header image
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 1,
+                width: isMobile ? '100%' : 'auto',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <Button
                   variant="text"
+                  fullWidth={isMobile}
                   startIcon={<ImageOutlinedIcon />}
                   onClick={() => setShowGallery(true)}
                   sx={{
@@ -171,6 +188,7 @@ export default function CustomiseAppearanceModal({
                     textTransform: 'none',
                     borderRadius: 20,
                     px: 2,
+                    py: isMobile ? 1 : 0.5,
                     fontWeight: 600,
                     '&:hover': { bgcolor: '#D2E8E8' },
                   }}
@@ -179,6 +197,7 @@ export default function CustomiseAppearanceModal({
                 </Button>
                 <Button
                   variant="text"
+                  fullWidth={isMobile}
                   startIcon={<UploadFileOutlinedIcon />}
                   component="label"
                   sx={{
@@ -187,6 +206,7 @@ export default function CustomiseAppearanceModal({
                     textTransform: 'none',
                     borderRadius: 20,
                     px: 2,
+                    py: isMobile ? 1 : 0.5,
                     fontWeight: 600,
                     '&:hover': { bgcolor: '#D2E8E8' },
                   }}
@@ -264,15 +284,22 @@ export default function CustomiseAppearanceModal({
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center', 
+                gap: isMobile ? 1 : 2, 
+                mt: 3 
+              }}>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
                   Custom hex colour:
                 </Typography>
                 <TextField
                   size="small"
+                  fullWidth={isMobile}
                   value={selectedColor}
                   onChange={(e) => handleColorSelect(e.target.value)}
-                  sx={{ width: 120 }}
+                  sx={{ width: isMobile ? '100%' : 120 }}
                   inputProps={{ maxLength: 7 }}
                 />
               </Box>

@@ -59,7 +59,13 @@ export const createRequirement = async (req: Request, res: Response) => {
             }
         }
 
-        // 3. Create Requirement
+        // 3. Get Active Term
+        const activeTerm = await mongoose.model('Term').findOne({ institutionId, isActive: true });
+        if (!activeTerm) {
+            return res.status(400).json({ message: "No active academic term found. Contact admin." });
+        }
+
+        // 4. Create Requirement
         const newRequirement = await ClearanceRequirement.create({
             title,
             description,
@@ -68,6 +74,7 @@ export const createRequirement = async (req: Request, res: Response) => {
             officeId,
             organizationId,
             institutionId,
+            termId: activeTerm._id, // ATTACH ACTIVE TERM
             createdBy: creatorId,
             isMandatory: isMandatory !== undefined ? isMandatory : true,
             isAnnouncement: isAnnouncement !== undefined ? isAnnouncement : false,
@@ -118,9 +125,16 @@ export const getOrganizationRequirements = async (req: Request, res: Response) =
         const { organizationId } = req.params;
         const institutionId = (req as any).user?.institutionId;
 
+        // 1. Get Active Term
+        const activeTerm = await mongoose.model('Term').findOne({ institutionId, isActive: true });
+        if (!activeTerm) {
+            return res.json({ requirements: [] });
+        }
+
         const requirements = await ClearanceRequirement.find({
             organizationId,
             institutionId,
+            termId: activeTerm._id, // FILTER BY TERM
             isActive: true
         })
             .populate('officeId', 'name sequence')

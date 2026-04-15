@@ -42,5 +42,15 @@ export const organizationService = {
     getTerms: async () => {
         const response = await api.get('/organizations/terms/list');
         return response.data;
+    },
+
+    leaveOrganization: async (id: string) => {
+        const response = await api.post(`/organizations/${id}/leave`);
+        return response.data;
+    },
+
+    unarchiveOrganization: async (id: string) => {
+        const response = await api.put(`/organizations/${id}/restore`);
+        return response.data;
     }
 };

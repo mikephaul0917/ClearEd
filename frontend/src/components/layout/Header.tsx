@@ -23,7 +23,7 @@ export default function Header() {
       showCancelButton: true,
       confirmButtonText: "Logout",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "#000000",
+      confirmButtonColor: "#3c4043",
       focusCancel: true,
       didOpen: () => {
         const container = Swal.getContainer();
@@ -34,12 +34,12 @@ export default function Header() {
         if (cancelBtn) {
           cancelBtn.style.backgroundColor = "#FFFFFF";
           cancelBtn.style.color = "#0F172A";
-          cancelBtn.style.border = "1px solid #000000";
+          cancelBtn.style.border = "1px solid #3c4043";
           cancelBtn.style.borderRadius = "6px";
         }
         const confirmBtn = Swal.getConfirmButton();
         if (confirmBtn) {
-          confirmBtn.style.backgroundColor = "#000000";
+          confirmBtn.style.backgroundColor = "#3c4043";
           confirmBtn.style.color = "#FFFFFF";
           confirmBtn.style.borderRadius = "6px";
         }
@@ -94,10 +94,12 @@ export default function Header() {
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 600,
+                fontWeight: 700,
                 color: "#0F172A",
                 textDecoration: "none",
-                cursor: "pointer"
+                cursor: "pointer",
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                display: { xs: 'none', sm: 'block' }
               }}
             >
               ClearEd
@@ -119,12 +121,12 @@ export default function Header() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
+                  gap: { xs: 1, sm: 1.5 },
                   bgcolor: '#F2F4F7',
                   borderRadius: '100px',
                   p: '4px',
-                  pr: isToggled ? 0.5 : 2.25,
-                  pl: isToggled ? 2.25 : 0.5,
+                  pr: isToggled ? 0.5 : { xs: 1.25, sm: 2.25 },
+                  pl: isToggled ? { xs: 1.25, sm: 2.25 } : 0.5,
                   flexDirection: isToggled ? 'row-reverse' : 'row',
                   textDecoration: 'none',
                   cursor: 'pointer',
@@ -141,11 +143,11 @@ export default function Header() {
                   sx={{
                     bgcolor: isToggled ? '#FFFFFF' : '#3c4043',
                     borderRadius: '100px',
-                    px: 3,
-                    py: 1.25,
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 1, sm: 1.25 },
                     color: isToggled ? '#3c4043' : '#FFFFFF',
                     fontWeight: 700,
-                    fontSize: '0.875rem',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
@@ -155,7 +157,7 @@ export default function Header() {
                 <ArrowForwardIcon
                   className="arrow-icon"
                   sx={{
-                    color: '#000000',
+                    color: '#3c4043',
                     fontSize: '1.2rem',
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     transform: isToggled ? 'rotate(180deg)' : 'none'

@@ -18,6 +18,12 @@ import Skeleton from "@mui/material/Skeleton";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
+const COLORS = {
+  black: '#3c4043',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB'
+};
+
 interface Quote {
   _id: string;
   text: string;
@@ -78,7 +84,7 @@ export default function AdminQuotesPage({
         icon: "error",
         title: "Validation Error",
         text: "Both quote text and author are required.",
-        confirmButtonColor: "#000"
+        confirmButtonColor: COLORS.black
       });
       return;
     }
@@ -90,7 +96,7 @@ export default function AdminQuotesPage({
           icon: "success",
           title: "Success",
           text: "Quote updated successfully!",
-          confirmButtonColor: "#000"
+          confirmButtonColor: COLORS.black
         });
       } else {
         await adminService.createQuote(formData);
@@ -98,7 +104,7 @@ export default function AdminQuotesPage({
           icon: "success",
           title: "Success",
           text: "Quote created successfully!",
-          confirmButtonColor: "#000"
+          confirmButtonColor: COLORS.black
         });
       }
 
@@ -109,7 +115,7 @@ export default function AdminQuotesPage({
         icon: "error",
         title: "Error",
         text: error.response?.data?.message || "Failed to save quote",
-        confirmButtonColor: "#000"
+        confirmButtonColor: COLORS.black
       });
     }
   };
@@ -130,7 +136,7 @@ export default function AdminQuotesPage({
       text: "This quote will be permanently deleted.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#000",
+      confirmButtonColor: COLORS.black,
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Delete"
     });
@@ -142,7 +148,7 @@ export default function AdminQuotesPage({
           icon: "success",
           title: "Deleted",
           text: "Quote deleted successfully!",
-          confirmButtonColor: "#000"
+          confirmButtonColor: COLORS.black
         });
         fetchQuotes();
       } catch (error: any) {
@@ -150,7 +156,7 @@ export default function AdminQuotesPage({
           icon: "error",
           title: "Error",
           text: error.response?.data?.message || "Failed to delete quote",
-          confirmButtonColor: "#000"
+          confirmButtonColor: COLORS.black
         });
       }
     }
@@ -165,7 +171,7 @@ export default function AdminQuotesPage({
         icon: "error",
         title: "Error",
         text: error.response?.data?.message || "Failed to toggle quote status",
-        confirmButtonColor: "#000"
+        confirmButtonColor: COLORS.black
       });
     }
   };
@@ -291,7 +297,7 @@ export default function AdminQuotesPage({
             <Button
               variant="outlined"
               onClick={() => setOpenDialog(true)}
-              sx={{ borderColor: "#000", color: "#000" }}
+              sx={{ borderColor: COLORS.black, color: COLORS.black }}
             >
               Create your first quote
             </Button>
@@ -354,7 +360,7 @@ export default function AdminQuotesPage({
             <Button
               type="submit"
               variant="contained"
-              sx={{ backgroundColor: "#000", "&:hover": { backgroundColor: "#111" } }}
+              sx={{ backgroundColor: COLORS.black, "&:hover": { backgroundColor: "#2d3033" } }}
             >
               {editingQuote ? "Update" : "Create"}
             </Button>

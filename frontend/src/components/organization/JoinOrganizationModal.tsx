@@ -155,11 +155,11 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                     disabled={loading || success || !joinCode}
                     sx={{
                         textTransform: 'none',
-                        bgcolor: "#0F172A",
+                        bgcolor: "#3c4043",
                         borderRadius: '8px',
                         px: 4,
                         fontWeight: 600,
-                        "&:hover": { bgcolor: "#1E293B" }
+                        "&:hover": { bgcolor: "#202124" }
                     }}
                 >
                     {loading ? <CircularProgress size={24} color="inherit" /> : "Join"}

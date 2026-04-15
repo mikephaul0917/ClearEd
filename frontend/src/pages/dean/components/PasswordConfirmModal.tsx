@@ -43,7 +43,7 @@ export default function PasswordConfirmModal({ open, onClose, onConfirm, loading
       maxWidth="xs"
       PaperProps={{
         sx: {
-          borderRadius: '24px',
+          borderRadius: 3,
           p: 0,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden'
@@ -100,7 +100,7 @@ export default function PasswordConfirmModal({ open, onClose, onConfirm, loading
                 </InputAdornment>
               ),
               sx: {
-                borderRadius: '12px',
+                borderRadius: 2,
                 bgcolor: '#FFF',
                 fontFamily: fontStack,
                 color: '#101828',
@@ -121,7 +121,7 @@ export default function PasswordConfirmModal({ open, onClose, onConfirm, loading
             sx={{
               bgcolor: '#0E1217',
               color: '#FFFFFF',
-              borderRadius: '100px',
+              borderRadius: '8px',
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.95rem',
@@ -130,7 +130,7 @@ export default function PasswordConfirmModal({ open, onClose, onConfirm, loading
               px: 4,
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#1C2127',
                 transform: 'translateY(-2px)',
                 boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'

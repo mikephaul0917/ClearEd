@@ -238,18 +238,20 @@ export default function RequestInstitutionAccess() {
           sx={{
             maxWidth: 800,
             width: "100%",
-            p: 4,
+            p: { xs: 2.5, md: 4 },
             borderRadius: 2,
             backgroundColor: "#FFFFFF"
           }}
         >
           <Typography
             variant="h4"
-            align="center"
+            align="left"
             sx={{
-              fontWeight: 600,
+              fontWeight: 700,
+              fontSize: { xs: "24px", md: "32px" },
               mb: 1,
-              color: "#0F172A"
+              color: "#0F172A",
+              letterSpacing: "-0.02em"
             }}
           >
             Request Institution Access
@@ -257,12 +259,12 @@ export default function RequestInstitutionAccess() {
 
           <Typography
             variant="body1"
-            align="center"
+            align="left"
             sx={{
-              mb: 4,
+              mb: { xs: 3, md: 4 },
               color: "#64748b",
               maxWidth: 600,
-              mx: "auto"
+              fontSize: { xs: "14px", md: "16px" }
             }}
           >
             Join the E-Clearance platform! Complete the form below to request access for your academic institution.
@@ -270,14 +272,25 @@ export default function RequestInstitutionAccess() {
 
           <Alert
             severity="info"
-            sx={{ mb: 3 }}
+            sx={{
+              mb: 3,
+              backgroundColor: "#f0fdf9",
+              color: "#0d9488",
+              border: "1px solid #ccfbf1",
+              borderRadius: "12px",
+              "& .MuiAlert-icon": {
+                color: "#0d9488"
+              },
+              fontWeight: 500,
+              fontSize: "14px"
+            }}
           >
             <strong>Important:</strong> You must use an official institutional email address.
             Free email services (Gmail, Yahoo, etc.) are not accepted.
           </Alert>
 
           <form onSubmit={handleSubmit}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: { xs: 2, md: 3 } }}>
               {/* Institution Information */}
               <Box sx={{ gridColumn: { xs: "1 / -1", md: "1 / -1" } }}>
                 <Typography variant="h6" sx={{ mb: 2, color: "#0F172A" }}>
@@ -385,7 +398,14 @@ export default function RequestInstitutionAccess() {
 
             <Divider sx={{ my: 3 }} />
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 3 }}>
+            <Box sx={{
+              display: "flex",
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 3,
+              gap: 2
+            }}>
               <Button
                 variant="outlined"
                 onClick={() => navigate('/')}
@@ -398,6 +418,7 @@ export default function RequestInstitutionAccess() {
                   px: 5,
                   py: 1.5,
                   fontWeight: 700,
+                  width: { xs: "100%", sm: "auto" },
                   boxShadow: '0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)',
                   backgroundColor: '#FFF',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -411,7 +432,7 @@ export default function RequestInstitutionAccess() {
               >
                 Cancel
               </Button>
-
+ 
               <Button
                 type="submit"
                 variant="contained"
@@ -425,6 +446,7 @@ export default function RequestInstitutionAccess() {
                   borderRadius: '999px',
                   textTransform: 'none',
                   fontWeight: 700,
+                  width: { xs: "100%", sm: "auto" },
                   boxShadow: '0 20px 30px -10px rgba(15,23,42,0.35), 0 10px 15px -5px rgba(15,23,42,0.15)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   "&:hover": {

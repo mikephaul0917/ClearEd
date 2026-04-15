@@ -21,12 +21,17 @@ interface SettingsHeaderProps {
 
 export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle }) => {
   return (
-    <Box sx={{ mb: 4, px: 1 }}>
-      <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 0.5 }}>
+    <Box sx={{ mb: 4, px: { xs: 0, sm: 1 } }}>
+      <Typography variant="h5" sx={{ 
+        fontWeight: 800, 
+        color: '#0F172A', 
+        mb: 0.5,
+        fontSize: { xs: '1.25rem', sm: '1.5rem' } 
+      }}>
         {title}
       </Typography>
       {subtitle && (
-        <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500 }}>
+        <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500, fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}>
           {subtitle}
         </Typography>
       )}
@@ -128,7 +133,7 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
   };
 
   return (
-    <Box sx={{ position: 'relative', width: 'fit-content', mb: 4 }}>
+    <Box sx={{ position: 'relative', width: 'fit-content', mb: 4, mx: { xs: 'auto', sm: 0 } }}>
       <input
         type="file"
         ref={fileInputRef}
@@ -140,9 +145,9 @@ export const ProfilePictureSection: React.FC<ProfilePictureSectionProps> = ({ av
         <Avatar
           src={avatarUrl}
           sx={{
-            width: 80,
-            height: 80,
-            fontSize: '1.75rem',
+            width: { xs: 100, sm: 80 },
+            height: { xs: 100, sm: 80 },
+            fontSize: { xs: '2.25rem', sm: '1.75rem' },
             bgcolor: '#5f6368',
             color: '#FFFFFF',
             fontWeight: 700,
@@ -225,13 +230,38 @@ export const SettingsContainer: React.FC<{ children: React.ReactNode }> = ({ chi
     }}>
       <Box sx={{
         bgcolor: '#FFF',
-        borderRadius: '24px',
-        p: { xs: 2.5, sm: 3, md: 4 },
+        borderRadius: { xs: '16px', sm: '24px' },
+        p: { xs: 2, sm: 3, md: 4 },
         boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
         border: '1px solid #F8FAFC'
       }}>
         {children}
       </Box>
+    </Box>
+  );
+};
+
+interface SettingsActionsProps {
+  children: React.ReactNode;
+  showBorder?: boolean;
+}
+
+export const SettingsActions: React.FC<SettingsActionsProps> = ({ children, showBorder = true }) => {
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: { xs: 'column', sm: 'row' },
+      gap: 2, 
+      mt: showBorder ? 6 : 4, 
+      pt: showBorder ? 4 : 0, 
+      borderTop: showBorder ? '1px solid #F1F5F9' : 'none',
+      px: { xs: 0, sm: 0 }
+    }}>
+      {React.Children.map(children, (child) => (
+        <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+          {child}
+        </Box>
+      ))}
     </Box>
   );
 };

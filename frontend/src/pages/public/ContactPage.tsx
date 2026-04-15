@@ -78,21 +78,21 @@ export default function ContactPage() {
     "& .MuiInputLabel-root": { color: "#6B7280", fontWeight: 500, fontSize: "14px" },
     "& .MuiInputLabel-root.Mui-focused": { color: C.black },
     "& .MuiInputBase-input": { py: 1.5, fontSize: "16px", fontWeight: 500 },
-    mb: 4
+    mb: { xs: 2.5, md: 4 }
   };
 
   return (
     <Box sx={{ backgroundColor: C.white, minHeight: "100vh", color: C.black, fontFamily: C.fontStack }}>
-      <Container maxWidth="xl" sx={{ pt: 18, pb: 20, px: { xs: 3, md: 8 } }}>
+      <Container maxWidth="xl" sx={{ pt: { xs: 12, md: 18 }, pb: { xs: 12, md: 20 }, px: { xs: 3, md: 8 } }}>
         <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as const }}>
           <Typography
             variant="h1"
             sx={{
-              fontSize: { xs: "62px", md: "230px" },
+              fontSize: { xs: "52px", sm: "100px", md: "230px" },
               fontWeight: 620,
               letterSpacing: "-0.06em",
               lineHeight: 0.85,
-              mb: { xs: 8, md: 15 },
+              mb: { xs: 6, md: 15 },
               color: C.black
             }}
           >
@@ -100,7 +100,7 @@ export default function ContactPage() {
           </Typography>
         </motion.div>
 
-        <Grid container spacing={10}>
+        <Grid container spacing={{ xs: 6, md: 10 }}>
           {/* Left Column: Info */}
           <Grid item xs={12} md={5}>
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
@@ -122,7 +122,7 @@ export default function ContactPage() {
             <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.4 }}>
               <Box component="form" onSubmit={handleSubmit} sx={{ mb: 4 }}>
                 <Typography sx={{ fontSize: "14px", fontWeight: 700, mb: 2 }}>Name (required)</Typography>
-                <Grid container spacing={4}>
+                <Grid container spacing={{ xs: 2, sm: 4 }}>
                   <Grid item xs={12} sm={6}>
                     <TextField fullWidth label="First Name" variant="standard" sx={inputSx} value={formData.firstName} onChange={handleInputChange("firstName")} disabled={isLoading} required />
                   </Grid>
@@ -170,12 +170,13 @@ export default function ContactPage() {
                     bgcolor: C.black,
                     color: C.white,
                     borderRadius: "100px",
-                    px: 10,
-                    py: 2.2,
-                    fontSize: "15px",
+                    px: { xs: 6, md: 10 },
+                    py: { xs: 1.8, md: 2.2 },
+                    fontSize: { xs: "14px", md: "15px" },
                     fontWeight: 700,
                     textTransform: "none",
                     mt: 4,
+                    width: { xs: "100%", sm: "auto" },
                     boxShadow: "0 15px 35px rgba(0,0,0,0.25)",
                     "&:hover": { bgcolor: "#1a1a1a", transform: "translateY(-2px)", boxShadow: "0 20px 45px rgba(0,0,0,0.3)" },
                     transition: "all 0.3s ease",
@@ -190,26 +191,27 @@ export default function ContactPage() {
         </Grid>
 
         {/* Big Contact Details */}
-        <Box sx={{ mt: { xs: 15, md: 25 }, pt: 15, borderTop: `1px solid ${C.border}` }}>
+        <Box sx={{ mt: { xs: 10, md: 25 }, pt: { xs: 10, md: 15 }, borderTop: `1px solid ${C.border}` }}>
           <Grid container spacing={4} alignItems="flex-end">
             <Grid item xs={12} md={7}>
               <Typography
                 sx={{
-                  fontSize: { xs: "24px", md: "56px" },
-                  fontWeight: 800,
+                  fontSize: { xs: "22px", sm: "32px", md: "56px" },
+                  fontWeight: { xs: 600, md: 800 },
                   letterSpacing: "-0.04em",
                   color: '#000',
-                  wordBreak: "break-all"
+                  wordBreak: "break-all",
+                  textAlign: { xs: "left", md: "left" }
                 }}
               >
                 cleared.system@gmail.com
               </Typography>
             </Grid>
-            <Grid item xs={12} md={5} textAlign={{ md: "right" }}>
+            <Grid item xs={12} md={5} textAlign={{ xs: "left", md: "right" }}>
               <Typography
                 sx={{
-                  fontSize: { xs: "24px", md: "42px" },
-                  fontWeight: 800,
+                  fontSize: { xs: "22px", sm: "32px", md: "42px" },
+                  fontWeight: { xs: 600, md: 800 },
                   letterSpacing: "-0.04em",
                   color: '#000'
                 }}
@@ -221,12 +223,12 @@ export default function ContactPage() {
         </Box>
 
         {/* Footer info */}
-        <Box sx={{ mt: 15, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
+        <Box sx={{ mt: { xs: 10, md: 15 }, display: "flex", justifyContent: "space-between", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "flex-start", md: "center" }, gap: 4 }}>
           <Box>
             <Typography sx={{ fontSize: "12px", fontWeight: 800, color: '#000', mb: 1 }}>LOCATION</Typography>
             <Typography sx={{ fontSize: "14px", color: "#6B7280", fontWeight: 500 }}>Lucena, Quezon 2026</Typography>
           </Box>
-          <Box sx={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <Box sx={{ display: "flex", gap: { xs: 2.5, sm: 4 }, flexWrap: "wrap", alignItems: "center" }}>
             <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Facebook</Typography>
             <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Instagram</Typography>
             <Typography sx={{ fontSize: "12px", fontWeight: 700, color: "#6B7280", "&:hover": { color: '#000' }, cursor: "pointer" }}>Twitter</Typography>

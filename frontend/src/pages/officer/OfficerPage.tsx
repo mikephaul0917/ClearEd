@@ -53,6 +53,7 @@ import {
   SettingsField,
   ProfilePictureSection,
   SettingsHeader,
+  SettingsActions,
   SettingsSkeleton
 } from "../../components/layout/SettingsLayout";
 import SuccessModal from "../../components/SuccessModal";
@@ -626,10 +627,11 @@ export default function OfficerPage() {
               </SettingsRow>
             </SettingsSection>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
+            <SettingsActions>
               <Button
                 variant="contained"
                 onClick={(e) => { e.preventDefault(); updateProfile(); }}
+                fullWidth={isSmallMobile}
                 sx={{
                   backgroundColor: '#3c4043',
                   color: '#FFF',
@@ -652,6 +654,7 @@ export default function OfficerPage() {
               <Button
                 variant="outlined"
                 onClick={updatePassword}
+                fullWidth={isSmallMobile}
                 sx={{
                   color: '#000',
                   borderColor: '#000',
@@ -674,7 +677,7 @@ export default function OfficerPage() {
               >
                 Update Password
               </Button>
-            </Box>
+            </SettingsActions>
           </SettingsContainer>
         )) : null}
       <SuccessModal

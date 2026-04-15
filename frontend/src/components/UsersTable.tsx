@@ -19,6 +19,7 @@ import {
   ChevronRight,
   ChevronLeft,
   PersonAdd,
+  Close,
   Security, History, Refresh,
   People as PeopleIcon, Settings as SettingsIcon, MoreVert as MoreVertIcon, Check
 } from '@mui/icons-material';
@@ -31,8 +32,8 @@ import { getInitials, getAbsoluteUrl } from "../utils/avatarUtils";
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#000000',
-  textPrimary: '#1E293B',
+  black: '#3c4043',
+  textPrimary: '#3c4043',
   textSecondary: '#64748B',
   teal: '#0E7490',      // Sidebar Active Text Color
   tealLight: 'rgba(45, 212, 191, 0.15)', // Sidebar Active Indicator BG
@@ -334,7 +335,6 @@ export default function UsersTable({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setMenuUser(null);
   };
 
   const handleMenuManage = () => {
@@ -420,27 +420,38 @@ export default function UsersTable({
             </>
           ) : (
             <>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                <Box sx={{
+                  bgcolor: '#F1F5F9',
+                  color: '#475569',
+                  p: { xs: 0.5, sm: 1 },
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <PeopleIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
+                </Box>
+                <Typography
+                  sx={{
+                    fontFamily: fontStack,
+                    fontWeight: 600,
+                    fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                    color: '#000',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Account Management
+                </Typography>
+              </Box>
               <Typography
                 sx={{
                   fontFamily: fontStack,
-                  fontWeight: 850,
-                  fontSize: isSmallMobile ? '1.75rem' : '2.1rem',
-                  letterSpacing: '-0.04em',
-                  color: COLORS.textPrimary,
-                  lineHeight: 1,
-                  mb: 0.8
-                }}
-              >
-                Account Management
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: fontStack,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  color: '#64748B',
+                  fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                  fontWeight: 400,
+                  color: '#6B7280',
                   maxWidth: 600,
-                  letterSpacing: '-0.01em'
+                  lineHeight: 1.5
                 }}
               >
                 Centrally manage institutional roles, account status, and platform permissions.
@@ -579,27 +590,11 @@ export default function UsersTable({
                                 fontSize: 13,
                                 bgcolor: '#5f6368',
                                 color: '#FFFFFF',
-                                fontWeight: 700
+                                fontWeight: 800
                               }}
                             >
                               {getInitials(u.fullName || u.username)}
                             </Avatar>
-                            {u.enabled && (
-                              <Box sx={{ position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: '2px', zIndex: 2 }}>
-                                <Box sx={{
-                                  width: 14,
-                                  height: 14,
-                                  bgcolor: COLORS.teal, // Use better teal
-                                  borderRadius: '50%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }}>
-                                  <Check sx={{ fontSize: 10, color: '#FFF', fontWeight: 900 }} />
-                                </Box>
-                              </Box>
-                            )}
                           </Box>
                           <Box>
                             <Typography sx={{ fontSize: 14.5, fontWeight: 800, lineHeight: 1.2, color: COLORS.textPrimary }}>{u.fullName || u.username}</Typography>
@@ -951,7 +946,17 @@ export default function UsersTable({
                         checked={selectedUserIds.length === paginatedRows.length && paginatedRows.length > 0}
                         indeterminate={selectedUserIds.length > 0 && selectedUserIds.length < paginatedRows.length}
                         onChange={toggleSelectAll}
-                        sx={{ color: '#CBD5E1', '&.Mui-checked': { color: COLORS.black } }}
+                        icon={<Box sx={{ width: 18, height: 18, borderRadius: '6px', border: '2px solid #E2E8F0' }} />}
+                        checkedIcon={
+                          <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: COLORS.teal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Check sx={{ color: '#FFF', fontSize: 14 }} />
+                          </Box>
+                        }
+                        indeterminateIcon={
+                          <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: COLORS.teal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box sx={{ width: 10, height: 2, bgcolor: '#FFF', borderRadius: '1px' }} />
+                          </Box>
+                        }
                       />
                     </TableCell>
                     {['Account', 'Email Address', 'Role', 'Access', 'Status', ''].map((h, i) => (
@@ -1010,7 +1015,12 @@ export default function UsersTable({
                             size="small"
                             checked={selectedUserIds.includes(user._id)}
                             onChange={() => toggleSelectUser(user._id)}
-                            sx={{ color: '#E2E8F0', '&.Mui-checked': { color: COLORS.black } }}
+                            icon={<Box sx={{ width: 18, height: 18, borderRadius: '6px', border: '2px solid #E2E8F0' }} />}
+                            checkedIcon={
+                              <Box sx={{ width: 18, height: 18, borderRadius: '6px', bgcolor: COLORS.teal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Check sx={{ color: '#FFF', fontSize: 14 }} />
+                              </Box>
+                            }
                           />
                         </TableCell>
                         <TableCell>
@@ -1028,22 +1038,6 @@ export default function UsersTable({
                                 }}>
                                 {getInitials(user.fullName || user.username)}
                               </Avatar>
-                              {user.enabled && (
-                                <Box sx={{ position: 'absolute', bottom: -3, right: -3, bgcolor: '#FFF', borderRadius: '50%', p: '2.5px', zIndex: 2 }}>
-                                  <Box sx={{
-                                    width: 14,
-                                    height: 14,
-                                    bgcolor: COLORS.teal,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                  }}>
-                                    <Check sx={{ fontSize: 10, color: '#FFF', fontWeight: 950 }} />
-                                  </Box>
-                                </Box>
-                              )}
                             </Box>
                             <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{maskName(user.fullName || user.username || "")}</Typography>
                           </Box>
@@ -1055,14 +1049,12 @@ export default function UsersTable({
                           <Box sx={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: 1,
                             px: 1.5,
                             py: 0.5,
                             borderRadius: '99px',
                             bgcolor: user.enabled ? COLORS.tealLight : '#F1F5F9',
-                            border: user.enabled ? `1px solid ${COLORS.teal}20` : 'none'
+                            border: user.enabled ? `1px solid ${COLORS.teal}20` : '1px solid #64748B20'
                           }}>
-                            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: user.enabled ? COLORS.teal : '#64748B' }} />
                             <Typography sx={{ fontSize: 12, fontWeight: 800, color: user.enabled ? COLORS.teal : '#64748B' }}>
                               {user.enabled ? 'Enabled' : 'Disabled'}
                             </Typography>
@@ -1194,78 +1186,102 @@ export default function UsersTable({
       <AnimatePresence>
         {selectedUserIds.length > 0 && (
           <Box
-            component={motion.div}
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
             sx={{
               position: 'fixed',
-              bottom: { xs: 16, sm: 72 }, // Increased to clear the 48px fixed footer
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: { xs: '100%', sm: 'auto' },
-              maxWidth: { xs: '100%', sm: 'calc(100% - 64px)' },
-              bgcolor: '#3c4043',
-              color: '#FFF',
-              py: { xs: 2.5, sm: 2 },
-              px: { xs: 2, sm: 3 },
-              borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
+              bottom: { xs: 16, sm: 72 },
+              left: { xs: 0, md: 280 },
+              right: 0,
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: 'center',
-              gap: { xs: 2, sm: 3 },
-              boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
-              zIndex: 1000
+              justifyContent: 'center',
+              zIndex: 1000,
+              pointerEvents: 'none',
+              px: 2
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
-              <Typography sx={{ fontWeight: 800, fontSize: 14 }}>
-                {selectedUserIds.length} users selected
-              </Typography>
-              <Button
-                size="small"
-                onClick={() => setSelectedUserIds([])}
-                sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'none', fontSize: 12, display: { xs: 'block', sm: 'none' } }}
-              >
-                Clear
-              </Button>
-            </Box>
-            <Divider orientation={isSmallMobile ? "horizontal" : "vertical"} flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)', display: { xs: 'none', sm: 'block' } }} />
-            <Box sx={{
-              display: 'flex',
-              gap: 1,
-              width: { xs: '100%', sm: 'auto' },
-              overflowX: 'auto',
-              pb: { xs: 0.5, sm: 0 },
-              '&::-webkit-scrollbar': { display: 'none' }
-            }}>
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => handleBulkUpdateStatus(selectedUserIds, true)}
-                sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                startIcon={<LockOpen />}
-              >
-                Enable
-              </Button>
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => handleBulkUpdateStatus(selectedUserIds, false)}
-                sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                startIcon={<Lock />}
-              >
-                Disable
-              </Button>
-              <Button
-                variant="text"
-                size="small"
-                onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
-                sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                startIcon={<AdminPanelSettings />}
-              >
-                Change Role
-              </Button>
+            <Box
+              component={motion.div}
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              sx={{
+                pointerEvents: 'auto',
+                width: { xs: '100%', sm: 'auto' },
+                maxWidth: { xs: '100%', sm: 'calc(100% - 64px)' },
+                bgcolor: '#3c4043',
+                color: '#FFF',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 3.5, sm: 3 },
+                borderRadius: '24px', // Updated to match reference squoval look
+                display: 'flex',
+                alignItems: 'center', // Row layout by default
+                gap: { xs: 2, sm: 4 },
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+                <Typography sx={{ fontWeight: 800, fontSize: { xs: 13, sm: 14 }, whiteSpace: 'nowrap' }}>
+                  {selectedUserIds.length} {isSmallMobile ? 'Sel.' : 'users selected'}
+                </Typography>
+                <Tooltip title={isSmallMobile ? "Clear Selection" : ""}>
+                  <Button
+                    size="small"
+                    onClick={() => setSelectedUserIds([])}
+                    sx={{
+                      color: 'rgba(255,255,255,0.5)',
+                      textTransform: 'none',
+                      fontSize: 12,
+                      minWidth: 'auto',
+                      p: { xs: 0.5, sm: '4px 8px' }
+                    }}
+                    startIcon={isSmallMobile ? <Close sx={{ fontSize: 18 }} /> : null}
+                  >
+                    {!isSmallMobile && "Clear"}
+                  </Button>
+                </Tooltip>
+              </Box>
+              <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)', height: 24, alignSelf: 'center', display: { xs: 'none', sm: 'block' } }} />
+              <Box sx={{
+                display: 'flex',
+                gap: { xs: 1.5, sm: 1.5 },
+                alignItems: 'center'
+              }}>
+                <Tooltip title={isSmallMobile ? "Enable Accounts" : ""}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => handleBulkUpdateStatus(selectedUserIds, true)}
+                    sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    startIcon={<LockOpen sx={{ fontSize: 20 }} />}
+                  >
+                    {!isSmallMobile && "Enable"}
+                  </Button>
+                </Tooltip>
+
+                <Tooltip title={isSmallMobile ? "Disable Accounts" : ""}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => handleBulkUpdateStatus(selectedUserIds, false)}
+                    sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    startIcon={<Lock sx={{ fontSize: 20 }} />}
+                  >
+                    {!isSmallMobile && "Disable"}
+                  </Button>
+                </Tooltip>
+
+                <Tooltip title={isSmallMobile ? "Update Roles" : ""}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
+                    sx={{ color: '#FFF', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    startIcon={<SettingsIcon sx={{ fontSize: 20 }} />}
+                  >
+                    {!isSmallMobile && "Change Role"}
+                  </Button>
+                </Tooltip>
+              </Box>
             </Box>
           </Box>
         )}
@@ -1428,7 +1444,7 @@ export default function UsersTable({
           <SettingsIcon sx={{ fontSize: 18, color: COLORS.textSecondary }} />
           Manage
         </MenuItem>
-        <MenuItem onClick={handleMenuToggle} sx={{ color: menuUser?.enabled ? '#EF4444' : COLORS.blue }}>
+        <MenuItem onClick={handleMenuToggle} sx={{ color: menuUser?.enabled ? '#EF4444' : '#3c4043' }}>
           {menuUser?.enabled ? <Lock sx={{ fontSize: 18 }} /> : <LockOpen sx={{ fontSize: 18 }} />}
           {menuUser?.enabled ? 'Disable Account' : 'Enable Account'}
         </MenuItem>
@@ -1458,15 +1474,13 @@ export default function UsersTable({
                   <Box sx={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 1,
                     px: 1.5,
                     py: 0.5,
                     borderRadius: '99px',
                     bgcolor: viewUser.enabled ? COLORS.tealLight : '#F1F5F9',
-                    border: viewUser.enabled ? `1px solid ${COLORS.teal}20` : 'none',
+                    border: viewUser.enabled ? `1px solid ${COLORS.teal}20` : '1px solid #64748B20',
                     mt: 0.5
                   }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: viewUser.enabled ? COLORS.teal : '#64748B' }} />
                     <Typography sx={{ fontWeight: 800, fontSize: 13, color: viewUser.enabled ? COLORS.teal : '#64748B' }}>
                       {viewUser.enabled ? "Enabled" : "Disabled"}
                     </Typography>
@@ -1485,10 +1499,10 @@ export default function UsersTable({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!manageUser} onClose={() => setManageUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: COLORS.cardRadius } }}>
-        <DialogTitle sx={{ fontWeight: 800 }}>{manageUser?._id ? "Manage User" : "Create New User"}</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={3} sx={{ mt: 2 }}>
+      <Dialog open={!!manageUser} onClose={() => setManageUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: COLORS.cardRadius, m: { xs: 1.5, sm: 2 } } }}>
+        <DialogTitle sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' }, px: { xs: 2.5, sm: 3 }, pt: { xs: 2.5, sm: 3 } }}>{manageUser?._id ? "Manage User" : "Create New User"}</DialogTitle>
+        <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, py: 0 }}>
+          <Box display="flex" flexDirection="column" gap={{ xs: 2.5, sm: 3 }} sx={{ mt: 1.5 }}>
             <TextField
               label="Full Name"
               fullWidth
@@ -1644,9 +1658,23 @@ export default function UsersTable({
             )}
 
             {(!manageUser?._id && role === 'dean') && (
-              <Alert severity="info" sx={{ borderRadius: '14px', mt: 1 }}>
-                You can assign specific courses and year levels to this Dean after creating their account.
-              </Alert>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 1.5, sm: 2 },
+                p: { xs: 1.25, sm: 1.5 },
+                borderRadius: '14px',
+                bgcolor: '#ECFEFF',
+                border: '1px solid #0E749020',
+                mt: 0.5
+              }}>
+                <Box sx={{ color: '#0E7490', display: 'flex' }}>
+                  <Security sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                </Box>
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, color: '#0E7490', fontWeight: 600, lineHeight: 1.3 }}>
+                  You can assign specific courses and year levels to this Dean after creating their account.
+                </Typography>
+              </Box>
             )}
 
             {manageUser?._id && (role === 'student' || role === 'officer') && (
@@ -1717,9 +1745,23 @@ export default function UsersTable({
             )}
 
             {(!manageUser?._id && (role === 'student' || role === 'officer')) && (
-              <Alert severity="info" sx={{ borderRadius: '14px', mt: 1 }}>
-                You can assign the specific course for this user after creating their account.
-              </Alert>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 1.5, sm: 2 },
+                p: { xs: 1.25, sm: 1.5 },
+                borderRadius: '14px',
+                bgcolor: '#ECFEFF',
+                border: '1px solid #0E749020',
+                mt: 0.5
+              }}>
+                <Box sx={{ color: '#0E7490', display: 'flex' }}>
+                  <Security sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                </Box>
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, color: '#0E7490', fontWeight: 600, lineHeight: 1.3 }}>
+                  You can assign the specific course for this user after creating their account.
+                </Typography>
+              </Box>
             )}
 
             {manageUser?._id && (
@@ -1740,7 +1782,7 @@ export default function UsersTable({
             )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: { xs: 2.5, sm: 3 }, pt: { xs: 1, sm: 2 } }}>
           <Button onClick={() => setManageUser(null)} sx={{ color: COLORS.textSecondary, textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
           <Button
             variant="contained"

@@ -51,43 +51,71 @@ const TodoItem: React.FC<TodoItemProps> = ({
             sx={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                py: 2,
+                py: { xs: 2.5, sm: 2 },
                 borderBottom: '1px solid #f1f3f4',
                 '&:hover': { bgcolor: '#f8f9fa' },
                 cursor: 'pointer',
-                px: 1,
+                px: { xs: 1.5, sm: 1 },
                 borderRadius: 1
             }}
         >
-            <Avatar sx={{ bgcolor: '#f1f3f4', width: 40, height: 40, mr: 2 }}>
-                <AssignmentIcon sx={{ color: '#5f6368', fontSize: 24 }} />
+            <Avatar sx={{ 
+                bgcolor: '#f1f3f4', 
+                width: { xs: 32, sm: 40 }, 
+                height: { xs: 32, sm: 40 }, 
+                mr: { xs: 1.5, sm: 2 },
+                mt: 0.5
+            }}>
+                <AssignmentIcon sx={{ color: '#5f6368', fontSize: { xs: 18, sm: 24 } }} />
             </Avatar>
 
-            <Box sx={{ flex: 1, minWidth: 0, pt: 0.5 }}>
-                <Typography sx={{ color: '#3c4043', fontWeight: 500, fontSize: '0.875rem', mb: 0.5, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    {title}
-                </Typography>
-                <Typography sx={{ color: '#5f6368', fontSize: '0.75rem' }}>
-                    {organizationName} {dueDate ? `• Due ${dueDate}` : ''}
-                </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', pt: 0.8, pr: 1 }}>
-                {status !== 'not_started' && (
-                    <Box sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: '999px',
-                        bgcolor: statusConfig.bgcolor,
-                        color: statusConfig.color,
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.01em',
-                        border: `1px solid ${statusConfig.color}20`
+            <Box sx={{ 
+                flex: 1, 
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: { xs: 1.5, sm: 2 }
+            }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ 
+                        color: '#3c4043', 
+                        fontWeight: 600, 
+                        fontSize: { xs: '0.9rem', sm: '0.875rem' }, 
+                        mb: 0.25,
+                        textOverflow: 'ellipsis', 
+                        overflow: 'hidden', 
+                        whiteSpace: 'nowrap' 
                     }}>
-                        {statusConfig.label}
+                        {title}
+                    </Typography>
+                    <Typography sx={{ color: '#5f6368', fontSize: '0.75rem' }}>
+                        {organizationName} {dueDate ? `• Due ${dueDate}` : ''}
+                    </Typography>
+                </Box>
+
+                {status !== 'not_started' && (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        pt: { xs: 0, sm: 0 },
+                    }}>
+                        <Box sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: '999px',
+                            bgcolor: statusConfig.bgcolor,
+                            color: statusConfig.color,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                            fontWeight: 700,
+                            letterSpacing: '0.01em',
+                            whiteSpace: 'nowrap',
+                            border: `1px solid ${statusConfig.color}20`
+                        }}>
+                            {statusConfig.label}
+                        </Box>
                     </Box>
                 )}
             </Box>

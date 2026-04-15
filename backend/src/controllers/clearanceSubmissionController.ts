@@ -136,21 +136,43 @@ export const getStudentTodoList = catchAsync(async (req: Request, res: Response)
     const memberships = await mongoose.model('OrganizationMember').find({
         userId,
         institutionId,
+        role: 'member',
         status: 'active'
     });
 
     const organizationIds = memberships.map(m => m.organizationId);
+    if (organizationIds.length === 0) {
+        return res.json({ status: 'success', todoList: { assigned: [], missing: [], done: [] } });
+    }
 
-    // 2. Get all active requirements for these organizations
+    // 2. Get active term for the institution
+    const activeTerm = await mongoose.model('Term').findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+        return res.json({ status: 'success', todoList: { assigned: [], missing: [], done: [] } });
+    }
+
+    // 3. Get all active requirements for these organizations for the active term
     const requirements = await ClearanceRequirement.find({
         organizationId: { $in: organizationIds },
+        termId: activeTerm._id, // FILTER BY TERM
         isActive: true
     }).populate('organizationId', 'name').populate('officeId', 'name');
 
-    // 3. Get all submissions by the user
-    const submissions = await ClearanceSubmission.find({ userId });
+    // 4. Get all active clearance requests for the student in this term
+    const activeRequests = await ClearanceRequest.find({
+        userId,
+        institutionId,
+        termId: activeTerm._id
+    });
+    const requestIds = activeRequests.map(r => r._id);
 
-    // 4. Map requirements to their submission status
+    // 5. Get all submissions by the user that belong to these requests
+    const submissions = await ClearanceSubmission.find({ 
+        userId,
+        clearanceRequestId: { $in: requestIds }
+    });
+
+    // 6. Map requirements to their submission status
     const todoItems = requirements.map((reqObj: any) => {
         const submission = submissions.find(s =>
             s.clearanceRequirementId.toString() === reqObj._id.toString()

@@ -230,7 +230,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                                             }}
                                                         >
                                                             <FolderIcon color={location.pathname === '/officer/to-review' ? "#0E7490" : "#0F172A"} />
-                                                            <Box ml={1.5}>Home</Box>
+                                                            <Box ml={1.5}>To Review</Box>
                                                         </Button>
 
                                                         {officerOrgs.map((org: any) => {
@@ -422,10 +422,10 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                     sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: "#5F6368",
+                        bgcolor: "#5f6368",
                         color: "#FFFFFF",
                         fontSize: 14,
-                        fontWeight: 700,
+                        fontWeight: 800,
                     }}
                 >
                     {initials}

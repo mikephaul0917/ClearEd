@@ -31,13 +31,14 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '32px',
-          padding: '48px 32px',
+          borderRadius: { xs: '24px', sm: '32px' },
+          padding: { xs: '32px 20px', sm: '48px 32px' },
           overflow: 'hidden',
           bgcolor: '#FFF',
           boxShadow: '0 25px 70px -12px rgba(0,0,0,0.18)',
           textAlign: 'center',
-          maxWidth: '440px'
+          maxWidth: '440px',
+          mx: { xs: 2, sm: 'auto' }
         }
       }}
     >
@@ -49,12 +50,12 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
           >
-            <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={{ xs: 2.5, sm: 3 }}>
               <Typography
                 sx={{
                   fontWeight: 900,
                   color: '#1E293B',
-                  fontSize: '28px',
+                  fontSize: { xs: '24px', sm: '28px' },
                   lineHeight: 1.2,
                   mb: 0.5,
                   letterSpacing: '-0.03em',
@@ -63,22 +64,22 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
               >
                 {title}
               </Typography>
-
+ 
               <Typography
                 sx={{
                   color: '#64748B',
-                  fontSize: '16px',
+                  fontSize: { xs: '14px', sm: '16px' },
                   lineHeight: 1.5,
-                  mb: 4,
-                  px: 2,
+                  mb: { xs: 3, sm: 4 },
+                  px: { xs: 1, sm: 2 },
                   fontWeight: 500,
                   fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                 }}
               >
                 {description}
               </Typography>
-
-              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+ 
+              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 2 } }}>
                 <Button
                   fullWidth
                   onClick={onConfirm}
@@ -86,12 +87,12 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
                   variant="contained"
                   sx={{
                     borderRadius: '16px',
-                    py: 2.2,
+                    py: { xs: 1.8, sm: 2.2 },
                     bgcolor: '#3c4043', 
                     color: '#FFF',
                     textTransform: 'none',
                     fontWeight: 800,
-                    fontSize: '18px',
+                    fontSize: { xs: '16px', sm: '18px' },
                     letterSpacing: '-0.01em',
                     boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.3)',
                     '&:hover': {
@@ -106,7 +107,7 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
                 >
                   {loading ? 'Processing...' : confirmText}
                 </Button>
-
+ 
                 <Button
                   fullWidth
                   onClick={onClose}

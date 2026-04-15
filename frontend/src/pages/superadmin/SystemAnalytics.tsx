@@ -63,8 +63,8 @@ import { superAdminService } from '../../services';
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#000000',
-  textPrimary: '#0F172A',
+  black: '#3c4043',
+  textPrimary: '#3c4043',
   textSecondary: '#64748B',
   accentBlue: '#B0E0E6',
   accentBlueDeep: '#4682B4', // Steel Blue for contrast

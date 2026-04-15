@@ -33,10 +33,10 @@ import SuperAdminAnnouncements from "./SuperAdminAnnouncements";
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#000000',
-  textPrimary: '#000000',
+  black: '#3c4043',
+  textPrimary: '#3c4043',
   textSecondary: '#64748B',
-  accent: '#000000',
+  accent: '#3c4043',
   teal: '#5EEAD4',
   blue: '#B0E0E6',
   yellow: '#FEF08A',

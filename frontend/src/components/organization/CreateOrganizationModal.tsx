@@ -13,6 +13,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import Grid from "@mui/material/Grid";
+import Switch from "@mui/material/Switch";
 import { organizationService } from "../../services";
 
 interface CreateOrganizationModalProps {
@@ -24,6 +26,8 @@ interface CreateOrganizationModalProps {
 const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open, onClose, onCreated }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [signatoryName, setSignatoryName] = useState("");
+    const [isFinal, setIsFinal] = useState(false);
     const [termId, setTermId] = useState("");
     const [terms, setTerms] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -67,6 +71,8 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
             await organizationService.createOrganization({
                 name,
                 description,
+                signatoryName,
+                isFinal,
                 termId
             });
             onCreated();
@@ -81,79 +87,238 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
     const handleClose = () => {
         setName("");
         setDescription("");
+        setSignatoryName("");
+        setIsFinal(false);
         setTermId("");
         setError(null);
         onClose();
     };
 
+    // Custom Label Component for consistent styling
+    const FieldLabel = ({ children }: { children: React.ReactNode }) => (
+        <Typography
+            variant="body2"
+            sx={{
+                fontWeight: 700,
+                color: "#1e293b",
+                mb: 1,
+                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
+            }}
+        >
+            {children}
+        </Typography>
+    );
+
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: "14px" } }}>
-            <DialogTitle sx={{ fontWeight: 800 }}>Create New Organization</DialogTitle>
-            <DialogContent>
-                <Box display="flex" flexDirection="column" gap={3} mt={1}>
-                    {error && <Alert severity="error">{error}</Alert>}
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: 3,
+                    p: 1
+                }
+            }}
+        >
+            <DialogTitle sx={{ pt: 3, pb: 1 }}>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
+                    }}
+                >
+                    New Organization
+                </Typography>
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: "#64748b",
+                        fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
+                        fontWeight: 500,
+                        mt: 0.5
+                    }}
+                >
+                    Establish a new institutional office for the clearance workflow.
+                </Typography>
+            </DialogTitle>
 
-                    <TextField
-                        label="Organization Name"
-                        placeholder="e.g. Society of Computer Science"
-                        fullWidth
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-                        required
-                    />
+            <DialogContent sx={{ mt: 1 }}>
+                <Box display="flex" flexDirection="column" gap={3}>
+                    {error && <Alert severity="error" sx={{ borderRadius: "12px" }}>{error}</Alert>}
 
-                    <TextField
-                        label="Description"
-                        placeholder="Briefly describe the purpose of this organization"
-                        multiline
-                        rows={3}
-                        fullWidth
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-                    />
+                    <Box>
+                        <FieldLabel>Full Name</FieldLabel>
+                        <TextField
+                            placeholder="e.g. Registrar's Office"
+                            fullWidth
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                    bgcolor: "#fcfdfe"
+                                }
+                            }}
+                            required
+                        />
+                    </Box>
 
-                    <FormControl fullWidth required>
-                        <InputLabel>Academic Term</InputLabel>
-                        <Select
-                            value={termId}
-                            label="Academic Term"
-                            onChange={(e) => setTermId(e.target.value)}
-                            disabled={fetchingTerms}
-                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-                        >
-                            {terms.map((term) => (
-                                <MenuItem key={term._id} value={term._id}>
-                                    {term.semester} - {term.academicYear} {term.isActive && "(Active)"}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {fetchingTerms && <CircularProgress size={20} sx={{ mt: 1 }} />}
-                        {terms.length === 0 && !fetchingTerms && (
-                            <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-                                No terms found. Please create a term in Admin Settings first.
+                    <Box>
+                        <FieldLabel>Internal Description</FieldLabel>
+                        <TextField
+                            placeholder="Briefly describe the purpose of this organization..."
+                            multiline
+                            rows={3}
+                            fullWidth
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                    bgcolor: "#fcfdfe"
+                                }
+                            }}
+                        />
+                    </Box>
+
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <FieldLabel>System Signatory</FieldLabel>
+                            <TextField
+                                placeholder="e.g. Juan Dela Cruz"
+                                fullWidth
+                                value={signatoryName}
+                                onChange={(e) => setSignatoryName(e.target.value)}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                        bgcolor: "#fcfdfe"
+                                    }
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <FieldLabel>Access Code</FieldLabel>
+                            <TextField
+                                fullWidth
+                                value="AUTO-GEN"
+                                disabled
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 2,
+                                        bgcolor: "#f8fafc",
+                                        "& input": {
+                                            fontWeight: 700,
+                                            color: "#94a3b8"
+                                        }
+                                    }
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+
+                    <Box>
+                        <FieldLabel>Academic Term</FieldLabel>
+                        <FormControl fullWidth required>
+                            <Select
+                                value={termId}
+                                onChange={(e) => setTermId(e.target.value)}
+                                disabled={fetchingTerms}
+                                sx={{ borderRadius: 2, bgcolor: "#fcfdfe" }}
+                            >
+                                {terms.map((term) => (
+                                    <MenuItem key={term._id} value={term._id} sx={{ fontFamily: '"Google Sans", sans-serif' }}>
+                                        {term.semester} - {term.academicYear} {term.isActive && "(Active)"}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            {fetchingTerms && <CircularProgress size={20} sx={{ mt: 1, alignSelf: "center" }} />}
+                            {terms.length === 0 && !fetchingTerms && (
+                                <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                                    No terms found. Please create a term in Admin Settings first.
+                                </Typography>
+                            )}
+                        </FormControl>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            p: 2.5,
+                            borderRadius: 2,
+                            border: "1px solid #e2e8f0",
+                            bgcolor: "#ffffff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+                        }}
+                    >
+                        <Box>
+                            <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1rem" }}>
+                                Final Milestone
                             </Typography>
-                        )}
-                    </FormControl>
+                            <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+                                Mark this as the final required signatory in the sequence.
+                            </Typography>
+                        </Box>
+                        <Switch
+                            checked={isFinal}
+                            onChange={(e) => setIsFinal(e.target.checked)}
+                            sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: '#334155',
+                                    '& + .MuiSwitch-track': {
+                                        backgroundColor: '#334155',
+                                    },
+                                },
+                            }}
+                        />
+                    </Box>
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-                <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 700, borderRadius: "8px" }}>
-                    Cancel
+
+            <DialogActions sx={{ p: 4, pt: 2, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                <Button
+                    onClick={handleClose}
+                    sx={{
+                        fontWeight: 700,
+                        color: "#64748b",
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        "&:hover": { bgcolor: "transparent", color: "#0f172a" }
+                    }}
+                >
+                    Go Back
                 </Button>
                 <Button
                     onClick={handleSubmit}
                     variant="contained"
                     disabled={loading || terms.length === 0}
                     sx={{
-                        bgcolor: "#0F172A",
+                        bgcolor: "#334155",
+                        color: "#ffffff",
                         fontWeight: 700,
                         borderRadius: "8px",
-                        "&:hover": { bgcolor: "#1E293B" }
+                        px: 4,
+                        py: 1.5,
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        boxShadow: "0 4px 12px rgba(15, 23, 42, 0.2)",
+                        "&:hover": {
+                            bgcolor: "#0f172a",
+                            boxShadow: "0 6px 16px rgba(15, 23, 42, 0.3)"
+                        },
+                        "&.Mui-disabled": {
+                            bgcolor: "#e2e8f0",
+                            color: "#94a3b8"
+                        }
                     }}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : "Create Organization"}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : "Confirm Creation"}
                 </Button>
             </DialogActions>
         </Dialog>

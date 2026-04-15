@@ -217,7 +217,16 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
                 >
                   <Avatar
                     src={getAbsoluteUrl(student.avatarUrl)}
-                    sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: '#F2F4F7', color: '#667085', border: '1px solid #F2F4F7' }}
+                    sx={{ 
+                      width: 44, 
+                      height: 44, 
+                      borderRadius: '50%', 
+                      bgcolor: '#5f6368', 
+                      color: '#FFF', 
+                      fontWeight: 800,
+                      fontSize: '1rem',
+                      border: '1.5px solid #F2F4F7' 
+                    }}
                   >
                     {getInitials(student.name)}
                   </Avatar>
@@ -236,6 +245,7 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
                   sx={{
                     bgcolor: '#FEF9C3', // Paler yellow
                     color: '#854D0E',
+                    border: '1px solid #854D0E20',
                     px: 1.5,
                     py: 0.5,
                     borderRadius: '8px',
@@ -260,7 +270,7 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
             disabled={isExporting}
             onClick={handleExport}
             sx={{
-              bgcolor: '#0E1217',
+              bgcolor: '#3c4043',
               color: '#FFFFFF',
               borderRadius: '100px',
               textTransform: 'none',
@@ -272,7 +282,7 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': { 
-                bgcolor: '#1C2127',
+                bgcolor: '#2d3034',
                 transform: 'translateY(-2px)',
                 boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
               },
@@ -281,7 +291,7 @@ export default function StudentListPopup({ open, onClose, students, searchQuery,
                 boxShadow: '0 5px 10px -3px rgba(0, 0, 0, 0.1)'
               },
               '&.Mui-disabled': {
-                bgcolor: '#0E1217',
+                bgcolor: '#3c4043',
                 opacity: 0.8,
                 color: '#FFFFFF'
               }

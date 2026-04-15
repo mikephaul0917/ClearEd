@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   Box, Typography, Button, Grid, IconButton,
   Tooltip, TextField, Chip, Skeleton, useTheme, useMediaQuery,
@@ -14,12 +14,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminService } from "../../services";
 import Swal from "sweetalert2";
 import { Switch, Menu, MenuItem } from "@mui/material";
+import SuccessActionModal from "../../components/SuccessActionModal";
+import DeleteTermConfirmModal from "./components/DeleteTermConfirmModal";
+import ActivateTermConfirmModal from "./components/ActivateTermConfirmModal";
 
 // ─── Modern Dashboard Design System ──────────────────────────────────────────
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#1E293B',
+  black: '#3c4043',
   textPrimary: '#1E293B',
   textSecondary: '#64748B',
   teal: '#0E7490',      // Sidebar Active Text Color
@@ -40,6 +43,8 @@ interface Term {
   semester: string;
   isActive: boolean;
   createdAt: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // ─── SKELETON LOADER COMPONENT ──────────────────────────────────────────────
@@ -99,6 +104,20 @@ export default function AdminTermsPage({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const toLocalISO = (date: Date) => {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  };
+
+  const getTermStatus = (term: Term) => {
+    if (term.isActive) return "ACTIVE";
+    const now = new Date();
+    if (term.startDate && new Date(term.startDate) > now) return "SCHEDULED";
+    if (term.endDate && new Date(term.endDate) < now) return "EXPIRED";
+    return "INACTIVE";
+  };
+
   const [terms, setTerms] = useState<Term[]>([]);
   const [loading, setLoading] = useState(true);
   const [ay, setAy] = useState("");
@@ -106,20 +125,38 @@ export default function AdminTermsPage({
   const [saving, setSaving] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [isEditingMonth, setIsEditingMonth] = useState(false);
-  const [startDate, setStartDate] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(toLocalISO(new Date()));
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState("08:00");
+  const [startTime, setStartTime] = useState(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 5);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  });
   const [endTime, setEndTime] = useState("17:00");
   const [startAnchorEl, setStartAnchorEl] = useState<null | HTMLElement>(null);
   const [endAnchorEl, setEndAnchorEl] = useState<null | HTMLElement>(null);
-  const [activateImmediately, setActivateImmediately] = useState(true);
+
+  // Success Modal State
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState("");
+  const [successModalDescription, setSuccessModalDescription] = useState("");
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [termToDelete, setTermToDelete] = useState<Term | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Activate Modal State
+  const [activateModalOpen, setActivateModalOpen] = useState(false);
+  const [termToActivate, setTermToActivate] = useState<Term | null>(null);
+  const [activateLoading, setActivateLoading] = useState(false);
+
 
   const formatDisplayTime = (timeStr: string) => {
-    const [h, m] = timeStr.split(':');
-    const hour = parseInt(h);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour.toString().padStart(2, '0')}:${m} ${ampm}`;
+    if (!timeStr) return "";
+    // Handle both HH:mm and ISO strings
+    const date = timeStr.includes('T') ? new Date(timeStr) : new Date(`2000-01-01T${timeStr}`);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   // --- Menu State for History ---
@@ -160,41 +197,104 @@ export default function AdminTermsPage({
     }
   };
 
-  const handleDownloadReport = (term: Term) => {
-    const csvContent = `data:text/csv;charset=utf-8,Student Name,ID,Status,Signatures\n` +
-      `Juan Dela Cruz,2021-0001,Cleared,15/15\n` +
-      `Maria Clara,2021-0002,Pending,12/15\n` +
-      `Jose Rizal,2021-0003,Cleared,15/15`;
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Report_${term.academicYear}_${term.semester}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    Swal.fire({
-      title: "Generating Report...",
-      text: "CSV download has been initiated.",
-      icon: "success",
-      timer: 1500,
-      showConfirmButton: false
-    });
+  const handleDownloadReport = async (term: Term) => {
+    try {
+      Swal.fire({
+        title: "Preparing Report",
+        text: "Gathering current student progress data...",
+        allowOutsideClick: false,
+        customClass: {
+          title: 'swal-title-custom',
+          htmlContainer: 'swal-text-custom'
+        },
+        didOpen: () => {
+          Swal.showLoading();
+          // Apply custom font styles directly
+          const title = Swal.getTitle();
+          const container = Swal.getHtmlContainer();
+          if (title) {
+            title.style.fontFamily = fontStack;
+            title.style.fontSize = '1.25rem';
+            title.style.fontWeight = '800';
+            title.style.color = COLORS.textPrimary;
+          }
+          if (container) {
+            container.style.fontFamily = fontStack;
+            container.style.fontSize = '0.9rem';
+            container.style.color = COLORS.textSecondary;
+          }
+        }
+      });
+
+      const reportData = await adminService.getTermReportData(term._id);
+
+      if (!reportData || reportData.length === 0) {
+        Swal.fire("Info", "No student data found for this term report.", "info");
+        return;
+      }
+
+      // 1. Define Headers
+      const headers = ["Student Name", "Student ID", "Course", "Year", "Status", "Progress"];
+      
+      // 2. Map Rows
+      const rows = reportData.map((s: any) => [
+        `"${s.fullName}"`,
+        `"${s.studentId}"`,
+        `"${s.course}"`,
+        `"${s.year}"`,
+        `"${s.status}"`,
+        `"${s.clearedCount}/${s.totalRequired}"`
+      ]);
+
+      // 3. Combine into CSV content
+      const csvString = [
+        headers.join(","),
+        ...rows.map((r: string[]) => r.join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Clearance_Report_${term.academicYear}_${term.semester.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Close the Swal loading modal before showing the custom React success modal
+      Swal.close();
+
+      // Use the premium SuccessActionModal instead of basic Swal
+      setSuccessModalTitle("Report Generated");
+      setSuccessModalDescription(`Successfully exported ${reportData.length} student records.`);
+      setSuccessModalOpen(true);
+      
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      Swal.fire("Error", "There was an issue generating the report. Please try again.", "error");
+    }
   };
 
-  const fetchTerms = useCallback(async () => {
-    setLoading(true);
-    onLoadingChange?.(true);
+  const onLoadingChangeRef = useRef(onLoadingChange);
+  useEffect(() => { onLoadingChangeRef.current = onLoadingChange; }, [onLoadingChange]);
+
+  const fetchTerms = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      onLoadingChangeRef.current?.(true);
+    }
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
       const data = await adminService.getTerms();
       setTerms(data || []);
     } catch (error) {
       console.error('Failed to fetch terms:', error);
     } finally {
-      setLoading(false);
-      onLoadingChange?.(false);
+      if (!silent) {
+        setLoading(false);
+        onLoadingChangeRef.current?.(false);
+      }
     }
-  }, [onLoadingChange]);
+  }, []); // Truly stable now
 
   useEffect(() => {
     fetchTerms();
@@ -206,6 +306,36 @@ export default function AdminTermsPage({
     }
   }, [refreshTrigger, fetchTerms]);
 
+  // --- Automatic UI Refresh on Term Boundaries ---
+  useEffect(() => {
+    if (terms.length === 0) return;
+
+    const now = new Date().getTime();
+    let nextEventTime = Infinity;
+
+    terms.forEach(term => {
+      if (term.startDate) {
+        const start = new Date(term.startDate).getTime();
+        if (start > now && start < nextEventTime) nextEventTime = start;
+      }
+      if (term.endDate) {
+        const end = new Date(term.endDate).getTime();
+        if (end > now && end < nextEventTime) nextEventTime = end;
+      }
+    });
+
+    if (nextEventTime !== Infinity) {
+      const delay = Math.max(0, nextEventTime - now + 1000);
+      const timer = setTimeout(() => {
+        fetchTerms(true); // Silent refresh
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+
+    const interval = setInterval(() => fetchTerms(true), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [terms, fetchTerms]);
+
   const handleSave = async () => {
     if (!ay || !sem) {
       Swal.fire("Required", "Please fill in all fields", "warning");
@@ -213,8 +343,19 @@ export default function AdminTermsPage({
     }
     setSaving(true);
     try {
-      await adminService.createTerm({ academicYear: ay, semester: sem });
-      Swal.fire("Success", "Academic term created", "success");
+      const startDateTime = startDate ? `${startDate}T${startTime}:00` : undefined;
+      const endDateTime = endDate ? `${endDate}T${endTime}:00` : undefined;
+
+      await adminService.createTerm({
+        academicYear: ay,
+        semester: sem,
+        isActive: false, // Let the scheduler handle activation
+        startDate: startDateTime,
+        endDate: endDateTime
+      });
+      setSuccessModalTitle("Academic Cycle Created");
+      setSuccessModalDescription("The new academic term has been successfully scheduled and added to the history.");
+      setSuccessModalOpen(true);
       setAy("");
       setSem("");
       setOpenAddModal(false);
@@ -226,47 +367,64 @@ export default function AdminTermsPage({
     }
   };
 
-  const handleActivate = async (id: string) => {
-    const result = await Swal.fire({
-      title: "Activate Term?",
-      text: "This will deactivate all other terms.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Activate",
-      confirmButtonColor: COLORS.black
-    });
+  const handleActivate = (idOrTerm: string | Term) => {
+    const term = typeof idOrTerm === 'string'
+      ? terms.find(t => t._id === idOrTerm)
+      : idOrTerm;
 
-    if (result.isConfirmed) {
-      try {
-        await adminService.activateTerm(id);
-        Swal.fire("Activated", "Term is now active", "success");
-        fetchTerms();
-      } catch (error: any) {
-        Swal.fire("Error", "Failed to activate term", "error");
-      }
+    if (term) {
+      setTermToActivate(term);
+      setActivateModalOpen(true);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const result = await Swal.fire({
-      title: "Delete?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      confirmButtonColor: "#EF4444"
-    });
+  const confirmActivate = async () => {
+    if (!termToActivate) return;
 
-    if (result.isConfirmed) {
-      try {
-        await adminService.deleteTerm(id);
-        fetchTerms();
-      } catch (error: any) {
-        Swal.fire("Error", "Failed to delete", "error");
-      }
+    setActivateLoading(true);
+    try {
+      await adminService.activateTerm(termToActivate._id);
+      setActivateModalOpen(false);
+      setTermToActivate(null);
+      setSuccessModalTitle("Cycle Activated");
+      setSuccessModalDescription("The selected academic term is now active across the entire institution.");
+      setSuccessModalOpen(true);
+      fetchTerms();
+    } catch (error: any) {
+      Swal.fire("Error", "Failed to activate term", "error");
+    } finally {
+      setActivateLoading(false);
     }
   };
 
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 1)); // December 2025
+  const handleDelete = (idOrTerm: string | Term) => {
+    const term = typeof idOrTerm === 'string'
+      ? terms.find(t => t._id === idOrTerm)
+      : idOrTerm;
+
+    if (term) {
+      setTermToDelete(term);
+      setDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!termToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await adminService.deleteTerm(termToDelete._id);
+      setDeleteModalOpen(false);
+      setTermToDelete(null);
+      fetchTerms();
+    } catch (error: any) {
+      Swal.fire("Error", "Failed to delete", "error");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const [currentDate, setCurrentDate] = useState(new Date()); // Default to current month/year
   const currentMonth = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const handleNextMonth = () => {
@@ -292,7 +450,7 @@ export default function AdminTermsPage({
       const date = new Date(year, month - 1, d);
       calendar.push({
         d,
-        dateStr: date.toISOString().split('T')[0],
+        dateStr: toLocalISO(date),
         current: false,
         active: false
       });
@@ -305,7 +463,7 @@ export default function AdminTermsPage({
       const isToday = today.toDateString() === date.toDateString();
       calendar.push({
         d,
-        dateStr: date.toISOString().split('T')[0],
+        dateStr: toLocalISO(date),
         current: true,
         active: isToday,
         event: d % 7 === 0 // Placeholder for deterministic events
@@ -318,7 +476,7 @@ export default function AdminTermsPage({
       const date = new Date(year, month + 1, d);
       calendar.push({
         d,
-        dateStr: date.toISOString().split('T')[0],
+        dateStr: toLocalISO(date),
         current: false,
         active: false
       });
@@ -566,24 +724,13 @@ export default function AdminTermsPage({
                   </Box>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: { xs: 14, sm: 15 }, color: COLORS.textPrimary }}>
-                      Activate immediately
-                    </Typography>
-                    <Tooltip title="If enabled, this will become the active term for all students upon creation.">
-                      <InfoOutlined sx={{ fontSize: 18, color: COLORS.textSecondary }} />
-                    </Tooltip>
-                  </Box>
-                  <Switch
-                    checked={activateImmediately}
-                    onChange={(e) => setActivateImmediately(e.target.checked)}
-                    size={isMobile ? "small" : "medium"}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': { color: COLORS.teal },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: COLORS.teal },
-                    }}
-                  />
+                <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc', border: `1px solid ${COLORS.border}`, mt: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, mb: 0.5 }}>
+                    Automatic Activation
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+                    This term will automatically become active at the scheduled start time and expire at the end time.
+                  </Typography>
                 </Box>
               </Box>
             </Grid>
@@ -640,15 +787,30 @@ export default function AdminTermsPage({
 
       {/* ─── CYCLE HISTORY SECTION ──────────────────────────────────────── */}
       <Box sx={{ mt: 8, maxWidth: 1000, mx: 'auto' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4, px: 1 }}>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          mb: 4,
+          px: 1,
+          gap: { xs: 1, sm: 0 }
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Settings sx={{ color: COLORS.textSecondary, fontSize: 20 }} />
-            <Typography sx={{ fontWeight: 800, fontSize: 19, color: COLORS.textPrimary }}>Academic Cycle History</Typography>
+            <Settings sx={{ color: COLORS.textSecondary, fontSize: { xs: 18, sm: 20 } }} />
+            <Typography sx={{ fontWeight: 800, fontSize: { xs: 17, sm: 19 }, color: COLORS.textPrimary }}>Academic Cycle History</Typography>
           </Box>
           <Button
-            onClick={fetchTerms}
+            onClick={() => fetchTerms()}
             startIcon={<AccessTime />}
-            sx={{ textTransform: 'none', fontWeight: 700, color: COLORS.teal, fontSize: 14 }}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              color: COLORS.teal,
+              fontSize: { xs: 13, sm: 14 },
+              p: { xs: 0, sm: '6px 8px' },
+              '& .MuiButton-startIcon': { mr: { xs: 0.5, sm: 1 } }
+            }}
           >
             Refresh History
           </Button>
@@ -687,32 +849,54 @@ export default function AdminTermsPage({
                           width: 50, height: 50, borderRadius: '16px', bgcolor: term.isActive ? COLORS.tealLight : '#F8FAFC',
                           display: 'flex', flexShrink: 0, alignItems: 'center', justifyContent: 'center'
                         }}>
-                          <Typography sx={{ fontWeight: 800, color: term.isActive ? COLORS.teal : COLORS.textSecondary, fontSize: 18 }}>
+                          <Typography sx={{ fontWeight: 800, color: term.isActive ? COLORS.teal : COLORS.textSecondary, fontSize: { xs: 16, sm: 18 } }}>
                             {term.academicYear.split('-')[0].slice(-2)}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography sx={{ fontWeight: 800, fontSize: { xs: 15.5, sm: 17 }, mb: 0.5 }}>{term.academicYear} {term.semester}</Typography>
+                          <Typography sx={{ fontWeight: 800, fontSize: { xs: 14, sm: 17 }, mb: 0.5 }}>{term.academicYear} {term.semester}</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                            <Chip
-                              label={term.isActive ? "ACTIVE" : "EXPIRED"}
-                              size="small"
-                              sx={{
-                                fontWeight: 800, fontSize: 10, borderRadius: '6px',
-                                bgcolor: term.isActive ? COLORS.tealLight : '#F1F5F9',
-                                color: term.isActive ? COLORS.teal : '#64748B',
-                                border: term.isActive ? `1px solid ${COLORS.teal}20` : 'none'
-                              }}
-                            />
+                            {(() => {
+                              const status = getTermStatus(term);
+                              const isActive = status === 'ACTIVE';
+                              const isScheduled = status === 'SCHEDULED';
+
+                              return (
+                                <Box sx={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: '99px',
+                                  bgcolor: isActive ? COLORS.tealLight : isScheduled ? '#eff6ff' : '#F1F5F9',
+                                  border: isActive ? `1px solid ${COLORS.teal}20` : isScheduled ? '1px solid #3b82f620' : '1px solid #64748B20',
+                                  height: 22
+                                }}>
+                                  <Typography sx={{
+                                    fontSize: 10,
+                                    fontWeight: 800,
+                                    color: isActive ? COLORS.teal : isScheduled ? '#3b82f6' : '#64748B',
+                                    lineHeight: 1
+                                  }}>
+                                    {status}
+                                  </Typography>
+                                </Box>
+                              );
+                            })()}
                             <Typography sx={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary }}>
                               Created on {new Date(term.createdAt).toLocaleDateString()}
                             </Typography>
+                            {(term.startDate || term.endDate) && (
+                              <Typography sx={{ fontSize: 12, fontWeight: 600, color: COLORS.teal, bgcolor: COLORS.tealLight + '20', px: 1, borderRadius: '4px' }}>
+                                {term.startDate ? formatDisplayTime(term.startDate.toString()) : '...'} - {term.endDate ? formatDisplayTime(term.endDate.toString()) : '...'}
+                              </Typography>
+                            )}
                           </Box>
                         </Box>
                       </Box>
                       <Box sx={{ display: 'flex', gap: 1, alignSelf: { xs: 'flex-end', sm: 'center' } }}>
                         {!term.isActive && (
-                          <Tooltip title="Set as Active">
+                          <Tooltip title="Set Active temporarily">
                             <IconButton onClick={() => handleActivate(term._id)} sx={{ color: COLORS.teal }}><CheckCircle /></IconButton>
                           </Tooltip>
                         )}
@@ -862,7 +1046,30 @@ export default function AdminTermsPage({
         );
       })()}
 
-      {/* Original Dialog removed - Integrated into main UI */}
+
+      {/* Success Modal */}
+      <SuccessActionModal
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={successModalTitle}
+        description={successModalDescription}
+      />
+
+      <DeleteTermConfirmModal
+        open={deleteModalOpen}
+        onClose={() => { setDeleteModalOpen(false); setTermToDelete(null); }}
+        onConfirm={confirmDelete}
+        termName={termToDelete ? `${termToDelete.academicYear} ${termToDelete.semester}` : undefined}
+        loading={deleteLoading}
+      />
+
+      <ActivateTermConfirmModal
+        open={activateModalOpen}
+        onClose={() => { setActivateModalOpen(false); setTermToActivate(null); }}
+        onConfirm={confirmActivate}
+        termName={termToActivate ? `${termToActivate.academicYear} ${termToActivate.semester}` : undefined}
+        loading={activateLoading}
+      />
     </Box>
   );
 }

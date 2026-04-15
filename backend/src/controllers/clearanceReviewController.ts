@@ -227,6 +227,17 @@ export const getSubmissionsForReview = catchAsync(async (req: Request, res: Resp
     if (organizationId) query.organizationId = organizationId;
     if (status) query.status = status;
 
+    // Filter by active term
+    const activeTerm = await mongoose.model('Term').findOne({ institutionId, isActive: true });
+    if (activeTerm) {
+        const activeRequests = await ClearanceRequest.find({ termId: activeTerm._id }).select('_id');
+        const activeRequestIds = activeRequests.map(r => r._id);
+        query.clearanceRequestId = { $in: activeRequestIds };
+    } else {
+        // If no active term, return empty to be safe
+        return res.json({ submissions: [] });
+    }
+
     const submissions = await ClearanceSubmission.find(query)
         .populate('userId', 'fullName firstName lastName email studentId avatarUrl')
         .populate('clearanceRequirementId', 'title officeId')

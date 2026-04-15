@@ -11,6 +11,15 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import UnarchiveIcon from "@mui/icons-material/Unarchive";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { organizationService } from "../../services/organization.service";
+import GenericConfirmationModal from "../modals/GenericConfirmationModal";
 
 /**
  * OrganizationCard Component
@@ -27,6 +36,8 @@ export interface OrganizationCardProps {
     color?: string; // Optional brand color for the header
     headerImage?: string | null; // Optional header image banner
     onClick?: (id: string) => void;
+    onRefresh?: () => void;
+    isAdmin?: boolean;
 }
 
 const OrganizationCard: React.FC<OrganizationCardProps> = ({
@@ -39,9 +50,83 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
     institutionName,
     color = "#0F172A",
     headerImage,
-    onClick
+    onClick,
+    onRefresh,
+    isAdmin = false
 }) => {
     const [open, setOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [isUnarchiveModalOpen, setIsUnarchiveModalOpen] = useState(false);
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+    const [isActionLoading, setIsActionLoading] = useState(false);
+
+    const handleMenuOpen = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        setAnchorEl(e.currentTarget);
+    };
+
+    const handleMenuClose = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setAnchorEl(null);
+    };
+
+    const handleArchiveClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsArchiveModalOpen(true);
+        handleMenuClose();
+    };
+
+    const handleUnarchiveClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsUnarchiveModalOpen(true);
+        handleMenuClose();
+    };
+
+    const handleLeaveClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsLeaveModalOpen(true);
+        handleMenuClose();
+    };
+
+    const handleArchiveConfirm = async () => {
+        setIsActionLoading(true);
+        try {
+            await organizationService.archiveOrganization(id);
+            onRefresh?.();
+        } catch (error) {
+            console.error("Failed to archive organization:", error);
+        } finally {
+            setIsActionLoading(false);
+            setIsArchiveModalOpen(false);
+        }
+    };
+
+    const handleUnarchiveConfirm = async () => {
+        setIsActionLoading(true);
+        try {
+            await organizationService.unarchiveOrganization(id);
+            onRefresh?.();
+        } catch (error) {
+            console.error("Failed to unarchive organization:", error);
+        } finally {
+            setIsActionLoading(false);
+            setIsUnarchiveModalOpen(false);
+        }
+    };
+
+    const handleLeaveConfirm = async () => {
+        setIsActionLoading(true);
+        try {
+            await organizationService.leaveOrganization(id);
+            onRefresh?.();
+        } catch (error) {
+            console.error("Failed to leave organization:", error);
+        } finally {
+            setIsActionLoading(false);
+            setIsLeaveModalOpen(false);
+        }
+    };
 
     const handleLearnMore = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -68,14 +153,6 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     position: "relative",
                     transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                     opacity: status === "archived" ? 0.7 : 1,
-                    "&:hover": {
-                        transform: "translateY(-6px)",
-                        "& .card-description": {
-                            maxHeight: "100px",
-                            opacity: 1,
-                            mt: 2
-                        }
-                    }
                 }}
             >
                 {/* Header Background Container (Rounded and Clipped) */}
@@ -97,7 +174,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     <Box
                         className="card-header"
                         sx={{
-                            height: "100%",
+                            height: "60%",
                             bgcolor: color,
                             backgroundImage: headerImage ? `url(${headerImage})` : 'none',
                             backgroundSize: 'cover',
@@ -108,14 +185,13 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             pt: 6,
                         }}
                     >
-                        {/* Initial Container (Icon Box) */}
                         <Box
                             className="icon-box"
                             sx={{
                                 width: 60,
                                 height: 60,
                                 bgcolor: "#FFFFFF",
-                                borderRadius: "16px",
+                                borderRadius: "50%",
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -138,6 +214,27 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 {name.charAt(0)}
                             </Avatar>
                         </Box>
+
+                        {/* Top Right Ellipsis Button */}
+                        <IconButton
+                            size="small"
+                            onClick={handleMenuOpen}
+                            sx={{
+                                position: "absolute",
+                                top: 24,
+                                right: 24,
+                                color: "#FFFFFF",
+                                bgcolor: "rgba(255, 255, 255, 0.25)",
+                                backdropFilter: "blur(8px)",
+                                border: "1px solid rgba(255, 255, 255, 0.3)",
+                                zIndex: 10,
+                                "&:hover": {
+                                    bgcolor: "rgba(255, 255, 255, 0.4)",
+                                }
+                            }}
+                        >
+                            <MoreVertIcon fontSize="small" />
+                        </IconButton>
                     </Box>
                 </Box>
 
@@ -157,7 +254,15 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                         display: "flex",
                         flexDirection: "column",
-                        zIndex: 3
+                        zIndex: 3,
+                        "&:hover": {
+                            transform: "translateY(-6px)",
+                            "& .card-description": {
+                                maxHeight: "100px",
+                                opacity: 1,
+                                mt: 2
+                            }
+                        }
                     }}
                 >
                     <Typography
@@ -174,6 +279,49 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     >
                         {name}
                     </Typography>
+
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={() => handleMenuClose()}
+                        onClick={(e) => e.stopPropagation()}
+                        PaperProps={{
+                            elevation: 3,
+                            sx: {
+                                borderRadius: "12px",
+                                mt: 0.5,
+                                minWidth: 160,
+                                border: "1px solid #F1F5F9"
+                            }
+                        }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    >
+                        {(role === 'officer' || isAdmin) && status !== 'archived' && (
+                            <MenuItem onClick={handleArchiveClick} sx={{ py: 1.5, gap: 1.5 }}>
+                                <ListItemIcon sx={{ minWidth: "auto !important" }}>
+                                    <ArchiveIcon fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2" fontWeight={600}>Archive</Typography>
+                            </MenuItem>
+                        )}
+                        {(role === 'officer' || isAdmin) && status === 'archived' && (
+                            <MenuItem onClick={handleUnarchiveClick} sx={{ py: 1.5, gap: 1.5 }}>
+                                <ListItemIcon sx={{ minWidth: "auto !important" }}>
+                                    <UnarchiveIcon fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2" fontWeight={600}>Unarchive</Typography>
+                            </MenuItem>
+                        )}
+                        {(role === 'member' || role === 'officer') && (
+                            <MenuItem onClick={handleLeaveClick} sx={{ py: 1.5, gap: 1.5, color: "#DC2626" }}>
+                                <ListItemIcon sx={{ minWidth: "auto !important", color: "inherit" }}>
+                                    <LogoutIcon fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2" fontWeight={600}>Leave Organization</Typography>
+                            </MenuItem>
+                        )}
+                    </Menu>
 
                     <Box
                         className="card-description"
@@ -293,6 +441,36 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 </DialogContent>
 
             </Dialog>
+
+            <GenericConfirmationModal
+                open={isArchiveModalOpen}
+                onClose={() => setIsArchiveModalOpen(false)}
+                onConfirm={handleArchiveConfirm}
+                title="Archive Organization?"
+                description={`Are you sure you want to archive "${name}"? This will hide it from active dashboards for all members.`}
+                confirmText="Archive"
+                loading={isActionLoading}
+            />
+
+            <GenericConfirmationModal
+                open={isUnarchiveModalOpen}
+                onClose={() => setIsUnarchiveModalOpen(false)}
+                onConfirm={handleUnarchiveConfirm}
+                title="Unarchive Organization?"
+                description={`Are you sure you want to unarchive "${name}"? This will return it to the active organizations dashboard.`}
+                confirmText="Unarchive"
+                loading={isActionLoading}
+            />
+
+            <GenericConfirmationModal
+                open={isLeaveModalOpen}
+                onClose={() => setIsLeaveModalOpen(false)}
+                onConfirm={handleLeaveConfirm}
+                title="Leave Organization?"
+                description={`Are you sure you want to leave "${name}"? You will need an invite code to join again.`}
+                confirmText="Leave"
+                loading={isActionLoading}
+            />
         </>
     );
 };

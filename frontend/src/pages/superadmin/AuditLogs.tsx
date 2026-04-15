@@ -21,7 +21,9 @@ import {
   MenuItem,
   CircularProgress,
   Dialog,
-  DialogContent
+  DialogContent,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -267,27 +269,21 @@ export default function AuditLogs() {
   // --- SKELETONS (Matching Actual Component Layout) ---
   const TabSkeleton = () => (
     <Box sx={{ 
+      borderBottom: 1, 
+      borderColor: "divider",
+      mb: 4,
       display: 'flex', 
       justifyContent: 'space-between', 
-      alignItems: 'center',
-      width: '100%',
-      mb: 4
+      alignItems: 'center'
     }}>
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 1, 
-        bgcolor: '#FFFFFF', 
-        p: 0.8, 
-        borderRadius: '100px', 
-        border: '1px solid #E2E8F0',
-        width: 'fit-content',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
-      }}>
+      <Box sx={{ display: 'flex' }}>
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} variant="rectangular" width={110} height={40} sx={{ borderRadius: '100px' }} />
+          <Box key={i} sx={{ px: 3, py: 2 }}>
+            <Skeleton variant="text" width={80} height={20} />
+          </Box>
         ))}
       </Box>
-      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px' }} />
+      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px', mb: 1 }} />
     </Box>
   );
 
@@ -469,7 +465,9 @@ export default function AuditLogs() {
 
   return (
     <Box sx={{ 
-      p: { xs: 2, sm: 4, md: 5 }, 
+      px: { xs: 2, sm: 4, md: 5 }, 
+      pb: { xs: 2, sm: 4, md: 5 },
+      pt: 0,
       bgcolor: '#F9FAFB', 
       minHeight: '100vh',
       fontFamily: fontStack
@@ -478,84 +476,60 @@ export default function AuditLogs() {
         <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }} onClose={() => setError(null)}>
           {error}
         </Alert>
-      )}      {/* --- Tabs & Actions --- */}
+      )}
+
+      {/* --- Tabs & Actions --- */}
       {loading && isInitialLoad ? (
         <TabSkeleton />
       ) : (
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'center',
+          alignItems: 'flex-end', // Align items to the bottom
+          borderBottom: 1,
+          borderColor: "divider",
           mb: 4,
           gap: { xs: 1.5, sm: 2 },
           width: '100%'
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            bgcolor: '#FFFFFF', 
-            p: 0.8, 
-            borderRadius: '100px', 
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-            flex: 1,
-            minWidth: 0,
-            overflowX: 'auto',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' }
-          }}>
-            {['System Records', 'Security & Alerts', 'Access Logs', 'Admin Actions'].map((label, idx) => {
-              const active = tabValue === idx;
-              return (
-                <Button
-                  key={label}
-                  onClick={() => handleTabChange(idx)}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    fontSize: { xs: 12, sm: 13 },
-                    px: { xs: 2.5, sm: 3.5 },
-                    py: 1.2,
-                    borderRadius: '100px',
-                    color: active ? '#FFFFFF' : '#64748B',
-                    bgcolor: 'transparent',
-                    position: 'relative',
-                    zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    '&:hover': {
-                      color: active ? '#FFFFFF' : '#1E293B'
-                    },
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="activeTabIndicator"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: '#1E293B',
-                        borderRadius: '100px',
-                        zIndex: -1,
-                        boxShadow: '0 10px 20px -5px rgba(0,0,0,0.2)'
-                      }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  {label}
-                </Button>
-              );
-            })}
-          </Box>
+          <Tabs
+            value={tabValue}
+            onChange={(_, v) => handleTabChange(v)}
+            textColor="primary"
+            variant="scrollable"
+            scrollButtons="auto"
+            TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+            sx={{
+              mb: "-1px", // Overlap the parent border
+              "& .MuiTabs-indicator": {
+                bottom: 0,
+              },
+              "& .MuiTab-root": {
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: "#5f6368",
+                minWidth: { xs: 'auto', sm: 120 },
+                px: { xs: 2, sm: 3 },
+                py: 2,
+              },
+              "& .Mui-selected": {
+                color: "#0D9488 !important",
+                fontWeight: 800
+              }
+            }}
+          >
+            <Tab label="System Records" />
+            <Tab label="Security & Alerts" />
+            <Tab label="Access Logs" />
+            <Tab label="Admin Actions" />
+          </Tabs>
 
           <Tooltip title="Export Logs">
             <IconButton 
               onClick={handleExport}
               sx={{ 
+                mb: 1,
                 border: `1px solid ${COLORS.border}`, 
                 borderRadius: '14px',
                 bgcolor: '#FFF',
@@ -572,6 +546,7 @@ export default function AuditLogs() {
           </Tooltip>
         </Box>
       )}
+
 
       {/* --- Consolidated Overview Card --- */}
       {loading ? (

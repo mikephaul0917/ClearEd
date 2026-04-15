@@ -55,7 +55,7 @@ export const adminService = {
     },
 
     // Term Management
-    createTerm: async (data: { academicYear: string, semester: string }) => {
+    createTerm: async (data: { academicYear: string, semester: string, isActive?: boolean, startDate?: string, endDate?: string }) => {
         const response = await api.post('/admin/terms', data);
         return response.data;
     },
@@ -72,6 +72,11 @@ export const adminService = {
 
     deleteTerm: async (id: string) => {
         const response = await api.delete(`/admin/terms/${id}`);
+        return response.data;
+    },
+
+    getTermReportData: async (id: string) => {
+        const response = await api.get(`/admin/terms/${id}/report`);
         return response.data;
     },
 

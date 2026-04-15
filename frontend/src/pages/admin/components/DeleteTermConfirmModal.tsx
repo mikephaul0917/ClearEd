@@ -1,20 +1,20 @@
 import React from 'react';
-import { Dialog, Box, Typography, Button, IconButton } from '@mui/material';
+import { Dialog, Box, Typography, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface RevokeApprovalModalProps {
+interface DeleteTermConfirmModalProps {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  studentName?: string;
+  termName?: string;
   loading?: boolean;
 }
 
-const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
+const DeleteTermConfirmModal: React.FC<DeleteTermConfirmModalProps> = ({
   open,
   onClose,
   onConfirm,
-  studentName = "this student",
+  termName = "this academic term",
   loading = false
 }) => {
   return (
@@ -51,10 +51,11 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                   color: '#0F172A',
                   fontSize: '1.75rem',
                   lineHeight: 1.2,
-                  mb: 1
+                  mb: 1,
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                 }}
               >
-                Are You Sure <br /> Want To Revoke?
+                Are You Sure <br /> Want To Delete?
               </Typography>
 
               <Typography
@@ -63,10 +64,11 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                   fontSize: '0.95rem',
                   lineHeight: 1.5,
                   mb: 3,
-                  px: 1
+                  px: 1,
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                 }}
               >
-                You are about to revoke the final approval for <strong>{studentName}</strong>. This status will be reverted to pending.
+                You are about to delete <strong>{termName}</strong>. This action will permanently remove all associated data and cannot be undone.
               </Typography>
 
               <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -90,10 +92,11 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                       transform: 'translateY(-1px)'
                     },
                     '&:active': { transform: 'translateY(0)' },
-                    transition: 'all 0.2s ease-in-out'
+                    transition: 'all 0.2s ease-in-out',
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
-                  {loading ? 'Processing...' : "Yes, Revoke"}
+                  {loading ? 'Processing...' : "Yes, Delete"}
                 </Button>
 
                 <Button
@@ -105,13 +108,14 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
                     textTransform: 'none',
                     fontWeight: 700,
                     fontSize: '1rem',
-                    color: '#64748B', // Neutral Gray
+                    color: '#64748B',
                     '&:hover': {
                       bgcolor: 'transparent',
                       color: '#475569',
                       transform: 'scale(1.02)'
                     },
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
                 >
                   Not Now
@@ -125,4 +129,4 @@ const RevokeApprovalModal: React.FC<RevokeApprovalModalProps> = ({
   );
 };
 
-export default RevokeApprovalModal;
+export default DeleteTermConfirmModal;

@@ -132,11 +132,17 @@ export const getTimeline = async (req: Request, res: Response) => {
       targetUserId = studentId;
     }
 
-    // 1. Find the clearance request
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.status(404).json({ message: "No active academic term found for your institution" });
+    }
+
+    // 1. Find the clearance request for the active term
     const request = await ClearanceRequest.findOne({
       userId: targetUserId,
       organizationId,
-      institutionId
+      institutionId,
+      termId: activeTerm._id
     }).populate("termId", "name academicYear");
 
     if (!request) {

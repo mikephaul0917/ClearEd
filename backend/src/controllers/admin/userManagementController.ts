@@ -668,7 +668,7 @@ export const deleteRequirement = async (req: Request, res: Response) => {
 export const createTerm = async (req: Request, res: Response) => {
   try {
     const institutionId = resolveInstitutionId(req);
-    const { name, academicYear, semester, isActive } = req.body;
+    const { name, academicYear, semester, isActive, startDate, endDate } = req.body;
 
     // Ensure only one active term per institution
     if (isActive) {
@@ -680,7 +680,9 @@ export const createTerm = async (req: Request, res: Response) => {
       academicYear,
       semester,
       institutionId,
-      isActive: !!isActive
+      isActive: !!isActive,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined
     });
 
     res.status(201).json({ message: "Term created", term });
@@ -758,16 +760,35 @@ export const getClearanceStats = async (req: Request, res: Response) => {
   try {
     const institutionId = resolveInstitutionId(req);
 
-    const totalRequests = await ClearanceRequest.countDocuments({ institutionId });
-    const completedRequests = await ClearanceRequest.countDocuments({ institutionId, status: 'completed' });
-    const pendingRequests = await ClearanceRequest.countDocuments({ institutionId, status: 'pending' });
+    // Get active term
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.json({
+        totalRequests: 0,
+        completedRequests: 0,
+        pendingRequests: 0,
+        rejectedRequests: 0,
+        organizationApprovals: [],
+        fastest: { name: "—", avgDays: 0 },
+        mostDelayed: { name: "—", avgDays: 0 },
+        volume: { day: [], week: [], month: [] }
+      });
+    }
+
+    const totalRequests = await ClearanceRequest.countDocuments({ institutionId, termId: activeTerm._id });
+    const completedRequests = await ClearanceRequest.countDocuments({ institutionId, termId: activeTerm._id, status: 'completed' });
+    const pendingRequests = await ClearanceRequest.countDocuments({ institutionId, termId: activeTerm._id, status: 'pending' });
 
     const orgs = await Organization.find({ institutionId, status: 'active' });
     
-    // Determine the review latencies for all approved submissions
+    // Determine the review latencies for approved submissions in the active term
+    const activeRequests = await ClearanceRequest.find({ institutionId, termId: activeTerm._id }).select('_id');
+    const activeRequestIds = activeRequests.map(r => r._id);
+
     const approvedSubmissions = await ClearanceSubmission.find({
       institutionId,
       status: 'approved',
+      clearanceRequestId: { $in: activeRequestIds },
       reviewedAt: { $exists: true }
     });
 
@@ -841,6 +862,74 @@ export const getInstitution = async (req: Request, res: Response) => {
     if (!institution) return res.status(404).json({ message: "Institution not found" });
 
     res.json(institution);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Aggregates student clearance progress for a specific term for reporting.
+ */
+export const getTermReportData = async (req: Request, res: Response) => {
+  try {
+    const { id: termId } = req.params;
+    const institutionId = resolveInstitutionId(req);
+
+    if (!institutionId) return res.status(401).json({ message: "Unauthorized" });
+
+    const term = await Term.findOne({ _id: termId, institutionId });
+    if (!term) return res.status(404).json({ message: "Term not found" });
+
+    // 1. Get all students in this institution
+    const students = await User.find({ institutionId, role: 'student' }).select('fullName email studentId');
+
+    // 2. Get Student Profiles for additional info (course, year)
+    const studentProfiles = await StudentProfile.find({ institutionId });
+    const profileMap: Record<string, any> = {};
+    studentProfiles.forEach(p => {
+      profileMap[p.userId.toString()] = p;
+    });
+
+    // 3. Get active organizations for this institution to know the total required
+    const totalOrgs = await Organization.countDocuments({ institutionId, status: 'active' });
+
+    // 4. Get all ClearanceRequests for this term
+    const clearanceRequests = await ClearanceRequest.find({ institutionId, termId });
+    
+    // Group requests by userId
+    const studentRequestsMap: Record<string, { total: number; cleared: number }> = {};
+    clearanceRequests.forEach(req => {
+      const uId = req.userId.toString();
+      if (!studentRequestsMap[uId]) {
+        studentRequestsMap[uId] = { total: 0, cleared: 0 };
+      }
+      studentRequestsMap[uId].total += 1;
+      if (req.status === 'completed' || req.status === 'officer_cleared') {
+        studentRequestsMap[uId].cleared += 1;
+      }
+    });
+
+    // Assemble final report data
+    const reportData = students.map(student => {
+      const profile = profileMap[student._id.toString()];
+      const progress = studentRequestsMap[student._id.toString()] || { total: 0, cleared: 0 };
+      
+      const isCleared = progress.total > 0 && progress.cleared === progress.total;
+
+      return {
+        id: student._id,
+        fullName: student.fullName,
+        email: student.email,
+        studentId: profile?.studentNumber || '',
+        course: profile?.course || 'Unassigned',
+        year: profile?.year || 'Unassigned',
+        clearedCount: progress.cleared,
+        totalRequired: progress.total || totalOrgs,
+        status: isCleared ? 'Cleared' : 'Incomplete'
+      };
+    });
+
+    res.json(reportData);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

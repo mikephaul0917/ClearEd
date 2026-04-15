@@ -1,5 +1,5 @@
 import express from "express";
-import { listUsers, getUser, createUser, updateStatus, updateBulkStatus, updateRole, updateBulkRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile } from "../controllers/admin/userManagementController";
+import { listUsers, getUser, createUser, updateStatus, updateBulkStatus, updateRole, updateBulkRole, updateProfile, getInstitution, createRequirement, createTerm, activateTerm, deleteTerm, getClearanceStats, listRequirements, updateRequirement, deleteRequirement, getDeanAssignments, addDeanAssignment, removeDeanAssignment, getStudentProfile, updateStudentProfile, getTermReportData } from "../controllers/admin/userManagementController";
 import { listAccessRequests, getAccessRequestCount, approveAccessRequest, rejectAccessRequest } from "../controllers/admin/accessRequestController";
 import {
     getInstitutionOrganizations,
@@ -50,6 +50,7 @@ router.post("/terms", auth, admin, createTerm);
 router.get("/terms", auth, admin, getOrgTerms);
 router.put("/terms/:id/activate", auth, admin, activateTerm);
 router.delete("/terms/:id", auth, admin, deleteTerm);
+router.get("/terms/:id/report", auth, admin, getTermReportData);
 router.get("/clearance-stats", auth, admin, getClearanceStats);
 router.get("/institution", auth, admin, getInstitution);
 
