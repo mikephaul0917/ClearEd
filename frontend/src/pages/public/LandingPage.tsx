@@ -419,17 +419,17 @@ export default function LandingPage() {
             initial={{ y: 200, opacity: 0, rotate: -5, x: "-50%" }}
             whileInView={{ y: isMobile ? 60 : -60, opacity: 1, rotate: -5, x: "-50%" }}
             viewport={{ once: true }}
-            transition={{ 
+            transition={{
               type: "spring",
               stiffness: 40,
               damping: 20,
               mass: 1.2,
-              duration: 1.5 
+              duration: 1.5
             }}
             sx={{
               position: "absolute",
               left: "50%",
-              width: { xs: "160%", sm: "85%", md: "1200px" },
+              width: { xs: "170%", sm: "90%", md: "1100px" },
               maxWidth: { xs: "none", sm: "600px", md: "none" },
               height: "auto",
               filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
