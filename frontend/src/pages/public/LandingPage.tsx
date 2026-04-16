@@ -151,7 +151,7 @@ export default function LandingPage() {
   };
 
   return (
-    <Box sx={{ backgroundColor: C.white, minHeight: "100vh", fontFamily: C.fontStack, position: "relative" }}>
+    <Box sx={{ backgroundColor: C.white, minHeight: "100vh", fontFamily: C.fontStack, position: "relative", overflowX: "hidden" }}>
       {/* ── Custom Integrated Header ── */}
       <Box
         component="header"
@@ -376,7 +376,7 @@ export default function LandingPage() {
         >
           <Typography
             sx={{
-              fontSize: { xs: "40px", sm: "60px", md: "140px" },
+              fontSize: { xs: "36px", sm: "60px", md: "140px" },
               fontWeight: 800,
               lineHeight: { xs: 1.1, md: 0.85 },
               letterSpacing: "-0.04em",
@@ -416,8 +416,8 @@ export default function LandingPage() {
             component={motion.img}
             src="/mobile.png"
             alt="Mobile Mockup"
-            initial={{ y: 200, opacity: 0, rotate: -5 }}
-            whileInView={{ y: isMobile ? 110 : -60, opacity: 1, rotate: -5 }}
+            initial={{ y: 200, opacity: 0, rotate: -5, x: "-50%" }}
+            whileInView={{ y: isMobile ? 60 : -60, opacity: 1, rotate: -5, x: "-50%" }}
             viewport={{ once: true }}
             transition={{ 
               type: "spring",
@@ -427,7 +427,9 @@ export default function LandingPage() {
               duration: 1.5 
             }}
             sx={{
-              width: { xs: "220%", sm: "80%", md: "1100px" },
+              position: "absolute",
+              left: "50%",
+              width: { xs: "140%", sm: "80%", md: "1100px" },
               maxWidth: { xs: "none", sm: "600px", md: "none" },
               height: "auto",
               filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
@@ -435,7 +437,7 @@ export default function LandingPage() {
               userSelect: 'none',
               pointerEvents: 'none',
               willChange: "transform, opacity, filter",
-              transform: "translateZ(0)",
+
               backfaceVisibility: "hidden"
             }}
           />
@@ -697,7 +699,7 @@ export default function LandingPage() {
         <Container maxWidth="xl">
           <Grid container spacing={6} justifyContent="space-between">
             {/* Column 1: Brand */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={4} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <Box display="flex" alignItems="center" gap={1.5} mb={3}>
                 <img src="/logo/logo.png" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain', transform: 'scale(2)' }} />
                 <Typography variant="h6" sx={{ fontWeight: 800, color: "#000", letterSpacing: "-0.02em" }}>ClearEd</Typography>
