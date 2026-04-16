@@ -25,6 +25,8 @@ export const createOrganization = catchAsync(async (req: Request, res: Response)
     const institutionId = resolveInstitutionId(req);
     const creatorId = (req as any).user?.id;
 
+    console.log(`[ORG_CREATE] Attempting to create organization: "${name}" for institution: ${institutionId}`);
+
     if (!name) {
         throw new AppError("Organization name is required.", 400);
     }
@@ -33,16 +35,19 @@ export const createOrganization = catchAsync(async (req: Request, res: Response)
         throw new AppError("Institution context is required.", 401);
     }
 
-    // 1. Resolve termId if not provided
+    // 1. Resolve termId if not provided (Automatic Fallback)
     if (!termId) {
+        console.log(`[ORG_CREATE] No termId provided, searching for active term...`);
         const activeTerm = await Term.findOne({ institutionId, isActive: true });
         if (activeTerm) {
             termId = activeTerm._id;
+            console.log(`[ORG_CREATE] Using active term: ${activeTerm.academicYear} ${activeTerm.semester}`);
         } else {
-            // Fallback to latest term if no active one
+            console.log(`[ORG_CREATE] No active term found, falling back to latest term...`);
             const latestTerm = await Term.findOne({ institutionId }).sort({ academicYear: -1, semester: -1 });
             if (latestTerm) {
                 termId = latestTerm._id;
+                console.log(`[ORG_CREATE] Using latest fallback term: ${latestTerm.academicYear} ${latestTerm.semester}`);
             } else {
                 throw new AppError("No academic term found. Please create a Term first in System Settings.", 400);
             }

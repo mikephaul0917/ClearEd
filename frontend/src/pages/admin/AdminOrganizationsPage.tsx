@@ -930,9 +930,8 @@ export default function AdminOrganizationsPage({
                 if (manageOrg?._id) {
                   await adminService.updateOrganization(manageOrg._id, { name, description, signatoryName, isFinal });
                 } else {
-                  const terms = await adminService.getTerms();
-                  const activeTerm = terms.data?.find((t: any) => t.isActive) || terms.data?.[0];
-                  await adminService.createOrganization({ name, description, signatoryName, isFinal, termId: activeTerm?._id });
+                  // Simplified: Backend now automatically handles termId lookup if not provided
+                  await adminService.createOrganization({ name, description, signatoryName, isFinal });
                 }
                 fetchData();
                 setManageOrg(null);
@@ -946,7 +945,9 @@ export default function AdminOrganizationsPage({
                 setName(""); setDescription(""); setSignatoryName(""); setIsFinal(false);
               } catch (err: any) {
                 console.error("Failed to save organization:", err);
-                alert(err.response?.data?.message || err.message || "An error occurred");
+                // Proper error message from response if available
+                const errorMsg = err.response?.data?.message || err.message || "An unexpected error occurred. Please check your connection.";
+                alert(errorMsg);
               }
             }}
             sx={{
