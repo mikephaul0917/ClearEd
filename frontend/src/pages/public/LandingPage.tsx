@@ -429,7 +429,7 @@ export default function LandingPage() {
             sx={{
               position: "absolute",
               left: "50%",
-              width: { xs: "140%", sm: "80%", md: "1100px" },
+              width: { xs: "160%", sm: "85%", md: "1200px" },
               maxWidth: { xs: "none", sm: "600px", md: "none" },
               height: "auto",
               filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
