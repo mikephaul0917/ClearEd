@@ -343,8 +343,9 @@ export default function AdminTermsPage({
     }
     setSaving(true);
     try {
-      const startDateTime = startDate ? `${startDate}T${startTime}:00` : undefined;
-      const endDateTime = endDate ? `${endDate}T${endTime}:00` : undefined;
+      // Create a proper Date object from the inputs to ensure timezone awareness
+      const startDateTime = startDate ? new Date(`${startDate}T${startTime}:00`).toISOString() : undefined;
+      const endDateTime = endDate ? new Date(`${endDate}T${endTime}:00`).toISOString() : undefined;
 
       await adminService.createTerm({
         academicYear: ay,
