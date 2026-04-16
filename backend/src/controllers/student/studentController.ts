@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import StudentProfile from "../../models/StudentProfile";
 import User from "../../models/User";
 
