@@ -818,12 +818,15 @@ export default function AdminOrganizationsPage({
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 3, p: 1, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
-            border: `1px solid ${COLORS.border}`
+            borderRadius: 3, 
+            p: { xs: 0, sm: 1 }, 
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+            border: `1px solid ${COLORS.border}`,
+            margin: { xs: 2, sm: 'auto' }
           }
         }}
       >
-        <DialogTitle sx={{ p: 4, pb: 1 }}>
+        <DialogTitle sx={{ p: { xs: 2.5, sm: 4 }, pb: 1 }}>
           <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 22, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
             {manageOrg?._id ? "Organization Settings" : "New Organization"}
           </Typography>
@@ -831,7 +834,7 @@ export default function AdminOrganizationsPage({
             {manageOrg?._id ? "Update department details and signatory configurations." : "Establish a new institutional office for the clearance workflow."}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 4 } }}>
           <Box display="flex" flexDirection="column" gap={3.5}>
             <Box>
               <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
@@ -914,10 +917,22 @@ export default function AdminOrganizationsPage({
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 4, pt: 1, gap: 1.5 }}>
+        <DialogActions sx={{ 
+          p: { xs: 2.5, sm: 4 }, 
+          pt: 1, 
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          gap: 1.5 
+        }}>
           <Button
             onClick={() => setManageOrg(null)}
-            sx={{ fontFamily: fontStack, color: COLORS.textSecondary, textTransform: 'none', fontWeight: 600, fontSize: 14 }}
+            sx={{ 
+              fontFamily: fontStack, 
+              color: COLORS.textSecondary, 
+              textTransform: 'none', 
+              fontWeight: 600, 
+              fontSize: 14,
+              width: { xs: '100%', sm: 'auto' } 
+            }}
           >
             Go Back
           </Button>
@@ -952,7 +967,8 @@ export default function AdminOrganizationsPage({
             }}
             sx={{
               fontFamily: fontStack, borderRadius: '8px', bgcolor: COLORS.black,
-              textTransform: 'none', px: 4, py: 1.2, fontWeight: 600, fontSize: 14,
+              textTransform: 'none', px: { xs: 2, sm: 4 }, py: 1.2, fontWeight: 600, fontSize: 14,
+              width: { xs: '100%', sm: 'auto' },
               boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
               '&:hover': {
                 bgcolor: '#000',
