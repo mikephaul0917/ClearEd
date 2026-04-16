@@ -61,6 +61,11 @@ connectDB();
 
 const app = express();
 
+// Health check route
+app.get("/api", (req, res) => {
+  res.json({ message: "E-Clearance API is running!", status: "healthy" });
+});
+
 // Configure middleware
 app.use(cors()); // Enable cross-origin requests
 app.use(express.json({ limit: '50mb' })); // Parse JSON request bodies with increased limit for images
