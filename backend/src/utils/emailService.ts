@@ -57,11 +57,14 @@ export const sendVerificationEmail = async (
   token: string, 
   institutionName: string
 ): Promise<void> => {
+  console.log(`[DIAGNOSTIC] Entering sendVerificationEmail`);
+  console.log(`[DIAGNOSTIC] process.env.FRONTEND_URL value: "${process.env.FRONTEND_URL}"`);
+  
   let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   // Remove trailing slash if present to prevent double slashes in links
   baseUrl = baseUrl.replace(/\/$/, '');
   
-  console.log(`[DEBUG] Generating verification link with baseUrl: ${baseUrl}`);
+  console.log(`[DEBUG] Final baseUrl being used: ${baseUrl}`);
   const verificationUrl = `${baseUrl}/verify-institution/${token}`;
   
   const html = `
