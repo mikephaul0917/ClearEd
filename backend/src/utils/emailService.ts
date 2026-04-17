@@ -57,14 +57,10 @@ export const sendVerificationEmail = async (
   token: string, 
   institutionName: string
 ): Promise<void> => {
-  console.log(`[DIAGNOSTIC] Entering sendVerificationEmail`);
-  console.log(`[DIAGNOSTIC] process.env.FRONTEND_URL value: "${process.env.FRONTEND_URL}"`);
-  
   let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   // Remove trailing slash if present to prevent double slashes in links
   baseUrl = baseUrl.replace(/\/$/, '');
   
-  console.log(`[DEBUG] Final baseUrl being used: ${baseUrl}`);
   const verificationUrl = `${baseUrl}/verify-institution/${token}`;
   
   const html = `
@@ -105,7 +101,9 @@ export const sendApprovalNotification = async (
   institutionName: string,
   domain: string
 ): Promise<void> => {
-  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/`;
+  let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  baseUrl = baseUrl.replace(/\/$/, '');
+  const loginUrl = `${baseUrl}/`;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -288,7 +286,9 @@ export const sendAnnouncementEmail = async (
     attachments?: string[];
   }
 ): Promise<void> => {
-  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/`;
+  let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  baseUrl = baseUrl.replace(/\/$/, '');
+  const loginUrl = `${baseUrl}/`;
   
   // Priority colors for branding
   const priorityColors: Record<string, string> = {
