@@ -146,7 +146,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 onClick={() => onClick?.(id)}
                 sx={{
                     width: "100%",
-                    maxWidth: { xs: 280, sm: 320 },
+                    maxWidth: { xs: "100%", sm: 340, md: 350 },
                     mx: 'auto',
                     aspectRatio: "1/1",
                     cursor: "pointer",
@@ -163,7 +163,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        borderRadius: "32px",
+                        borderRadius: { xs: "24px", sm: "32px" },
                         overflow: "hidden",
                         bgcolor: "#FFFFFF",
                         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
@@ -182,14 +182,14 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             display: 'flex',
                             alignItems: 'flex-start',
                             justifyContent: 'center',
-                            pt: 6,
+                            pt: { xs: 4, sm: 6 },
                         }}
                     >
                         <Box
                             className="icon-box"
                             sx={{
-                                width: 60,
-                                height: 60,
+                                width: { xs: 48, sm: 60 },
+                                height: { xs: 48, sm: 60 },
                                 bgcolor: "#FFFFFF",
                                 borderRadius: "50%",
                                 display: 'flex',
@@ -202,12 +202,12 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         >
                             <Avatar
                                 sx={{
-                                    width: 32,
-                                    height: 32,
+                                    width: { xs: 24, sm: 32 },
+                                    height: { xs: 24, sm: 32 },
                                     bgcolor: "transparent",
                                     color: color,
                                     fontWeight: 800,
-                                    fontSize: 18,
+                                    fontSize: { xs: 14, sm: 18 },
                                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                                 }}
                             >
@@ -221,8 +221,8 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             onClick={handleMenuOpen}
                             sx={{
                                 position: "absolute",
-                                top: 24,
-                                right: 24,
+                                top: { xs: 16, sm: 24 },
+                                right: { xs: 16, sm: 24 },
                                 color: "#FFFFFF",
                                 bgcolor: "rgba(255, 255, 255, 0.25)",
                                 backdropFilter: "blur(8px)",
@@ -244,11 +244,11 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     sx={{
                         position: "absolute",
                         bottom: 0,
-                        left: -6,
-                        right: -6,
+                        left: { xs: -4, sm: -6 },
+                        right: { xs: -4, sm: -6 },
                         bgcolor: "#FFFFFF",
-                        p: { xs: "28px 20px 32px", sm: "20px" },
-                        minHeight: { xs: "140px", sm: "auto" },
+                        p: { xs: "20px 16px 24px", sm: "20px 20px", md: "24px 24px" },
+                        minHeight: { xs: "120px", sm: "auto" },
                         borderRadius: "24px",
                         boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
                         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -256,18 +256,18 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         flexDirection: "column",
                         zIndex: 3,
                         "&:hover": {
-                            transform: "translateY(-6px)",
+                            transform: "translateY(-4px)",
                             "& .card-description": {
-                                maxHeight: "100px",
+                                maxHeight: "60px",
                                 opacity: 1,
-                                mt: 2
+                                mt: 1
                             }
                         }
                     }}
                 >
                     <Typography
                         sx={{
-                            fontSize: "1.25rem",
+                            fontSize: { xs: "1.1rem", sm: "1.25rem" },
                             fontWeight: 800,
                             color: "#1F2937",
                             fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
@@ -334,12 +334,12 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     >
                         <Typography
                             sx={{
-                                fontSize: "0.875rem",
+                                fontSize: { xs: "0.8rem", sm: "0.875rem" },
                                 color: "#6B7280",
                                 lineHeight: 1.5,
                                 fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                                 display: "-webkit-box",
-                                WebkitLineClamp: 3,
+                                WebkitLineClamp: 2,
                                 WebkitBoxOrient: "vertical",
                                 overflow: "hidden",
                             }}
@@ -349,13 +349,13 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     </Box>
 
                     {/* Footer Section - Pills (Always visible) */}
-                    <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+                    <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1, md: 1 }, mt: { xs: 1.25, sm: 1.5, md: 2 } }}>
                         <Box
                             onClick={handleLearnMore}
                             className="learn-more-btn"
                             sx={{
-                                px: 3,
-                                py: 1,
+                                px: { xs: 1.5, sm: 1.5, md: 1.5 },
+                                py: { xs: 0.75, sm: 0.85, md: 1 },
                                 bgcolor: "#FFFFFF",
                                 borderRadius: "100px",
                                 border: "1px solid #E5E7EB",
@@ -372,23 +372,39 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 }
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#000000", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', whiteSpace: 'nowrap' }}>
+                            <Typography sx={{ 
+                                fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" }, 
+                                fontWeight: 700, 
+                                color: "#000000", 
+                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', 
+                                whiteSpace: 'nowrap' 
+                            }}>
                                 Learn more
                             </Typography>
                         </Box>
                         <Box
                             sx={{
-                                px: 3,
-                                py: 1,
+                                px: { xs: 1.25, sm: 1.5, md: 1.5 },
+                                py: { xs: 0.75, sm: 0.85, md: 1 },
                                 flex: 1,
                                 bgcolor: "rgba(176, 224, 230, 0.2)",
                                 borderRadius: "20px",
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                minWidth: 0 // Prevent overflow
                             }}
                         >
-                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#0D9488", fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', textTransform: 'capitalize' }}>
+                            <Typography sx={{ 
+                                fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.7rem" }, 
+                                fontWeight: 800, 
+                                color: "#0D9488", 
+                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', 
+                                textTransform: 'capitalize',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                             }}>
                                 {role}
                             </Typography>
                         </Box>

@@ -132,7 +132,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '24px',
+          borderRadius: 2,
           padding: 0,
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -140,7 +140,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
         }
       }}
     >
-      <Box p={{ xs: 2.5, sm: 4 }} pb={{ xs: 4, sm: 8 }} sx={{ position: 'relative' }}>
+      <Box p={{ xs: 2.5, sm: 4 }} pb={{ xs: 2.5, sm: 4 }} sx={{ position: 'relative' }}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
           <Box>
@@ -173,7 +173,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                 </InputAdornment>
               ),
               sx: {
-                borderRadius: '12px',
+                borderRadius: 2,
                 bgcolor: '#F8FAFC',
                 fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -326,7 +326,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
                     sx={{
                       bgcolor: '#F1F5F9',
                       color: '#0F172A',
-                      borderRadius: '8px',
+                      borderRadius: 1.5,
                       textTransform: 'none',
                       fontWeight: 700,
                       px: 2,
@@ -466,7 +466,7 @@ const DirectoryModal: React.FC<DirectoryModalProps> = ({
               fullWidth
               onClick={onExport}
               sx={{
-                borderRadius: '100px',
+                borderRadius: 1.5,
                 bgcolor: '#3c4043',
                 color: '#FFFFFF',
                 py: 1.5,

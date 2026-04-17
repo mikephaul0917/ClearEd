@@ -69,30 +69,41 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
 
                     <Grid container spacing={3}>
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                            <Grid item key={i} xs={12} sm={6} md={4} lg={3}>
+                            <Grid item key={i} xs={12} sm={6} md={6} lg={4} xl={3}
+                                sx={{
+                                    '@media (min-width: 768px) and (max-width: 899px)': {
+                                        maxWidth: '33.333333%',
+                                        flexBasis: '33.333333%',
+                                    },
+                                    '@media (min-width: 1050px) and (max-width: 1199px)': {
+                                        maxWidth: '33.333333%',
+                                        flexBasis: '33.333333%',
+                                    }
+                                }}
+                            >
                                 <Box sx={{
                                     width: "100%",
-                                    maxWidth: { xs: 280, sm: 320 },
+                                    maxWidth: { xs: "100%", sm: 340, md: 350 },
                                     mx: 'auto',
                                     aspectRatio: "1/1",
                                     position: "relative"
                                 }}>
                                     {/* Header Skeleton */}
-                                    <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: "32px", overflow: "hidden", bgcolor: "#FFFFFF", border: '1px solid #eaebec' }}>
-                                        <Box sx={{ height: "100%", display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: 6 }}>
-                                            <Skeleton variant="circular" width={60} height={60} sx={{ bgcolor: "#eaebec" }} />
+                                    <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: { xs: "24px", sm: "32px" }, overflow: "hidden", bgcolor: "#FFFFFF", border: '1px solid #eaebec' }}>
+                                        <Box sx={{ height: "100%", display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: { xs: 4, sm: 6 } }}>
+                                            <Skeleton variant="circular" width={60} height={60} sx={{ bgcolor: "#eaebec", width: { xs: 48, sm: 60 }, height: { xs: 48, sm: 60 } }} />
                                         </Box>
                                     </Box>
- 
+
                                     {/* Content Overlay Skeleton */}
                                     <Box sx={{
                                         position: "absolute",
                                         bottom: 0,
-                                        left: -6,
-                                        right: -6,
+                                        left: { xs: -4, sm: -6 },
+                                        right: { xs: -4, sm: -6 },
                                         bgcolor: "#FFFFFF",
-                                        p: { xs: "28px 20px 32px", sm: "20px" },
-                                        minHeight: { xs: "140px", sm: "auto" },
+                                        p: { xs: "20px 16px 24px", sm: "24px 20px", md: "28px 24px" },
+                                        minHeight: { xs: "120px", sm: "auto" },
                                         borderRadius: "24px",
                                         boxShadow: "0 12px 32px rgba(0,0,0,0.06)",
                                         display: "flex",
@@ -139,8 +150,8 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     fontWeight: 600,
                                     color: '#000',
                                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
-                                    letterSpacing: { xs: '-0.5px', sm: '-1.5px' },
-                                    fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                                    letterSpacing: { xs: '-0.5px', sm: '-1px', md: '-1.5px' },
+                                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.875rem' },
                                     lineHeight: 1.2
                                 }}>
                                     {title}
@@ -150,7 +161,7 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                         {description && (
                             <Typography variant="body1" sx={{
                                 color: '#6B7280',
-                                fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                                fontSize: { xs: '0.8rem', sm: '0.9rem', md: '0.95rem' },
                                 fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                             }}>
                                 {description}
@@ -166,10 +177,21 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                 {displayedOrgs.length > 0 ? (
                     <Grid container spacing={3}>
                         {displayedOrgs.map((org) => (
-                            <Grid item key={org.id} xs={12} sm={6} md={4} lg={3}>
-                                <OrganizationCard 
-                                    {...org} 
-                                    onClick={onCardClick} 
+                            <Grid item key={org.id} xs={12} sm={6} md={6} lg={4} xl={3}
+                                sx={{
+                                    '@media (min-width: 768px) and (max-width: 899px)': {
+                                        maxWidth: '33.333333%',
+                                        flexBasis: '33.333333%',
+                                    },
+                                    '@media (min-width: 1050px) and (max-width: 1199px)': {
+                                        maxWidth: '33.333333%',
+                                        flexBasis: '33.333333%',
+                                    }
+                                }}
+                            >
+                                <OrganizationCard
+                                    {...org}
+                                    onClick={onCardClick}
                                     onRefresh={onRefresh}
                                     isAdmin={isAdmin}
                                 />

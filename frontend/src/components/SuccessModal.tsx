@@ -99,7 +99,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ open, onClose, title, descr
           onClick={onClose}
           sx={{
             py: 2,
-            borderRadius: '8px',
+            borderRadius: 1.5,
             bgcolor: '#F1F5F9',
             color: '#475569',
             textTransform: 'none',

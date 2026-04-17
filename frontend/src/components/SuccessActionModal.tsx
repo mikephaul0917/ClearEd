@@ -192,7 +192,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                 onClick={onClose}
                 sx={{
                   mt: 1,
-                  borderRadius: '8px',
+                  borderRadius: 1.5,
                   py: 1.8,
                   bgcolor: 'rgba(241, 245, 249, 0.7)',
                   color: '#64748B',

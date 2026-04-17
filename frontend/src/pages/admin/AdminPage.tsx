@@ -486,19 +486,19 @@ export default function AdminPage() {
                       <Typography sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: '-0.02em' }}>
                         {s.value.toLocaleString()}
                       </Typography>
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          px: { xs: 0.75, sm: 1 },
-                          py: 0.25,
-                          borderRadius: '999px',
-                          backgroundColor: trendBg,
-                          border: `1px solid ${trendColor}20`
-                        }}>
-                          <Typography sx={{ fontSize: { xs: 10, sm: 11 }, fontWeight: 800, color: trendColor }}>
-                            {isPositive ? '↑' : '↓'} {s.trend}
-                          </Typography>
-                        </Box>
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        px: { xs: 0.75, sm: 1 },
+                        py: 0.25,
+                        borderRadius: '999px',
+                        backgroundColor: trendBg,
+                        border: `1px solid ${trendColor}20`
+                      }}>
+                        <Typography sx={{ fontSize: { xs: 10, sm: 11 }, fontWeight: 800, color: trendColor }}>
+                          {isPositive ? '↑' : '↓'} {s.trend}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 );
@@ -778,14 +778,14 @@ export default function AdminPage() {
                 <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
                   <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Most Delayed Responder</Typography>
                   <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{delayedOrg.name}</Typography>
-                  <Box sx={{ 
-                    display: 'inline-flex', 
-                    mt: 1.5, 
-                    px: 1.5, 
-                    py: 0.5, 
-                    borderRadius: '99px', 
-                    backgroundColor: '#F1F5F9', 
-                    border: '1px solid #64748B20' 
+                  <Box sx={{
+                    display: 'inline-flex',
+                    mt: 1.5,
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '99px',
+                    backgroundColor: '#F1F5F9',
+                    border: '1px solid #64748B20'
                   }}>
                     <Typography sx={{ fontSize: 12, fontWeight: 800, color: COLORS.black }}>
                       {delayedOrg.avgDays} days average
@@ -795,12 +795,12 @@ export default function AdminPage() {
                 <Box sx={{ p: 3, borderRadius: '16px', border: '2px dashed #94A3B880', backgroundColor: '#FFFFFF', flex: 1, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)' }}>
                   <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>Fastest Organization</Typography>
                   <Typography sx={{ fontSize: 24, fontWeight: 800 }}>{fastestOrg.name}</Typography>
-                  <Box sx={{ 
-                    display: 'inline-flex', 
-                    mt: 1.5, 
-                    px: 1.5, 
-                    py: 0.5, 
-                    borderRadius: '99px', 
+                  <Box sx={{
+                    display: 'inline-flex',
+                    mt: 1.5,
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '99px',
                     backgroundColor: '#FEF08A',
                     border: '1px solid #a1620720'
                   }}>

@@ -65,7 +65,9 @@ const HomePage: React.FC = () => {
                     description: org.description,
                     role: org.membership?.role || "member",
                     status: org.status,
-                    termName: org.termId ? `${org.termId.semester} ${org.termId.academicYear}` : "Current Term",
+                    termName: org.termId 
+                        ? `${org.termId.semester} ${org.termId.academicYear}`
+                        : "Current Term",
                     institutionName: user?.institutionId || "Institution",
                     color: org.themeColor || (org.membership?.role === 'officer' ? "#2563EB" : "#1E293B"),
                     headerImage: org.headerImage

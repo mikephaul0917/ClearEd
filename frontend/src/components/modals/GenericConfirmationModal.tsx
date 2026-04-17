@@ -31,7 +31,7 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: { xs: '24px', sm: '32px' },
+          borderRadius: { xs: '16px', sm: '20px' },
           padding: { xs: '32px 20px', sm: '48px 32px' },
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -53,12 +53,12 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
             <Box display="flex" flexDirection="column" alignItems="center" gap={{ xs: 2.5, sm: 3 }}>
               <Typography
                 sx={{
-                  fontWeight: 900,
+                  fontWeight: 700,
                   color: '#1E293B',
                   fontSize: { xs: '24px', sm: '28px' },
                   lineHeight: 1.2,
                   mb: 0.5,
-                  letterSpacing: '-0.03em',
+                  letterSpacing: '-0.02em',
                   fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                 }}
               >
@@ -86,12 +86,12 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
                   disabled={loading}
                   variant="contained"
                   sx={{
-                    borderRadius: '16px',
-                    py: { xs: 1.8, sm: 2.2 },
+                    borderRadius: '12px',
+                    py: { xs: 1.5, sm: 2 },
                     bgcolor: '#3c4043', 
                     color: '#FFF',
                     textTransform: 'none',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     fontSize: { xs: '16px', sm: '18px' },
                     letterSpacing: '-0.01em',
                     boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.3)',
@@ -115,7 +115,7 @@ const GenericConfirmationModal: React.FC<GenericConfirmationModalProps> = ({
                   variant="text"
                   sx={{
                     textTransform: 'none',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     fontSize: '16px',
                     color: '#64748B',
                     py: 1,

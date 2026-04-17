@@ -117,11 +117,27 @@ export const getInstitutionOrganizations = catchAsync(async (req: Request, res: 
     const institutionId = resolveInstitutionId(req);
     if (!institutionId) throw new AppError("Institution context is required.", 401);
 
-    const organizations = await Organization.find({ institutionId, status: 'active' })
-        .populate('termId', 'name academicYear semester')
-        .sort({ order: 1, createdAt: -1 });
+    const [organizations, activeTerm] = await Promise.all([
+        Organization.find({ institutionId, status: 'active' })
+            .populate('termId', 'name academicYear semester')
+            .sort({ order: 1, createdAt: -1 }),
+        Term.findOne({ institutionId, isActive: true })
+    ]);
 
-    res.json({ status: 'success', organizations });
+    const processedOrgs = organizations.map(org => {
+        const orgObj = org.toObject();
+        if (!orgObj.termId && activeTerm) {
+            orgObj.termId = {
+                _id: activeTerm._id,
+                name: activeTerm.name,
+                academicYear: activeTerm.academicYear,
+                semester: activeTerm.semester
+            };
+        }
+        return orgObj;
+    });
+
+    res.json({ status: 'success', organizations: processedOrgs });
 });
 
 /**
@@ -667,24 +683,37 @@ export const getMyOrganizations = catchAsync(async (req: Request, res: Response)
         throw new AppError("Authentication required.", 401);
     }
 
-    const memberships = await OrganizationMember.find({
-        userId,
-        institutionId,
-        status: 'active'
-    })
-        .populate({
+    const [memberships, activeTerm] = await Promise.all([
+        OrganizationMember.find({
+            userId,
+            institutionId,
+            status: 'active'
+        }).populate({
             path: 'organizationId',
             populate: { path: 'termId', select: 'name academicYear semester' }
-        });
+        }),
+        Term.findOne({ institutionId, isActive: true })
+    ]);
 
     // CRITICAL FIX: Filter out memberships for organizations that have been deleted.
-    // Prevents 500 error when calling .toObject() on null.
     const validMemberships = memberships.filter(m => m.organizationId !== null);
 
     const organizations = validMemberships.map(m => {
         const org: any = m.organizationId;
+        const orgObj = org.toObject();
+
+        // Smart Fallback: If organization has no termId, use the institution's active term
+        if (!orgObj.termId && activeTerm) {
+            orgObj.termId = {
+                _id: activeTerm._id,
+                name: activeTerm.name,
+                academicYear: activeTerm.academicYear,
+                semester: activeTerm.semester
+            };
+        }
+
         return {
-            ...org.toObject(),
+            ...orgObj,
             membership: {
                 role: m.role,
                 joinedAt: m.joinedAt

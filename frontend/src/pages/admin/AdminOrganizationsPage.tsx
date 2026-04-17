@@ -70,7 +70,7 @@ const OrgBentoCard = ({
 
   return (
     <Box sx={{
-      p: 3, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
+      p: { xs: 2.5, sm: 3 }, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
       border: isArchived ? '1px solid #EF444430' : `1px solid ${COLORS.border}`,
       boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
       position: 'relative',
@@ -86,34 +86,45 @@ const OrgBentoCard = ({
       }
     }}>
       <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          mb: 2,
+          gap: 1
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
             <Avatar sx={{
-              width: 44, height: 44,
+              width: { xs: 38, sm: 44 }, height: { xs: 38, sm: 44 },
               bgcolor: '#5f6368',
               color: '#FFFFFF',
-              fontWeight: 800, fontSize: 16, borderRadius: '12px'
+              fontWeight: 800, fontSize: { xs: 14, sm: 16 }, borderRadius: '12px'
             }}>
               {org.name?.charAt(0)}
             </Avatar>
-            <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: 15, color: COLORS.textPrimary }}>{org.name}</Typography>
-              <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 500 }}>{org.signatoryName || "No Signatory"}</Typography>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography noWrap sx={{ fontWeight: 800, fontSize: { xs: 14, sm: 15 }, color: COLORS.textPrimary }}>{org.name}</Typography>
+              <Typography noWrap sx={{ fontSize: { xs: 11, sm: 12 }, color: COLORS.textSecondary, fontWeight: 500 }}>{org.signatoryName || "No Signatory"}</Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 0.5, sm: 1 }, 
+            alignItems: 'center',
+            flexShrink: 0
+          }}>
             <Box sx={{
               display: 'inline-flex',
               alignItems: 'center',
-              px: 1.5,
+              px: { xs: 1, sm: 1.5 },
               py: 0.5,
-              borderRadius: '99px',
+              borderRadius: '999px',
               bgcolor: isArchived ? '#FEE2E2' : COLORS.tealLight,
               border: isArchived ? '1px solid #EF444420' : `1px solid ${COLORS.teal}20`,
-              height: 22
+              height: { xs: 20, sm: 22 }
             }}>
               <Typography sx={{
-                fontSize: 12,
+                fontSize: { xs: 10, sm: 12 },
                 fontWeight: 800,
                 color: isArchived ? '#EF4444' : COLORS.teal,
                 lineHeight: 1
@@ -265,7 +276,7 @@ const ToolbarSkeleton = () => (
   <Box sx={{ p: { xs: 3, sm: 4 }, pb: 2 }}>
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 3 }}>
       <Skeleton variant="text" width={180} height={32} />
-      <Skeleton variant="rectangular" width={140} height={44} sx={{ borderRadius: COLORS.pillRadius, width: { xs: '100%', sm: 140 } }} />
+      <Skeleton variant="rectangular" width={140} height={44} sx={{ borderRadius: 1.5, width: { xs: '100%', sm: 140 } }} />
     </Box>
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 2 }}>
       <Skeleton variant="rectangular" width="100%" height={44} sx={{ borderRadius: '12px', flex: 1 }} />
@@ -537,7 +548,7 @@ export default function AdminOrganizationsPage({
                   startIcon={<AddCircle />}
                   onClick={() => setManageOrg({ _id: "", name: "", signatoryName: "", description: "", joinCode: "", isFinal: false })}
                   sx={{
-                    borderRadius: COLORS.pillRadius, bgcolor: COLORS.black,
+                    borderRadius: 1.5, bgcolor: COLORS.black,
                     textTransform: 'none', px: { xs: 2, sm: 4 }, py: 1.2, fontWeight: 800,
                     fontSize: 13, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
                     '&:hover': {
@@ -818,7 +829,7 @@ export default function AdminOrganizationsPage({
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 3, 
+            borderRadius: 2, 
             p: { xs: 0, sm: 1 }, 
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
             border: `1px solid ${COLORS.border}`,
@@ -826,18 +837,18 @@ export default function AdminOrganizationsPage({
           }
         }}
       >
-        <DialogTitle sx={{ p: { xs: 2.5, sm: 4 }, pb: 1 }}>
-          <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 22, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+        <DialogTitle sx={{ p: { xs: 3, sm: 4 }, pb: { xs: 1, sm: 1 } }}>
+          <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
             {manageOrg?._id ? "Organization Settings" : "New Organization"}
           </Typography>
-          <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, fontWeight: 400, mt: 0.5 }}>
+          <Typography sx={{ fontFamily: fontStack, fontSize: { xs: 12, sm: 13 }, color: COLORS.textSecondary, fontWeight: 400, mt: 0.5 }}>
             {manageOrg?._id ? "Update department details and signatory configurations." : "Establish a new institutional office for the clearance workflow."}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 2.5, sm: 4 } }}>
-          <Box display="flex" flexDirection="column" gap={3.5}>
+        <DialogContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <Box display="flex" flexDirection="column" gap={{ xs: 2, sm: 3.5 }}>
             <Box>
-              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
                 Full Name
               </FormLabel>
               <TextField
@@ -845,12 +856,12 @@ export default function AdminOrganizationsPage({
                 placeholder="e.g. Registrar's Office"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC', border: 'none', px: 0.5 } }}
+                InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC', border: 'none', px: 0.5, height: { xs: 44, sm: 'auto' } } }}
                 sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
             <Box>
-              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
                 Internal Description
               </FormLabel>
               <TextField
@@ -864,9 +875,9 @@ export default function AdminOrganizationsPage({
                 sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
                   System Signatory
                 </FormLabel>
                 <TextField
@@ -874,12 +885,12 @@ export default function AdminOrganizationsPage({
                   placeholder="e.g. Juan Dela Cruz"
                   value={signatoryName}
                   onChange={(e) => setSignatoryName(e.target.value)}
-                  InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC' } }}
+                  InputProps={{ sx: { fontFamily: fontStack, borderRadius: 2, bgcolor: '#F8FAFC', height: { xs: 44, sm: 'auto' } } }}
                   sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.5, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
                   Access Code
                 </FormLabel>
                 <TextField
@@ -889,26 +900,27 @@ export default function AdminOrganizationsPage({
                   InputProps={{
                     sx: {
                       fontFamily: fontStack, borderRadius: 2, bgcolor: '#F1F5F9', fontWeight: 700,
-                      color: COLORS.accentBlue, textAlign: 'center', fontSize: 14
+                      color: COLORS.accentBlue, textAlign: 'center', fontSize: 13, height: { xs: 44, sm: 'auto' }
                     },
                   }}
                 />
               </Grid>
             </Grid>
             <Box sx={{
-              display: 'flex', alignItems: 'center', gap: 2, p: 2.5, borderRadius: 2,
+              display: 'flex', alignItems: 'center', gap: 2, p: { xs: 1.5, sm: 2.5 }, borderRadius: 2,
               bgcolor: isFinal ? '#F0FDFA' : '#F8FAFC', border: `1px solid ${isFinal ? '#CCFBF1' : '#E2E8F0'}`,
               transition: '0.3s'
             }}>
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 14, color: COLORS.textPrimary }}>Final Milestone</Typography>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 13, sm: 14 }, color: COLORS.textPrimary }}>Final Milestone</Typography>
                 <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 400 }}>
-                  Mark this as the final required signatory in the sequence.
+                  Mark this as the final required signatory.
                 </Typography>
               </Box>
               <Switch
                 checked={isFinal}
                 onChange={() => setIsFinal(!isFinal)}
+                size={isSmallMobile ? "small" : "medium"}
                 sx={{
                   '& .MuiSwitch-switchBase.Mui-checked': { color: '#0D9488' },
                   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#0D9488' },
@@ -918,10 +930,10 @@ export default function AdminOrganizationsPage({
           </Box>
         </DialogContent>
         <DialogActions sx={{ 
-          p: { xs: 2.5, sm: 4 }, 
-          pt: 1, 
+          p: { xs: 3, sm: 4 }, 
+          pt: { xs: 1, sm: 1 }, 
           flexDirection: { xs: 'column-reverse', sm: 'row' },
-          gap: 1.5 
+          gap: { xs: 1.5, sm: 1.5 } 
         }}>
           <Button
             onClick={() => setManageOrg(null)}
@@ -966,7 +978,7 @@ export default function AdminOrganizationsPage({
               }
             }}
             sx={{
-              fontFamily: fontStack, borderRadius: '8px', bgcolor: COLORS.black,
+              fontFamily: fontStack, borderRadius: 1.5, bgcolor: COLORS.black,
               textTransform: 'none', px: { xs: 2, sm: 4 }, py: 1.2, fontWeight: 600, fontSize: 14,
               width: { xs: '100%', sm: 'auto' },
               boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
@@ -1336,23 +1348,24 @@ export default function AdminOrganizationsPage({
         maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            borderRadius: { xs: 2, sm: 3 },
             p: 0,
             maxHeight: '90vh',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            margin: { xs: 1.5, sm: 'auto' }
           }
         }}
       >
         <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
           {/* Header Section */}
-          <Box sx={{ p: 3, pt: 4, position: 'relative', bgcolor: '#FFF' }}>
+          <Box sx={{ p: { xs: 2.5, sm: 3 }, pt: { xs: 3.5, sm: 4 }, position: 'relative', bgcolor: '#FFF' }}>
             <IconButton
               onClick={() => setMemberListOpen(false)}
               sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
+                top: { xs: 12, sm: 16 },
+                right: { xs: 12, sm: 16 },
                 color: '#98A2B3',
                 '&:hover': {
                   color: '#667085',
@@ -1360,21 +1373,21 @@ export default function AdminOrganizationsPage({
                 }
               }}
             >
-              <Close sx={{ fontSize: '1.25rem' }} />
+              <Close sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
             </IconButton>
             <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: '#101828', fontFamily: fontStack, mb: 0.5 }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', sm: '1.25rem' }, color: '#101828', fontFamily: fontStack, mb: 0.5 }}>
                 {targetOrgName} Member Directory
               </Typography>
-              <Typography sx={{ fontSize: '0.8125rem', color: '#475467', fontFamily: fontStack, lineHeight: 1.3 }}>
-                View and manage members currently active in this organization. Review their roles and profiles.
+              <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.8125rem' }, color: '#475467', fontFamily: fontStack, lineHeight: 1.3 }}>
+                View and manage members active in this organization. Review roles and profiles.
               </Typography>
             </Box>
           </Box>
 
           {/* Search Bar Section */}
-          <Box sx={{ px: 3, pb: 1, mt: 1 }}>
-            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#344054', mb: 1.5 }}>
+          <Box sx={{ px: { xs: 2.5, sm: 3 }, pb: 1, mt: 1 }}>
+            <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' }, fontWeight: 600, color: '#344054', mb: 1.5 }}>
               Search for members
             </Typography>
             <Box sx={{ display: 'flex' }}>
@@ -1405,17 +1418,17 @@ export default function AdminOrganizationsPage({
           </Box>
 
           {/* Member List Label */}
-          <Box sx={{ px: 3, py: 2 }}>
-            <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: '#344054' }}>
+          <Box sx={{ px: { xs: 2.5, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
+            <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' }, fontWeight: 700, color: '#344054' }}>
               In this directory
             </Typography>
           </Box>
 
           {/* List Section */}
           <Box sx={{
-            px: 1.5,
+            px: { xs: 1, sm: 1.5 },
             pb: 2,
-            maxHeight: '400px',
+            maxHeight: { xs: '320px', sm: '400px' },
             overflowY: 'auto',
             '&::-webkit-scrollbar': { width: '8px' },
             '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
@@ -1492,15 +1505,15 @@ export default function AdminOrganizationsPage({
                           alignItems: 'center',
                           px: 1.5,
                           py: 0.5,
-                          borderRadius: '99px',
-                          bgcolor: member.role === 'officer' ? '#E0F2FE' : '#FEF9C3',
-                          border: `1px solid ${member.role === 'officer' ? '#0369A120' : '#854D0E20'}`
+                          borderRadius: '999px',
+                          bgcolor: member.role === 'officer' ? '#DCFCE7' : '#FEF9C3',
+                          border: `1px solid ${member.role === 'officer' ? '#16653420' : '#854D0E20'}`
                         }}
                       >
                         <Typography sx={{
                           fontSize: 12,
                           fontWeight: 800,
-                          color: member.role === 'officer' ? '#0369A1' : '#854D0E',
+                          color: member.role === 'officer' ? '#166534' : '#854D0E',
                           fontFamily: fontStack,
                           textTransform: 'capitalize'
                         }}>
@@ -1515,7 +1528,7 @@ export default function AdminOrganizationsPage({
           </Box>
 
           {/* Footer Section */}
-          <Box sx={{ p: 2, px: 3, borderTop: '1px solid #F2F4F7', display: 'flex', gap: 1.5, bgcolor: '#FFF' }}>
+          <Box sx={{ p: { xs: 2, sm: 2 }, px: { xs: 2.5, sm: 3 }, borderTop: '1px solid #F2F4F7', display: 'flex', gap: 1.5, bgcolor: '#FFF' }}>
             <Button
               fullWidth
               variant="contained"
@@ -1556,7 +1569,7 @@ export default function AdminOrganizationsPage({
               sx={{
                 bgcolor: COLORS.black,
                 color: '#FFFFFF',
-                borderRadius: '8px',
+                borderRadius: 1.5,
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '0.95rem',

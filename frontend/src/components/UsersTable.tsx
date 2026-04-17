@@ -18,7 +18,7 @@ import {
   FilterList as FilterIcon,
   ChevronRight,
   ChevronLeft,
-  PersonAdd,
+  PersonAdd, AddCircle,
   Close,
   Security, History, Refresh,
   People as PeopleIcon, Settings as SettingsIcon, MoreVert as MoreVertIcon, Check
@@ -460,12 +460,13 @@ export default function UsersTable({
           )}
         </Box>
         {loading ? (
-          <Skeleton variant="rounded" width={isSmallMobile ? '100%' : 160} height={48} sx={{ borderRadius: '999px' }} />
+          <Skeleton variant="rounded" width={isSmallMobile ? '100%' : 160} height={48} sx={{ borderRadius: 1.5 }} />
         ) : (
           <Button
             variant="contained"
             disableElevation
             fullWidth={isSmallMobile}
+            startIcon={<AddCircle />}
             onClick={() => {
               setManageUser({
                 _id: "", username: "", fullName: "", email: "",
@@ -474,7 +475,7 @@ export default function UsersTable({
               setCreatePassword("");
             }}
             sx={{
-              borderRadius: '999px',
+              borderRadius: 1.5,
               bgcolor: COLORS.black,
               color: '#FFFFFF',
               textTransform: 'none',
@@ -1211,7 +1212,7 @@ export default function UsersTable({
                 color: '#FFF',
                 py: { xs: 1.5, sm: 2 },
                 px: { xs: 3.5, sm: 3 },
-                borderRadius: '24px', // Updated to match reference squoval look
+                borderRadius: 2, // Matches Dialog radius
                 display: 'flex',
                 alignItems: 'center', // Row layout by default
                 gap: { xs: 2, sm: 4 },
@@ -1451,7 +1452,7 @@ export default function UsersTable({
       </Menu>
 
       {/* ── Dialogs ────────────────────────────────────────────────── */}
-      <Dialog open={!!viewUser} onClose={() => setViewUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: COLORS.cardRadius } }}>
+      <Dialog open={!!viewUser} onClose={() => setViewUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2 } }}>
         <DialogTitle sx={{ fontWeight: 800 }}>User Details</DialogTitle>
         <DialogContent>
           {viewUser && (
@@ -1499,7 +1500,7 @@ export default function UsersTable({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!manageUser} onClose={() => setManageUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: COLORS.cardRadius, m: { xs: 1.5, sm: 2 } } }}>
+      <Dialog open={!!manageUser} onClose={() => setManageUser(null)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 2, m: { xs: 1.5, sm: 2 } } }}>
         <DialogTitle sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' }, px: { xs: 2.5, sm: 3 }, pt: { xs: 2.5, sm: 3 } }}>{manageUser?._id ? "Manage User" : "Create New User"}</DialogTitle>
         <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, py: 0 }}>
           <Box display="flex" flexDirection="column" gap={{ xs: 2.5, sm: 3 }} sx={{ mt: 1.5 }}>
@@ -1729,7 +1730,7 @@ export default function UsersTable({
                       }
                     }}
                     sx={{
-                      borderRadius: '8px',
+                      borderRadius: 1.5,
                       textTransform: 'none',
                       fontWeight: 700,
                       bgcolor: '#3c4043',
@@ -1774,7 +1775,7 @@ export default function UsersTable({
                   size="small"
                   variant="outlined"
                   onClick={async () => { await adminService.regenerateAccessKey(manageUser._id); loadData(); }}
-                  sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
+                  sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}
                 >
                   Regenerate
                 </Button>
@@ -1826,7 +1827,7 @@ export default function UsersTable({
               loadData();
               setManageUser(null);
             }}
-            sx={{ borderRadius: COLORS.pillRadius, bgcolor: COLORS.black, textTransform: 'none', px: 4, fontWeight: 600, '&:hover': { bgcolor: '#222' } }}
+            sx={{ borderRadius: 1.5, bgcolor: COLORS.black, textTransform: 'none', px: 4, fontWeight: 600, '&:hover': { bgcolor: '#222' } }}
           >
             {manageUser?._id ? "Save Changes" : "Create User"}
           </Button>

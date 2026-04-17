@@ -557,7 +557,18 @@ export const removeDeanAssignment = async (req: Request, res: Response) => {
 export const createOrganization = async (req: Request, res: Response) => {
   try {
     const institutionId = resolveInstitutionId(req);
-    const { name, code, description, type, approvalOrder } = req.body;
+    let { name, code, description, type, approvalOrder, termId } = req.body;
+
+    // Resolve termId if not provided (Automatic Fallback to active term)
+    if (!termId) {
+      const activeTerm = await Term.findOne({ institutionId, isActive: true });
+      if (activeTerm) {
+        termId = activeTerm._id;
+      } else {
+        const latestTerm = await Term.findOne({ institutionId }).sort({ academicYear: -1, semester: -1 });
+        if (latestTerm) termId = latestTerm._id;
+      }
+    }
 
     const org = await Organization.create({
       name,
@@ -565,6 +576,7 @@ export const createOrganization = async (req: Request, res: Response) => {
       description,
       type: type || 'office',
       institutionId,
+      termId,
       approvalOrder: approvalOrder || 0,
       isActive: true
     });

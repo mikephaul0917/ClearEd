@@ -31,7 +31,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '40px',
+          borderRadius: 2,
           padding: '48px 32px 40px 32px',
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -84,7 +84,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   onClick={onConfirm}
                   disabled={loading}
                   sx={{
-                    borderRadius: '99px',
+                    borderRadius: 1.5,
                     py: 2,
                     bgcolor: '#0F172A',
                     color: '#FFF',
@@ -112,7 +112,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   onClick={onClose}
                   disabled={loading}
                   sx={{
-                    borderRadius: '99px',
+                    borderRadius: 1.5,
                     py: 1.5,
                     color: '#64748B',
                     textTransform: 'none',

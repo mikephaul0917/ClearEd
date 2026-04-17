@@ -30,7 +30,9 @@ const ArchivedOrganizationsPage: React.FC = () => {
                     description: org.description,
                     role: org.membership?.role || "member",
                     status: org.status,
-                    termName: org.termId ? `${org.termId.semester} ${org.termId.academicYear}` : "Past Term",
+                    termName: org.termId 
+                        ? (org.termId.name || `${org.termId.semester} ${org.termId.academicYear}`)
+                        : "Past Term",
                     institutionName: user?.institutionId || "Institution",
                     color: org.themeColor || "#64748B",
                     headerImage: org.headerImage
@@ -70,6 +72,7 @@ const ArchivedOrganizationsPage: React.FC = () => {
                     icon={<ArchiveBoxIcon />}
                     iconBgColor="#F1F5F9"
                     iconColor="#475569"
+                    onRefresh={fetchOrgs}
                 />
             </Box>
         </>

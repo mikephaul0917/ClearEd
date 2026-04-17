@@ -6,6 +6,7 @@ import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { Reorder } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
 import SuccessMessage from "../../components/SuccessMessage";
 import { showGlobalModal } from "../../components/GlobalModal";
@@ -477,28 +478,43 @@ export default function StudentPage() {
               </Typography>
             </Box>
 
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-              gap: 5,
-              mb: 4
-            }}>
+            <Reorder.Group
+              axis="y"
+              values={myClearances}
+              onReorder={setMyClearances}
+              as="div"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: '40px',
+                marginBottom: '32px'
+              }}
+            >
               {loadingClearances ? (
                 [1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} variant="rounded" height={220} sx={{ borderRadius: '32px', bgcolor: '#eaebec' }} />)
-              ) : filteredClearances.map((org) => (
-                <Box
+              ) : myClearances.filter(c => c.orgStatus === 'active').map((org) => (
+                <Reorder.Item
                   key={org._id}
-                  onClick={() => nav(`/student/progress/${org._id}`)}
-                  sx={{
-                    width: "100%",
-                    maxWidth: 320,
-                    aspectRatio: "1/1",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                    opacity: org.orgStatus === 'archived' ? 0.7 : 1,
+                  value={org}
+                  whileDrag={{ 
+                    scale: 1.05,
+                    zIndex: 50,
+                    boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
                   }}
+                  style={{ listStyleType: 'none' }}
                 >
+                  <Box
+                    onClick={() => nav(`/student/progress/${org._id}`)}
+                    sx={{
+                      width: "100%",
+                      maxWidth: 320,
+                      aspectRatio: "1/1",
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                      opacity: org.orgStatus === 'archived' ? 0.7 : 1,
+                    }}
+                  >
                   {/* Header Background Container (Rounded and Clipped) */}
                   <Box
                     sx={{
@@ -661,10 +677,11 @@ export default function StudentPage() {
                         </Typography>
                       </Box>
                     </Box>
+                    </Box>
                   </Box>
-                </Box>
+                </Reorder.Item>
               ))}
-            </Box>
+            </Reorder.Group>
 
             {/* Modal for Full Description (Student Dashboard) */}
             <Dialog
