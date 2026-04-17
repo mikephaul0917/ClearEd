@@ -149,16 +149,16 @@ export default function App() {
       </Box>
       {/* Diagnostic Backend Link (Temporary for Debugging) */}
       <div style={{
-          position: 'fixed',
-          bottom: '10px',
-          left: '10px',
-          fontSize: '10px',
-          color: '#666',
-          zIndex: 9999,
-          pointerEvents: 'none',
-          opacity: 0.5
+        position: 'fixed',
+        bottom: '10px',
+        left: '10px',
+        fontSize: '10px',
+        color: '#666',
+        zIndex: 9999,
+        pointerEvents: 'none',
+        opacity: 0.5
       }}>
-          API: {import.meta.env.VITE_API_URL || 'Localhost (Default)'}
+        API: {import.meta.env.VITE_API_URL || 'Localhost (Default)'}
       </div>
     </LoadingProvider>
   );
