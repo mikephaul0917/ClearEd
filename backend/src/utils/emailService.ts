@@ -57,7 +57,8 @@ export const sendVerificationEmail = async (
   token: string, 
   institutionName: string
 ): Promise<void> => {
-  const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-institution/${token}`;
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const verificationUrl = `${baseUrl}/verify-institution/${token}`;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
