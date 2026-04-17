@@ -125,13 +125,14 @@ export const getInstitutionOrganizations = catchAsync(async (req: Request, res: 
     ]);
 
     const processedOrgs = organizations.map(org => {
-        const orgObj = org.toObject();
+        const orgObj = org.toObject() as any;
         if (!orgObj.termId && activeTerm) {
+            const term: any = activeTerm;
             orgObj.termId = {
-                _id: activeTerm._id,
-                name: activeTerm.name,
-                academicYear: activeTerm.academicYear,
-                semester: activeTerm.semester
+                _id: term._id,
+                name: term.name,
+                academicYear: term.academicYear,
+                semester: term.semester
             };
         }
         return orgObj;
@@ -700,15 +701,16 @@ export const getMyOrganizations = catchAsync(async (req: Request, res: Response)
 
     const organizations = validMemberships.map(m => {
         const org: any = m.organizationId;
-        const orgObj = org.toObject();
+        const orgObj = org.toObject() as any;
 
         // Smart Fallback: If organization has no termId, use the institution's active term
         if (!orgObj.termId && activeTerm) {
+            const term: any = activeTerm;
             orgObj.termId = {
-                _id: activeTerm._id,
-                name: activeTerm.name,
-                academicYear: activeTerm.academicYear,
-                semester: activeTerm.semester
+                _id: term._id,
+                name: term.name,
+                academicYear: term.academicYear,
+                semester: term.semester
             };
         }
 
