@@ -57,7 +57,7 @@ export const sendVerificationEmail = async (
   token: string, 
   institutionName: string
 ): Promise<void> => {
-  let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  let baseUrl = process.env.FRONTEND_URL || 'https://clear-ed-8u77.vercel.app';
   // Remove trailing slash if present to prevent double slashes in links
   baseUrl = baseUrl.replace(/\/$/, '');
   
@@ -101,7 +101,7 @@ export const sendApprovalNotification = async (
   institutionName: string,
   domain: string
 ): Promise<void> => {
-  let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  let baseUrl = process.env.FRONTEND_URL || 'https://clear-ed-8u77.vercel.app';
   baseUrl = baseUrl.replace(/\/$/, '');
   const loginUrl = `${baseUrl}/`;
   
@@ -286,7 +286,7 @@ export const sendAnnouncementEmail = async (
     attachments?: string[];
   }
 ): Promise<void> => {
-  let baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  let baseUrl = process.env.FRONTEND_URL || 'https://clear-ed-8u77.vercel.app';
   baseUrl = baseUrl.replace(/\/$/, '');
   const loginUrl = `${baseUrl}/`;
   
