@@ -47,7 +47,6 @@ const InstitutionRequestSchema: Schema = new Schema({
     required: [true, 'Academic domain is required'],
     trim: true,
     lowercase: true,
-    lowercase: true,
     validate: {
       validator: function(domain: string) {
         // Basic domain validation
