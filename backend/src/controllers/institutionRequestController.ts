@@ -3,7 +3,7 @@ import { InstitutionRequest } from '../models/InstitutionRequest';
 import { Institution } from '../models/Institution';
 import { AuditLog } from '../models/AuditLog';
 import crypto from 'crypto';
-import { sendVerificationEmail, sendApprovalNotification, sendRejectionNotification } from '../utils/emailService';
+import { sendRequestReceivedNotification, sendApprovalNotification, sendRejectionNotification } from '../utils/emailService';
 
 // List of free email providers to block
 const FREE_EMAIL_DOMAINS = [
@@ -110,11 +110,7 @@ export class InstitutionRequestController {
         });
       }
 
-      // Generate verification token
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-      // Create new institution request
+      // Create new institution request (directly to pending approval)
       const institutionRequest = new InstitutionRequest({
         institutionName: institutionName.trim(),
         academicDomain: cleanDomain,
@@ -123,20 +119,18 @@ export class InstitutionRequestController {
         administratorName: administratorName.trim(),
         administratorPosition: administratorPosition.trim(),
         administratorEmail: administratorEmail.toLowerCase().trim(),
-        verificationToken,
-        verificationTokenExpires,
+        status: 'PENDING_APPROVAL',
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
       });
 
       await institutionRequest.save();
 
-      // Send verification email
+      // Send received notification email
       try {
-        await sendVerificationEmail(administratorEmail, verificationToken, institutionName);
+        await sendRequestReceivedNotification(administratorEmail, institutionName);
       } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
-        // Don't fail the request if email fails, but log it
+        console.error('Failed to send received notification email:', emailError);
       }
 
       // Log the submission
@@ -158,7 +152,7 @@ export class InstitutionRequestController {
 
       res.status(201).json({
         success: true,
-        message: 'Institution access request submitted successfully. Please check your email for verification instructions.',
+        message: 'Institution access request submitted successfully. It is now pending review by our administrators.',
         data: {
           requestId: institutionRequest._id,
           status: institutionRequest.status

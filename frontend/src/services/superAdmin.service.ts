@@ -109,5 +109,10 @@ export const superAdminService = {
     exportAuditLogs: async (params?: any) => {
         const response = await api.get('/super-admin/audit-logs/export', { params });
         return response.data;
+    },
+
+    getAuditStats: async (params?: any) => {
+        const response = await api.get('/super-admin/audit-stats', { params });
+        return response.data;
     }
 };

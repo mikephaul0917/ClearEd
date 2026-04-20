@@ -146,7 +146,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 onClick={() => onClick?.(id)}
                 sx={{
                     width: "100%",
-                    maxWidth: { xs: "100%", sm: 340, md: 350 },
+                    maxWidth: 350,
                     mx: 'auto',
                     aspectRatio: "1/1",
                     cursor: "pointer",
@@ -163,7 +163,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        borderRadius: { xs: "24px", sm: "32px" },
+                        borderRadius: "24px",
                         overflow: "hidden",
                         bgcolor: "#FFFFFF",
                         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
@@ -182,14 +182,14 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             display: 'flex',
                             alignItems: 'flex-start',
                             justifyContent: 'center',
-                            pt: { xs: 4, sm: 6 },
+                            pt: 6,
                         }}
                     >
                         <Box
                             className="icon-box"
                             sx={{
-                                width: { xs: 48, sm: 60 },
-                                height: { xs: 48, sm: 60 },
+                                width: 60,
+                                height: 60,
                                 bgcolor: "#FFFFFF",
                                 borderRadius: "50%",
                                 display: 'flex',
@@ -202,12 +202,12 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         >
                             <Avatar
                                 sx={{
-                                    width: { xs: 24, sm: 32 },
-                                    height: { xs: 24, sm: 32 },
+                                    width: 32,
+                                    height: 32,
                                     bgcolor: "transparent",
                                     color: color,
                                     fontWeight: 800,
-                                    fontSize: { xs: 14, sm: 18 },
+                                    fontSize: 18,
                                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                                 }}
                             >
@@ -221,8 +221,8 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                             onClick={handleMenuOpen}
                             sx={{
                                 position: "absolute",
-                                top: { xs: 16, sm: 24 },
-                                right: { xs: 16, sm: 24 },
+                                top: 24,
+                                right: 24,
                                 color: "#FFFFFF",
                                 bgcolor: "rgba(255, 255, 255, 0.25)",
                                 backdropFilter: "blur(8px)",
@@ -244,11 +244,11 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     sx={{
                         position: "absolute",
                         bottom: 0,
-                        left: { xs: -4, sm: -6 },
-                        right: { xs: -4, sm: -6 },
+                        left: -6,
+                        right: -6,
                         bgcolor: "#FFFFFF",
-                        p: { xs: "20px 16px 24px", sm: "20px 20px", md: "24px 24px" },
-                        minHeight: { xs: "120px", sm: "auto" },
+                        p: "18px 24px",
+                        minHeight: 124,
                         borderRadius: "24px",
                         boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
                         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -267,7 +267,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 >
                     <Typography
                         sx={{
-                            fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                            fontSize: "1.25rem",
                             fontWeight: 800,
                             color: "#1F2937",
                             fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
@@ -349,13 +349,13 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     </Box>
 
                     {/* Footer Section - Pills (Always visible) */}
-                    <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1, md: 1 }, mt: { xs: 1.25, sm: 1.5, md: 2 } }}>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                         <Box
                             onClick={handleLearnMore}
                             className="learn-more-btn"
                             sx={{
-                                px: { xs: 1.5, sm: 1.5, md: 1.5 },
-                                py: { xs: 0.75, sm: 0.85, md: 1 },
+                                px: 1.5,
+                                py: 1,
                                 bgcolor: "#FFFFFF",
                                 borderRadius: "100px",
                                 border: "1px solid #E5E7EB",
@@ -372,39 +372,39 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                                 }
                             }}
                         >
-                            <Typography sx={{ 
-                                fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" }, 
-                                fontWeight: 700, 
-                                color: "#000000", 
-                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', 
-                                whiteSpace: 'nowrap' 
+                            <Typography sx={{
+                                fontSize: "0.75rem",
+                                fontWeight: 700,
+                                color: "#000000",
+                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
+                                whiteSpace: 'nowrap'
                             }}>
                                 Learn more
                             </Typography>
                         </Box>
                         <Box
                             sx={{
-                                px: { xs: 1.25, sm: 1.5, md: 1.5 },
-                                py: { xs: 0.75, sm: 0.85, md: 1 },
-                                flex: 1,
-                                bgcolor: "rgba(176, 224, 230, 0.2)",
+                                py: 1,
+                                px: 2.5,
+                                bgcolor: "#F0FDFA",
                                 borderRadius: "20px",
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                minWidth: 0 // Prevent overflow
+                                minWidth: 0,
+                                border: '1px solid #0D948820'
                             }}
                         >
-                            <Typography sx={{ 
-                                fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.7rem" }, 
-                                fontWeight: 800, 
-                                color: "#0D9488", 
-                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', 
+                            <Typography sx={{
+                                fontSize: "0.75rem",
+                                fontWeight: 800,
+                                color: "#0D9488",
+                                fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                                 textTransform: 'capitalize',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
-                             }}>
+                            }}>
                                 {role}
                             </Typography>
                         </Box>
@@ -444,14 +444,14 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     <Typography sx={{ color: "#4B5563", lineHeight: 1.6, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>
                         {description || "Join this organization to access exclusive content and tools for your clearance process."}
                     </Typography>
-                    <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
-                            <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Role</Typography>
-                            <Typography sx={{ fontWeight: 700, textTransform: 'capitalize' }}>{role}</Typography>
+                    <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                        <Box sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                            <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5, letterSpacing: '0.05em' }}>Role</Typography>
+                            <Typography sx={{ fontWeight: 700, textTransform: 'capitalize', color: '#1F2937' }}>{role}</Typography>
                         </Box>
-                        <Box sx={{ p: 1.5, bgcolor: "#F8FAFC", borderRadius: "6px", flex: 1 }}>
-                            <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5 }}>Term</Typography>
-                            <Typography sx={{ fontWeight: 700 }}>{termName}</Typography>
+                        <Box sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: "12px", flex: 1 }}>
+                            <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: 'uppercase', mb: 0.5, letterSpacing: '0.05em' }}>Term</Typography>
+                            <Typography sx={{ fontWeight: 700, color: '#1F2937' }}>{termName}</Typography>
                         </Box>
                     </Box>
                 </DialogContent>

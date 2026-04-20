@@ -56,20 +56,79 @@ export default function DeanFAQPage() {
   const [activeCategory, setActiveCategory] = useState("general");
   const [expanded, setExpanded] = useState<string | false>("panel0");
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  // Loading state effect - runs once on mount
   React.useEffect(() => {
-    setIsLoading(true);
+    if (isInitialLoad) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      }, 1000); // Reduced to 1s for better balance
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialLoad]);
 
-    // Since data is static, "loading" is near-instant.
-    // We implement a minimum 1000ms delay as requested for a premium feel.
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+  // Chatbot effect - runs only once on mount
+  React.useEffect(() => {
+    // Inject Tuqlas Chatbot Script
+    const script = document.createElement("script");
+    script.src = "https://www.tuqlas.com/chatbot.js";
+    script.setAttribute("data-key", "tq_live_7ed1635c2379892b8a8b8581ed143f0b88e2cab8");
+    script.setAttribute("data-api", "https://www.tuqlas.com");
+    script.defer = true;
+    document.body.appendChild(script);
 
-    return () => clearTimeout(timer);
-  }, [activeCategory]);
+    // Initial style injection
+    const style = document.createElement("style");
+    style.id = "tuqlas-position-fix-dean";
+    style.innerHTML = `
+      #tuqlas-container, .tq-chatbot-container, [id^="tq-chatbot"], iframe[src*="tuqlas.com"] {
+        bottom: 100px !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Aggressive positioning check to fight script overrides
+    const forcePosition = () => {
+      const selectors = ['#tuqlas-container', '.tq-chatbot-container', '[id^="tq-chatbot"]', 'iframe[src*="tuqlas.com"]'];
+      selectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+          (el as HTMLElement).style.setProperty('bottom', '100px', 'important');
+        });
+      });
+    };
+    const positionInterval = setInterval(forcePosition, 1000);
+
+    return () => {
+      clearInterval(positionInterval);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+      const existingStyle = document.getElementById("tuqlas-position-fix-dean");
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
+
+      // Robust cleanup: Remove Tuqlas injected DOM elements (iframes, containers, bubbles, etc.)
+      const selectors = [
+        '#tuqlas-container',
+        '.tq-chatbot-container',
+        '[id^="tq-chatbot"]',
+        'iframe[src*="tuqlas.com"]',
+        '.tq-bubble',
+        '.tq-launcher',
+        '[class*="tuqlas"]',
+        '[id*="tuqlas"]'
+      ];
+      selectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => el.remove());
+      });
+    };
+  }, []);
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);

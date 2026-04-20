@@ -10,7 +10,6 @@ import RoleSelection from "./pages/auth/RoleSelection";
 import SetPasswordPage from "./pages/auth/SetPasswordPage";
 import SuperAdminLogin from "./pages/auth/SuperAdminLogin";
 import RequestInstitutionAccess from "./pages/public/RequestInstitutionAccess";
-import VerifyInstitution from "./pages/public/VerifyInstitution";
 import HowItWorks from "./pages/public/HowItWorks";
 import AdminPage from "./pages/admin/AdminPage";
 import StudentPage from "./pages/student/StudentPage";
@@ -29,6 +28,11 @@ import TodoPage from "./pages/todo/TodoPage";
 import ToReviewPage from "./pages/officer/ToReviewPage";
 import InstitutionUsersPage from "./pages/superadmin/InstitutionUsersPage";
 import FAQPage from "./pages/FAQPage";
+import ProcessOverviewPage from "./pages/public/guides/ProcessOverviewPage";
+import StudentGuidePage from "./pages/public/guides/StudentGuidePage";
+import InstitutionGuidePage from "./pages/public/guides/InstitutionGuidePage";
+import ApprovalGuidePage from "./pages/public/guides/ApprovalGuidePage";
+import EmailPolicyGuidePage from "./pages/public/guides/EmailPolicyGuidePage";
 import Header from "./components/layout/Header";
 import GlobalAnnouncements from "./components/GlobalAnnouncements";
 import Box from "@mui/material/Box";
@@ -78,12 +82,18 @@ export default function App() {
 
           {/* Public institution request routes */}
           <Route path="/request-institution-access" element={<RequestInstitutionAccess />} />
-          <Route path="/verify-institution/:token" element={<VerifyInstitution />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/terms" element={<LegalPage />} />
           <Route path="/privacy" element={<LegalPage />} />
           <Route path="/cookies" element={<LegalPage />} />
           <Route path="/contact" element={<ContactPage />} />
+
+          {/* Guide Routes */}
+          <Route path="/overview" element={<ProcessOverviewPage />} />
+          <Route path="/guides/student" element={<StudentGuidePage />} />
+          <Route path="/guides/institution" element={<InstitutionGuidePage />} />
+          <Route path="/guides/approval" element={<ApprovalGuidePage />} />
+          <Route path="/guides/email-policy" element={<EmailPolicyGuidePage />} />
 
           {/* Admin routes - persistent layout */}
           <Route element={<ProtectedRoute allowedRoles={['admin']}><RoleLayout /></ProtectedRoute>}>
@@ -147,19 +157,6 @@ export default function App() {
           </Route>
         </Routes>
       </Box>
-      {/* Diagnostic Backend Link (Temporary for Debugging) */}
-      <div style={{
-        position: 'fixed',
-        bottom: '10px',
-        left: '10px',
-        fontSize: '10px',
-        color: '#666',
-        zIndex: 9999,
-        pointerEvents: 'none',
-        opacity: 0.5
-      }}>
-        API: {import.meta.env.VITE_API_URL || 'Localhost (Default)'}
-      </div>
     </LoadingProvider>
   );
 }

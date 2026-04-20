@@ -55,10 +55,10 @@ const RegisterPage = () => {
         const fetchQuote = async () => {
             try {
                 const response = await authService.getPublicQuotes("login");
-                
+
                 // Handle both single quote object and array response
                 const fetchedQuotes = Array.isArray(response) ? response : (response ? [response] : []);
-                
+
                 if (fetchedQuotes.length > 0) {
                     const randomQuote = fetchedQuotes[Math.floor(Math.random() * fetchedQuotes.length)];
                     setQuote(randomQuote);
@@ -68,6 +68,17 @@ const RegisterPage = () => {
             }
         };
         fetchQuote();
+
+        // Check for remembered email
+        const rememberedEmail = localStorage.getItem("rememberedEmail");
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        if (rememberedEmail) {
+            setFormData(prev => ({
+                ...prev,
+                email: rememberedEmail,
+                rememberMe: rememberMe
+            }));
+        }
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +105,8 @@ const RegisterPage = () => {
                 formData.email.toLowerCase(),
                 formData.password,
                 false,
-                false // Registration disabled on this flow
+                false, // Registration disabled on this flow
+                formData.rememberMe
             );
             if (success) {
                 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -148,7 +160,7 @@ const RegisterPage = () => {
                 const { token: jwt, user: returnedUser } = data;
 
                 // Use loginWithToken to properly update AuthContext + localStorage
-                loginWithToken(jwt, returnedUser);
+                loginWithToken(jwt, returnedUser, formData.rememberMe);
 
                 setAuthUserName(returnedUser.fullName || returnedUser.email.split('@')[0]);
                 setAuthUserRole(returnedUser.role);
@@ -383,8 +395,8 @@ const RegisterPage = () => {
                             >
                                 <motion.div
                                     animate={{
-                                        backgroundColor: formData.rememberMe ? '#000' : "transparent",
-                                        borderColor: formData.rememberMe ? '#000' : "#E2E8F0"
+                                        backgroundColor: formData.rememberMe ? C.black : "transparent",
+                                        borderColor: formData.rememberMe ? C.black : "#E2E8F0"
                                     }}
                                     transition={{ duration: 0.2 }}
                                     style={{
@@ -421,7 +433,7 @@ const RegisterPage = () => {
                                     Remember me
                                 </span>
                             </div>
-                            <a href="#" style={{ fontSize: "14px", color: '#000', fontWeight: 600, textDecoration: "none" }}>
+                            <a href="https://support.google.com/mail/answer/41078?hl=en&co=GENIE.Platform%3DDesktop" style={{ fontSize: "14px", color: '#000', fontWeight: 600, textDecoration: "none" }}>
                                 Forgot password?
                             </a>
                         </div>

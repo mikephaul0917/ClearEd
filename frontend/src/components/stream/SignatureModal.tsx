@@ -117,7 +117,7 @@ export default function SignatureModal({ open, onClose, onConfirm }: SignatureMo
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '32px',
+          borderRadius: '16px',
           padding: '32px',
           overflow: 'hidden',
           bgcolor: '#FFF',
@@ -132,7 +132,7 @@ export default function SignatureModal({ open, onClose, onConfirm }: SignatureMo
             sx={{ 
               width: 48, 
               height: 48, 
-              bgcolor: '#0F172A', 
+              bgcolor: '#3c4043', 
               borderRadius: '12px', 
               display: 'flex', 
               alignItems: 'center', 
@@ -349,18 +349,18 @@ export default function SignatureModal({ open, onClose, onConfirm }: SignatureMo
           variant="contained"
           disabled={tabIndex === 1 && !uploadedBase64}
           sx={{
-            borderRadius: '20px',
+            borderRadius: '12px',
             py: 2,
-            bgcolor: '#0F172A',
+            bgcolor: '#3c4043',
             color: '#FFF',
             textTransform: 'none',
             fontWeight: 700,
             fontSize: '1rem',
-            boxShadow: '0 10px 15px -3px rgba(15,23,42,0.3)',
+            boxShadow: '0 10px 15px -3px rgba(60,64,67,0.3)',
             transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': { 
-              bgcolor: '#1E293B',
-              boxShadow: '0 20px 25px -5px rgba(15,23,42,0.4)',
+              bgcolor: '#202124',
+              boxShadow: '0 20px 25px -5px rgba(60,64,67,0.4)',
               transform: 'translateY(-2px)'
             },
             '&:active': { transform: 'translateY(0)' },

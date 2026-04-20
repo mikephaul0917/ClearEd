@@ -39,9 +39,12 @@ interface CreateMaterialModalProps {
     organizationId: string;
     organizationName?: string;
     students?: any[];
+    editData?: any;
+    joinCode?: string;
     onCreated?: () => void;
     isEdit?: boolean;
-    editData?: any;
+    institutionId: string;
+    termId: string;
 }
 
 const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
@@ -52,7 +55,10 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
     students = [],
     onCreated,
     isEdit = false,
-    editData = null
+    editData = null,
+    joinCode,
+    institutionId,
+    termId
 }) => {
     const [title, setTitle] = useState("");
     const [instructions, setInstructions] = useState("");
@@ -165,6 +171,8 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
             formData.append('instructions', instructions);
             if (finalTopic) formData.append('topic', finalTopic);
             formData.append('organizationId', organizationId);
+            if (institutionId) formData.append('institutionId', institutionId);
+            if (termId) formData.append('termId', termId);
             formData.append('isAnnouncement', 'false');
             formData.append('type', 'material');
 
@@ -203,7 +211,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
             open: true,
             type,
             title: `Add ${type} Resource`,
-            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            description: `Please enter the ${type === 'Link' ? '' : type.toLowerCase() + ' '}link below to attach it as a resource.`,
             placeholder: `${type} Link`
         });
     };
@@ -557,6 +565,7 @@ const CreateMaterialModal: React.FC<CreateMaterialModalProps> = ({
                 selectedIds={selectedIds}
                 onToggle={handleToggleAssign}
                 onToggleAll={handleToggleAllAssign}
+                joinCode={joinCode}
             />
 
             <AddLinkModal

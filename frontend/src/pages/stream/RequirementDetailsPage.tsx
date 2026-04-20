@@ -44,6 +44,7 @@ import CreateRequirementModal from "../../components/stream/CreateRequirementMod
 import CreateFormModal from "../../components/stream/CreateFormModal";
 import CreatePollModal from "../../components/stream/CreatePollModal";
 import CreateMaterialModal from "../../components/stream/CreateMaterialModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../hooks/useAuth";
 import { api, clearanceService, organizationService } from "../../services";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
@@ -165,6 +166,13 @@ const RequirementDetailsPage: React.FC = () => {
         handleMenuClose();
     };
 
+    const [confirmModalState, setConfirmModalState] = useState<{
+        isOpen: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+    }>({ isOpen: false, title: "", description: "", onConfirm: () => {} });
+
     const handleEditClick = () => {
         handleMenuClose();
         if (requirement?.type === 'form') {
@@ -180,14 +188,24 @@ const RequirementDetailsPage: React.FC = () => {
 
     const handleDeleteClick = async () => {
         handleMenuClose();
-        if (!window.confirm("Are you sure you want to delete this?")) return;
-        try {
-            await clearanceService.deleteRequirement(reqId as string);
-            navigate(`/organization/${orgId}`);
-        } catch (error) {
-            console.error("Failed to delete item:", error);
-            alert("Failed to delete item");
-        }
+        setConfirmModalState({
+            isOpen: true,
+            title: "Delete Requirement",
+            description: "Are you sure you want to delete this requirement? This action cannot be undone.",
+            onConfirm: async () => {
+                setSubActionState('loading');
+                try {
+                    await clearanceService.deleteRequirement(reqId as string);
+                    setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                    navigate(`/organization/${orgId}`);
+                } catch (error) {
+                    console.error("Failed to delete item:", error);
+                    alert("Failed to delete item");
+                } finally {
+                    setSubActionState('idle');
+                }
+            }
+        });
     };
 
     // Submissions state (Officer only)
@@ -433,24 +451,30 @@ const RequirementDetailsPage: React.FC = () => {
     const handleBulkReturn = async (decision: 'approved' | 'rejected' | 'pending') => {
         if (selectedSubIds.length === 0) return;
         
-        const confirmMsg = `Are you sure you want to ${decision} ${selectedSubIds.length} submissions?`;
-        if (!window.confirm(confirmMsg)) return;
+        setConfirmModalState({
+            isOpen: true,
+            title: `Confirm ${decision.charAt(0).toUpperCase() + decision.slice(1)}`,
+            description: `Are you sure you want to ${decision} ${selectedSubIds.length} submissions?`,
+            onConfirm: async () => {
+                setSubActionState('loading');
+                try {
+                    await clearanceService.bulkReviewSubmissions(selectedSubIds, decision, subRemarks || "Bulk reviewed");
+                    setSubActionState('success');
 
-        setSubActionState('loading');
-        try {
-            await clearanceService.bulkReviewSubmissions(selectedSubIds, decision, subRemarks || "Bulk reviewed");
-            setSubActionState('success');
-
-            setTimeout(async () => {
-                await fetchOfficerSubmissions();
-                setSelectedSubIds([]);
-                setSubRemarks("");
-                setSubActionState('idle');
-            }, 800);
-        } catch (err: any) {
-            setSubError(err.response?.data?.message || `Failed to process bulk ${decision}`);
-            setSubActionState('idle');
-        }
+                    setTimeout(async () => {
+                        await fetchOfficerSubmissions();
+                        setSelectedSubIds([]);
+                        setSubRemarks("");
+                        setSubActionState('idle');
+                        setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                    }, 800);
+                } catch (err: any) {
+                    setSubError(err.response?.data?.message || `Failed to process bulk ${decision}`);
+                    setSubActionState('idle');
+                    setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                }
+            }
+        });
     };
 
     const handleSelectByStatus = (status: 'all' | 'pending' | 'approved' | 'rejected') => {
@@ -1149,6 +1173,9 @@ const RequirementDetailsPage: React.FC = () => {
                                 }}
                                 isEdit={true}
                                 editData={requirement}
+                                joinCode={organization?.joinCode}
+                                institutionId={organization?.institutionId?._id || organization?.institutionId}
+                                termId={organization?.termId?._id || organization?.termId}
                             />
                             <CreateFormModal
                                 open={isEditFormModalOpen}
@@ -1162,6 +1189,9 @@ const RequirementDetailsPage: React.FC = () => {
                                 }}
                                 isEdit={true}
                                 editData={requirement}
+                                joinCode={organization?.joinCode}
+                                institutionId={organization?.institutionId?._id || organization?.institutionId}
+                                termId={organization?.termId?._id || organization?.termId}
                             />
                             <CreatePollModal
                                 open={isEditPollModalOpen}
@@ -1175,6 +1205,9 @@ const RequirementDetailsPage: React.FC = () => {
                                 }}
                                 isEdit={true}
                                 editData={requirement}
+                                joinCode={organization?.joinCode}
+                                institutionId={organization?.institutionId?._id || organization?.institutionId}
+                                termId={organization?.termId?._id || organization?.termId}
                             />
                             <CreateMaterialModal
                                 open={isEditMaterialModalOpen}
@@ -1188,6 +1221,9 @@ const RequirementDetailsPage: React.FC = () => {
                                 }}
                                 isEdit={true}
                                 editData={requirement}
+                                joinCode={organization?.joinCode}
+                                institutionId={organization?.institutionId?._id || organization?.institutionId}
+                                termId={organization?.termId?._id || organization?.termId}
                             />
                         </>
                     )}
@@ -1450,11 +1486,11 @@ const RequirementDetailsPage: React.FC = () => {
                                                             textTransform: "none",
                                                             py: 1.5,
                                                             fontWeight: 600,
-                                                            backgroundColor: allSelectedApproved ? '#fff' : '#000',
+                                                            backgroundColor: allSelectedApproved ? '#fff' : '#3c4043',
                                                             color: allSelectedApproved ? '#3c4043' : '#fff',
                                                             border: allSelectedApproved ? '1.5px solid #dadce0' : 'none',
                                                             '&:hover': { 
-                                                                backgroundColor: allSelectedApproved ? '#f8f9fa' : '#333',
+                                                                backgroundColor: allSelectedApproved ? '#f8f9fa' : '#202124',
                                                                 borderColor: allSelectedApproved ? '#3c4043' : 'none'
                                                             }
                                                         }}
@@ -1559,14 +1595,14 @@ const RequirementDetailsPage: React.FC = () => {
                                                             textTransform: "none",
                                                             py: 1,
                                                             fontWeight: 600,
-                                                            backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#000',
-                                                            color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#fff',
-                                                            border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
-                                                            '&:hover': { backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#f8f9fa' : '#333' },
+                                                            backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#3c4043',
+                                                            color: subActionState === 'success' || selectedSub.status === 'approved' ? '#3c4043' : '#fff',
+                                                            border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #3c4043' : 'none',
+                                                            '&:hover': { backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#f8f9fa' : '#202124' },
                                                             '&.Mui-disabled': {
                                                                 backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#E2E8F0',
-                                                                color: subActionState === 'success' || selectedSub.status === 'approved' ? '#000' : '#94A3B8',
-                                                                border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #000' : 'none',
+                                                                color: subActionState === 'success' || selectedSub.status === 'approved' ? '#3c4043' : '#94A3B8',
+                                                                border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #3c4043' : 'none',
                                                             }
                                                         }}
                                                     >
@@ -1811,6 +1847,15 @@ const RequirementDetailsPage: React.FC = () => {
                     )}
                 </Box>
             </Container>
+
+            <ConfirmationModal
+                open={confirmModalState.isOpen}
+                onClose={() => setConfirmModalState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModalState.onConfirm}
+                title={confirmModalState.title}
+                description={confirmModalState.description}
+                loading={subActionState === 'loading'}
+            />
 
         </>
     );

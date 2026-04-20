@@ -7,7 +7,7 @@ const router = Router();
 
 // Public routes (no authentication required)
 router.post('/submit', InstitutionRequestController.submitRequest);
-router.get('/verify/:token', InstitutionRequestController.verifyRequest);
+// router.get('/verify/:token', InstitutionRequestController.verifyRequest);
 
 // Admin routes (require Super Admin authentication)
 router.use(auth);

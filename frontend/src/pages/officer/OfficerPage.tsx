@@ -453,7 +453,8 @@ export default function OfficerPage() {
       setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
-      setNotice({ message: msg, variant: "error" });
+      setPasswordModalOpen(false);
+      showGlobalModal("Incorrect Current Password", msg, "error");
     } finally {
       setPasswordUpdateLoading(false);
     }

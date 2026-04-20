@@ -112,3 +112,65 @@ The system follows a modern **Client-Server Architecture** utilizing a decoupled
 *   Implement real-time WebSockets for instant notifications when an officer approves or rejects a requirement, eliminating the need for page reloads.
 *   Introduce AI/OCR integrations to automatically pre-validate standard institutional documents before a human officer reviews them.
 *   Create distinct data export features (PDF/Excel) allowing admins to statically archive the cleared student list at the end of a term.
+
+## 11. Computational Algorithms & Frameworks
+
+The E-Clearance (ClearEd) system leverages a variety of established computational algorithms and industrial-standard frameworks to ensure data integrity, security, and high performance.
+
+## 11. Computational Algorithms & Frameworks
+
+The E-Clearance (ClearEd) system is built upon a high-performance, secure stack. Below is a comprehensive breakdown of the computational methodologies, frameworks, and algorithms utilized, including the technical rationale for their selection.
+
+### 11.1 Security & Cryptography Algorithms
+*   **Bcrypt Hashing Algorithm:** 
+    *   **Description:** A password-hashing function based on the Blowfish cipher that incorporates a salt to protect against rainbow table attacks and an adaptive cost factor.
+    *   **Applied In:** User registration and login validation (`AuthController.ts`).
+    *   **Rationale:** Bcrypt was chosen because of its "adaptive" nature. As hardware becomes more powerful, the computation cost can be increased to ensure it remains resistant to GPU-based brute-force attacks—a critical requirement for protecting institutional user data.
+    *   *Citation:* Provos, N., & Mazières, D. (1999).
+*   **HMAC SHA-256 (JWT Signature):** 
+    *   **Description:** A specific type of Message Authentication Code (MAC) involving a cryptographic hash function and a secret cryptographic key.
+    *   **Applied In:** Stateless session management and API authorization (`authMiddleware.ts`).
+    *   **Rationale:** HS256 was selected to provide a balance between security and performance. It allows the server to verify the authenticity of a student's session without keeping a session state in memory (Statelessness), which is essential for scaling the system to thousands of concurrent users.
+    *   *Citation:* RFC 7519.
+
+### 11.2 Data Processing & Sorting Algorithms
+*   **Timsort (Array Sorting):** 
+    *   **Description:** A hybrid stable sorting algorithm derived from Merge Sort and Insertion Sort.
+    *   **Applied In:** All dynamic data tables (Users, Records, Audit Logs).
+    *   **Rationale:** Timsort excels on "real-world" data that often contains partially ordered sequences. Standardizing on Timsort ensures that when an admin sorts thousands of clearance records, the operation is O(n log n) and stable, meaning identical elements maintain their relative order.
+    *   *Citation:* Peters, T. (2002).
+*   **Reconciliation & Diffing (Virtual DOM):**
+    *   **Description:** A heuristic algorithm used by **React** to identify which parts of the UI tree have changed.
+    *   **Applied In:** Entire Frontend rendering engine.
+    *   **Rationale:** Since the ClearEd dashboards feature many real-time status updates (e.g., Progress bars turning green), the reconciliation algorithm ensures only the specific sections of the UI that changed are re-rendered. This provides the "fluid" and lag-free experience characteristic of the platform.
+
+### 11.3 Search & Retrieval Algorithms (Database)
+*   **B-Tree / B+ Tree Indexing:** 
+    *   **Description:** Self-balancing tree data structures that maintain sorted data and allow searches, sequential access, insertions, and deletions in logarithmic time.
+    *   **Applied In:** MongoDB collections for Users, Logs, and Institutions.
+    *   **Rationale:** B-Trees were chosen for the database layer because they minimize disk I/O. For an institution with 10,000+ students, finding a record by `StudentID` or `Email` remains near-instantaneous despite the database's size on disk.
+    *   *Citation:* Bayer, R. (1972).
+
+### 11.4 Communication & Messaging Protocols
+*   **SMTP (Mail Protocol):** 
+    *   **Description:** The internet standard for electronic mail transmission.
+    *   **Applied In:** The Automated Email Notification Service.
+    *   **Rationale:** SMTP is used to ensure cross-platform compatibility. Whether a student uses Outlook, Gmail, or a private institutional mail server, SMTP ensures their clearance status notifications are delivered reliably.
+    *   *Citation:* RFC 5321.
+*   **Physics-Based Animation Algorithms (Spring & Damping):**
+    *   **Description:** Mathematical models that simulate natural motion using mass, tension, and friction constants.
+    *   **Applied In:** **Framer Motion** transitions (e.g., the sliding selection pill and modal fade-ins).
+    *   **Rationale:** Standard linear animations feel "robotic." By using spring physics, the ClearEd UI feels "organic" and premium—interactive elements react to user input with a sense of weight and momentum.
+
+### 11.5 Scheduling & System Management
+*   **Vixie Cron Algorithm:** 
+    *   **Description:** A pattern-matching algorithm for executing tasks based on the system clock.
+    *   **Applied In:** `termScheduler.ts` for automated term expiration and data cleanup.
+    *   **Rationale:** The ClearEd system must automatically close clearance windows at specific dates. The Vixie-style cron was chosen for its decades-long track record of reliability in Unix-based system scheduling.
+    *   *Citation:* Vixie, P. (1987).
+
+### 11.6 Development & Implementation Frameworks
+*   **React 18 (Frontend):** Chosen for its component-driven architecture, enabling the creation of complex, reusable UI elements like the `UsersTable`.
+*   **Node.js & Express (Backend):** Selected for their non-blocking, event-driven I/O model. This allows the backend to handle high volumes of concurrent clearance request submissions without blocking subsequent processes.
+*   **TypeScript (Language):** Implemented to provide static type checking. This reduces runtime errors—crucial for a system where a single data error could incorrectly block a student's graduation.
+*   **Mongoose ODM:** Used to enforce a schema-based solution for MongoDB, ensuring that clearance data remains consistent and validated before it ever hits the database.

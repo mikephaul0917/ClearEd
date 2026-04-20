@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import CheckIcon from "@mui/icons-material/Check";
 import { getAbsoluteUrl } from "../../utils/avatarUtils";
 
 import Checkbox from "@mui/material/Checkbox";
@@ -22,6 +23,7 @@ interface AssignToModalProps {
     selectedIds: string[];
     onToggle: (id: string) => void;
     onToggleAll: () => void;
+    joinCode?: string;
 }
 
 const AssignToModal: React.FC<AssignToModalProps> = ({ 
@@ -30,8 +32,19 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
     students = [],
     selectedIds,
     onToggle,
-    onToggleAll
+    onToggleAll,
+    joinCode
 }) => {
+    const [copied, setCopied] = React.useState(false);
+    
+    const handleCopyCode = () => {
+        if (joinCode) {
+            navigator.clipboard.writeText(joinCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     const isAllSelected = students.length > 0 && selectedIds.length === students.length;
     const isIndeterminate = selectedIds.length > 0 && selectedIds.length < students.length;
 
@@ -103,15 +116,18 @@ const AssignToModal: React.FC<AssignToModalProps> = ({
                         </Typography>
 
                         <Button
-                            startIcon={<PersonAddAltIcon />}
+                            startIcon={copied ? <CheckIcon sx={{ fontSize: 18 }} /> : <PersonAddAltIcon />}
+                            onClick={handleCopyCode}
+                            disabled={!joinCode || copied}
                             sx={{
                                 textTransform: "none",
                                 fontWeight: 500,
-                                color: "#0E7490",
-                                "&:hover": { bgcolor: "rgba(26,115,232,0.04)" }
+                                color: copied ? "#059669" : "#0E7490",
+                                "&:hover": { bgcolor: "rgba(26,115,232,0.04)" },
+                                transition: "all 0.2s ease"
                             }}
                         >
-                            Invite members
+                            {copied ? "Code copied!" : "Invite members"}
                         </Button>
                     </Box>
                 ) : (

@@ -8,6 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Skeleton from "@mui/material/Skeleton";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { api, clearanceService } from '../../services';
+import SuccessModal from "../../components/SuccessModal";
 
 type DeptStatus = {
   name: string;
@@ -28,6 +29,7 @@ export default function StudentClearanceSlip() {
   const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
   const [showMaximized, setShowMaximized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -64,7 +66,7 @@ export default function StudentClearanceSlip() {
     setSubmittingDean(true);
     try {
       await clearanceService.submitToDean();
-      alert("Successfully submitted clearance to the Dean!");
+      setShowSuccessModal(true);
       // Refresh timeline/finalClearance
       const res = await clearanceService.getMyClearances();
       setTimeline(res.organizations || []);
@@ -197,8 +199,15 @@ export default function StudentClearanceSlip() {
                       <img
                         src={it.signatureUrl}
                         alt="Signature"
-                        onClick={() => setZoomedSignature(it.signatureUrl!)}
-                        style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)", cursor: "pointer" }}
+                        style={{ 
+                          maxHeight: "60px", 
+                          maxWidth: "120px", 
+                          position: "absolute", 
+                          bottom: -5, 
+                          filter: "contrast(1.2)",
+                          pointerEvents: "none",
+                          userSelect: "none"
+                        }}
                       />
                     ) : isApproved && (
                       <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
@@ -224,8 +233,15 @@ export default function StudentClearanceSlip() {
                 <img
                   src={finalClearance.signatureUrl}
                   alt="Final Signature"
-                  onClick={() => setZoomedSignature(finalClearance.signatureUrl)}
-                  style={{ maxHeight: "70px", maxWidth: "160px", position: "absolute", bottom: -5, filter: "contrast(1.2)", cursor: "pointer" }}
+                  style={{ 
+                    maxHeight: "70px", 
+                    maxWidth: "160px", 
+                    position: "absolute", 
+                    bottom: -5, 
+                    filter: "contrast(1.2)",
+                    pointerEvents: "none",
+                    userSelect: "none"
+                  }}
                 />
               ) : (
                 <Typography sx={{ color: "#0d9488", fontWeight: 700, fontStyle: "italic", fontSize: "0.85rem" }}>
@@ -458,8 +474,8 @@ export default function StudentClearanceSlip() {
       >
         {loading ? (
           <>
-            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
-            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "12px" }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "12px" }} />
           </>
         ) : (
           <>
@@ -470,7 +486,7 @@ export default function StudentClearanceSlip() {
               sx={{
                 bgcolor: '#000',
                 color: '#FFF',
-                borderRadius: '100px',
+                borderRadius: '12px',
                 fontWeight: 700,
                 fontSize: { xs: '0.9rem', sm: '0.95rem' },
                 px: 4,
@@ -490,7 +506,7 @@ export default function StudentClearanceSlip() {
               onClick={handleSubmitToDean}
               fullWidth
               sx={{
-                borderRadius: '100px',
+                borderRadius: '12px',
                 color: '#000',
                 borderColor: '#E2E8F0',
                 bgcolor: '#FFF',
@@ -585,6 +601,13 @@ export default function StudentClearanceSlip() {
           </Box>
         </Box>
       </Dialog>
+      
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Submission Successful"
+        description="Your clearance has been successfully submitted to the Dean for final approval."
+      />
     </Box>
   );
 }

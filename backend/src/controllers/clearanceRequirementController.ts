@@ -171,6 +171,7 @@ export const getOrganizationRequirements = async (req: Request, res: Response) =
                         pending: reqStats.find(s => s._id.status === 'pending')?.count || 0,
                         approved: reqStats.find(s => s._id.status === 'approved')?.count || 0,
                         rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0,
+                        resubmission_required: reqStats.find(s => s._id.status === 'resubmission_required')?.count || 0,
                         totalMembers
                     }
                 };

@@ -49,6 +49,7 @@ const TodoPage: React.FC = () => {
 
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [todoData, setTodoData] = useState<any>({ assigned: [], missing: [], done: [] });
 
@@ -87,10 +88,8 @@ const TodoPage: React.FC = () => {
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to fetch to-do items.");
         } finally {
-            // Add deliberate delay for premium feel
-            setTimeout(() => {
-                setLoading(false);
-            }, 2000);
+            setLoading(false);
+            setIsInitialLoad(false);
         }
     }, []);
 
@@ -98,14 +97,6 @@ const TodoPage: React.FC = () => {
         fetchData();
     }, [fetchData]);
 
-    // Trigger skeleton on tab change for premium feel
-    useEffect(() => {
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, [tabValue]);
 
     const renderEmptyState = (type: 'assigned' | 'missing' | 'done') => {
         switch (type) {
@@ -247,10 +238,22 @@ const TodoPage: React.FC = () => {
                             '& .MuiAccordionSummary-content': { alignItems: 'center', m: 0, '&.Mui-expanded': { m: 0 } }
                         }}
                     >
-                        <Typography sx={{ fontSize: '1.25rem', color: '#3C4043', ml: 1, flex: 1, fontFamily: "'Google Sans', Roboto, Arial, sans-serif" }}>
+                        <Typography sx={{ 
+                            fontSize: { xs: '1.125rem', sm: '1.25rem' }, 
+                            color: '#3C4043', 
+                            ml: 1, 
+                            flex: 1, 
+                            fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
+                            lineHeight: 1.2
+                        }}>
                             {title}
                         </Typography>
-                        <Typography sx={{ color: count > 0 ? '#0E7490' : '#3C4043', mr: 2, fontSize: '0.875rem' }}>
+                        <Typography sx={{ 
+                            color: count > 0 ? '#0E7490' : '#3C4043', 
+                            mr: 2, 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            fontWeight: 600
+                        }}>
                             {count}
                         </Typography>
                     </AccordionSummary>
@@ -318,97 +321,95 @@ const TodoPage: React.FC = () => {
 
     return (
         <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', pt: 0, pb: 8 }}>
-            <Container maxWidth="lg" sx={{ px: { xs: 0, md: 4 } }}>
-                <Box sx={{ mb: 2 }}>
-                    <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
-                        <Tabs
-                            value={tabValue}
-                            onChange={(_, val) => setTabValue(val)}
-                            textColor="inherit"
-                            indicatorColor="primary"
-                            variant={isMobile ? "fullWidth" : "standard"}
+            <Box sx={{ 
+                borderBottom: 1, 
+                borderColor: "divider", 
+                mb: { xs: 3, md: 4 },
+                bgcolor: '#F9FAFB',
+                position: 'sticky',
+                top: 0,
+                zIndex: 10,
+            }}>
+                <Container maxWidth="lg" sx={{ px: { xs: 0, md: 4 } }}>
+                    <Tabs
+                        value={tabValue}
+                        onChange={(_, val) => setTabValue(val)}
+                        textColor="inherit"
+                        variant="standard"
+                        sx={{
+                            "& .MuiTab-root": {
+                                textTransform: "none",
+                                fontWeight: 600,
+                                fontSize: "0.9375rem",
+                                minWidth: { xs: 100, md: 120 },
+                                py: 2.5,
+                                color: "#5F6368",
+                                fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    color: '#0D9488',
+                                    bgcolor: "rgba(13, 148, 136, 0.04)"
+                                },
+                                '&.Mui-selected': {
+                                    color: '#0D9488',
+                                }
+                            },
+                            "& .MuiTabs-indicator": {
+                                height: 3,
+                                borderRadius: "3px 3px 0 0",
+                                bgcolor: "#0D9488"
+                            }
+                        }}
+                    >
+                        <Tab label="Assigned" />
+                        <Tab label="Missing" />
+                        <Tab label="Done" />
+                    </Tabs>
+                </Container>
+            </Box>
+
+            <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
+                <Box sx={{ px: { xs: 0, sm: 0 }, mb: 4, mt: { xs: 2, md: 0 } }}>
+                    <FormControl size="small" sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 280 }}>
+                        <Select
+                            value={selectedOrg}
+                            onChange={(e) => setSelectedOrg(e.target.value)}
+                            displayEmpty
                             sx={{
-                                minHeight: 48,
-                                px: { xs: 0, sm: 1 },
-                                "& .MuiTabs-flexContainer": {
-                                    gap: { xs: 0, sm: 2 }
+                                bgcolor: '#fff',
+                                color: '#3C4043',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#dadce0',
+                                    borderWidth: 1,
+                                    borderRadius: '8px'
                                 },
-                                "& .MuiTab-root": {
-                                    textTransform: "none",
-                                    fontWeight: 500,
-                                    minWidth: 'auto',
-                                    px: 0,
-                                    py: 1.5,
-                                    mr: { xs: 0, sm: 3 },
-                                    fontSize: "0.875rem",
-                                    color: "#5F6368", // Google dark grey
-                                    fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
-                                    transition: 'color 0.2s',
-                                    '&:hover': {
-                                        color: '#202124' // darker grey on hover
-                                    },
-                                    '&.Mui-selected': {
-                                        color: '#0D9488', // Dark teal
-                                        fontWeight: 500
-                                    }
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#202124'
                                 },
-                                "& .MuiTabs-indicator": {
-                                    height: 3,
-                                    borderRadius: "3px 3px 0 0",
-                                    bgcolor: "#0D9488" // Dark teal indicator
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#0D9488',
+                                    borderWidth: 2
+                                },
+                                '& .MuiSelect-select': {
+                                    py: 1,
+                                    px: 2
                                 }
                             }}
                         >
-                            <Tab label="Assigned" />
-                            <Tab label="Missing" />
-                            <Tab label="Done" />
-                        </Tabs>
-                    </Box>
-
-                    <Box sx={{ px: { xs: 2, sm: 1 }, mb: 4 }}>
-                        <FormControl size="small" sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 200 }}>
-                            <Select
-                                value={selectedOrg}
-                                onChange={(e) => setSelectedOrg(e.target.value)}
-                                displayEmpty
-                                sx={{
-                                    bgcolor: '#F9FAFB',
-                                    color: '#3C4043',
-                                    '& .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#dadce0', // Gray border default
-                                        borderWidth: 1,
-                                        borderRadius: '4px'
-                                    },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#202124' // Dark hover
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#0D9488', // Dark teal when focused
-                                        borderWidth: 2
-                                    },
-                                    '& .MuiSelect-select': {
-                                        py: 1,
-                                        px: 2
-                                    },
-                                    '& .MuiSvgIcon-root': {
-                                        color: '#5f6368' // Gray dropdown arrow
-                                    }
-                                }}
-                            >
-                                <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>All organizations</MenuItem>
-                                {allOrganizations.map(org => (
-                                    <MenuItem key={org.id} value={org.id} sx={{ fontSize: '0.875rem' }}>
-                                        {org.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Box>
-
-                    {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px', mx: { xs: 2, sm: 0 } }}>{error}</Alert>}
+                            <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>All organizations</MenuItem>
+                            {allOrganizations.map(org => (
+                                <MenuItem key={org.id} value={org.id} sx={{ fontSize: '0.875rem' }}>
+                                    {org.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </Box>
 
-                {loading ? (
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '14px' }}>{error}</Alert>}
+
+
+                {loading && isInitialLoad ? (
                     <Box sx={{ mt: 2 }}>
                         {/* Skeleton Filter Box */}
                         <Box sx={{ px: 1, mb: 4, opacity: 0.5 }}>

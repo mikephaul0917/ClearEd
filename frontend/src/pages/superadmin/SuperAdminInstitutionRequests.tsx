@@ -29,10 +29,11 @@ import Snackbar from "@mui/material/Snackbar";
 import {
   useTheme, useMediaQuery, Skeleton, CircularProgress, Grid,
   InputAdornment, Menu, MenuItem, Divider, ListItemText, ListItemIcon,
-  IconButton, Tooltip
+  IconButton, Tooltip, Tabs, Tab
 } from "@mui/material";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import SuccessActionModal from "../../components/SuccessActionModal";
 import CheckIcon from '@mui/icons-material/Check';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -55,7 +56,7 @@ import CloseIcon from '@mui/icons-material/Close';
 const COLORS = {
   pageBg: '#F9FAFB',
   surface: '#FFFFFF',
-  black: '#0a0a0a',
+  black: '#3c4043',
   textPrimary: '#3c4043',
   textSecondary: '#64748B',
   teal: '#5fcca0',
@@ -98,7 +99,6 @@ export default function SuperAdminInstitutionRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'suspended'>('pending');
-  const [isTabLoading, setIsTabLoading] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
@@ -112,6 +112,7 @@ export default function SuperAdminInstitutionRequests() {
   const [revokeReason, setRevokeReason] = useState("");
   const [actionState, setActionState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [successModal, setSuccessModal] = useState({ open: false, title: "", description: "" });
   const [searchQuery, setSearchQuery] = useState("");
   const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -191,13 +192,6 @@ export default function SuperAdminInstitutionRequests() {
     setPage(1);
   }, [searchQuery, statusFilter, activeTab, sortConfig]);
 
-  useEffect(() => {
-    if (!loading) {
-      setIsTabLoading(true);
-      const timer = setTimeout(() => setIsTabLoading(false), 400);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, loading]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -214,10 +208,7 @@ export default function SuperAdminInstitutionRequests() {
   };
 
   useEffect(() => {
-    // Simulate initial loading delay for better UX
-    setTimeout(() => {
-      fetchData();
-    }, 1000);
+    fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -272,10 +263,10 @@ export default function SuperAdminInstitutionRequests() {
 
       // Hold success state briefly before closing
       setTimeout(() => {
-        setSnackbar({
+        setSuccessModal({
           open: true,
-          message: `Approved ${selectedRequest.institutionName} successfully`,
-          severity: "success"
+          title: "Institution Approved",
+          description: `${selectedRequest.institutionName} has been successfully added to the platform.`
         });
 
         setApproveDialogOpen(false);
@@ -308,10 +299,10 @@ export default function SuperAdminInstitutionRequests() {
       setActionState('success');
 
       setTimeout(() => {
-        setSnackbar({
+        setSuccessModal({
           open: true,
-          message: `Rejected ${selectedRequest.institutionName} successfully`,
-          severity: "success"
+          title: "Request Rejected",
+          description: `The application for ${selectedRequest.institutionName} has been denied.`
         });
 
         setRejectDialogOpen(false);
@@ -347,10 +338,10 @@ export default function SuperAdminInstitutionRequests() {
 
       setActionState('success');
       setTimeout(() => {
-        setSnackbar({
+        setSuccessModal({
           open: true,
-          message: `Revoked access for ${selectedRequest.institutionName}`,
-          severity: "success"
+          title: "Access Revoked",
+          description: `Access for ${selectedRequest.institutionName} has been suspended.`
         });
         setRevokeDialogOpen(false);
         setRevokeReason("");
@@ -376,7 +367,11 @@ export default function SuperAdminInstitutionRequests() {
       await superAdminService.reactivateInstitution(selectedRequest._id);
       setActionState('success');
       setTimeout(() => {
-        setSnackbar({ open: true, message: `Reactivated access for ${selectedRequest.institutionName}`, severity: "success" });
+        setSuccessModal({
+          open: true,
+          title: "Access Reactivated",
+          description: `Full institutional access has been restored for ${selectedRequest.institutionName}.`
+        });
         setReactivateDialogOpen(false);
         setSelectedRequest(null);
         setActionState('idle');
@@ -396,7 +391,11 @@ export default function SuperAdminInstitutionRequests() {
       await superAdminService.deleteInstitution(selectedRequest._id);
       setActionState('success');
       setTimeout(() => {
-        setSnackbar({ open: true, message: `Institution marked for deletion`, severity: "success" });
+        setSuccessModal({
+          open: true,
+          title: "Institution Deleted",
+          description: `${selectedRequest.institutionName} has been marked for deletion.`
+        });
         setDeleteDialogOpen(false);
         setSelectedRequest(null);
         setActionState('idle');
@@ -422,7 +421,11 @@ export default function SuperAdminInstitutionRequests() {
       await superAdminService.permanentDeleteInstitution(selectedRequest._id);
       setActionState('success');
       setTimeout(() => {
-        setSnackbar({ open: true, message: `${selectedRequest.institutionName} has been permanently deleted.`, severity: "success" });
+        setSuccessModal({
+          open: true,
+          title: "Permanently Deleted",
+          description: `${selectedRequest.institutionName} has been completely removed from the system.`
+        });
         setPermanentDeleteDialogOpen(false);
         setSelectedRequest(null);
         setPermanentDeleteConfirmText("");
@@ -496,16 +499,31 @@ export default function SuperAdminInstitutionRequests() {
 
   const getStatusChipSx = (status: string) => {
     switch (status) {
-      case 'PENDING_APPROVAL':
-        return { backgroundColor: `${COLORS.yellow}80`, color: COLORS.black };
       case 'APPROVED':
-        return { backgroundColor: '#B0E0E6', color: '#000000' };
-      case 'REJECTED':
-        return { backgroundColor: `${COLORS.orange}25`, color: '#9a3412' };
+        return { 
+          backgroundColor: '#F0FDFA', 
+          color: '#0D9488', 
+          border: '1px solid #0D948820' 
+        };
+      case 'PENDING_APPROVAL':
       case 'PENDING_VERIFICATION':
-        return { backgroundColor: `${COLORS.yellow}80`, color: COLORS.black };
+        return { 
+          backgroundColor: '#FFFBEB', 
+          color: '#D97706', 
+          border: '1px solid #D9770620' 
+        };
+      case 'REJECTED':
+        return { 
+          backgroundColor: '#FEF2F2', 
+          color: '#DC2626', 
+          border: '1px solid #DC262620' 
+        };
       default:
-        return { backgroundColor: '#F1F5F9', color: '#475569' };
+        return { 
+          backgroundColor: '#F8FAFC', 
+          color: '#64748B', 
+          border: '1px solid #64748B20' 
+        };
     }
   };
 
@@ -513,84 +531,70 @@ export default function SuperAdminInstitutionRequests() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const renderToggleSwitch = () => (
+  const renderNavigation = () => (
     <Box sx={{
-      display: 'flex',
-      width: { xs: '100%', md: 'max-content' },
-      position: 'relative',
-      bgcolor: '#FFFFFF',
-      p: 0.5,
-      borderRadius: COLORS.pillRadius,
-      border: '1px solid rgba(0,0,0,0.08)',
+      borderBottom: 1,
+      borderColor: "divider",
       mb: 4,
-      boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-      isolation: 'isolate'
+      width: '100%',
+      position: 'relative'
     }}>
-      <Box sx={{
-        position: 'absolute',
-        top: 4,
-        bottom: 4,
-        left: 4,
-        width: 'calc(33.33% - 2.66px)',
-        bgcolor: '#1E1E1E',
-        borderRadius: COLORS.pillRadius,
-        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: activeTab === 'pending' ? 'translateX(0%)' :
-          activeTab === 'approved' ? 'translateX(100.5%)' :
-            'translateX(201%)',
-        zIndex: -1
-      }} />
-
-      {(['pending', 'approved', 'suspended'] as const).map((tab) => (
-        <Button
-          key={tab}
-          onClick={() => setActiveTab(tab)}
-          sx={{
-            flex: 1,
-            width: { xs: 'auto', sm: 120 },
-            py: 1,
-            px: { xs: 1, sm: 2 },
-            borderRadius: COLORS.pillRadius,
-            textTransform: 'none',
-            fontWeight: 700,
-            fontSize: { xs: '12px', sm: '14px' },
-            color: activeTab === tab ? '#FFFFFF' : '#64748B',
-            bgcolor: 'transparent',
-            transition: 'color 0.3s ease',
-            '&:hover': {
-              bgcolor: activeTab === tab ? 'transparent' : 'rgba(0,0,0,0.04)',
-            },
-          }}
-        >
-          {tab.charAt(0).toUpperCase() + tab.slice(1)}
-        </Button>
-      ))}
+      <Tabs
+        value={activeTab}
+        onChange={(_, v) => setActiveTab(v)}
+        textColor="primary"
+        variant="scrollable"
+        scrollButtons="auto"
+        TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+        sx={{
+          mb: "-1px", 
+          "& .MuiTabs-indicator": {
+            bottom: 0,
+          },
+          "& .MuiTab-root": {
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
+            color: "#5f6368",
+            minWidth: { xs: 80, sm: 120 },
+            px: { xs: 1.5, sm: 3 },
+            py: 2,
+          },
+          "& .Mui-selected": {
+            color: "#0D9488 !important",
+            fontWeight: 800
+          }
+        }}
+      >
+        <Tab value="pending" label={isMobile ? "Pending" : "Pending Requests"} />
+        <Tab value="approved" label={isMobile ? "Approved" : "Approved Institutions"} />
+        <Tab value="suspended" label={isMobile ? "Suspended" : "Suspended Access"} />
+      </Tabs>
     </Box>
   );
 
-  if (loading || isTabLoading) {
+  if (loading) {
     return (
       <Box sx={{ 
-        px: isSmallMobile ? 2 : 4, 
-        pb: isSmallMobile ? 2 : 4, 
+        px: isMobile ? 2 : 4, 
+        pb: isMobile ? 2 : 4, 
         pt: 0, 
         backgroundColor: COLORS.pageBg, 
         minHeight: '100vh', 
         fontFamily: fontStack 
       }}>
-        {renderToggleSwitch()}
+        {renderNavigation()}
 
         {/* Metric Cards Skeleton */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2.5, mb: 4 }}>
           {[1, 2, 3].map(i => (
             <Box key={i} sx={{ p: 3, bgcolor: '#FFFFFF', borderRadius: COLORS.cardRadius, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Skeleton variant="circular" width={40} height={40} />
-                <Skeleton variant="text" width={100} height={20} />
+                <Skeleton variant="rounded" width={40} height={40} sx={{ borderRadius: '12px', bgcolor: '#F1F5F9' }} />
+                <Skeleton variant="text" width={120} height={20} />
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                <Skeleton variant="text" width={40} height={48} />
-                <Skeleton variant="rounded" width={60} height={20} sx={{ borderRadius: '6px' }} />
+                <Skeleton variant="text" width={60} height={50} sx={{ mt: -1 }} />
               </Box>
               <Skeleton variant="text" width="90%" height={20} />
             </Box>
@@ -598,36 +602,55 @@ export default function SuperAdminInstitutionRequests() {
         </Box>
 
         {/* Table Header & Controls Skeleton */}
-        <Box sx={{ mb: 3, display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Skeleton variant="circular" width={24} height={24} />
-            <Skeleton variant="text" width={120} height={32} />
+        <Box sx={{ mb: 3, display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Skeleton variant="circular" width={20} height={20} />
+            <Skeleton variant="text" width={100} height={24} />
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
-            <Skeleton variant="rounded" width={250} height={40} sx={{ borderRadius: '8px' }} />
-            <Skeleton variant="rounded" width={120} height={40} sx={{ borderRadius: COLORS.pillRadius }} />
+          <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+            <Skeleton variant="rounded" width={isMobile ? '100%' : 240} height={36} sx={{ borderRadius: '8px' }} />
+            <Skeleton variant="rounded" width={100} height={36} sx={{ borderRadius: '10px' }} />
           </Box>
         </Box>
 
         {/* Table Skeleton */}
         <Box sx={{ bgcolor: '#FFFFFF', borderRadius: COLORS.cardRadius, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden' }}>
           <TableContainer>
-            <Table>
+            <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                  {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                    <TableCell key={i} sx={{ py: 2 }}><Skeleton variant="text" width="60%" /></TableCell>
+                  {[
+                    "Name", "Domain", "Email", "Admin", "Submitted", "Status", 
+                    ...(activeTab === 'suspended' ? ["Deletion"] : []), "Actions"
+                  ].map((_, i) => (
+                    <TableCell key={i} sx={{ py: 1.5 }}>
+                      <Skeleton variant="text" width="60%" height={16} />
+                    </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {[1, 2, 3, 4, 5].map(row => (
                   <TableRow key={row}>
-                    {[1, 2, 3, 4, 5, 6, 7].map(col => (
-                      <TableCell key={col} sx={{ py: 2 }}>
-                        {col === 6 ? <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: COLORS.pillRadius }} /> : <Skeleton variant="text" width="80%" />}
-                      </TableCell>
-                    ))}
+                    {[
+                      "Name", "Domain", "Email", "Admin", "Submitted", "Status", 
+                      ...(activeTab === 'suspended' ? ["Deletion"] : []), "Actions"
+                    ].map((_, colIndex, arr) => {
+                      const isActions = colIndex === arr.length - 1;
+                      const isStatus = colIndex === arr.length - (activeTab === 'suspended' ? 3 : 2);
+                      
+                      return (
+                        <TableCell key={colIndex} sx={{ py: 2 }} align={isActions ? 'right' : 'left'}>
+                          {isStatus ? (
+                            <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: '999px', mx: 'auto' }} />
+                          ) : isActions ? (
+                            <Skeleton variant="circular" width={32} height={32} sx={{ ml: 'auto' }} />
+                          ) : (
+                            <Skeleton variant="text" width="80%" height={20} />
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableBody>
@@ -722,7 +745,7 @@ export default function SuperAdminInstitutionRequests() {
       fontFamily: fontStack,
     }}>
       {/* ── Toggle Switch ─────────────────────────────────────────── */}
-      {renderToggleSwitch()}
+      {renderNavigation()}
 
       {/* ── Stats Row ──────────────────────────────────────────────── */}
       <Box sx={{
@@ -772,17 +795,6 @@ export default function SuperAdminInstitutionRequests() {
             }}>
               {requests.length}
             </Typography>
-            <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: '#000000',
-              display: 'flex', alignItems: 'center', gap: 0.5,
-              bgcolor: '#B0E0E6', px: 1, py: 0.3, borderRadius: '6px',
-              textTransform: 'uppercase'
-            }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-              Real-time
-            </Typography>
           </Box>
 
           <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
@@ -829,17 +841,6 @@ export default function SuperAdminInstitutionRequests() {
             }}>
               {requests.filter(r => r.status === 'PENDING_APPROVAL').length}
             </Typography>
-            <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: '#000000',
-              display: 'flex', alignItems: 'center', gap: 0.5,
-              bgcolor: '#B0E0E6', px: 1, py: 0.3, borderRadius: '6px',
-              textTransform: 'uppercase'
-            }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-              Active
-            </Typography>
           </Box>
 
           <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
@@ -885,14 +886,6 @@ export default function SuperAdminInstitutionRequests() {
               letterSpacing: '-1px',
             }}>
               {requests.filter(r => r.status === 'PENDING_VERIFICATION').length}
-            </Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              Action Required
             </Typography>
           </Box>
 
@@ -1182,7 +1175,7 @@ export default function SuperAdminInstitutionRequests() {
                             textTransform: 'none', borderRadius: '10px',
                             py: 1.2,
                             backgroundColor: COLORS.black, color: '#FFFFFF',
-                            '&:hover': { backgroundColor: '#222' },
+                            '&:hover': { backgroundColor: '#202124' },
                             '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' },
                           }}
                         >
@@ -1212,8 +1205,8 @@ export default function SuperAdminInstitutionRequests() {
                           fontFamily: fontStack, fontWeight: 600, fontSize: 13,
                           textTransform: 'none', borderRadius: '10px',
                           py: 1.2,
-                          backgroundColor: '#ef4444', color: '#FFFFFF',
-                          '&:hover': { backgroundColor: '#dc2626' },
+                          backgroundColor: '#3c4043', color: '#FFFFFF',
+                          '&:hover': { backgroundColor: '#222' },
                         }}
                         onClick={() => openRevokeDialog(request)}
                       >
@@ -1331,10 +1324,12 @@ export default function SuperAdminInstitutionRequests() {
                           size="small"
                           sx={{
                             fontFamily: fontStack,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            borderRadius: '999px',
                             height: 24,
+                            px: 1,
+                            textTransform: 'none',
                             ...getStatusChipSx(request.status),
                           }}
                         />
@@ -1394,10 +1389,10 @@ export default function SuperAdminInstitutionRequests() {
             {activeTab === 'pending' && currentMenuRequest?.status !== "PENDING_VERIFICATION" && (
               <>
                 <MenuItem onClick={() => { openApproveDialog(currentMenuRequest); handleMenuClose(); }}>
-                  <ListItemIcon sx={{ minWidth: 'auto !important' }}><CheckCircleOutlineIcon fontSize="small" sx={{ color: '#10b981' }} /></ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 'auto !important' }}><CheckCircleOutlineIcon fontSize="small" sx={{ color: COLORS.black }} /></ListItemIcon>
                   <ListItemText primary="Approve Request" />
                 </MenuItem>
-                <MenuItem onClick={() => { openRejectDialog(currentMenuRequest); handleMenuClose(); }}>
+                <MenuItem onClick={() => { openRejectDialog(currentMenuRequest); handleMenuClose(); }} sx={{ color: '#ef4444' }}>
                   <ListItemIcon sx={{ minWidth: 'auto !important' }}><CloseIcon fontSize="small" sx={{ color: '#ef4444' }} /></ListItemIcon>
                   <ListItemText primary="Reject Request" />
                 </MenuItem>
@@ -1695,26 +1690,18 @@ export default function SuperAdminInstitutionRequests() {
               px: 3, py: 1,
               transition: 'all 0.2s ease',
               display: 'flex', gap: 1, alignItems: 'center',
-              ...(actionState === 'success' ? {
-                backgroundColor: '#EF4444',
-                color: '#FFFFFF',
-                border: '1.5px solid #EF4444'
-              } : {
-                border: '1.5px solid #EF4444',
-                color: '#EF4444',
-                backgroundColor: 'transparent',
-                '&:hover': { backgroundColor: '#FEF2F2', borderColor: '#DC2626' },
-              }),
-              '&.Mui-disabled': {
-                borderColor: actionState === 'success' ? '#EF4444' : '#E2E8F0',
-                color: actionState === 'success' ? '#FFFFFF' : '#94A3B8',
-                backgroundColor: actionState === 'success' ? '#EF4444' : 'transparent',
+              backgroundColor: actionState === 'success' ? '#10b981' : COLORS.black,
+              color: '#FFFFFF',
+              '&:hover': { backgroundColor: actionState === 'success' ? '#10b981' : '#222' },
+              '&.Mui-disabled': { 
+                backgroundColor: actionState === 'success' ? '#10b981' : '#E2E8F0', 
+                color: actionState === 'success' ? '#fff' : '#94A3B8' 
               },
             }}
           >
             {actionState === 'loading' && <CircularProgress size={16} color="inherit" />}
             {actionState === 'success' && <CheckIcon fontSize="small" />}
-            {actionState === 'idle' ? 'Reject Request' : actionState === 'loading' ? 'Rejecting...' : 'Rejected'}
+            {actionState === 'idle' ? 'Reject Request' : actionState === 'loading' ? 'Rejecting...' : 'Rejected!'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1770,8 +1757,8 @@ export default function SuperAdminInstitutionRequests() {
             disabled={actionState !== 'idle'}
             sx={{
               fontFamily: fontStack, fontWeight: 600, textTransform: 'none', borderRadius: COLORS.pillRadius,
-              px: 3, py: 1, backgroundColor: '#ef4444', color: '#FFFFFF',
-              '&:hover': { backgroundColor: '#dc2626' },
+              px: 3, py: 1, backgroundColor: '#3c4043', color: '#FFFFFF',
+              '&:hover': { backgroundColor: '#222' },
             }}
           >
             {actionState === 'loading' ? <CircularProgress size={16} color="inherit" /> : 'Revoke Access'}
@@ -1914,7 +1901,14 @@ export default function SuperAdminInstitutionRequests() {
         </DialogActions>
       </Dialog>
 
-      {/* ── Snackbar ───────────────────────────────────────────────── */}
+      {/* ── Alerts & Modals ─────────────────────────────────────────── */}
+      <SuccessActionModal 
+        open={successModal.open}
+        onClose={() => setSuccessModal(prev => ({ ...prev, open: false }))}
+        title={successModal.title}
+        description={successModal.description}
+      />
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

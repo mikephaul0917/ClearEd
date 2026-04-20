@@ -79,10 +79,17 @@ export const getClearanceRequirements = async (req: Request, res: Response) => {
     let stats: any[] = [];
     let totalMembers = 0;
     if (isOfficer && activeTerm) {
+      // Fetch all ClearanceRequests for the current term and organization
+      const allActiveRequests = await ClearanceRequest.find({ 
+          organizationId: new mongoose.Types.ObjectId(organizationId as string), 
+          termId: activeTerm._id 
+      }).select('_id');
+      const allRequestIds = allActiveRequests.map(r => r._id);
+
       stats = await ClearanceSubmission.aggregate([
         { $match: { 
             organizationId: new mongoose.Types.ObjectId(organizationId as string),
-            clearanceRequestId: { $in: requestIds } // All requests in this term
+            clearanceRequestId: { $in: allRequestIds } // All requests from all students in this term
         } },
         { $group: { _id: { requirementId: "$clearanceRequirementId", status: "$status" }, count: { $sum: 1 } } }
       ]);

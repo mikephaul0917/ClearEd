@@ -76,6 +76,7 @@ export interface ClearanceRequirementCardProps {
         pending: number;
         approved: number;
         rejected: number;
+        resubmission_required?: number;
         totalMembers?: number;
     };
     dueDate?: string;
@@ -292,10 +293,10 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                     <Box key={comment._id} sx={{ display: "flex", gap: 2 }}>
                                         <Avatar
                                             src={getAbsoluteUrl(avatarSrc)}
-                                            sx={{ 
-                                                width: 32, 
-                                                height: 32, 
-                                                bgcolor: "#5f6368", 
+                                            sx={{
+                                                width: 32,
+                                                height: 32,
+                                                bgcolor: "#5f6368",
                                                 fontSize: "0.75rem",
                                                 fontWeight: 700
                                             }}
@@ -322,15 +323,15 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                     )}
                     <ClickAwayListener onClickAway={() => { if (!newComment.trim()) setIsCommentFocused(false); }}>
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mt: 1 }}>
-                            <Avatar 
-                                src={getAbsoluteUrl(currentUser?.avatarUrl)} 
-                                sx={{ 
-                                    width: 32, 
-                                    height: 32, 
-                                    bgcolor: "#5f6368", 
+                            <Avatar
+                                src={getAbsoluteUrl(currentUser?.avatarUrl)}
+                                sx={{
+                                    width: 32,
+                                    height: 32,
+                                    bgcolor: "#5f6368",
                                     fontSize: "0.75rem",
                                     fontWeight: 700,
-                                    mt: 0.5 
+                                    mt: 0.5
                                 }}
                             >
                                 {getInitials(currentUser?.fullName || currentUser?.firstName, user?.email)}
@@ -477,10 +478,10 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                         <Box display="flex" gap={3} alignItems="center">
                             <Avatar
                                 src={getAbsoluteUrl(author?.avatarUrl)}
-                                sx={{ 
-                                    bgcolor: "#5f6368", 
-                                    width: 40, 
-                                    height: 40, 
+                                sx={{
+                                    bgcolor: "#5f6368",
+                                    width: 40,
+                                    height: 40,
                                     fontSize: "0.875rem",
                                     fontWeight: 700
                                 }}
@@ -790,35 +791,40 @@ const ClearanceRequirementCard: React.FC<ClearanceRequirementCardProps> = ({
                                 )}
                             </Box>
                             {/* Right Side: Stats Block */}
-                            {type !== 'announcement' && !isAnnouncement && type !== 'material' && (
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    gap: { xs: 3, sm: 4 }, 
-                                    pl: { xs: 0, md: 4 }, 
-                                    pr: { xs: 0, md: 2 }, 
-                                    pt: { xs: 2, md: 0 }, 
-                                    height: 'fit-content',
-                                    borderTop: { xs: '1px solid #e0e0e0', md: 'none' },
-                                    justifyContent: { xs: 'space-around', md: 'flex-start' }
-                                }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #e0e0e0' }, pl: { xs: 0, md: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
-                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
-                                            {stats?.approved || 0}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-                                            Handed in
-                                        </Typography>
+                            {type !== 'announcement' && !isAnnouncement && type !== 'material' && stats && (() => {
+                                const handedIn = (stats?.pending || 0) + (stats?.approved || 0) + (stats?.rejected || 0) + (stats?.resubmission_required || 0);
+                                const assignedCount = Math.max(0, (stats?.totalMembers || 0) - handedIn);
+                                
+                                return (
+                                    <Box sx={{
+                                        display: 'flex',
+                                        gap: { xs: 3, sm: 4 },
+                                        pl: { xs: 0, md: 4 },
+                                        pr: { xs: 0, md: 2 },
+                                        pt: { xs: 2, md: 0 },
+                                        height: 'fit-content',
+                                        borderTop: { xs: '1px solid #e0e0e0', md: 'none' },
+                                        justifyContent: { xs: 'space-around', md: 'flex-start' }
+                                    }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #e0e0e0' }, pl: { xs: 0, md: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
+                                            <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
+                                                {handedIn}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+                                                Handed in
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: { xs: 2, sm: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
+                                            <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
+                                                {assignedCount}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+                                                Assigned
+                                            </Typography>
+                                        </Box>
                                     </Box>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid #e0e0e0', pl: { xs: 2, sm: 3 }, alignItems: { xs: 'center', md: 'flex-start' } }}>
-                                        <Typography variant="h2" sx={{ fontWeight: 400, color: "#3c4043", mb: 0.5, lineHeight: 1, fontSize: { xs: '2rem', sm: '2.5rem' } }}>
-                                            {stats?.pending || 0}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: "#5f6368", fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-                                            Assigned
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            )}
+                                );
+                            })()}
 
                         </Box>
 

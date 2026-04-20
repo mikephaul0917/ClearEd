@@ -13,6 +13,8 @@ export const getComments = async (req: Request, res: Response) => {
     }
 
     const { isPrivate, studentId } = req.query;
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
 
     const query: any = { requirementId };
 
@@ -20,6 +22,24 @@ export const getComments = async (req: Request, res: Response) => {
       if (!studentId) {
         return res.status(400).json({ message: "studentId is required for private comments" });
       }
+      
+      // Enforce privacy: Only the student themselves or an officer/admin can access these private comments
+      if (studentId !== userId && userRole !== 'admin' && userRole !== 'super_admin') {
+          // Need to check if user is an officer in the organization
+          const mongoose = require('mongoose');
+          const OrganizationMember = require('../models/OrganizationMember').default;
+          
+          const member = await OrganizationMember.findOne({
+              organizationId: requirement.organizationId,
+              userId: new mongoose.Types.ObjectId(userId),
+              status: 'active'
+          });
+          
+          if (!member || member.role !== 'officer') {
+              return res.status(403).json({ message: "Not authorized to view these private comments" });
+          }
+      }
+
       query.isPrivate = true;
       query.studentId = studentId;
     } else {
@@ -62,6 +82,25 @@ export const createComment = async (req: Request, res: Response) => {
 
     if (isPrivate && !studentId) {
       return res.status(400).json({ message: "studentId is required for private comments" });
+    }
+
+    if (isPrivate) {
+      const userRole = (req as any).user?.role;
+      // Enforce privacy: Only the student themselves or an officer/admin can create a private comment for this studentId
+      if (studentId !== userId && userRole !== 'admin' && userRole !== 'super_admin') {
+          const mongoose = require('mongoose');
+          const OrganizationMember = require('../models/OrganizationMember').default;
+          
+          const member = await OrganizationMember.findOne({
+              organizationId: requirement.organizationId,
+              userId: new mongoose.Types.ObjectId(userId),
+              status: 'active'
+          });
+          
+          if (!member || member.role !== 'officer') {
+              return res.status(403).json({ message: "Not authorized to create private comments for this student" });
+          }
+      }
     }
 
     const newComment = await Comment.create({

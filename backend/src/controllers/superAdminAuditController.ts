@@ -19,7 +19,7 @@ export const getAuditLogs = async (req: Request, res: Response) => {
 
     // Calculate date range based on dateRange
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | null = null;
     
     switch (dateRange) {
       case '1d':
@@ -37,12 +37,18 @@ export const getAuditLogs = async (req: Request, res: Response) => {
       case '1y':
         startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         break;
+      case 'all':
+        startDate = null;
+        break;
       default:
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     }
 
     // Build filter object
-    const filter: any = { createdAt: { $gte: startDate } };
+    const filter: any = {};
+    if (startDate) {
+      filter.createdAt = { $gte: startDate };
+    }
     
     if (institutionId) {
       filter.institutionId = institutionId;
@@ -53,11 +59,13 @@ export const getAuditLogs = async (req: Request, res: Response) => {
     }
     
     if (severity) {
-      filter.severity = severity;
+      const severities = (severity as string).split(',');
+      filter.severity = severities.length > 1 ? { $in: severities } : severities[0];
     }
     
     if (category) {
-      filter.category = category;
+      const categories = (category as string).split(',');
+      filter.category = categories.length > 1 ? { $in: categories } : categories[0];
     }
 
     // Add search functionality
@@ -136,7 +144,7 @@ export const exportAuditLogs = async (req: Request, res: Response) => {
 
     // Calculate date range
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | null = null;
     
     switch (dateRange) {
       case '1d':
@@ -154,12 +162,18 @@ export const exportAuditLogs = async (req: Request, res: Response) => {
       case '1y':
         startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         break;
+      case 'all':
+        startDate = null;
+        break;
       default:
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     // Build filter object
-    const filter: any = { createdAt: { $gte: startDate } };
+    const filter: any = {};
+    if (startDate) {
+      filter.createdAt = { $gte: startDate };
+    }
     
     if (institutionId) {
       filter.institutionId = institutionId;
@@ -170,11 +184,13 @@ export const exportAuditLogs = async (req: Request, res: Response) => {
     }
     
     if (severity) {
-      filter.severity = severity;
+      const severities = (severity as string).split(',');
+      filter.severity = severities.length > 1 ? { $in: severities } : severities[0];
     }
     
     if (category) {
-      filter.category = category;
+      const categories = (category as string).split(',');
+      filter.category = categories.length > 1 ? { $in: categories } : categories[0];
     }
 
     // Add search functionality
@@ -413,7 +429,7 @@ export const getAuditStats = async (req: Request, res: Response) => {
 
     // Calculate date range
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | null = null;
     
     switch (dateRange) {
       case '1d':
@@ -431,8 +447,17 @@ export const getAuditStats = async (req: Request, res: Response) => {
       case '1y':
         startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         break;
+      case 'all':
+        startDate = null;
+        break;
       default:
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+    
+    // Build filter for count/aggregate
+    const baseFilter: any = {};
+    if (startDate) {
+      baseFilter.createdAt = { $gte: startDate };
     }
 
     // Get comprehensive audit statistics
@@ -445,19 +470,19 @@ export const getAuditStats = async (req: Request, res: Response) => {
       uniqueUsers,
       uniqueIPs
     ] = await Promise.all([
-      AuditLog.countDocuments({ createdAt: { $gte: startDate } }),
-      AuditLog.countDocuments({ createdAt: { $gte: startDate }, severity: 'critical' }),
-      AuditLog.countDocuments({ createdAt: { $gte: startDate }, category: 'security' }),
-      AuditLog.countDocuments({ createdAt: { $gte: startDate }, action: 'LOGIN_FAILED' }),
-      AuditLog.countDocuments({ createdAt: { $gte: startDate }, category: 'admin' }),
-      AuditLog.distinct('userId', { createdAt: { $gte: startDate } }),
-      AuditLog.distinct('ipAddress', { createdAt: { $gte: startDate } })
+      AuditLog.countDocuments(baseFilter),
+      AuditLog.countDocuments({ ...baseFilter, severity: 'critical' }),
+      AuditLog.countDocuments({ ...baseFilter, severity: { $in: ['high', 'critical'] } }),
+      AuditLog.countDocuments({ ...baseFilter, action: 'LOGIN_FAILED' }),
+      AuditLog.countDocuments({ ...baseFilter, category: { $in: ['user_management', 'organization_management', 'institution_management'] } }),
+      AuditLog.distinct('userId', baseFilter),
+      AuditLog.distinct('ipAddress', baseFilter)
     ]);
 
     // Get action breakdown
     const actionBreakdown = await AuditLog.aggregate([
       {
-        $match: { createdAt: { $gte: startDate } }
+        $match: baseFilter
       },
       {
         $group: {
@@ -471,7 +496,7 @@ export const getAuditStats = async (req: Request, res: Response) => {
     // Get severity breakdown
     const severityBreakdown = await AuditLog.aggregate([
       {
-        $match: { createdAt: { $gte: startDate } }
+        $match: baseFilter
       },
       {
         $group: {

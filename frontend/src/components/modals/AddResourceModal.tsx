@@ -93,7 +93,7 @@ const AddResourceModal: React.FC<AddResourceModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "24px",
+          borderRadius: "8px",
           width: "100%",
           maxWidth: "500px",
           p: 2,
@@ -185,7 +185,7 @@ const AddResourceModal: React.FC<AddResourceModalProps> = ({
                       </InputAdornment>
                     ),
                     sx: {
-                      borderRadius: '12px',
+                      borderRadius: '4px',
                       height: '56px',
                       fontSize: '0.95rem',
                       '& .MuiOutlinedInput-notchedOutline': {
@@ -210,7 +210,7 @@ const AddResourceModal: React.FC<AddResourceModalProps> = ({
                 variant="contained"
                 disabled={!url.trim()}
                 sx={{
-                  borderRadius: '100px',
+                  borderRadius: '4px',
                   py: 2,
                   bgcolor: url.trim() ? '#3c4043' : '#e8eaed',
                   color: url.trim() ? '#FFF' : '#9aa0a6',

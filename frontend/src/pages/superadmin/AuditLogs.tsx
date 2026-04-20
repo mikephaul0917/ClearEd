@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getInitials } from '../../utils/avatarUtils';
 import {
   Box,
   Typography,
@@ -21,6 +22,7 @@ import {
   MenuItem,
   CircularProgress,
   Dialog,
+  DialogTitle,
   DialogContent,
   Tabs,
   Tab
@@ -77,7 +79,7 @@ interface AuditLog {
   institutionName?: string;
   action: string;
   resource: string;
-  details: string;
+  details: string | any;
   ipAddress: string;
   userAgent: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -106,7 +108,7 @@ export default function AuditLogs() {
     action: '',
     severity: '',
     category: '',
-    dateRange: '7d'
+    dateRange: 'all'
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -115,6 +117,8 @@ export default function AuditLogs() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const fetchAuditLogs = useCallback(async (isFullLoad: boolean = false) => {
     setLoading(true);
@@ -136,7 +140,7 @@ export default function AuditLogs() {
       // Ensure we match the backend response shape
       const fetchedLogs = response.data?.logs || response.logs || [];
       const pagination = response.data?.pagination || response.pagination || { totalPages: 1, total: 0 };
-      
+
       setLogs(fetchedLogs);
       setTotalPages(pagination.totalPages);
       setTotalLogs(pagination.total);
@@ -144,14 +148,12 @@ export default function AuditLogs() {
       setError(err.response?.data?.message || 'Failed to fetch audit logs');
       console.error('Error fetching audit logs:', err);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-        setIsInitialLoad(false);
-      }, 600);
+      setLoading(false);
+      setIsInitialLoad(false);
     }
   }, [filters, page, searchTerm]);
 
-  const fetchInstitutions = async () => {
+  const fetchInstitutions = useCallback(async () => {
     try {
       const response = await superAdminService.getInstitutions();
       // Handle different possible response structures
@@ -161,11 +163,25 @@ export default function AuditLogs() {
       console.error('Error fetching institutions:', err);
       setInstitutions([]);
     }
-  };
+  }, []);
+
+  const fetchAuditStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const response = await superAdminService.getAuditStats({ dateRange: 'all' });
+      const data = response.data || response;
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching audit stats:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchInstitutions();
-  }, []);
+    fetchAuditStats();
+  }, [fetchAuditStats, fetchInstitutions]);
 
   useEffect(() => {
     fetchAuditLogs(isInitialLoad);
@@ -175,14 +191,14 @@ export default function AuditLogs() {
     setTabValue(newValue);
     let category = '';
     let severity = '';
-    
+
     if (newValue === 1) {
-      category = 'security';
+      category = ''; // Treat all high/critical severity items as alerts
       severity = 'high,critical';
     } else if (newValue === 2) {
-      category = 'authentication';
+      category = 'auth';
     } else if (newValue === 3) {
-      category = 'admin,user_management,institution_management';
+      category = 'user_management,organization_management,institution_management';
     }
 
     setFilters(prev => ({ ...prev, category, severity }));
@@ -268,33 +284,34 @@ export default function AuditLogs() {
 
   // --- SKELETONS (Matching Actual Component Layout) ---
   const TabSkeleton = () => (
-    <Box sx={{ 
-      borderBottom: 1, 
+    <Box sx={{
+      borderBottom: 1,
       borderColor: "divider",
       mb: 4,
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center'
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      width: '100%'
     }}>
-      <Box sx={{ display: 'flex' }}>
-        {[1, 2, 3, 4].map((i) => (
-          <Box key={i} sx={{ px: 3, py: 2 }}>
-            <Skeleton variant="text" width={80} height={20} />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        {[1, 2, 3].map((i) => (
+          <Box key={i} sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+            <Skeleton variant="text" width={isMobile ? 60 : 80} height={20} />
           </Box>
         ))}
       </Box>
-      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px', mb: 1 }} />
+      <Skeleton variant="rectangular" width={isMobile ? 44 : 48} height={isMobile ? 44 : 48} sx={{ borderRadius: '14px', mb: 1, flexShrink: 0 }} />
     </Box>
   );
 
   const FilterBarSkeleton = () => (
-    <Box sx={{ 
-      mb: 3, 
-      display: 'flex', 
+    <Box sx={{
+      mb: 3,
+      display: 'flex',
       flexDirection: { xs: 'column', sm: 'row' },
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      gap: 2 
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 2
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Skeleton variant="circular" width={24} height={24} />
@@ -312,13 +329,13 @@ export default function AuditLogs() {
       p: 3, borderRadius: COLORS.cardRadius, bgcolor: '#FFFFFF',
       border: `1px solid ${COLORS.border}`, mb: 3
     }}>
-      <Box sx={{ 
-        display: 'grid', 
+      <Box sx={{
+        display: 'grid',
         gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
-        gap: 1.5, mb: 3 
+        gap: 1.5, mb: 3
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
-          <Box key={i} sx={{ 
+          <Box key={i} sx={{
             p: 2.5, bgcolor: '#F8FAFC', borderRadius: '14px', minHeight: 85,
             gridColumn: { xs: i === 5 ? 'span 2' : 'span 1', sm: 'span 1' }
           }}>
@@ -327,10 +344,10 @@ export default function AuditLogs() {
           </Box>
         ))}
       </Box>
-      <Box sx={{ 
-        display: 'grid', 
+      <Box sx={{
+        display: 'grid',
         gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
-        gap: 3, px: 2 
+        gap: 3, px: 2
       }}>
         {[1, 2, 3, 4, 5].map((i) => (
           <Box key={i}>
@@ -409,12 +426,19 @@ export default function AuditLogs() {
         {/* Action & Participant Column */}
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
           <Box sx={{ position: 'relative', flexShrink: 0 }}>
-            <Avatar 
-              sx={{ width: { xs: 38, sm: 44 }, height: { xs: 38, sm: 44 }, bgcolor: COLORS.black, color: '#FFF', fontSize: { xs: 14, sm: 16 }, fontWeight: 800 }}
+            <Avatar
+              sx={{ 
+                width: { xs: 38, sm: 44 }, 
+                height: { xs: 38, sm: 44 }, 
+                bgcolor: '#5f6368', // Matching Sidebar
+                color: '#FFF', 
+                fontSize: { xs: 13, sm: 14 }, // Matching Sidebar profile font size
+                fontWeight: 800 
+              }}
             >
-              {log.userName?.[0] || 'S'}
+              {getInitials(log.userName || log.userEmail)}
             </Avatar>
-            <Box sx={{ 
+            <Box sx={{
               position: 'absolute', bottom: -2, right: -2, bgcolor: '#FFF', borderRadius: '50%', p: 0.3,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
@@ -423,13 +447,13 @@ export default function AuditLogs() {
             </Box>
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ 
+            <Typography sx={{
               fontWeight: 800, fontSize: { xs: 13, sm: 15 }, color: '#1E293B', lineHeight: 1.2,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
             }}>
               {log.action.replace(/_/g, ' ').toLowerCase()}
             </Typography>
-            <Typography sx={{ 
+            <Typography sx={{
               fontSize: { xs: 11, sm: 13 }, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
             }}>
@@ -453,8 +477,8 @@ export default function AuditLogs() {
         >
           Details
         </Button>
-        <IconButton 
-          sx={{ display: { xs: 'flex', md: 'none' }, bgcolor: '#F1F5F9', p: 1 }} 
+        <IconButton
+          sx={{ display: { xs: 'flex', md: 'none' }, bgcolor: '#F1F5F9', p: 1 }}
           onClick={() => { setSelectedLog(log); setDetailsOpen(true); }}
         >
           <MoreHoriz sx={{ fontSize: 20 }} />
@@ -464,11 +488,11 @@ export default function AuditLogs() {
   };
 
   return (
-    <Box sx={{ 
-      px: { xs: 2, sm: 4, md: 5 }, 
+    <Box sx={{
+      px: { xs: 2, sm: 4, md: 5 },
       pb: { xs: 2, sm: 4, md: 5 },
       pt: 0,
-      bgcolor: '#F9FAFB', 
+      bgcolor: '#F9FAFB',
       minHeight: '100vh',
       fontFamily: fontStack
     }}>
@@ -479,185 +503,201 @@ export default function AuditLogs() {
       )}
 
       {/* --- Tabs & Actions --- */}
-      {loading && isInitialLoad ? (
-        <TabSkeleton />
-      ) : (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'flex-end', // Align items to the bottom
-          borderBottom: 1,
-          borderColor: "divider",
-          mb: 4,
-          gap: { xs: 1.5, sm: 2 },
-          width: '100%'
-        }}>
-          <Tabs
-            value={tabValue}
-            onChange={(_, v) => handleTabChange(v)}
-            textColor="primary"
-            variant="scrollable"
-            scrollButtons="auto"
-            TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        borderBottom: 1,
+        borderColor: "divider",
+        mb: 4,
+        gap: { xs: 1.5, sm: 2 },
+        width: '100%'
+      }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, v) => handleTabChange(v)}
+          textColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+          sx={{
+            mb: "-1px", 
+            "& .MuiTabs-indicator": {
+              bottom: 0,
+            },
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: { xs: "0.8rem", sm: "0.875rem" },
+              color: "#5f6368",
+              minWidth: { xs: 80, sm: 120 },
+              px: { xs: 1.5, sm: 3 },
+              py: 2,
+            },
+            "& .Mui-selected": {
+              color: "#0D9488 !important",
+              fontWeight: 800
+            }
+          }}
+        >
+          <Tab label={isMobile ? "System" : "System Records"} />
+          <Tab label={isMobile ? "Security" : "Security & Alerts"} />
+          <Tab label={isMobile ? "Access" : "Access Logs"} />
+          <Tab label={isMobile ? "Actions" : "Admin Actions"} />
+        </Tabs>
+
+        <Tooltip title="Export Logs">
+          <IconButton
+            onClick={handleExport}
             sx={{
-              mb: "-1px", // Overlap the parent border
-              "& .MuiTabs-indicator": {
-                bottom: 0,
-              },
-              "& .MuiTab-root": {
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "#5f6368",
-                minWidth: { xs: 'auto', sm: 120 },
-                px: { xs: 2, sm: 3 },
-                py: 2,
-              },
-              "& .Mui-selected": {
-                color: "#0D9488 !important",
-                fontWeight: 800
-              }
+              mb: 1,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: '14px',
+              bgcolor: '#FFF',
+              width: { xs: 44, sm: 48 },
+              height: { xs: 44, sm: 48 },
+              flexShrink: 0,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+              '&:hover': { bgcolor: '#F8FAFC', transform: 'translateY(-1px)' },
+              transition: 'all 0.2s'
             }}
           >
-            <Tab label="System Records" />
-            <Tab label="Security & Alerts" />
-            <Tab label="Access Logs" />
-            <Tab label="Admin Actions" />
-          </Tabs>
-
-          <Tooltip title="Export Logs">
-            <IconButton 
-              onClick={handleExport}
-              sx={{ 
-                mb: 1,
-                border: `1px solid ${COLORS.border}`, 
-                borderRadius: '14px',
-                bgcolor: '#FFF',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 },
-                flexShrink: 0,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                '&:hover': { bgcolor: '#F8FAFC', transform: 'translateY(-1px)' },
-                transition: 'all 0.2s'
-              }}
-            >
-              <Download sx={{ fontSize: { xs: 20, sm: 22 }, color: COLORS.textPrimary }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
+            <Download sx={{ fontSize: { xs: 20, sm: 22 }, color: COLORS.textPrimary }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
 
       {/* --- Consolidated Overview Card --- */}
-      {loading ? (
-        <OverviewSkeleton />
-      ) : (
-        <Card sx={{ 
-          borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`, 
-          boxShadow: 'none', mb: 3, overflow: 'visible'
-        }}>
-          <CardContent sx={{ p: 3 }}>
-            {/* Top Row: Metrics */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: 'repeat(2, 1fr)', 
-                sm: 'repeat(3, 1fr)', 
-                md: 'repeat(5, 1fr)' 
-              },
-              gap: 1.5, 
-              mb: 3
-            }}>
-              {[
-                { label: 'TOTAL PLATFORM LOGS', value: totalLogs.toLocaleString() },
-                { label: 'SECURITY ALERTS', value: logs.filter(l => l.category === 'security').length },
-                { label: 'ACTIVE INSTITUTIONS', value: institutions.length, color: COLORS.darkTeal },
-                { label: 'CRITICAL ERRORS', value: logs.filter(l => l.severity === 'critical').length },
-                { label: 'SYSTEM HEALTH', value: '100%', color: COLORS.darkTeal }
-              ].map((stat, idx, arr) => (
-                <Box 
-                  key={stat.label}
-                  sx={{ 
-                    p: { xs: 2, sm: 2.5 }, bgcolor: '#F8FAFC', borderRadius: '14px',
-                    display: 'flex', flexDirection: 'column', gap: 0.2,
-                    position: 'relative',
-                    border: '1px solid transparent',
-                    transition: 'all 0.2s ease',
-                    '&:hover': { bgcolor: '#F1F5F9', borderColor: COLORS.border },
-                    gridColumn: { xs: idx === 4 ? 'span 2' : 'span 1', sm: 'span 1' }
-                  }}
-                >
+      <Card sx={{
+        borderRadius: COLORS.cardRadius, border: `1px solid ${COLORS.border}`,
+        boxShadow: 'none', mb: 3, overflow: 'visible'
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          {/* Top Row: Metrics */}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(5, 1fr)'
+            },
+            gap: 1.5,
+            mb: 3
+          }}>
+            {[
+              { label: 'TOTAL PLATFORM LOGS', value: statsLoading ? '...' : (stats?.totalLogs || 0).toLocaleString() },
+              { label: 'SECURITY ALERTS', value: statsLoading ? '...' : (stats?.securityEvents || 0).toLocaleString() },
+              { label: 'ACTIVE INSTITUTIONS', value: institutions.length },
+              { label: 'CRITICAL ERRORS', value: statsLoading ? '...' : (stats?.criticalEvents || 0).toLocaleString() },
+              { 
+                label: 'SYSTEM HEALTH', 
+                value: statsLoading ? '...' : (Math.max(0, 100 - ((stats?.criticalEvents || 0) * 5)) + '%'),
+                color: (stats?.criticalEvents || 0) > 0 ? '#ef4444' : '#1E293B'
+              }
+            ].map((stat, idx, arr) => (
+              <Box
+                key={stat.label}
+                sx={{
+                  p: { xs: 2, sm: 2.5 }, bgcolor: '#F8FAFC', borderRadius: '14px',
+                  display: 'flex', flexDirection: 'column', gap: 0.2,
+                  position: 'relative',
+                  border: '1px solid transparent',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { bgcolor: '#F1F5F9', borderColor: COLORS.border },
+                  gridColumn: { xs: idx === 4 ? 'span 2' : 'span 1', sm: 'span 1' }
+                }}
+              >
+                {loading && isInitialLoad ? (
+                  <Skeleton variant="text" width="60%" height={28} />
+                ) : (
                   <Typography sx={{ fontSize: { xs: 18, sm: 24 }, fontWeight: 800, color: stat.color || '#1E293B' }}>
                     {stat.value}
                   </Typography>
+                )}
+                {loading && isInitialLoad ? (
+                  <Skeleton variant="text" width="40%" height={14} />
+                ) : (
                   <Typography sx={{ fontSize: { xs: 9, sm: 10 }, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: '0.05em' }}>
                     {stat.label}
                   </Typography>
-                  {/* Vertical Divider for desktop only */}
-                  {idx < arr.length - 1 && (
-                    <Box sx={{ 
-                      display: { xs: 'none', md: 'block' },
-                      position: 'absolute', right: -6, top: '20%', bottom: '20%',
-                      width: '1px', bgcolor: COLORS.border, zIndex: 1
-                    }} />
-                  )}
-                </Box>
-              ))}
-            </Box>
+                )}
+                {/* Vertical Divider for desktop only */}
+                {idx < arr.length - 1 && (
+                  <Box sx={{
+                    display: { xs: 'none', md: 'block' },
+                    position: 'absolute', right: -6, top: '20%', bottom: '20%',
+                    width: '1px', bgcolor: COLORS.border, zIndex: 1
+                  }} />
+                )}
+              </Box>
+            ))}
+          </Box>
 
-            {/* Bottom Row: Context */}
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: '1fr 1fr', 
-                sm: 'repeat(3, 1fr)', 
-                md: 'repeat(5, 1fr)' 
+          {/* Bottom Row: Context */}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr 1fr',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(5, 1fr)'
+            },
+            px: { xs: 1, md: 2 },
+            gap: 3
+          }}>
+            {[
+              { 
+                label: 'MONITORING', 
+                value: loading ? 'SYNCING' : (error ? 'OFFLINE' : 'ACTIVE'),
+                color: error ? '#ef4444' : (loading ? '#f59e0b' : '#1E293B')
               },
-              px: { xs: 1, md: 2 }, 
-              gap: 3
-            }}>
-              {[
-                { label: 'MONITORING', value: 'PLATFORM WIDE', color: COLORS.darkTeal },
-                { label: 'LAST ACTIVITY', value: logs[0] ? formatDate(logs[0].createdAt) + ', Today' : '—' },
-                { label: 'DATABASE', value: 'MONGODB' },
-                { label: 'ENVIRONMENT', value: 'PRODUCTION' },
-                { label: 'ADMINISTRATOR', value: 'SUPER ADMIN' }
-              ].map((item) => (
-                <Box key={item.label}>
+              { label: 'LAST ACTIVITY', value: logs[0] ? formatDate(logs[0].createdAt) + ', Today' : '—' },
+              { label: 'DATABASE', value: 'MONGODB' },
+              { label: 'ENVIRONMENT', value: 'PRODUCTION' },
+              { label: 'ADMINISTRATOR', value: 'SUPER ADMIN' }
+            ].map((item) => (
+              <Box key={item.label}>
+                {loading && isInitialLoad ? (
+                  <Skeleton variant="text" width="50%" height={14} sx={{ mb: 0.5 }} />
+                ) : (
                   <Typography sx={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, mb: 0.5 }}>
                     {item.label}
                   </Typography>
+                )}
+                {loading && isInitialLoad ? (
+                  <Skeleton variant="text" width={80} height={20} />
+                ) : (
                   <Typography sx={{ fontSize: 14, fontWeight: 700, color: item.color || '#1E293B' }}>
                     {item.value}
                   </Typography>
-                </Box>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+                )}
+              </Box>
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* --- Search & Sort/Filter Bar --- */}
       {loading && isInitialLoad ? (
         <FilterBarSkeleton />
       ) : (
-        <Box sx={{ 
-          mb: 3, 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' }, 
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'stretch', sm: 'center' }, 
-          gap: 2 
+        <Box sx={{
+          mb: 3,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: 2
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <History sx={{ fontSize: 20, color: COLORS.textSecondary }} />
             <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Activity Logs</Typography>
           </Box>
 
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1.5, 
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
             width: { xs: '100%', sm: 'auto' }
           }}>
             <TextField
@@ -667,19 +707,19 @@ export default function AuditLogs() {
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: <Search sx={{ fontSize: 18, color: COLORS.textSecondary, mr: 1 }} />,
-                sx: { 
-                  borderRadius: '10px', 
-                  bgcolor: '#FFF', 
-                  fontSize: 13, 
-                  height: 36, 
+                sx: {
+                  borderRadius: '10px',
+                  bgcolor: '#FFF',
+                  fontSize: 13,
+                  height: 36,
                   minWidth: { xs: 'none', sm: 240 },
                   flex: 1
                 }
               }}
-              sx={{ 
+              sx={{
                 flex: 1,
                 width: 'auto',
-                '& .MuiOutlinedInput-notchedOutline': { 
+                '& .MuiOutlinedInput-notchedOutline': {
                   border: '1px solid transparent',
                   transition: 'border-color 0.2s',
                   borderColor: '#E2E8F0'
@@ -698,7 +738,7 @@ export default function AuditLogs() {
               variant="outlined"
               onClick={(e) => setFilterAnchorEl(e.currentTarget)}
               endIcon={<FilterIcon sx={{ fontSize: 18 }} />}
-              sx={{ 
+              sx={{
                 height: 36,
                 borderRadius: '10px',
                 px: { xs: 1.5, sm: 2 },
@@ -723,10 +763,10 @@ export default function AuditLogs() {
               open={Boolean(filterAnchorEl)}
               onClose={() => setFilterAnchorEl(null)}
               PaperProps={{
-                sx: { 
-                  mt: 1, 
-                  p: 1.5, 
-                  borderRadius: '16px', 
+                sx: {
+                  mt: 1,
+                  p: 1.5,
+                  borderRadius: '16px',
                   boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)',
                   minWidth: '240px',
                   border: '1px solid #F1F5F9'
@@ -738,8 +778,8 @@ export default function AuditLogs() {
               <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>INSTITUTION</Typography>
               <MenuItem onClick={() => { handleFilterChange('institution', ''); setFilterAnchorEl(null); }} sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.institution === '' ? 800 : 500, bgcolor: filters.institution === '' ? '#F1F5F9' : 'transparent', mb: 0.5 }}>All Institutions</MenuItem>
               {(Array.isArray(institutions) ? institutions : []).slice(0, 8).map(inst => (
-                <MenuItem 
-                  key={inst._id} 
+                <MenuItem
+                  key={inst._id}
                   onClick={() => { handleFilterChange('institution', inst._id); setFilterAnchorEl(null); }}
                   sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.institution === inst._id ? 800 : 500, bgcolor: filters.institution === inst._id ? '#F1F5F9' : 'transparent', mb: 0.5 }}
                 >
@@ -750,13 +790,13 @@ export default function AuditLogs() {
               <Divider sx={{ my: 1.5, opacity: 0.5 }} />
 
               <Typography sx={{ px: 2, py: 1, fontSize: 11, fontWeight: 800, color: COLORS.textSecondary, letterSpacing: '0.1em' }}>DATE RANGE</Typography>
-              {['1d', '7d', '30d'].map(range => (
-                <MenuItem 
+              {['1d', '7d', '30d', 'all'].map(range => (
+                <MenuItem
                   key={range}
                   onClick={() => { handleFilterChange('dateRange', range); setFilterAnchorEl(null); }}
                   sx={{ borderRadius: '10px', fontSize: 13, fontWeight: filters.dateRange === range ? 800 : 500, bgcolor: filters.dateRange === range ? '#F1F5F9' : 'transparent', mb: 0.5 }}
                 >
-                  Last {range === '1d' ? '24 Hours' : range === '7d' ? '7 Days' : '30 Days'}
+                  {range === 'all' ? 'All Time' : `Last ${range === '1d' ? '24 Hours' : range === '7d' ? '7 Days' : '30 Days'}`}
                 </MenuItem>
               ))}
             </Menu>
@@ -778,9 +818,9 @@ export default function AuditLogs() {
               return (
                 <React.Fragment key={log._id}>
                   {showMonth && (
-                    <Typography sx={{ 
-                      fontSize: 14, fontWeight: 800, color: COLORS.textSecondary, 
-                      mt: 4, mb: 2, px: 1, textTransform: 'capitalize' 
+                    <Typography sx={{
+                      fontSize: 14, fontWeight: 800, color: COLORS.textSecondary,
+                      mt: 4, mb: 2, px: 1, textTransform: 'capitalize'
                     }}>
                       {currentMonth}
                     </Typography>
@@ -791,33 +831,50 @@ export default function AuditLogs() {
             });
           })()
         ) : (
-          <Box sx={{ py: 10, textAlign: 'center', bgcolor: '#FFF', borderRadius: '16px', border: '1px dashed #E2E8F0' }}>
+          <Box sx={{
+            textAlign: 'center', py: 15, bgcolor: '#FFF', borderRadius: '24px',
+            border: '1px dashed #E2E8F0', mt: 2
+          }}>
             <History sx={{ fontSize: 48, color: '#E2E8F0', mb: 2 }} />
-            <Typography sx={{ fontWeight: 700, color: COLORS.textSecondary }}>No platform logs found matching your selection.</Typography>
+            <Typography sx={{ fontWeight: 700, color: COLORS.textPrimary, mb: 1 }}>
+              No platform logs found matching your selection.
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, maxWidth: 400, mx: 'auto', px: 3 }}>
+              Try adjusting your filters (Currently showing: <b>{tabValue === 0 ? 'All Records' : tabValue === 1 ? 'Security' : tabValue === 2 ? 'Access' : 'Admin Actions'}</b> from <b>{filters.dateRange === 'all' ? 'All Time' : filters.dateRange === '1d' ? 'Last 24h' : `Last ${filters.dateRange}`}</b>).
+            </Typography>
           </Box>
         )}
       </Box>
 
       {/* --- Pagination --- */}
       <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-        {loading ? (
+        {loading && isInitialLoad ? (
           <Skeleton variant="rectangular" width={240} height={44} sx={{ borderRadius: '40px' }} />
         ) : (
-          <Box sx={{ 
-            display: 'flex', gap: 1.5, alignItems: 'center', bgcolor: '#F1F5F9', px: 1, py: 0.5, borderRadius: '40px' 
+          <Box sx={{
+            display: 'flex', gap: 1.5, alignItems: 'center', bgcolor: '#F1F5F9', px: 1, py: 0.5, borderRadius: '40px'
           }}>
             <IconButton disabled={page === 1} onClick={() => setPage(page - 1)} sx={{ color: page === 1 ? '#CBD5E1' : COLORS.textSecondary }}>
               <ChevronLeft sx={{ fontSize: 20 }} />
             </IconButton>
-            {[...Array(totalPages)].slice(0, 5).map((_, i) => (
-              <Box key={i} onClick={() => setPage(i + 1)} sx={{
-                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                borderRadius: '12px', bgcolor: page === i + 1 ? COLORS.black : 'transparent', color: page === i + 1 ? '#FFF' : COLORS.textSecondary,
-                fontWeight: 800, fontSize: 13, transition: 'all 0.2s ease', '&:hover': { bgcolor: page === i + 1 ? COLORS.black : 'rgba(0,0,0,0.04)' }
-              }}>
-                {i + 1}
-              </Box>
-            ))}
+            
+            {(() => {
+              // Calculate a sliding window of 3 pages
+              // When user clicks 3, start becomes 3, showing 3, 4, 5
+              const start = Math.max(1, Math.min(page, totalPages - 2));
+              const visiblePages = [0, 1, 2].map(v => start + v).filter(p => p <= totalPages);
+              
+              return visiblePages.map((p) => (
+                <Box key={p} onClick={() => setPage(p)} sx={{
+                  width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  borderRadius: '12px', bgcolor: page === p ? COLORS.black : 'transparent', color: page === p ? '#FFF' : COLORS.textSecondary,
+                  fontWeight: 800, fontSize: 13, transition: 'all 0.2s ease', '&:hover': { bgcolor: page === p ? COLORS.black : 'rgba(0,0,0,0.04)' }
+                }}>
+                  {p}
+                </Box>
+              ));
+            })()}
+
             <IconButton disabled={page === totalPages} onClick={() => setPage(page + 1)} sx={{ color: page === totalPages ? '#CBD5E1' : COLORS.textSecondary }}>
               <ChevronRight sx={{ fontSize: 20 }} />
             </IconButton>
@@ -826,45 +883,95 @@ export default function AuditLogs() {
       </Box>
 
       {/* --- Details Dialog --- */}
-      <Dialog 
-        open={detailsOpen} 
-        onClose={() => setDetailsOpen(false)} 
-        maxWidth="sm" 
-        fullWidth 
-        PaperProps={{ sx: { borderRadius: '24px', p: 1 } }}
+      <Dialog
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '12px' } }}
       >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Log Details</DialogTitle>
         <DialogContent>
           {selectedLog && (
-            <Box sx={{ pt: 2 }}>
-              <Typography sx={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.02em', mb: 3 }}>Record Activity</Typography>
-              <Box sx={{ p: 3, borderRadius: '16px', bgcolor: '#F8FAFC', border: `1px solid ${COLORS.border}`, mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
+              <Box>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Action Context</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, p: 2, borderRadius: '8px', border: '1px solid ' + COLORS.border, backgroundColor: '#F8FAFC' }}>
                   {getActionIcon(selectedLog.action)}
                   <Box>
-                    <Typography sx={{ fontWeight: 900, fontSize: 16 }}>{selectedLog.action.replace(/_/g, ' ')}</Typography>
-                    <Typography sx={{ fontSize: 13, color: COLORS.textSecondary }}>Resource: {selectedLog.resource}</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: 16 }}>{selectedLog.action.replace(/_/g, ' ')}</Typography>
+                    <Typography sx={{ fontSize: 13, color: COLORS.textSecondary }}>{selectedLog.resource}</Typography>
+                  </Box>
+                  <Box sx={{ ml: 'auto' }}>
+                    <Chip 
+                      size="small" 
+                      label={selectedLog.severity.toUpperCase()} 
+                      sx={{ 
+                        fontWeight: 700, 
+                        fontSize: 10, 
+                        height: 20,
+                        bgcolor: selectedLog.severity === 'low' ? '#FEF9C3' : selectedLog.severity === 'medium' ? '#FCD34D' : undefined,
+                        color: selectedLog.severity === 'low' ? '#854D0E' : selectedLog.severity === 'medium' ? '#92400E' : undefined,
+                      }}
+                      color={selectedLog.severity !== 'low' && selectedLog.severity !== 'medium' ? getSeverityColor(selectedLog.severity) as any : undefined}
+                    />
                   </Box>
                 </Box>
-                <Divider sx={{ my: 2 }} />
-                <Grid container spacing={3}>
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: 10, fontWeight: 800, color: COLORS.textSecondary }}>INSTITUTION</Typography>
-                    <Typography sx={{ fontWeight: 700, fontSize: 14 }}>{selectedLog.institutionName || 'Platform Level'}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography sx={{ fontSize: 10, fontWeight: 800, color: COLORS.textSecondary }}>NETWORK ID</Typography>
-                    <Typography sx={{ fontWeight: 700, fontSize: 14, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>{selectedLog.ipAddress}</Typography>
-                  </Grid>
-                </Grid>
               </Box>
-              <Box sx={{ mb: 4 }}>
-                <Typography sx={{ fontSize: 10, fontWeight: 800, color: COLORS.textSecondary, mb: 1 }}>PAYLOAD DATA</Typography>
-                <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#1E293B', color: '#5eead4', fontSize: 12, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', whiteSpace: 'pre-wrap' }}>
-                  {selectedLog.details}
+
+              <Grid container spacing={3}>
+                <Grid item xs={6}>
+                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Institution</Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: 14 }}>{selectedLog.institutionName || 'Platform Level'}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Network</Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: 14, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif' }}>{selectedLog.ipAddress}</Typography>
+                  <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>Source IP</Typography>
+                </Grid>
+              </Grid>
+
+              <Divider />
+
+              <Box>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Activity Payload</Typography>
+                <Box sx={{
+                  mt: 1.5, p: 3, borderRadius: '12px', backgroundColor: '#F1F5F9',
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', fontSize: 12, overflowX: 'auto',
+                  border: '1px solid ' + COLORS.border,
+                  minHeight: 60,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  {typeof selectedLog.details === 'object' 
+                    ? <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(selectedLog.details, null, 2)}</pre>
+                    : (selectedLog.details || <Typography sx={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>No additional payload data available.</Typography>)
+                  }
                 </Box>
               </Box>
-              <Button fullWidth onClick={() => setDetailsOpen(false)} sx={{ bgcolor: COLORS.black, color: '#fff', py: 2, borderRadius: '12px', fontWeight: 800, '&:hover': { bgcolor: '#222' } }}>
-                Dismiss
+
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>User Agent</Typography>
+                <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, mt: 1, lineHeight: 1.5 }}>
+                  {selectedLog.userAgent || 'Unknown User Agent'}
+                </Typography>
+              </Box>
+
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => setDetailsOpen(false)}
+                sx={{
+                  mt: 2,
+                  bgcolor: COLORS.black,
+                  color: '#fff',
+                  borderRadius: '8px',
+                  py: 1.5,
+                  fontWeight: 600,
+                  '&:hover': { bgcolor: '#222' }
+                }}
+              >
+                Close Details
               </Button>
             </Box>
           )}

@@ -83,15 +83,15 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                             >
                                 <Box sx={{
                                     width: "100%",
-                                    maxWidth: { xs: "100%", sm: 340, md: 350 },
+                                    maxWidth: 350,
                                     mx: 'auto',
                                     aspectRatio: "1/1",
                                     position: "relative"
                                 }}>
                                     {/* Header Skeleton */}
                                     <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: { xs: "24px", sm: "32px" }, overflow: "hidden", bgcolor: "#FFFFFF", border: '1px solid #eaebec' }}>
-                                        <Box sx={{ height: "100%", display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: { xs: 4, sm: 6 } }}>
-                                            <Skeleton variant="circular" width={60} height={60} sx={{ bgcolor: "#eaebec", width: { xs: 48, sm: 60 }, height: { xs: 48, sm: 60 } }} />
+                                        <Box sx={{ height: "100%", display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: 6 }}>
+                                            <Skeleton variant="circular" width={60} height={60} sx={{ bgcolor: "#eaebec", width: 60, height: 60 }} />
                                         </Box>
                                     </Box>
 
@@ -99,11 +99,11 @@ const OrganizationBoard: React.FC<OrganizationBoardProps> = ({
                                     <Box sx={{
                                         position: "absolute",
                                         bottom: 0,
-                                        left: { xs: -4, sm: -6 },
-                                        right: { xs: -4, sm: -6 },
+                                        left: -6,
+                                        right: -6,
                                         bgcolor: "#FFFFFF",
-                                        p: { xs: "20px 16px 24px", sm: "24px 20px", md: "28px 24px" },
-                                        minHeight: { xs: "120px", sm: "auto" },
+                                        p: "18px 24px",
+                                        minHeight: 124,
                                         borderRadius: "24px",
                                         boxShadow: "0 12px 32px rgba(0,0,0,0.06)",
                                         display: "flex",

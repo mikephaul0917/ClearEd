@@ -47,7 +47,7 @@ const InstitutionRequestSchema: Schema = new Schema({
     required: [true, 'Academic domain is required'],
     trim: true,
     lowercase: true,
-    unique: true,
+    lowercase: true,
     validate: {
       validator: function(domain: string) {
         // Basic domain validation
@@ -104,7 +104,7 @@ const InstitutionRequestSchema: Schema = new Schema({
   status: {
     type: String,
     enum: ['PENDING_VERIFICATION', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'RETURNED_FOR_CLARIFICATION'],
-    default: 'PENDING_VERIFICATION',
+    default: 'PENDING_APPROVAL',
     index: true
   },
   verificationToken: {
@@ -145,6 +145,13 @@ const InstitutionRequestSchema: Schema = new Schema({
 // Indexes for performance and queries (academicDomain and status are automatically indexed by schema definitions)
 InstitutionRequestSchema.index({ createdAt: -1 });
 InstitutionRequestSchema.index({ verificationToken: 1 });
+InstitutionRequestSchema.index(
+  { academicDomain: 1 }, 
+  { 
+    unique: true, 
+    partialFilterExpression: { status: { $ne: 'REJECTED' } } 
+  }
+);
 
 // Virtual for formatted domain
 InstitutionRequestSchema.virtual('formattedDomain').get(function(this: IInstitutionRequest) {

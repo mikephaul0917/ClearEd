@@ -78,7 +78,7 @@ const InstitutionBentoCard = ({
     <Box sx={{
       p: { xs: 2.5, sm: 3 }, borderRadius: COLORS.cardRadius, bgcolor: COLORS.surface,
       border: `1px solid ${COLORS.border}`,
-      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+      boxShadow: '0 10px 30px -10px rgba(0,0,0,0.04), 0 4px 6px -1px rgba(0,0,0,0.02)',
       position: 'relative',
       height: '100%',
       display: 'flex',
@@ -87,12 +87,12 @@ const InstitutionBentoCard = ({
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       '&:hover': {
         transform: 'translateY(-4px)',
-        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.01)',
+        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12), 0 10px 15px -5px rgba(0,0,0,0.05)',
         borderColor: 'rgba(14, 116, 144, 0.3)'
       }
     }}>
       <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar sx={{
               width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 },
@@ -128,20 +128,26 @@ const InstitutionBentoCard = ({
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', alignSelf: { xs: 'flex-end', md: 'center' }, flexShrink: 0 }}>
-            <Chip
-              label={inst.status.charAt(0).toUpperCase() + inst.status.slice(1)}
-              size="small"
-              sx={{
-                fontWeight: 700,
-                fontSize: 10,
-                bgcolor: currentStatus.bg,
-                color: currentStatus.color,
-                height: 20,
-                textTransform: 'uppercase',
-                maxWidth: 'fit-content'
-              }}
-            />
+          <Box sx={{ 
+            px: 1.5, 
+            py: 0.5, 
+            borderRadius: '999px', 
+            bgcolor: currentStatus.bg, 
+            color: currentStatus.color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 'fit-content'
+          }}>
+            <Typography sx={{ 
+              fontSize: 10, 
+              fontWeight: 800, 
+              fontFamily: fontStack,
+              lineHeight: 1,
+              letterSpacing: '0.02em'
+            }}>
+              {inst.status.charAt(0).toUpperCase() + inst.status.slice(1).toLowerCase()}
+            </Typography>
           </Box>
         </Box>
 
@@ -162,14 +168,20 @@ const InstitutionBentoCard = ({
         </Typography>
       </Box>
 
-      <Box sx={{ pt: 2, borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: { xs: 'column', xl: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', xl: 'center' }, gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden', width: '100%' }}>
-          <Language sx={{ fontSize: 14, color: COLORS.teal, flexShrink: 0 }} />
-          <Typography noWrap sx={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 700 }}>
-            {inst.domain}
-          </Typography>
+      <Box sx={{ 
+        pt: 2, 
+        borderTop: '1px solid #F1F5F9', 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' }, 
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        gap: 2 
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: COLORS.textSecondary }}>
+          <Language sx={{ fontSize: 16 }} />
+          <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{inst.domain}</Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', xl: 'auto' }, justifyContent: { xs: 'space-between', xl: 'flex-end' } }}>
+        <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: 'flex-end' }}>
           <Button
             onClick={() => onDetails(inst)}
             size="small"
@@ -186,22 +198,6 @@ const InstitutionBentoCard = ({
             }}
           >
             Details
-          </Button>
-          <Button
-            onClick={() => onManageUsers(inst)}
-            size="small"
-            variant="contained"
-            disableElevation
-            fullWidth={false}
-            sx={{
-              textTransform: 'none', fontWeight: 800, borderRadius: '10px',
-              bgcolor: COLORS.black, color: '#FFF', px: { xs: 1.5, sm: 2 },
-              fontSize: 11,
-              flexGrow: { xs: 1, xl: 0 },
-              '&:hover': { bgcolor: '#000' }
-            }}
-          >
-            Manage
           </Button>
         </Box>
       </Box>
@@ -352,11 +348,14 @@ export default function InstitutionMonitoring() {
 
   if (loading) {
     return (
-      <Box sx={{ px: isSmallMobile ? 3 : 5, py: isSmallMobile ? 3 : 5, pt: 0, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+      <Box sx={{ px: isSmallMobile ? 3 : 5, pb: isSmallMobile ? 3 : 5, pt: 2, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
         {/* Header Skeleton */}
         <Box sx={{ mb: { xs: 4, sm: 6 } }}>
-          <Skeleton variant="text" width={320} height={48} sx={{ mb: 1 }} />
-          <Skeleton variant="text" width="60%" height={24} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+            <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: 2, bgcolor: '#eaebec' }} />
+            <Skeleton variant="text" width={280} height={48} />
+          </Box>
+          <Skeleton variant="text" width="60%" height={24} sx={{ mt: 1 }} />
         </Box>
 
         {/* Stats Skeleton */}
@@ -394,31 +393,44 @@ export default function InstitutionMonitoring() {
   return (
     <Box sx={{
       px: { xs: 2.5, sm: 4, md: 5 },
-      py: { xs: 4, sm: 5, md: 6 },
-      pt: 0,
+      pb: { xs: 4, sm: 5, md: 6 },
+      pt: 2,
       bgcolor: COLORS.pageBg,
       minHeight: '100vh',
       fontFamily: fontStack
     }}>
 
       {/* ── Page Header ────────────────────────────────────────────── */}
-      <Box sx={{ mb: { xs: 4, md: 6 } }}>
+      <Box sx={{ mb: { xs: 4, sm: 6 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+          <Box sx={{
+            bgcolor: '#F1F5F9',
+            color: '#475569',
+            p: { xs: 0.5, sm: 1 },
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Business sx={{ fontSize: { xs: 24, sm: 28 } }} />
+          </Box>
+          <Typography sx={{
+            fontFamily: fontStack,
+            fontWeight: 600,
+            fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+            color: '#000',
+            lineHeight: 1.2,
+          }}>
+            Institution Monitoring
+          </Typography>
+        </Box>
         <Typography sx={{
-          fontWeight: 800,
-          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
-          color: COLORS.textPrimary,
-          letterSpacing: '-0.06em',
-          lineHeight: 1.1
-        }}>
-          Institution Monitoring
-        </Typography>
-        <Typography sx={{
-          fontSize: { xs: 12, sm: 14, md: 15 },
-          color: COLORS.textSecondary,
-          mt: 1.5,
-          fontWeight: 500,
-          lineHeight: 1.5,
-          maxWidth: '800px'
+          fontFamily: fontStack,
+          fontSize: { xs: '0.8rem', sm: '0.95rem' },
+          fontWeight: 400,
+          color: '#6B7280',
+          maxWidth: 800,
+          lineHeight: 1.5
         }}>
           Comprehensive oversight and administrative management of all integrated academic domains.
         </Typography>
@@ -505,7 +517,7 @@ export default function InstitutionMonitoring() {
             gap: 2.5, mb: 4
           }}>
             <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.75px' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.25px' }}>
                 Institution Directory
               </Typography>
             </Box>
@@ -566,14 +578,19 @@ export default function InstitutionMonitoring() {
                     key={status}
                     onClick={() => handleFilterChange('status', status)}
                     sx={{
-                      flex: { xs: '1 0 100px', md: 'none' },
-                      textTransform: 'none', px: 2.5, py: 1.25, borderRadius: '12px', fontSize: 13, fontWeight: 700,
+                      flex: { xs: 1, md: 'none' },
+                      textTransform: 'none', 
+                      px: { xs: 1, sm: 2.5 }, 
+                      py: 1.25, 
+                      borderRadius: '12px', 
+                      fontSize: { xs: 12, sm: 13 }, 
+                      fontWeight: 700,
                       bgcolor: 'transparent',
                       color: filters.status === status ? COLORS.textPrimary : COLORS.textSecondary,
                       whiteSpace: 'nowrap',
                       position: 'relative',
                       zIndex: 1,
-                      minWidth: 'max-content',
+                      minWidth: { xs: 0, md: 'max-content' },
                       transition: 'color 0.4s ease-in-out',
                       '&:hover': { bgcolor: 'transparent' }
                     }}
@@ -604,15 +621,7 @@ export default function InstitutionMonitoring() {
         </Box>
 
         <Box sx={{ p: { xs: 2, sm: 4 }, pt: 0 }}>
-          {filterLoading ? (
-            <Grid container spacing={{ xs: 2.5, sm: 3 }}>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Grid item xs={12} sm={6} lg={4} key={i}>
-                  <CardSkeleton />
-                </Grid>
-              ))}
-            </Grid>
-          ) : institutions.length === 0 ? (
+          {institutions.length === 0 && !filterLoading ? (
             <Box sx={{ py: 12, textAlign: 'center' }}>
               <Business sx={{ fontSize: 48, color: '#CBD5E1', mb: 2 }} />
               <Typography sx={{ color: COLORS.textSecondary, fontFamily: fontStack, fontSize: 16, fontWeight: 600 }}>
@@ -625,25 +634,21 @@ export default function InstitutionMonitoring() {
                 key={filters.status}
                 custom={direction}
                 variants={{
-                  enter: (direction: number) => ({
-                    x: direction > 0 ? 50 : -50,
+                  enter: {
                     opacity: 0
-                  }),
+                  },
                   center: {
-                    x: 0,
                     opacity: 1
                   },
-                  exit: (direction: number) => ({
-                    x: direction < 0 ? 50 : -50,
+                  exit: {
                     opacity: 0
-                  })
+                  }
                 }}
                 initial="enter"
                 animate="center"
                 exit="exit"
                 transition={{
-                  x: { type: "spring", stiffness: 150, damping: 22 },
-                  opacity: { duration: 0.4 }
+                  opacity: { duration: 0.3 }
                 }}
               >
                 <Grid container spacing={{ xs: 2.5, sm: 3 }}>
@@ -747,33 +752,35 @@ export default function InstitutionMonitoring() {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: '24px',
-            p: { xs: 0.5, sm: 1 },
-            margin: { xs: 2, sm: 4 }
+            borderRadius: '16px',
+            p: { xs: 0, sm: 1 },
+            margin: { xs: 1, sm: 4 },
+            fontFamily: fontStack,
+            maxHeight: { xs: '90vh', sm: 'auto' }
           }
         }}
       >
-        <DialogTitle sx={{ p: { xs: 3, sm: 4 }, pb: 1 }}>
-          <Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
+        <DialogTitle sx={{ p: { xs: 2.5, sm: 4 }, pb: 1 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: { xs: '1.15rem', sm: '1.5rem' }, color: COLORS.textPrimary, letterSpacing: '-0.2px', fontFamily: fontStack }}>
             Institution Profile
           </Typography>
-          <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: COLORS.textSecondary, fontWeight: 500, mt: 0.5 }}>
+          <Typography sx={{ fontSize: { xs: 11, sm: 13 }, color: COLORS.textSecondary, fontWeight: 400, mt: 0.5, fontFamily: fontStack }}>
             Detailed overview of organizational and administrative information.
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 3, sm: 4 } }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 4 }, py: { xs: 1, sm: 0 } }}>
           {selectedInstitution && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 3, sm: 3.5 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3.5 } }}>
               <Box>
-                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
                   School Information
                 </Typography>
-                <Typography sx={{ fontWeight: 800, fontSize: { xs: 16, sm: 20 }, color: COLORS.textPrimary, mb: 0.5 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: { xs: 15, sm: 17 }, color: COLORS.textPrimary, mb: 0.5, fontFamily: fontStack }}>
                   {selectedInstitution.name}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationOn sx={{ fontSize: 16, color: COLORS.teal }} />
-                  <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 500 }}>
+                  <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, fontWeight: 400, fontFamily: fontStack }}>
                     {selectedInstitution.address}
                   </Typography>
                 </Box>
@@ -781,58 +788,58 @@ export default function InstitutionMonitoring() {
 
               <Grid container spacing={{ xs: 2.5, sm: 3 }}>
                 <Grid item xs={12} sm={6}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
                     Access Domain
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Language sx={{ fontSize: 16, color: COLORS.teal }} />
-                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{selectedInstitution.domain}</Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, fontFamily: fontStack }}>{selectedInstitution.domain}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
                     Contact Number
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Phone sx={{ fontSize: 16, color: COLORS.teal }} />
-                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{selectedInstitution.contactNumber}</Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, fontFamily: fontStack }}>{selectedInstitution.contactNumber}</Typography>
                   </Box>
                 </Grid>
               </Grid>
 
               <Box>
-                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1.5, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
                   Administrative Authority
                 </Typography>
-                <Box sx={{ p: 2.5, bgcolor: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Avatar sx={{
-                    bgcolor: COLORS.black,
+                    bgcolor: '#5f6368',
                     width: { xs: 40, sm: 48 },
                     height: { xs: 40, sm: 48 },
                     fontSize: { xs: 14, sm: 16 },
                     fontWeight: 800,
-                    borderRadius: '12px'
+                    borderRadius: '8px'
                   }}>
                     {getInitials(selectedInstitution.administratorName)}
                   </Avatar>
                   <Box>
-                    <Typography sx={{ fontWeight: 800, fontSize: { xs: 14, sm: 15 }, color: COLORS.textPrimary }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: 14, color: COLORS.textPrimary, fontFamily: fontStack }}>
                       {selectedInstitution.administratorName}
                     </Typography>
-                    <Typography sx={{ fontSize: { xs: 11, sm: 12 }, color: COLORS.textSecondary, fontWeight: 600 }}>
+                    <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: 400, fontFamily: fontStack }}>
                       {selectedInstitution.administratorPosition}
                     </Typography>
                   </Box>
                 </Box>
               </Box>
 
-              <Box sx={{ mt: 1 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: 11, color: COLORS.textSecondary, mb: 1.5, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <Box sx={{ mt: 0.5 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: 11, color: COLORS.textSecondary, mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
                   Official Email
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, bgcolor: '#F0FDF4', borderRadius: '12px', border: '1px solid #DCFCE7' }}>
-                  <Email sx={{ fontSize: 20, color: '#16A34A' }} />
-                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#166534' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, bgcolor: '#F0FDFA', borderRadius: '8px', border: '1px solid #CCFBF1' }}>
+                  <Email sx={{ fontSize: 20, color: COLORS.teal }} />
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#115E59', fontFamily: fontStack }}>
                     {selectedInstitution.email}
                   </Typography>
                 </Box>
@@ -840,18 +847,20 @@ export default function InstitutionMonitoring() {
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: { xs: 3, sm: 4 }, pt: 1 }}>
+        <DialogActions sx={{ p: { xs: 2.5, sm: 4 }, pt: 1 }}>
           <Button
             onClick={() => setShowDetails(false)}
             fullWidth
             sx={{
               textTransform: 'none',
-              fontWeight: 800,
+              fontWeight: 600,
               color: '#FFF',
-              bgcolor: COLORS.black,
-              borderRadius: '12px',
-              py: 1.5,
-              '&:hover': { bgcolor: '#000' }
+              bgcolor: '#3c4043',
+              borderRadius: '8px',
+              py: { xs: 1.25, sm: 1.5 },
+              fontSize: '15px',
+              fontFamily: fontStack,
+              '&:hover': { bgcolor: '#2d2e30' }
             }}
           >
             Close Profile

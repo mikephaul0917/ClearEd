@@ -45,10 +45,13 @@ export const submitRequirement = catchAsync(async (req: Request, res: Response) 
     }
 
     // 2. Find or Create parent ClearanceRequest for this term/org
+    // PRIORITIZE termId from the requirement itself, fallback to organization level if missing
+    const targetTermId = requirement.termId || organization.termId;
+
     let clearanceRequest = await ClearanceRequest.findOne({
         userId,
         organizationId: requirement.organizationId,
-        termId: organization.termId
+        termId: targetTermId
     });
 
     if (!clearanceRequest) {
@@ -56,7 +59,7 @@ export const submitRequirement = catchAsync(async (req: Request, res: Response) 
             userId,
             organizationId: requirement.organizationId,
             institutionId,
-            termId: organization.termId,
+            termId: targetTermId,
             status: "in_progress"
         });
     } else if (clearanceRequest.status === 'pending') {

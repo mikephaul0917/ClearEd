@@ -227,7 +227,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
           
           if (targetAudience !== 'all') {
             if (targetAudience === 'institutions' || targetAudience === 'admins') {
-              userFilters.role = { $in: ['admin', 'dean', 'officer'] };
+              userFilters.role = { $in: ['admin', 'dean', 'officer', 'student'] };
             } else if (targetAudience === 'students') {
               userFilters.role = 'student';
             }
@@ -238,21 +238,42 @@ export const createAnnouncement = async (req: Request, res: Response) => {
           }
           
           const targetUsers = await User.find(userFilters).select('email');
-          console.log(`👥 BROADCAST: Found ${targetUsers.length} target users.`);
+          const totalUsers = targetUsers.length;
+          console.log(`👥 BROADCAST: Found ${totalUsers} target users. Starting optimized batch delivery...`);
           
-          for (const user of targetUsers) {
-            try {
-              await sendAnnouncementEmail(user.email, {
+          const BATCH_SIZE = 20;
+          let sentCount = 0;
+          let failCount = 0;
+
+          for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
+            const batch = targetUsers.slice(i, i + BATCH_SIZE);
+            console.log(`📦 BATCH: Processing users ${i + 1} to ${Math.min(i + BATCH_SIZE, totalUsers)}...`);
+            
+            const emailPromises = batch.map(user => 
+              sendAnnouncementEmail(user.email, {
                 title,
                 content,
                 type: type || 'general',
                 priority: priority || 'medium',
                 attachments: attachments
-              });
-            } catch (err) {
-              console.error(`❌ BROADCAST ERROR: Failed to send to ${user.email}:`, err);
+              }).then(() => {
+                sentCount++;
+              }).catch(err => {
+                failCount++;
+                console.error(`❌ BATCH ERROR: Failed to send to ${user.email}:`, err.message);
+              })
+            );
+
+            await Promise.allSettled(emailPromises);
+            
+            // Small delay to prevent SMTP throttling (50ms)
+            if (i + BATCH_SIZE < totalUsers) {
+              await new Promise(resolve => setTimeout(resolve, 50));
             }
           }
+
+          console.log(`✅ BROADCAST COMPLETE for: ${title}`);
+          console.log(`📊 STATS: Sent: ${sentCount} | Failed: ${failCount} | Total: ${totalUsers}`);
         } catch (err) {
           console.error(`❌ BROADCAST ERROR:`, err);
         }

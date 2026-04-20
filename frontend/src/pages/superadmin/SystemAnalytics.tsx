@@ -31,6 +31,7 @@ import {
   Assignment,
   TrendingUp,
   TrendingDown,
+  TrendingFlat,
   Schedule,
   CheckCircle,
   Pending,
@@ -84,29 +85,6 @@ const COLORS = {
 
 const fontStack = '"Google Sans", "Product Sans", Roboto, sans-serif';
 
-// ─── Mock Data & Trend Helpers ──────────────────────────────────────────────
-const generateMockTimeline = (days: number) => {
-  const data = [];
-  const now = new Date();
-  for (let i = days; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(now.getDate() - i);
-    data.push({
-      date: d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
-      processed: Math.floor(Math.random() * 50) + 20,
-      pending: Math.floor(Math.random() * 30) + 10,
-      logins: Math.floor(Math.random() * 200) + 100,
-    });
-  }
-  return data;
-};
-
-const calculateMockTrend = () => {
-  const trend = (Math.random() * 5 + 1).toFixed(1);
-  const isUp = Math.random() > 0.3;
-  return { trend: `${isUp ? '+' : '-'}${trend}%`, isUp };
-};
-
 const cardShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)';
 const interactiveShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
 
@@ -129,6 +107,7 @@ interface SystemMetrics {
     daily: number;
   };
   clearanceCompletionRates: InstitutionCompletionRate[];
+  timelineData?: { _id: string; processed: number; pending: number; }[];
 }
 
 interface InstitutionCompletionRate {
@@ -137,7 +116,8 @@ interface InstitutionCompletionRate {
   totalRequests: number;
   completedRequests: number;
   completionRate: number;
-  status: 'active' | 'suspended';
+  trend?: number;
+  status: string;
 }
 
 export default function SystemAnalytics() {
@@ -153,14 +133,37 @@ export default function SystemAnalytics() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  // New Analytics State
-  const timelineData = useMemo(() => generateMockTimeline(timeRange === '7d' ? 7 : 30), [timeRange]);
-  const trends = useMemo(() => ({
-    institutions: calculateMockTrend(),
-    users: calculateMockTrend(),
-    requests: calculateMockTrend(),
-    logins: calculateMockTrend(),
-  }), [metrics]);
+  // Daily Activity Timeline (Real + Zero-filled Skeleton)
+  const timelineData = useMemo(() => {
+    const days = timeRange === '7d' ? 7 : 30;
+    const data = [];
+    const now = new Date();
+    
+    // Create a map of existing data for quick lookup
+    const dataMap = new Map();
+    if (metrics?.timelineData) {
+      metrics.timelineData.forEach(d => {
+        dataMap.set(d._id, { processed: d.processed, pending: d.pending });
+      });
+    }
+
+    // Generate full range (today back to 7/30 days ago)
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0]; // Matches backend %Y-%m-%d
+      const formattedDate = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      
+      const record = dataMap.get(dateKey);
+      data.push({
+        date: formattedDate,
+        processed: record ? record.processed : 0,
+        pending: record ? record.pending : 0
+      });
+    }
+    
+    return data;
+  }, [metrics, timeRange]);
 
   useEffect(() => {
     fetchSystemMetrics();
@@ -218,14 +221,31 @@ export default function SystemAnalytics() {
   };
 
   if (loading) return (
-    <Box sx={{ p: isSmallMobile ? 2 : 4, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
-      {/* Header Skeleton */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+    <Box sx={{ 
+      px: { xs: 2.5, sm: 4, md: 5 }, 
+      pt: 1.5, 
+      pb: { xs: 4, sm: 5, md: 6 }, 
+      bgcolor: COLORS.pageBg, 
+      minHeight: '100vh', 
+      fontFamily: fontStack 
+    }}>
+      {/* ── Page Header Skeleton ────────────────────────────────────────────── */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', md: 'center' }, 
+        mb: { xs: 4, sm: 6 },
+        flexDirection: { xs: 'column', md: 'row' }, 
+        gap: 2.5 
+      }}>
         <Box>
-          <Skeleton variant="text" width="220px" height={40} sx={{ borderRadius: '8px' }} />
-          <Skeleton variant="text" width="340px" height={20} sx={{ mt: 1, borderRadius: '4px' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+            <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: 2 }} />
+            <Skeleton variant="text" width="220px" height={36} sx={{ borderRadius: '4px' }} />
+          </Box>
+          <Skeleton variant="text" width="340px" height={20} sx={{ mt: 0.5, borderRadius: '4px' }} />
         </Box>
-        <Skeleton variant="rectangular" width={160} height={48} sx={{ borderRadius: '100px' }} />
+        <Skeleton variant="rectangular" width={160} height={48} sx={{ borderRadius: '8px' }} />
       </Box>
 
       {/* Top Stats Row Skeleton */}
@@ -260,36 +280,56 @@ export default function SystemAnalytics() {
   );
 
   return (
-    <Box sx={{ p: isSmallMobile ? 2 : 4, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
+    <Box sx={{ 
+      px: { xs: 2.5, sm: 4, md: 5 }, 
+      pt: 1.5, 
+      pb: { xs: 4, sm: 5, md: 6 }, 
+      bgcolor: COLORS.pageBg, 
+      minHeight: '100vh', 
+      fontFamily: fontStack 
+    }}>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
+      {/* ── Page Header ────────────────────────────────────────────── */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: { xs: 'flex-start', md: 'center' }, 
-        mb: 4, 
+        mb: { xs: 4, sm: 6 },
         flexDirection: { xs: 'column', md: 'row' }, 
         gap: 2.5 
       }}>
         <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+            <Box sx={{
+              bgcolor: '#F1F5F9',
+              color: '#475569',
+              p: { xs: 0.5, sm: 1 },
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <TrendingUp sx={{ fontSize: { xs: 24, sm: 28 } }} />
+            </Box>
+            <Typography sx={{ 
+              fontFamily: fontStack,
+              fontWeight: 600, 
+              fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+              color: '#000',
+              lineHeight: 1.2,
+            }}>
+              System Analytics
+            </Typography>
+          </Box>
           <Typography sx={{ 
-            fontFamily: fontStack, 
-            fontWeight: 900, 
-            fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' }, 
-            letterSpacing: '-0.04em', 
-            color: COLORS.textPrimary, 
-            lineHeight: 1.1 
+            fontFamily: fontStack,
+            fontSize: { xs: '0.8rem', sm: '0.95rem' },
+            fontWeight: 400,
+            color: '#6B7280',
+            maxWidth: 800,
+            lineHeight: 1.5
           }}>
-            Overview
-          </Typography>
-          <Typography sx={{ 
-            fontFamily: fontStack, 
-            fontSize: { xs: 13, sm: 14 }, 
-            color: COLORS.textSecondary, 
-            mt: 0.5, 
-            fontWeight: 500 
-          }}>
-            Real-time monitoring and advanced system telemetry.
+            A deep-dive into system-wide performance and administrative telemetry.
           </Typography>
         </Box>
 
@@ -305,11 +345,11 @@ export default function SystemAnalytics() {
             sx={{ 
               bgcolor: COLORS.black, 
               color: 'white', 
-              px: 4, 
-              py: 1.5, 
-              borderRadius: '100px', 
+              px: 3, 
+              py: 1.25, 
+              borderRadius: '8px', 
               textTransform: 'none', 
-              fontWeight: 700, 
+              fontWeight: 600, 
               flex: { xs: 1, md: 'none' }, 
               boxShadow: '0 4px 14px 0 rgba(0,0,0,0.25)',
               transition: 'all 0.2s ease-in-out',
@@ -370,7 +410,7 @@ export default function SystemAnalytics() {
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, fontFamily: fontStack }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary, fontFamily: fontStack }}>
                   {stat.label}
                 </Typography>
                 <Box sx={{
@@ -387,7 +427,7 @@ export default function SystemAnalytics() {
               </Box>
 
               <Box>
-                <Typography sx={{ fontSize: 32, fontWeight: 800, color: COLORS.textPrimary, fontFamily: fontStack, lineHeight: 1 }}>
+                <Typography sx={{ fontSize: 32, fontWeight: 700, color: COLORS.textPrimary, fontFamily: fontStack, lineHeight: 1 }}>
                   {stat.value}
                 </Typography>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary, mt: 1, fontFamily: fontStack }}>
@@ -406,8 +446,8 @@ export default function SystemAnalytics() {
           <Card sx={{ p: 3, borderRadius: '24px', boxShadow: cardShadow, border: '1px solid #F1F5F9', height: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
               <Box>
-                <Typography sx={{ fontSize: 18, fontWeight: 800, color: COLORS.textPrimary }}>Clearance Activity</Typography>
-                <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, mt: 0.5 }}>Processed vs Pending Volume Over Time</Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, color: COLORS.textPrimary, fontFamily: fontStack }}>Clearance Activity</Typography>
+                <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, mt: 0.5, fontFamily: fontStack }}>Processed vs Pending Volume Over Time</Typography>
               </Box>
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <Select
@@ -479,13 +519,13 @@ export default function SystemAnalytics() {
         {/* Right Column: Sidebar Breakdown */}
         <Grid item xs={12} lg={3.5}>
           <Card sx={{ p: 3, borderRadius: '24px', boxShadow: cardShadow, border: '1px solid #F1F5F9', height: '100%' }}>
-            <Typography sx={{ fontSize: 18, fontWeight: 800, color: COLORS.textPrimary, mb: 1 }}>Summary Health</Typography>
-            <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, mb: 3 }}>Completion overview via category</Typography>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: COLORS.textPrimary, mb: 1, fontFamily: fontStack }}>Summary Health</Typography>
+            <Typography sx={{ fontSize: 13, color: COLORS.textSecondary, mb: 3, fontFamily: fontStack }}>Completion overview via category</Typography>
 
             <Box sx={{ mb: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
-                <Typography sx={{ fontSize: 28, fontWeight: 900, color: COLORS.textPrimary, letterSpacing: '-0.04em' }}>
-                  {formatPercentage((metrics.processedClearanceRequests / metrics.totalClearanceRequests) * 100)}
+                <Typography sx={{ fontSize: 28, fontWeight: 700, color: COLORS.textPrimary, letterSpacing: '-0.02em', fontFamily: fontStack }}>
+                  {formatPercentage(metrics.totalClearanceRequests > 0 ? (metrics.processedClearanceRequests / metrics.totalClearanceRequests) * 100 : 0)}
                 </Typography>
                 <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0F766E' }}>Overall Rate</Typography>
               </Box>
@@ -498,7 +538,7 @@ export default function SystemAnalytics() {
               </Box>
             </Box>
 
-            <Typography sx={{ fontSize: 13, fontWeight: 800, color: COLORS.textPrimary, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: fontStack }}>
               Volume by User Role
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -537,8 +577,8 @@ export default function SystemAnalytics() {
           gap: 2
         }}>
           <Box>
-            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 800, color: COLORS.textPrimary }}>Institution Performance</Typography>
-            <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>Real-time completion tracking across partners</Typography>
+            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 700, color: COLORS.textPrimary, fontFamily: fontStack }}>Institution Performance</Typography>
+            <Typography sx={{ fontSize: 12, color: COLORS.textSecondary, fontFamily: fontStack }}>Real-time completion tracking across partners</Typography>
           </Box>
           <Button
             endIcon={<ArrowForward />}
@@ -546,7 +586,8 @@ export default function SystemAnalytics() {
             sx={{
               color: COLORS.black,
               textTransform: 'none',
-              fontWeight: 700,
+              fontWeight: 600,
+              fontFamily: fontStack,
               '&:hover': {
                 textDecoration: 'underline',
                 bgcolor: 'transparent'
@@ -565,14 +606,14 @@ export default function SystemAnalytics() {
             <TableHead>
               <TableRow sx={{ bgcolor: COLORS.softBg }}>
                 {['Institution Name', 'Status', 'Total Volume', 'Completion Rate', 'Trend'].map((h) => (
-                  <TableCell key={h} sx={{ color: COLORS.textSecondary, fontWeight: 700, fontSize: 12, py: 2 }}>{h}</TableCell>
+                  <TableCell key={h} sx={{ color: COLORS.textSecondary, fontWeight: 600, fontSize: 12, py: 2, fontFamily: fontStack }}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {paginatedInstitutions.map((inst) => (
                 <TableRow key={inst.institutionId} sx={{ '&:hover': { bgcolor: '#F8FAFC' } }}>
-                  <TableCell sx={{ fontWeight: 700, color: COLORS.textPrimary }}>{inst.institutionName}</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: COLORS.textPrimary, fontFamily: fontStack }}>{inst.institutionName}</TableCell>
                   <TableCell>
                     <Box sx={{
                       display: 'inline-flex',
@@ -592,9 +633,10 @@ export default function SystemAnalytics() {
                       }} />
                       <Typography sx={{
                         fontSize: '11px',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: inst.status === 'active' ? COLORS.accentTealDeep : COLORS.accentOrangeDeep,
-                        textTransform: 'capitalize'
+                        textTransform: 'capitalize',
+                        fontFamily: fontStack
                       }}>
                         {inst.status}
                       </Typography>
@@ -606,12 +648,22 @@ export default function SystemAnalytics() {
                       <Box sx={{ flex: 1, minWidth: 100 }}>
                         <LinearProgress variant="determinate" value={inst.completionRate} sx={{ height: 6, borderRadius: 3, bgcolor: COLORS.softBg, '& .MuiLinearProgress-bar': { bgcolor: inst.completionRate > 80 ? COLORS.accentTealDeep : COLORS.accentOrangeDeep, borderRadius: 3 } }} />
                       </Box>
-                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{formatPercentage(inst.completionRate)}</Typography>
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, fontFamily: fontStack }}>{formatPercentage(inst.completionRate)}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', color: inst.completionRate > 85 ? COLORS.accentTealDeep : COLORS.accentOrangeDeep }}>
-                      {inst.completionRate > 85 ? <TrendingUp sx={{ fontSize: 18 }} /> : <TrendingDown sx={{ fontSize: 18 }} />}
+                  <TableCell align="center">
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'center',
+                      color: !inst.trend || inst.trend === 0 ? COLORS.textSecondary : inst.trend > 0 ? COLORS.accentTealDeep : COLORS.accentOrangeDeep 
+                    }}>
+                      {!inst.trend || inst.trend === 0 ? (
+                        <TrendingFlat sx={{ fontSize: 18 }} />
+                      ) : inst.trend > 0 ? (
+                        <TrendingUp sx={{ fontSize: 18 }} />
+                      ) : (
+                        <TrendingDown sx={{ fontSize: 18 }} />
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>

@@ -10,6 +10,29 @@ interface EmailOptions {
   replyTo?: string;
 }
 
+// Cache the transporter for connection pooling
+let transporter: nodemailer.Transporter | null = null;
+
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  const config = {
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_PORT === '465', // true for 465, false for 587
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    pool: true, // Enable connection pooling
+    maxConnections: 5, // Max simultaneous connections
+    maxMessages: 100, // Max messages per connection before closing and reopening
+  };
+
+  transporter = nodemailer.createTransport(config);
+  return transporter;
+};
+
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   try {
     // We keep a small log to know it's attempting to send
@@ -23,16 +46,6 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
         return;
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465', // true for 465, false for 587
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
     const mailOptions = {
       from: options.from || process.env.SMTP_FROM || `"E-Clearance System" <${process.env.SMTP_USER}>`,
       to: options.to,
@@ -42,7 +55,8 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
       text: options.text,
     };
 
-    await transporter.sendMail(mailOptions);
+    const currentTransporter = getTransporter();
+    await currentTransporter.sendMail(mailOptions);
     console.log(`✅ Email successfully sent to ${options.to}`);
     
   } catch (error) {
@@ -95,15 +109,49 @@ export const sendVerificationEmail = async (
   });
 };
 
+/**
+ * Send notification that the institution request has been received (no verification needed)
+ */
+export const sendRequestReceivedNotification = async (
+  email: string,
+  institutionName: string
+): Promise<void> => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0F172A;">Institution Request Received</h2>
+      <p>Dear Administrator,</p>
+      <p>We have successfully received your request to register <strong>${institutionName}</strong> on the E-Clearance platform.</p>
+      <p>Your request is currently <strong>pending review</strong> by our system administrators. You will receive another email once your request has been processed.</p>
+      
+      <div style="background-color: #f8fafc; border-left: 4px solid #0F172A; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0;"><strong>Status:</strong> Pending Administrator Approval</p>
+      </div>
+
+      <p>Thank you for choosing E-Clearance to streamline your institutional workflows.</p>
+      
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+      <p style="color: #666; font-size: 14px;">
+        This is an automated notification. Please do not reply to this email.
+      </p>
+    </div>
+  `;
+
+  await sendEmail({
+    from: '"E-Clearance System" <cleared.system@gmail.com>',
+    to: email,
+    subject: `Request Received: ${institutionName} Access Request`,
+    html,
+    text: `Your request for institutional access for ${institutionName} has been received and is pending approval.`
+  });
+};
+
 // Send approval notification
 export const sendApprovalNotification = async (
   email: string,
   institutionName: string,
   domain: string
 ): Promise<void> => {
-  let baseUrl = process.env.FRONTEND_URL || 'https://clear-ed-8u77.vercel.app';
-  baseUrl = baseUrl.replace(/\/$/, '');
-  const loginUrl = `${baseUrl}/`;
+  const loginUrl = 'https://clear-ed-8u77.vercel.app/';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -177,6 +225,146 @@ export const sendRejectionNotification = async (
     subject: `Regarding Your Institution Request - ${institutionName}`,
     html,
     text: `Your institution request for ${institutionName} was not approved. Reason: ${reason}`
+  });
+};
+
+// Send suspension notification
+export const sendSuspensionNotification = async (
+  email: string,
+  institutionName: string,
+  reason: string
+): Promise<void> => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 24px;">Institution Access Suspended</h1>
+      </div>
+      
+      <div style="padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+        <p>Dear Administrator,</p>
+        <p>This email is to formally notify you that the access for <strong>${institutionName}</strong> on the E-Clearance platform has been <strong>suspended</strong> by our system administrators.</p>
+        
+        <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 25px 0;">
+          <h3 style="color: #991b1b; margin-top: 0; font-size: 16px;">Reason for Suspension:</h3>
+          <p style="color: #7f1d1d; margin-bottom: 0; line-height: 1.5;">${reason}</p>
+        </div>
+        
+        <h3>What this means:</h3>
+        <ul style="color: #475569; line-height: 1.6;">
+          <li>Users can no longer log in using institutional credentials.</li>
+          <li>All ongoing clearance workflows for your institution have been paused.</li>
+          <li>Management access to the institution dashboard is currently restricted.</li>
+        </ul>
+        
+        <p style="margin-top: 30px;">If you believe this is an error or would like to request reactivation, please contact our support team at <a href="mailto:cleared.system@gmail.com" style="color: #2563eb;">cleared.system@gmail.com</a>.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+        <p style="color: #64748b; font-size: 12px; text-align: center;">
+          This is an automated security notification. Please do not reply to this email.
+        </p>
+      </div>
+    </div>
+  `;
+
+  await sendEmail({
+    from: '"E-Clearance System" <cleared.system@gmail.com>',
+    to: email,
+    subject: `🚨 [SECURITY UPDATE] Institution Access Suspended - ${institutionName}`,
+    html,
+    text: `The access for ${institutionName} has been suspended. Reason: ${reason}. Please contact support for more information.`
+  });
+};
+
+// Send reactivation notification
+export const sendReactivationNotification = async (
+  email: string,
+  institutionName: string
+): Promise<void> => {
+  const loginUrl = 'https://clear-ed-8u77.vercel.app/';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 24px;">Institution Access Restored</h1>
+      </div>
+      
+      <div style="padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+        <p>Dear Administrator,</p>
+        <p>We are pleased to inform you that the access for <strong>${institutionName}</strong> on the E-Clearance platform has been <strong>successfully reactivated</strong> by our system administrators.</p>
+        
+        <div style="background-color: #f0fdf4; border-left: 4px solid #059669; padding: 15px; margin: 25px 0;">
+          <p style="color: #065f46; margin-bottom: 0; line-height: 1.5;">Your institutional dashboard and all associated clearance workflows have been fully restored and are now operational.</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${loginUrl}" 
+             style="background-color: #0F172A; color: white; padding: 12px 30px; 
+                    text-decoration: none; border-radius: 5px; display: inline-block; font-weight: 600;">
+            Log In to E-Clearance
+          </a>
+        </div>
+        
+        <p>Your team and staff members can now resume their activities on the platform using their standard institutional credentials.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+        <p style="color: #64748b; font-size: 12px; text-align: center;">
+          Thank you for your patience and for being part of the E-Clearance community.
+        </p>
+      </div>
+    </div>
+  `;
+
+  await sendEmail({
+    from: '"E-Clearance System" <cleared.system@gmail.com>',
+    to: email,
+    subject: `✅ [System Update] Institution Access Reactivated - ${institutionName}`,
+    html,
+    text: `The access for ${institutionName} has been fully reactivated. You can now log in at ${loginUrl}`
+  });
+};
+
+// Send permanent deletion notification
+export const sendPermanentDeletionNotification = async (
+  email: string,
+  institutionName: string
+): Promise<void> => {
+  const requestAccessUrl = 'https://clear-ed-8u77.vercel.app/request-institution-access';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0F172A;">Institution Account Permanently Removed</h2>
+      <p>Dear Administrator,</p>
+      <p>This email is to confirm that the institutional account for <strong>${institutionName}</strong> has been <strong>permanently deleted</strong> from the E-Clearance platform.</p>
+      
+      <p>As part of this process, all associated data, including user accounts, clearance records, and organizational configurations, have been purged from our active systems.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; margin: 25px 0; border-radius: 8px;">
+        <h3 style="color: #0F172A; margin-top: 0; font-size: 16px;">Thinking of returning?</h3>
+        <p style="color: #475569; margin-bottom: 20px;">If your institution wishes to use E-Clearance again in the future, you are welcome to submit a fresh application at any time.</p>
+        <div style="text-align: center;">
+          <a href="${requestAccessUrl}" 
+             style="background-color: #0F172A; color: white; padding: 10px 20px; 
+                    text-decoration: none; border-radius: 5px; display: inline-block; font-weight: 600;">
+            Request New Access
+          </a>
+        </div>
+      </div>
+      
+      <p>Thank you for the time you spent with us on the platform.</p>
+      
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+      <p style="color: #666; font-size: 13px; text-align: center;">
+        This is an automated administrative notification.
+      </p>
+    </div>
+  `;
+
+  await sendEmail({
+    from: '"E-Clearance System" <cleared.system@gmail.com>',
+    to: email,
+    subject: `Institution Account Removed - ${institutionName}`,
+    html,
+    text: `The institutional account for ${institutionName} has been permanently removed. If you wish to use E-Clearance again, you can request new access at ${requestAccessUrl}`
   });
 };
 

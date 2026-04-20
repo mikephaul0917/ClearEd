@@ -158,8 +158,7 @@ export default function StudentCertificate() {
                 <img
                   src={signatureUrl}
                   alt="Dean Signature"
-                  onClick={() => setZoomedSignature(signatureUrl)}
-                  style={{ maxHeight: "80px", maxWidth: "160px", position: "absolute", bottom: -5, filter: "contrast(1.2)", cursor: "pointer" }}
+                  style={{ maxHeight: "80px", maxWidth: "160px", position: "absolute", bottom: -5, filter: "contrast(1.2)", pointerEvents: "none", userSelect: "none" }}
                 />
               ) : (
                 <Typography sx={{ color: "#10b981", fontWeight: 700, fontStyle: "italic", fontSize: "0.85rem" }}>[ DEAN APPROVED ]</Typography>
@@ -371,8 +370,8 @@ export default function StudentCertificate() {
       >
         {loading ? (
           <>
-            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
-            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "6px" }} />
+            <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "6px" }} />
           </>
         ) : (
           <>
@@ -383,7 +382,7 @@ export default function StudentCertificate() {
               sx={{
                 bgcolor: '#3c4043',
                 color: '#FFF',
-                borderRadius: '100px',
+                borderRadius: '6px',
                 fontWeight: 700,
                 fontSize: { xs: '0.9rem', sm: '0.95rem' },
                 px: 4,
@@ -403,7 +402,7 @@ export default function StudentCertificate() {
               disabled={downloading}
               fullWidth
               sx={{
-                borderRadius: '100px',
+                borderRadius: '6px',
                 color: '#000',
                 borderColor: '#E2E8F0',
                 bgcolor: '#FFF',

@@ -305,15 +305,28 @@ export const getSignatoryRequirements = async (req: Request, res: Response) => {
       { $group: { _id: { requirementId: "$clearanceRequirementId", status: "$status" }, count: { $sum: 1 } } }
     ]);
 
+    // 4. Get total member counts for these organizations
+    const membersCount = await OrganizationMember.aggregate([
+      { $match: { organizationId: { $in: organizationIds }, role: "member", status: "active" } },
+      { $group: { _id: "$organizationId", count: { $sum: 1 } } }
+    ]);
+
     const requirementsWithStats = requirements.map(reqObj => {
       const reqIdStr = (reqObj._id as any).toString();
       const reqStats = stats.filter(s => s._id.requirementId && s._id.requirementId.toString() === reqIdStr);
+      
+      // Find total members for the requirement's organization
+      const orgId = (reqObj.organizationId as any)._id?.toString() || reqObj.organizationId.toString();
+      const totalMembers = membersCount.find(m => m._id.toString() === orgId)?.count || 0;
+
       return {
         ...reqObj.toObject(),
         stats: {
           pending: reqStats.find(s => s._id.status === 'pending')?.count || 0,
           approved: reqStats.find(s => s._id.status === 'approved')?.count || 0,
-          rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0
+          rejected: reqStats.find(s => s._id.status === 'rejected')?.count || 0,
+          resubmission_required: reqStats.find(s => s._id.status === 'resubmission_required')?.count || 0,
+          totalMembers
         }
       };
     });
@@ -328,7 +341,7 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
   try {
     const userId = (req as any).user?.id;
     const institutionId = (req as any).user?.institutionId;
-    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments, options, dueDate, points } = req.body;
+    const { organizationId, title, description, instructions, type, requiredFiles, isMandatory, isAnnouncement, attachments: rawUrlAttachments, options, dueDate, points, termId } = req.body;
 
     const membership = await OrganizationMember.findOne({
       userId,
@@ -371,6 +384,16 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
         console.error("Failed to parse options", e);
       }
     }
+    
+    // Resolve termId: Use from body or fallback to active term
+    let finalTermId = termId;
+    if (!finalTermId || finalTermId === "null" || finalTermId === "undefined") {
+      const activeTerm = await Term.findOne({ institutionId, isActive: true });
+      if (!activeTerm) {
+        return res.status(400).json({ message: "No active academic term found. Please set an active term first." });
+      }
+      finalTermId = activeTerm._id;
+    }
 
     const requirement = await ClearanceRequirement.create({
       title,
@@ -384,6 +407,7 @@ export const createSignatoryRequirement = async (req: Request, res: Response) =>
       options: parsedOptions,
       organizationId,
       institutionId,
+      termId: finalTermId,
       createdBy: userId,
       isActive: true,
       dueDate: dueDate || undefined,

@@ -39,9 +39,12 @@ interface CreatePollModalProps {
     organizationId: string;
     organizationName?: string;
     students?: any[];
+    editData?: any;
+    joinCode?: string;
     onCreated?: () => void;
     isEdit?: boolean;
-    editData?: any;
+    institutionId: string;
+    termId: string;
 }
 
 const CreatePollModal: React.FC<CreatePollModalProps> = ({
@@ -52,7 +55,10 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
     students = [],
     onCreated,
     isEdit = false,
-    editData = null
+    editData = null,
+    joinCode,
+    institutionId,
+    termId
 }) => {
     const [question, setQuestion] = useState("");
     const [instructions, setInstructions] = useState("");
@@ -163,6 +169,8 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
             formData.append('instructions', instructions);
             if (finalTopic) formData.append('topic', finalTopic);
             formData.append('organizationId', organizationId);
+            if (institutionId) formData.append('institutionId', institutionId);
+            if (termId) formData.append('termId', termId);
             formData.append('type', 'poll');
             formData.append('status', status);
             if (dueDate) formData.append('dueDate', dueDate);
@@ -223,7 +231,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
             open: true,
             type,
             title: `Add ${type} Resource`,
-            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            description: `Please enter the ${type === 'Link' ? '' : type.toLowerCase() + ' '}link below to attach it as a resource.`,
             placeholder: `${type} Link`
         });
     };
@@ -628,6 +636,7 @@ const CreatePollModal: React.FC<CreatePollModalProps> = ({
                 selectedIds={selectedIds}
                 onToggleAll={handleToggleAllAssign}
                 onToggle={handleToggleAssign}
+                joinCode={joinCode}
             />
 
             <AddLinkModal

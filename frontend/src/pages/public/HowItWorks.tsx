@@ -188,7 +188,7 @@ export default function HowItWorks() {
               platform. Submit requests, monitor their progress in real-time, and
               receive approvals electronically — no more queuing in offices.
             </Typography>
-            <ArrowButton variant="white" onClick={() => navigate("/register")} />
+            <ArrowButton variant="white" onClick={() => navigate("/guides/student")} />
           </Box>
 
           {/* Card 2 — Teal (Strategic / Institutions) */}
@@ -221,7 +221,7 @@ export default function HowItWorks() {
               Track every student's progress and maintain immutable digital
               records.
             </Typography>
-            <ArrowButton />
+            <ArrowButton onClick={() => navigate("/guides/institution")} />
           </Box>
 
           {/* Card 3 — Blue (Approval process) */}
@@ -253,7 +253,7 @@ export default function HowItWorks() {
               All institution access requests are reviewed by system admins to
               ensure compliance and security before activation.
             </Typography>
-            <ArrowButton />
+            <ArrowButton onClick={() => navigate("/guides/approval")} />
           </Box>
         </Box>
 
@@ -294,7 +294,7 @@ export default function HowItWorks() {
               Personal email domains (gmail, yahoo, outlook) are automatically
               blocked to protect institutional integrity.
             </Typography>
-            <ArrowButton />
+            <ArrowButton onClick={() => navigate("/guides/email-policy")} />
           </Box>
 
           {/* Card 5 — White / Get Started CTA */}

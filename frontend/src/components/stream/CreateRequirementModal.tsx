@@ -38,9 +38,12 @@ interface CreateRequirementModalProps {
     organizationId: string;
     organizationName?: string;
     students?: any[];
+    editData?: any;
+    joinCode?: string;
     onCreated?: () => void;
     isEdit?: boolean;
-    editData?: any;
+    institutionId: string;
+    termId: string;
 }
 
 const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
@@ -51,7 +54,10 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
     students = [],
     onCreated,
     isEdit = false,
-    editData = null
+    editData = null,
+    joinCode,
+    institutionId,
+    termId
 }) => {
     const [title, setTitle] = useState("");
     const [instructions, setInstructions] = useState("");
@@ -172,9 +178,12 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
             formData.append('instructions', instructions);
             if (finalTopic) formData.append('topic', finalTopic);
             formData.append('organizationId', organizationId);
+            if (institutionId) formData.append('institutionId', institutionId);
+            if (termId) formData.append('termId', termId);
             formData.append('isMandatory', isMandatory.toString());
             formData.append('isAnnouncement', 'false');
             formData.append('type', 'requirement');
+            formData.append('status', status);
             if (dueDate) formData.append('dueDate', dueDate);
             if (uploadRequired) formData.append('requiredFiles', 'File');
 
@@ -213,7 +222,7 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
             open: true,
             type,
             title: `Add ${type} Resource`,
-            description: `Please enter the ${type.toLowerCase()} link below to attach it as a resource.`,
+            description: `Please enter the ${type === 'Link' ? '' : type.toLowerCase() + ' '}link below to attach it as a resource.`,
             placeholder: `${type} Link`
         });
     };
@@ -634,6 +643,7 @@ const CreateRequirementModal: React.FC<CreateRequirementModalProps> = ({
                 selectedIds={selectedIds}
                 onToggle={handleToggleAssign}
                 onToggleAll={handleToggleAllAssign}
+                joinCode={joinCode}
             />
 
             <AddLinkModal

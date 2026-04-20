@@ -26,6 +26,7 @@ import PendingIcon from "@mui/icons-material/Pending";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import Dialog from "@mui/material/Dialog";
+import SuccessModal from "../../components/SuccessModal";
 
 const COLORS = {
   black: '#0a0a0a',
@@ -51,6 +52,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
   const [profile, setProfile] = useState<any>(null);
   const [submittingDean, setSubmittingDean] = useState(false);
   const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const isOverview = !organizationId;
 
@@ -141,7 +143,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
     setSubmittingDean(true);
     try {
       await clearanceService.submitToDean();
-      alert("Successfully submitted clearance to the Dean!");
+      setShowSuccessModal(true);
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.message || "Failed to submit clearance to Dean.");
@@ -283,15 +285,22 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
               return (
                 <Box
                   key={org._id}
-                  onClick={() => navigate(`/student/progress/${org._id}`)}
-                  sx={{ display: "flex", flexDirection: "column", position: "relative", cursor: "pointer" }}
+                  sx={{ display: "flex", flexDirection: "column", position: "relative" }}
                 >
                   <Box sx={{ height: 40, position: "relative", display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
                     {org.signatureUrl && isApproved ? (
                       <img
                         src={org.signatureUrl}
                         alt="Signature"
-                        style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
+                        style={{ 
+                          maxHeight: "60px", 
+                          maxWidth: "120px", 
+                          position: "absolute", 
+                          bottom: -5, 
+                          filter: "contrast(1.2)",
+                          pointerEvents: "none",
+                          userSelect: "none"
+                        }}
                       />
                     ) : isApproved && (
                       <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>
@@ -317,7 +326,15 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
                   <img
                     src={finalClearance.signatureUrl}
                     alt="Dean Signature"
-                    style={{ maxHeight: "60px", maxWidth: "120px", position: "absolute", bottom: -5, filter: "contrast(1.2)" }}
+                    style={{ 
+                      maxHeight: "60px", 
+                      maxWidth: "120px", 
+                      position: "absolute", 
+                      bottom: -5, 
+                      filter: "contrast(1.2)",
+                      pointerEvents: "none",
+                      userSelect: "none"
+                    }}
                   />
                 ) : finalClearance?.status === 'approved' && (
                   <Typography sx={{ color: "#5EEAD4", fontWeight: 700, fontStyle: "italic", fontSize: "0.75rem" }}>[ DEAN APPROVED ]</Typography>
@@ -387,8 +404,8 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
             gap: 2,
             width: "100%"
           }}>
-            {[1, 2, 3].map((i) => (
-              <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            {[1, 2, 3, 4, 5, 6].map((it) => (
+              <Box key={it} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <Box sx={{ height: 40, width: "100%", display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
                   <Skeleton width="60%" height={30} sx={{ borderRadius: "4px", bgcolor: "#eaebec" }} />
                 </Box>
@@ -534,7 +551,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           sx={{
             bgcolor: '#3c4043',
             color: '#FFF',
-            borderRadius: '100px',
+            borderRadius: '12px',
             fontWeight: 700,
             fontSize: { xs: '0.9rem', sm: '0.95rem' },
             px: 4,
@@ -554,7 +571,7 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
             disabled={submittingDean || finalClearance !== null}
             onClick={handleSubmitToDean}
             sx={{
-              borderRadius: '100px',
+              borderRadius: '12px',
               color: '#000',
               borderColor: '#E2E8F0',
               bgcolor: '#FFF',
@@ -692,21 +709,48 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
               maxWidth: { xs: 400, sm: "none" },
               mx: "auto"
             }}>
-              <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
-              <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "100px" }} />
+              <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "12px" }} />
+              <Skeleton variant="rectangular" sx={{ width: "100%", maxWidth: { sm: 210 }, height: 44, borderRadius: "12px" }} />
             </Box>
           </Box>
         ) : (
           <Box sx={{ p: { xs: 2, md: 4 } }}>
-            <Skeleton variant="text" width={300} height={60} sx={{ mb: 2 }} />
-            <Skeleton variant="rounded" height={200} sx={{ borderRadius: "24px", mb: 4 }} />
-            <Grid container spacing={2}>
-              {[1, 2, 3].map(i => (
-                <Grid item xs={12} sm={4} key={i}>
-                  <Skeleton variant="rounded" height={100} sx={{ borderRadius: "20px" }} />
-                </Grid>
-              ))}
-            </Grid>
+            {/* Back Button Skeleton */}
+            <Skeleton variant="text" width={150} height={32} sx={{ mb: 2, borderRadius: "4px" }} />
+            
+            {/* Title & Subtitle Skeleton */}
+            <Skeleton variant="text" width={400} height={60} sx={{ mb: 0.5, borderRadius: "4px" }} />
+            <Skeleton variant="text" width={250} height={30} sx={{ mb: 4, borderRadius: "4px" }} />
+            
+            {/* Stats Card Skeleton */}
+            <Paper sx={{ p: 4, borderRadius: "24px", border: "1px solid rgba(0,0,0,0.06)", mb: 4 }}>
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                {[1, 2, 3, 4].map((i) => (
+                  <Grid item xs={6} sm={3} key={i}>
+                    <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="40%" height={40} />
+                  </Grid>
+                ))}
+              </Grid>
+
+              {/* Table Skeleton */}
+              <Box>
+                <Box sx={{ display: 'flex', gap: 2, pb: 2, borderBottom: '2px solid #eaebec' }}>
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="text" width="20%" height={24} />)}
+                </Box>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Box key={i} sx={{ display: 'flex', gap: 2, py: 3, borderBottom: '1px solid #f1f5f9' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Skeleton variant="text" width="60%" height={24} sx={{ mb: 0.5 }} />
+                      <Skeleton variant="text" width="90%" height={20} />
+                    </Box>
+                    <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: "8px" }} />
+                    <Skeleton variant="text" width="20%" height={24} />
+                    <Skeleton variant="text" width="15%" height={24} />
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
           </Box>
         )}
       </Box>
@@ -772,6 +816,13 @@ export default function StudentProgress({ organizationId, studentId, studentInfo
           </Box>
         </Box>
       </Dialog>
+
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Submission Successful"
+        description="Your clearance has been successfully submitted to the Dean for final approval."
+      />
     </Box>
   );
 }

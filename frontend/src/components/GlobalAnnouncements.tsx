@@ -51,7 +51,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
 
   useEffect(() => {
     fetchAnnouncements();
-    
+
     // Load dismissed announcements from localStorage
     const dismissed = localStorage.getItem('dismissedAnnouncements');
     if (dismissed) {
@@ -90,16 +90,16 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
   const acknowledgeAnnouncement = async (announcementId: string) => {
     try {
       await api.post(`/announcements/${announcementId}/acknowledge`);
-      
+
       // Update local state
-      setAnnouncements(prev => 
-        prev.map(ann => 
-          ann._id === announcementId 
+      setAnnouncements(prev =>
+        prev.map(ann =>
+          ann._id === announcementId
             ? { ...ann, isAcknowledged: true }
             : ann
         )
       );
-      
+
       // Also dismiss it
       dismissAnnouncement(announcementId);
     } catch (error) {
@@ -140,11 +140,11 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
 
   const getTypeColor = (type: Announcement['type']) => {
     switch (type) {
-      case 'maintenance': return '#2196F3';
-      case 'policy': return '#4CAF50';
-      case 'security': return '#F44336';
-      case 'urgent': return '#FF9800';
-      default: return '#757575';
+      case 'maintenance': return '#0D9488';
+      case 'policy': return '#0F766E';
+      case 'security': return '#DC2626';
+      case 'urgent': return '#EA580C';
+      default: return '#64748B';
     }
   };
 
@@ -169,7 +169,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
     return new Date(expiresAt) < new Date();
   };
 
-  const visibleAnnouncements = announcements.filter(announcement => 
+  const visibleAnnouncements = announcements.filter(announcement =>
     !dismissedAnnouncements.has(announcement._id) && !isExpired(announcement.expiresAt)
   );
 
@@ -186,7 +186,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
       {visibleAnnouncements.map((announcement) => {
         const isExpanded = expandedAnnouncements.has(announcement._id);
         const severity = getAlertSeverity(announcement.type, announcement.priority);
-        
+
         return (
           <Alert
             key={announcement._id}
@@ -195,6 +195,11 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
             sx={{
               mb: 1,
               borderRadius: '14px',
+              border: `1px solid ${severity === 'info' ? '#CCFBF1' : 'transparent'}`,
+              bgcolor: severity === 'info' ? '#F0FDFA' : undefined,
+              '& .MuiAlert-icon': {
+                color: severity === 'info' ? '#0D9488' : undefined
+              },
               '& .MuiAlert-message': {
                 width: '100%'
               }
@@ -207,24 +212,40 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
                     label="Scheduled"
                     size="small"
                     variant="outlined"
-                    color="info"
+                    sx={{
+                      borderColor: '#CCFBF1',
+                      color: '#0D9488',
+                      '& .MuiChip-icon': { color: '#0D9488' }
+                    }}
                   />
                 )}
                 <Chip
                   label={getPriorityLabel(announcement.priority)}
                   size="small"
-                  color={severity === 'error' ? 'error' : severity === 'warning' ? 'warning' : severity === 'success' ? 'success' : 'info'}
+                  sx={{
+                    bgcolor: severity === 'info' ? '#0D9488' :
+                      severity === 'error' ? '#FEE2E2' :
+                        severity === 'warning' ? '#FEF3C7' : '#DCFCE7',
+                    color: severity === 'info' ? '#FFFFFF' :
+                      severity === 'error' ? '#991B1B' :
+                        severity === 'warning' ? '#92400E' : '#166534',
+                    fontWeight: 700,
+                    fontSize: 10,
+                    height: 22,
+                    textTransform: 'uppercase'
+                  }}
                 />
                 <IconButton
                   size="small"
                   onClick={() => toggleExpanded(announcement._id)}
-                  sx={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                  sx={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: severity === 'info' ? '#0D9488' : undefined }}
                 >
                   <ExpandMoreIcon />
                 </IconButton>
                 <IconButton
                   size="small"
                   onClick={() => dismissAnnouncement(announcement._id)}
+                  sx={{ color: severity === 'info' ? '#0D9488' : undefined }}
                 >
                   <Close />
                 </IconButton>
@@ -232,30 +253,30 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
             }
           >
             <AlertTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography variant="subtitle2" component="span" sx={{ fontWeight: 'bold' }}>
+              <Typography variant="subtitle2" component="span" sx={{ fontWeight: 800, color: severity === 'info' ? '#042F2E' : 'inherit' }}>
                 {announcement.title}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box
                   sx={{
-                    width: 8,
-                    height: 8,
+                    width: 7,
+                    height: 7,
                     borderRadius: '50%',
                     backgroundColor: getTypeColor(announcement.type)
                   }}
                 />
-                <Typography variant="caption" sx={{ textTransform: 'capitalize', color: 'text.secondary' }}>
+                <Typography variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.02em', color: severity === 'info' ? '#0D9488' : 'text.secondary' }}>
                   {announcement.type}
                 </Typography>
               </Box>
             </AlertTitle>
-            
+
             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
               <Box sx={{ mt: 1 }}>
                 <Typography variant="body2" sx={{ mb: 2 }}>
                   {announcement.content}
                 </Typography>
-                
+
                 {announcement.tags.length > 0 && (
                   <Box sx={{ mb: 2, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {announcement.tags.map((tag, index) => (
@@ -269,7 +290,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
                     ))}
                   </Box>
                 )}
-                
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                   <Typography variant="caption" color="text.secondary">
                     {announcement.createdAt && (
@@ -285,7 +306,7 @@ const GlobalAnnouncements: React.FC<GlobalAnnouncementsProps> = ({ user }) => {
                       </>
                     )}
                   </Typography>
-                  
+
                   {announcement.requiresAcknowledgment && !announcement.isAcknowledged && (
                     <Button
                       size="small"

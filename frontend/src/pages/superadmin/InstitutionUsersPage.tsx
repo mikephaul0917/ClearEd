@@ -25,14 +25,14 @@ export default function InstitutionUsersPage() {
     if (institutionId) {
       sessionStorage.setItem('targetInstitutionId', institutionId);
       setIsSessionReady(true);
-      
+
       api.get(`/admin/institution?institutionId=${institutionId}`).then(res => {
-         if(res.data?.name) {
-             setInstitutionName(res.data.name);
-         }
+        if (res.data?.name) {
+          setInstitutionName(res.data.name);
+        }
       }).catch(console.error);
     }
-    
+
     // Clear context on dismount so superadmin returns to root domain
     return () => {
       sessionStorage.removeItem('targetInstitutionId');
@@ -43,8 +43,8 @@ export default function InstitutionUsersPage() {
   return (
     <Box sx={{ p: { xs: 2, md: 5 }, bgcolor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
-        <IconButton 
-          onClick={() => navigate('/super-admin/institution-monitoring')} 
+        <IconButton
+          onClick={() => navigate('/super-admin/institution-monitoring')}
           sx={{ border: `1px solid ${COLORS.border}`, borderRadius: '12px', bgcolor: '#f8fafc' }}
         >
           <ArrowBack sx={{ color: COLORS.black }} />

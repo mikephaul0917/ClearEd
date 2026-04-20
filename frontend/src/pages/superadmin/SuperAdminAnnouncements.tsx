@@ -23,6 +23,9 @@ import {
   DialogContent,
   DialogActions,
   Grid,
+  Menu,
+  ListItemIcon,
+  ListItemText,
   LinearProgress,
   Skeleton,
   InputAdornment,
@@ -61,6 +64,7 @@ import {
   Tune as TuneIcon,
   Badge as BadgeIcon,
   AttachFile as AttachFileIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -73,8 +77,8 @@ const COLORS = {
   black: '#0a0a0a',
   textPrimary: '#000000',
   textSecondary: '#64748B',
-  teal: '#5fcca0',
-  lavender: '#cb9bfb',
+  teal: '#0E7490',
+  lavender: '#5fcca0',
   yellow: '#FEF08A',
   orange: '#ff895d',
   border: '#E2E8F0',
@@ -147,7 +151,7 @@ const getAnnouncementDate = (d: string) => {
 const getTypeStyle = (type: Announcement['type']) => {
   const iconSx = { fontSize: 13 };
   const styles: Record<string, { bg: string, color: string, icon: any, label: string }> = {
-    maintenance: { bg: '#F5F3FF', color: '#7E22CE', icon: <BuildIcon sx={iconSx} />, label: 'Maintenance' },
+    maintenance: { bg: '#F0FDFA', color: '#0D9488', icon: <BuildIcon sx={iconSx} />, label: 'Maintenance' },
     policy: { bg: '#F0FDFA', color: '#0F766E', icon: <InfoIcon sx={iconSx} />, label: 'Policy' },
     general: { bg: '#F8FAFC', color: '#444', icon: <NotificationsIcon sx={iconSx} />, label: 'News' },
   };
@@ -163,6 +167,18 @@ const SuperAdminAnnouncements: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedAnnForMenu, setSelectedAnnForMenu] = useState<Announcement | null>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, ann: Announcement) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedAnnForMenu(ann);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedAnnForMenu(null);
+  };
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({ type: '', priority: '', status: '', targetAudience: '', search: '' });
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
@@ -246,7 +262,7 @@ const SuperAdminAnnouncements: React.FC = () => {
       fetchInstitutions();
     }, 1000);
   }, []);
-  useEffect(() => { setFilterLoading(true); setTimeout(() => { fetchAnnouncements(); }, 1000); }, [filters]);
+  useEffect(() => { fetchAnnouncements(); }, [filters]);
 
   const fetchAnnouncements = async () => {
     try {
@@ -294,19 +310,23 @@ const SuperAdminAnnouncements: React.FC = () => {
 
       if (editingAnnouncement) {
         await superAdminService.updateAnnouncement(editingAnnouncement._id, fd);
-        Swal.fire('Success', 'Announcement updated successfully', 'success');
+        Swal.fire({ title: 'Success', text: 'Announcement updated successfully', icon: 'success', confirmButtonColor: '#0E7490', confirmButtonText: 'OK' });
       } else {
         await superAdminService.createAnnouncement(fd);
-        Swal.fire('Success', 'Announcement created successfully', 'success');
+        Swal.fire({ title: 'Success', text: 'Announcement created successfully', icon: 'success', confirmButtonColor: '#0E7490', confirmButtonText: 'OK' });
       }
       setShowModal(false); resetForm(); fetchAnnouncements(); fetchStats();
     } catch (error: any) { Swal.fire('Error', error.response?.data?.message || 'Failed to save announcement', 'error'); }
   };
 
   const handleDelete = async (id: string) => {
-    const result = await Swal.fire({ title: 'Are you sure?', text: 'This announcement will be permanently deleted.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Delete' });
+    const result = await Swal.fire({ title: 'Are you sure?', text: 'This announcement will be permanently deleted.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#94a3b8', confirmButtonText: 'Delete' });
     if (result.isConfirmed) {
-      try { await superAdminService.deleteAnnouncement(id); Swal.fire('Success', 'Announcement deleted', 'success'); fetchAnnouncements(); fetchStats(); }
+      try { 
+        await superAdminService.deleteAnnouncement(id); 
+        Swal.fire({ title: 'Success', text: 'Announcement deleted successfully', icon: 'success', confirmButtonColor: '#0E7490', confirmButtonText: 'OK' });
+        fetchAnnouncements(); fetchStats(); 
+      }
       catch (error: any) { Swal.fire('Error', error.response?.data?.message || 'Failed to delete', 'error'); }
     }
   };
@@ -361,16 +381,16 @@ const SuperAdminAnnouncements: React.FC = () => {
               <Box key={i} sx={{
                 display: 'flex',
                 flexDirection: { xs: 'column', sm: 'row' },
-                gap: { xs: 1.5, sm: 5 },
+                gap: { xs: 2.5, sm: 5 },
                 p: { xs: 2.5, sm: 3 },
                 borderRadius: '24px',
                 bgcolor: '#FFFFFF',
                 border: `1px solid #f1f5f9`,
-                boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
               }}>
                 {/* Mobile Header Row Skeleton */}
                 {isMobile && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                     <Skeleton variant="text" width={100} height={18} />
                     <Skeleton variant="circular" width={24} height={24} />
                   </Box>
@@ -381,6 +401,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                   <Box sx={{ width: 70, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Skeleton variant="text" width="60%" height={12} />
                     <Skeleton variant="text" width="80%" height={32} />
+                    <Skeleton variant="text" width="40%" height={10} />
                   </Box>
                 )}
 
@@ -410,22 +431,47 @@ const SuperAdminAnnouncements: React.FC = () => {
     <Box sx={{ px: isMobile ? 2 : 4, pb: isMobile ? 2 : 4, pt: isMobile ? 1 : 2, backgroundColor: COLORS.pageBg, minHeight: '100vh', fontFamily: fontStack }}>
       <Box sx={{ maxWidth: '900px', mx: 'auto', width: '100%' }}>
 
-        {/* ── Header ──────────────────────────────────────────────────── */}
+        {/* ── Page Header ────────────────────────────────────────────── */}
         <Box sx={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: isMobile ? 'flex-start' : 'center', mb: 3,
-          flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 2 : 0,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          mb: { xs: 4, sm: 6 },
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 2.5
         }}>
           <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+              <Box sx={{
+                bgcolor: '#F1F5F9',
+                color: '#475569',
+                p: { xs: 0.5, sm: 1 },
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <NotificationsIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
+              </Box>
+              <Typography sx={{
+                fontFamily: fontStack,
+                fontWeight: 600,
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '1.875rem' },
+                color: '#000',
+                lineHeight: 1.2,
+              }}>
+                System Announcements
+              </Typography>
+            </Box>
             <Typography sx={{
-              fontFamily: fontStack, fontWeight: 800,
-              fontSize: isMobile ? '1.25rem' : '2.25rem',
-              letterSpacing: '-0.03em', color: COLORS.textPrimary, lineHeight: 1.15,
+              fontFamily: fontStack,
+              fontSize: { xs: '0.8rem', sm: '0.95rem' },
+              fontWeight: 400,
+              color: '#6B7280',
+              maxWidth: 800,
+              lineHeight: 1.5
             }}>
-              System Announcements
-            </Typography>
-            <Typography sx={{ fontFamily: fontStack, fontSize: isMobile ? 11 : 14, color: COLORS.textSecondary, mt: 0.5 }}>
-              Manage platform-wide communications
+              Broadcast internal updates, policy changes, and system-wide news alerts.
             </Typography>
           </Box>
           <Button
@@ -433,9 +479,10 @@ const SuperAdminAnnouncements: React.FC = () => {
             onClick={() => { resetForm(); setShowModal(true); }}
             sx={{
               fontFamily: fontStack, fontWeight: 700, fontSize: 13,
-              borderRadius: '100px', textTransform: 'none',
-              bgcolor: COLORS.black, color: '#FFFFFF', px: isMobile ? 2.5 : 3, py: 1.5,
-              minWidth: isMobile ? 'auto' : 160,
+              borderRadius: '8px', textTransform: 'none',
+              bgcolor: '#3c4043', color: '#FFFFFF', px: isMobile ? 2.5 : 3, py: 1.5,
+              width: isMobile ? '100% ' : 'auto',
+              minWidth: isMobile ? '0' : 160,
               boxShadow: '0 10px 25px rgba(0,0,0,0.12)',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
@@ -456,13 +503,13 @@ const SuperAdminAnnouncements: React.FC = () => {
         {/* ── Tabs Navigation ────────────────────────────────────────── */}
         <Box sx={{ borderBottom: `1px solid ${COLORS.border}`, mb: 5, display: 'flex', gap: { xs: 2.5, sm: 4 }, overflowX: 'auto', px: { xs: 1, sm: 0 }, '&::-webkit-scrollbar': { display: 'none' } }}>
           {[
-            { label: 'All', value: '', color: COLORS.black },
-            { label: 'News', value: 'general', color: getTypeStyle('general').color },
-            { label: 'Policy', value: 'policy', color: getTypeStyle('policy').color },
-            { label: 'Maintenance', value: 'maintenance', color: getTypeStyle('maintenance').color },
+            { label: 'All', value: '' },
+            { label: 'News', value: 'general' },
+            { label: 'Policy', value: 'policy' },
+            { label: 'Maintenance', value: 'maintenance' },
           ].map((tab) => {
             const active = filters.type === tab.value;
-            const activeColor = tab.color;
+            const activeColor = '#0D9488'; // Dark Teal
             return (
               <Box
                 key={tab.label}
@@ -500,15 +547,39 @@ const SuperAdminAnnouncements: React.FC = () => {
 
         {/* ── Main List ───────────────────────────────────────────────── */}
         <Box sx={{ width: '100%' }}>
-          {loading || filterLoading ? (
+          {loading ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[1, 2, 3, 4, 5].map((i) => (
-                <Box key={i} sx={{ display: 'flex', gap: { xs: 2.5, sm: 5 }, p: 2 }}>
-                  <Box sx={{ width: { xs: 60, sm: 70 }, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Skeleton variant="text" width="60%" height={12} />
-                    <Skeleton variant="text" width="80%" height={32} />
-                    <Skeleton variant="text" width="40%" height={10} />
-                  </Box>
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: { xs: 2.5, sm: 5 },
+                    p: { xs: 2.5, sm: 3 },
+                    borderRadius: '24px',
+                    bgcolor: '#FFFFFF',
+                    border: `1px solid #f1f5f9`,
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  {/* Mobile Header Row Skeleton */}
+                  {isMobile && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                      <Skeleton variant="text" width={100} height={18} />
+                      <Skeleton variant="circular" width={24} height={24} />
+                    </Box>
+                  )}
+
+                  {/* Date Block Skeleton (Desktop Only) */}
+                  {!isMobile && (
+                    <Box sx={{ width: 70, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Skeleton variant="text" width="60%" height={12} />
+                      <Skeleton variant="text" width="80%" height={32} />
+                      <Skeleton variant="text" width="40%" height={10} />
+                    </Box>
+                  )}
+
                   <Box sx={{ flex: 1 }}>
                     <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1.5 }} />
                     <Skeleton variant="text" width="95%" height={16} />
@@ -545,10 +616,10 @@ const SuperAdminAnnouncements: React.FC = () => {
                       borderRadius: '24px',
                       bgcolor: '#FFFFFF',
                       border: `1px solid #f1f5f9`,
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
                       '&:hover': {
-                        boxShadow: '0 12px 30px rgba(0,0,0,0.06)',
-                        transform: 'translateY(-2px)'
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
+                        transform: 'translateY(-4px)'
                       }
                     }}
                   >
@@ -572,10 +643,18 @@ const SuperAdminAnnouncements: React.FC = () => {
                             </Typography>
                           </Box>
                         </Box>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <IconButton size="small" onClick={() => openEditModal(a)} sx={{ bgcolor: '#fff', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', color: '#64748B' }}><EditIcon sx={{ fontSize: 14 }} /></IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(a._id)} sx={{ bgcolor: '#fff', border: '1px solid #f1f5f9', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', color: '#64748B' }}><DeleteIcon sx={{ fontSize: 14 }} /></IconButton>
-                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, a)}
+                          sx={{
+                            bgcolor: '#fff',
+                            border: '1px solid #f1f5f9',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                            color: '#64748B'
+                          }}
+                        >
+                          <MoreVertIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
                       </Box>
                     )}
 
@@ -594,7 +673,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                           fontFamily: fontStack,
                           fontSize: isToday ? 11 : 12,
                           fontWeight: 800,
-                          color: isToday ? '#2563EB' : '#94A3B8',
+                          color: isToday ? '#0E7490' : '#94A3B8',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                           lineHeight: 1
@@ -605,7 +684,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                           fontFamily: fontStack,
                           fontSize: isToday ? 15 : 28,
                           fontWeight: 900,
-                          color: isToday ? '#2563EB' : COLORS.black,
+                          color: isToday ? '#0E7490' : '#0D9488',
                           lineHeight: 1.1,
                           mt: 0.5
                         }}>
@@ -640,7 +719,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                         <Typography sx={{
                           fontFamily: fontStack,
                           fontSize: { xs: 17, sm: 19 },
-                          fontWeight: 800,
+                          fontWeight: 600,
                           color: COLORS.black,
                           lineHeight: 1.3,
                           letterSpacing: '-0.01em',
@@ -699,7 +778,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                           py: 0.5,
                           borderRadius: '8px',
                           bgcolor: '#F8FAFC',
-                          color: '#64748B',
+                          color: '#475569',
                           border: '1px solid #E2E8F0'
                         }}>
                           <PeopleAltIcon sx={{ fontSize: 13 }} />
@@ -734,48 +813,26 @@ const SuperAdminAnnouncements: React.FC = () => {
                       </Box>
                     </Box>
 
-                    {/* Action Buttons */}
                     <Box sx={{
                       position: 'absolute',
                       top: 24,
                       right: 24,
                       display: { xs: 'none', md: 'flex' },
-                      gap: 1.5,
                     }}>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          onClick={() => openEditModal(a)}
-                          sx={{
-                            color: '#64748B',
-                            bgcolor: '#FFF',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                            border: `1px solid #f1f5f9`,
-                            p: 1.25,
-                            '&:hover': { bgcolor: '#F8FAFC', color: '#2563EB', transform: 'translateY(-2px)' },
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <EditIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(a._id)}
-                          sx={{
-                            color: '#64748B',
-                            bgcolor: '#FFF',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                            border: `1px solid #f1f5f9`,
-                            p: 1.25,
-                            '&:hover': { bgcolor: '#FEF2F2', color: '#EF4444', border: '1px solid #FEE2E2', transform: 'translateY(-2px)' },
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <DeleteIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton
+                        onClick={(e) => handleMenuOpen(e, a)}
+                        sx={{
+                          color: '#64748B',
+                          bgcolor: '#FFF',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                          border: `1px solid #f1f5f9`,
+                          p: 1.25,
+                          '&:hover': { bgcolor: '#F8FAFC', color: COLORS.black },
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <MoreVertIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
                     </Box>
 
                     {/* Mobile Actions (Removed from absolute to integrated in Card Header) */}
@@ -794,7 +851,7 @@ const SuperAdminAnnouncements: React.FC = () => {
           PaperProps={{
             component: 'form', onSubmit: handleSubmit,
             sx: {
-              borderRadius: isMobile ? 0 : '32px',
+              borderRadius: isMobile ? 0 : '16px',
               maxWidth: isMobile ? '100%' : '720px !important',
               maxHeight: isMobile ? '100vh' : '90vh',
               m: isMobile ? 0 : 2,
@@ -806,10 +863,10 @@ const SuperAdminAnnouncements: React.FC = () => {
           {/* Modal Header (Minimalist) */}
           <Box sx={{ p: isMobile ? 2.5 : 4, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Box>
-              <Typography sx={{ fontFamily: fontStack, fontWeight: 800, fontSize: isMobile ? 24 : 32, color: COLORS.textPrimary, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
+              <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: isMobile ? 20 : 26, color: COLORS.textPrimary, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
                 {editingAnnouncement ? 'Edit Announcement' : 'New Announcement'}
               </Typography>
-              <Typography sx={{ fontFamily: fontStack, fontSize: 13, color: '#94a3b8', fontWeight: 400, mt: 0.5 }}>
+              <Typography sx={{ fontFamily: fontStack, fontSize: 12.5, color: '#94a3b8', fontWeight: 400, mt: 0.5 }}>
                 Configure system alerts and broadcast notifications.
               </Typography>
             </Box>
@@ -821,12 +878,12 @@ const SuperAdminAnnouncements: React.FC = () => {
 
               {/* 1. CORE Section */}
               <Box>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
                   Basic Details
                 </Typography>
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 400, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
                       Headline
                     </Typography>
                     <TextField
@@ -836,20 +893,20 @@ const SuperAdminAnnouncements: React.FC = () => {
                       placeholder="Announcement title"
                       variant="outlined"
                       sx={{
-                        '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack, border: '1px solid #f1f5f9' },
+                        '& .MuiOutlinedInput-root': { borderRadius: '8px', fontFamily: fontStack, border: '1px solid #f1f5f9' },
                         '& .MuiInputBase-input': { p: 1.5, fontSize: 14 }
                       }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 400, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
                       Category
                     </Typography>
                     <FormControl fullWidth size="small">
                       <Select
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                        sx={{ ...selectSx, height: 42, borderRadius: '10px', border: '1px solid #f1f5f9' }}
+                        sx={{ ...selectSx, height: 42, borderRadius: '8px', border: '1px solid #f1f5f9' }}
                       >
                         <MenuItem value="general">News</MenuItem>
                         <MenuItem value="policy">Policy</MenuItem>
@@ -862,17 +919,17 @@ const SuperAdminAnnouncements: React.FC = () => {
 
               {/* 2. RECIPIENTS Minimalist Section */}
               <Box>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
                   Target Recipients
                 </Typography>
                 <Box sx={{
-                  p: 2.5, borderRadius: '14px', border: '1px solid #f1f5f9',
+                  p: 2.5, borderRadius: '8px', border: '1px solid #f1f5f9',
                   bgcolor: '#ffffff', display: 'flex', alignItems: 'center', gap: 3
                 }}>
                   <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
                     <PeopleAltIcon sx={{ color: '#94a3b8', fontSize: 20 }} />
                     <Box>
-                      <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
+                      <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 15, color: COLORS.textPrimary }}>
                         {formData.targetAudience === 'all' ? 'All Institutions' : `Target: ${formData.targetAudience?.replace('_', ' ')}`}
                       </Typography>
                       <Typography sx={{ fontFamily: fontStack, fontSize: 12, color: '#CBD5E1' }}>
@@ -901,19 +958,19 @@ const SuperAdminAnnouncements: React.FC = () => {
 
               {/* 3. SCHEDULING Section */}
               <Box>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
                   Schedule & Importance
                 </Typography>
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={4}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 400, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
                       Priority
                     </Typography>
                     <FormControl fullWidth size="small">
                       <Select
                         value={formData.priority}
                         onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                        sx={{ ...selectSx, height: 42, borderRadius: '10px' }}
+                        sx={{ ...selectSx, height: 42, borderRadius: '8px' }}
                       >
                         <MenuItem value="low">Low</MenuItem>
                         <MenuItem value="medium">Medium</MenuItem>
@@ -924,7 +981,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 400, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
                       Post On
                     </Typography>
                     <TextField
@@ -932,12 +989,12 @@ const SuperAdminAnnouncements: React.FC = () => {
                       value={formData.scheduledAt}
                       onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
                       InputLabelProps={{ shrink: true }}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontFamily: fontStack } }}
                     />
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
+                    <Typography sx={{ fontFamily: fontStack, fontWeight: 400, fontSize: 13, color: COLORS.textPrimary, mb: 1.25 }}>
                       Expire On
                     </Typography>
                     <TextField
@@ -945,7 +1002,7 @@ const SuperAdminAnnouncements: React.FC = () => {
                       value={formData.expiresAt}
                       onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
                       InputLabelProps={{ shrink: true }}
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontFamily: fontStack } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontFamily: fontStack } }}
                     />
                   </Grid>
                 </Grid>
@@ -953,7 +1010,7 @@ const SuperAdminAnnouncements: React.FC = () => {
 
               {/* 4. CONTENT Minimalist Section */}
               <Box>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
+                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', mb: 2 }}>
                   Message Content
                 </Typography>
                 <Box sx={{ border: '1px solid #f1f5f9', borderRadius: '14px', overflow: 'hidden' }}>
@@ -1011,13 +1068,13 @@ const SuperAdminAnnouncements: React.FC = () => {
             </Box>
           </DialogContent>
 
-          <DialogActions sx={{ p: isMobile ? 2.5 : 4, pt: 1, display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: 2 }}>
+          <DialogActions sx={{ p: isMobile ? 2.5 : 4, pt: 1, display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               onClick={() => setShowModal(false)}
               fullWidth={isMobile}
               sx={{
                 fontFamily: fontStack, fontWeight: 600, color: '#94a3b8', textTransform: 'none',
-                fontSize: 14, py: 1.5, borderRadius: '12px', flex: 1,
+                fontSize: 14, py: 1.5, borderRadius: '8px', px: 3,
                 '&:hover': { bgcolor: '#F8FAFC' }
               }}
             >
@@ -1028,9 +1085,9 @@ const SuperAdminAnnouncements: React.FC = () => {
               fullWidth={isMobile}
               disabled={!formData.title.trim() || !formData.content.trim()}
               sx={{
-                bgcolor: '#1E293B', color: '#fff', borderRadius: '12px', py: 1.5, flex: 2,
-                textTransform: 'none', fontWeight: 700, fontFamily: fontStack, fontSize: 14,
-                '&:hover': { bgcolor: '#0F172A' },
+                bgcolor: '#3c4043', color: '#fff', borderRadius: '8px', py: 1.5,
+                textTransform: 'none', fontWeight: 700, fontFamily: fontStack, fontSize: 14, px: 4,
+                '&:hover': { bgcolor: '#2c2f32' },
                 '&.Mui-disabled': { bgcolor: '#f1f5f9', color: '#CBD5E1' }
               }}
             >
@@ -1044,7 +1101,7 @@ const SuperAdminAnnouncements: React.FC = () => {
           fullScreen={isMobile}
           PaperProps={{
             sx: {
-              borderRadius: isMobile ? 0 : '32px',
+              borderRadius: isMobile ? 0 : '16px',
               maxWidth: isMobile ? '100%' : '720px !important',
               maxHeight: isMobile ? '100vh' : '85vh',
               m: isMobile ? 0 : 2,
@@ -1146,15 +1203,59 @@ const SuperAdminAnnouncements: React.FC = () => {
             <Button
               fullWidth onClick={() => setShowPreview(false)} disableElevation
               sx={{
-                bgcolor: '#1E293B', color: '#fff', borderRadius: '12px', py: 1.5,
+                bgcolor: '#3c4043', color: '#fff', borderRadius: '8px', py: 1.5,
                 textTransform: 'none', fontWeight: 700, fontFamily: fontStack, fontSize: 14,
-                '&:hover': { bgcolor: '#0F172A' }
+                '&:hover': { bgcolor: '#2c2f32' }
               }}
             >
               Close Preview
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* ── Action Menu ────────────────────────────────────────────── */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            sx: {
+              borderRadius: '12px',
+              mt: 1,
+              minWidth: 160,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              border: '1px solid #f1f5f9'
+            }
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <MenuItem
+            onClick={() => {
+              if (selectedAnnForMenu) openEditModal(selectedAnnForMenu);
+              handleMenuClose();
+            }}
+            sx={{ py: 1.5, gap: 1.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto !important' }}>
+              <EditIcon sx={{ fontSize: 18, color: '#64748B' }} />
+            </ListItemIcon>
+            <ListItemText primary="Edit Announcement" primaryTypographyProps={{ fontSize: 13, fontWeight: 600, fontFamily: fontStack }} />
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              if (selectedAnnForMenu) handleDelete(selectedAnnForMenu._id);
+              handleMenuClose();
+            }}
+            sx={{ py: 1.5, gap: 1.5, color: '#EF4444' }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto !important' }}>
+              <DeleteIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+            </ListItemIcon>
+            <ListItemText primary="Delete" primaryTypographyProps={{ fontSize: 13, fontWeight: 600, fontFamily: fontStack }} />
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );

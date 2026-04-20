@@ -163,7 +163,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                 <Typography
                   variant="h5"
                   sx={{
-                    fontWeight: 750,
+                    fontWeight: 700,
                     color: '#0a0a0a',
                     mb: 1,
                     fontSize: '1.45rem',
@@ -186,7 +186,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                   {description}
                 </Typography>
               </Box>
-
+ 
               <Button
                 fullWidth
                 onClick={onClose}
@@ -199,6 +199,7 @@ const SuccessActionModal: React.FC<SuccessActionModalProps> = ({ open, onClose, 
                   textTransform: 'none',
                   fontWeight: 700,
                   fontSize: '1rem',
+                  fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif',
                   '&:hover': {
                     bgcolor: 'rgba(226, 232, 240, 0.9)',
                     color: '#0F172A'

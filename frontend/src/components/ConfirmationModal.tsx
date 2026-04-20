@@ -53,11 +53,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 <Typography
                   variant="h4"
                   sx={{
-                    fontWeight: 850,
-                    color: '#0F172A',
-                    mb: 4,
+                    fontWeight: 600,
+                    color: '#3c4043',
+                    mb: 2,
                     fontSize: '1.85rem',
-                    letterSpacing: '-0.03em',
+                    letterSpacing: '-0.02em',
                     lineHeight: 1.2,
                     fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif'
                   }}
@@ -86,16 +86,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   sx={{
                     borderRadius: 1.5,
                     py: 2,
-                    bgcolor: '#0F172A',
+                    bgcolor: '#3c4043',
                     color: '#FFF',
                     textTransform: 'none',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     fontSize: '1.05rem',
-                    boxShadow: '0 10px 25px rgba(15, 23, 42, 0.3)',
+                    boxShadow: '0 10px 25px rgba(60, 64, 67, 0.25)',
                     '&:hover': {
-                      bgcolor: '#1E293B',
+                      bgcolor: '#202124',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 15px 30px rgba(15, 23, 42, 0.4)'
+                      boxShadow: '0 15px 30px rgba(60, 64, 67, 0.35)'
                     },
                     '&:disabled': {
                       bgcolor: '#94A3B8',

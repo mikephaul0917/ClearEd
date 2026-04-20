@@ -69,7 +69,7 @@ export const createUser = async (req: Request, res: Response) => {
     console.log('[DEBUG] createUser request body:', req.body);
     console.log('[DEBUG] createUser req.user:', (req as any).user);
 
-    const { email, password, fullName, role, organizationId, organizationIds } = req.body;
+    const { email, password, fullName, role, organizationId, organizationIds, course, yearLevel } = req.body;
     const institutionId = resolveInstitutionId(req);
 
     if (!email || !password || !fullName || !role) {
@@ -101,6 +101,21 @@ export const createUser = async (req: Request, res: Response) => {
           { upsert: true, new: true }
         );
       }
+    }
+
+    // Handle Student Profile during creation
+    if ((role === 'student' || role === 'officer') && (course || yearLevel)) {
+      const activeTerm = await Term.findOne({ institutionId, isActive: true });
+      await StudentProfile.findOneAndUpdate(
+        { userId: user._id, institutionId },
+        {
+          course: course || "",
+          year: yearLevel || "First Year",
+          academicYear: activeTerm?.academicYear || "2024-2025",
+          semester: activeTerm?.semester || "1st Semester"
+        },
+        { upsert: true, new: true }
+      );
     }
 
     res.status(201).json({
@@ -604,16 +619,29 @@ export const listOrganizations = async (req: Request, res: Response) => {
 export const createRequirement = async (req: Request, res: Response) => {
   try {
     const institutionId = resolveInstitutionId(req);
-    const { organizationId, title, description, requiredFiles, isMandatory } = req.body;
+    const { organizationId, title, description, requiredFiles, isMandatory, termId } = req.body;
+
+    // Resolve termId
+    let finalTermId = termId;
+    if (!finalTermId || finalTermId === "null" || finalTermId === "undefined") {
+      const activeTerm = await Term.findOne({ institutionId, isActive: true });
+      if (activeTerm) {
+        finalTermId = activeTerm._id;
+      } else {
+        return res.status(400).json({ message: "No active academic term found." });
+      }
+    }
 
     const reqDoc = await ClearanceRequirement.create({
       organizationId,
       institutionId,
+      termId: finalTermId,
       title,
       description,
       requiredFiles: requiredFiles || [],
       isMandatory: isMandatory !== false,
-      isActive: true
+      isActive: true,
+      createdBy: (req as any).user?.id // Added createdBy which is also required usually
     } as any);
 
     res.status(201).json({ message: "Requirement created", requirement: reqDoc });

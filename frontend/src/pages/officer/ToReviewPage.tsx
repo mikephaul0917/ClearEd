@@ -22,6 +22,7 @@ export default function ToReviewPage() {
     const [organizations, setOrganizations] = useState<any[]>([]);
     const [requirements, setRequirements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [menuReq, setMenuReq] = useState<any>(null);
 
@@ -43,10 +44,8 @@ export default function ToReviewPage() {
         } catch (err) {
             console.error("Failed to load To Review data", err);
         } finally {
-            // Add deliberate delay for premium feel
-            setTimeout(() => {
-                setLoading(false);
-            }, 2000);
+            setLoading(false);
+            setIsInitialLoad(false);
         }
     }, []);
 
@@ -54,14 +53,6 @@ export default function ToReviewPage() {
         fetchData();
     }, [fetchData]);
 
-    // Trigger skeleton on tab change for premium feel
-    useEffect(() => {
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, [tabValue]);
 
     const filteredRequirements = useMemo(() => {
         if (selectedOrg === "all") {
@@ -211,41 +202,62 @@ export default function ToReviewPage() {
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#F9FAFB' }}>
-            <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider", mb: { xs: 2, md: 4 } }}>
+            <Box sx={{ 
+                borderBottom: 1, 
+                borderColor: "divider", 
+                mb: { xs: 3, md: 4 },
+                bgcolor: '#F9FAFB',
+                position: 'sticky',
+                top: 0,
+                zIndex: 10,
+            }}>
+                <Container maxWidth="lg" sx={{ px: { xs: 0, md: 3 } }}>
                     <Tabs
                         value={tabValue}
                         onChange={(_, v) => setTabValue(v)}
                         textColor="primary"
-                        variant={useMediaQuery('(max-width:600px)') ? "fullWidth" : "standard"}
-                        TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+                        variant="standard"
+                        TabIndicatorProps={{ 
+                            sx: { 
+                                bgcolor: "#0D9488", 
+                                height: 3, 
+                                borderTopLeftRadius: 3, 
+                                borderTopRightRadius: 3 
+                            } 
+                        }}
                         sx={{
-                            px: { xs: 0, md: 0 },
                             "& .MuiTab-root": {
                                 textTransform: "none",
                                 fontWeight: 600,
-                                fontSize: "0.875rem",
-                                minWidth: { xs: 'auto', md: 100 },
-                                py: 2,
-                                color: "#5f6368"
+                                fontSize: "0.9375rem",
+                                minWidth: { xs: 100, md: 120 },
+                                py: 2.5,
+                                color: "#5f6368",
+                                transition: 'all 0.2s ease',
+                                "&:hover": {
+                                    color: "#0D9488",
+                                    bgcolor: "rgba(13, 148, 136, 0.04)"
+                                }
                             },
                             "& .Mui-selected": {
-                                color: "#0D9488 !important"
+                                color: "#0D9488 !important",
                             }
                         }}
                     >
                         <Tab label="To review" />
                         <Tab label="Reviewed" />
                     </Tabs>
-                </Box>
+                </Container>
+            </Box>
 
-                <Box sx={{ px: { xs: 2, md: 0 } }}>
+            <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
+                <Box sx={{ mt: { xs: 2, md: 0 } }}>
                     <Select
                         value={selectedOrg}
                         onChange={(e) => setSelectedOrg(e.target.value)}
                         size="small"
                         sx={{
-                            width: { xs: '100%', sm: 250 },
+                            width: { xs: '100%', sm: 280 },
                             mb: 4,
                             borderRadius: '8px',
                             color: '#3c4043',
@@ -269,7 +281,7 @@ export default function ToReviewPage() {
                         ))}
                     </Select>
 
-                    {loading ? (
+                    {loading && isInitialLoad ? (
                         <Box pb={8}>
                             <Skeleton variant="rectangular" width="100%" height={40} sx={{ width: { xs: '100%', sm: 250 }, mb: 4, borderRadius: '8px', bgcolor: "#f1f3f4" }} />
                             {[1, 2].map((group) => (

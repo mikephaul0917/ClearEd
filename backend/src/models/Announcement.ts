@@ -133,7 +133,7 @@ AnnouncementSchema.methods.isVisibleToUser = function(user: any) {
     case 'all':
       return true;
     case 'institutions':
-      return ['admin', 'dean', 'officer'].includes(user?.role);
+      return ['admin', 'dean', 'officer', 'student'].includes(user?.role);
     case 'students':
       return user?.role === 'student';
     case 'admins':

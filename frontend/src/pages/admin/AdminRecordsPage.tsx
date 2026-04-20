@@ -102,6 +102,7 @@ export default function AdminRecordsPage({
 }) {
   const theme = useTheme();
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -301,16 +302,17 @@ export default function AdminRecordsPage({
       mb: 4,
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center'
+      alignItems: 'center',
+      width: '100%'
     }}>
-      <Box sx={{ display: 'flex' }}>
-        {[1, 2, 3, 4].map((i) => (
-          <Box key={i} sx={{ px: 3, py: 2 }}>
-            <Skeleton variant="text" width={80} height={20} />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        {[1, 2, 3].map((i) => (
+          <Box key={i} sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+            <Skeleton variant="text" width={isMobile ? 60 : 80} height={20} />
           </Box>
         ))}
       </Box>
-      <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: '14px', mb: 1 }} />
+      <Skeleton variant="rectangular" width={isMobile ? 44 : 48} height={isMobile ? 44 : 48} sx={{ borderRadius: '14px', mb: 1, flexShrink: 0 }} />
     </Box>
   );
 
@@ -501,74 +503,73 @@ export default function AdminRecordsPage({
         </Alert>
       )}
       {/* --- Tabs & Actions --- */}
-      {loading && isInitialLoad ? (
-        <TabSkeleton />
-      ) : (
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          borderBottom: 1,
-          borderColor: "divider",
-          mb: 4,
-          gap: { xs: 1.5, sm: 2 },
-          width: '100%'
-        }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            textColor="primary"
-            variant="scrollable"
-            scrollButtons="auto"
-            TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        borderBottom: 1,
+        borderColor: "divider",
+        mb: 4,
+        gap: { xs: 1.5, sm: 2 },
+        width: '100%'
+      }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          textColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
+          sx={{
+            mb: "-1px", 
+            "& .MuiTabs-indicator": {
+              bottom: 0,
+            },
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: { xs: "0.8rem", sm: "0.875rem" },
+              color: "#5f6368",
+              minWidth: { xs: 80, sm: 120 },
+              px: { xs: 1.5, sm: 3 },
+              py: 2,
+            },
+            "& .Mui-selected": {
+              color: "#0D9488 !important",
+              fontWeight: 800
+            }
+          }}
+        >
+          <Tab label={isMobile ? "System" : "System Records"} />
+          <Tab label={isMobile ? "Security" : "Security & Alerts"} />
+          <Tab label={isMobile ? "Access" : "Access Logs"} />
+          <Tab label={isMobile ? "Actions" : "Admin Actions"} />
+        </Tabs>
+
+        <Tooltip title="Export Logs">
+          <IconButton
+            onClick={handleExport}
             sx={{
-              mb: "-1px", // Overlap the parent border
-              "& .MuiTab-root": {
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "#5f6368",
-                minWidth: { xs: 'auto', sm: 120 },
-                px: { xs: 2, sm: 3 },
-                py: 2,
-              },
-              "& .Mui-selected": {
-                color: "#0D9488 !important",
-                fontWeight: 800
-              }
+              mb: 1,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: '14px',
+              bgcolor: '#FFF',
+              width: { xs: 44, sm: 48 },
+              height: { xs: 44, sm: 48 },
+              flexShrink: 0,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+              '&:hover': { bgcolor: '#F8FAFC', transform: 'translateY(-1px)' },
+              transition: 'all 0.2s'
             }}
           >
-            <Tab label="System Records" />
-            <Tab label="Security & Alerts" />
-            <Tab label="Access Logs" />
-            <Tab label="Admin Actions" />
-          </Tabs>
-
-          <Tooltip title="Export Logs">
-            <IconButton
-              onClick={handleExport}
-              sx={{
-                mb: 1,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: '14px',
-                bgcolor: '#FFF',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 },
-                flexShrink: 0,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                '&:hover': { bgcolor: '#F8FAFC', transform: 'translateY(-1px)' },
-                transition: 'all 0.2s'
-              }}
-            >
-              <Download sx={{ fontSize: { xs: 20, sm: 22 }, color: COLORS.textPrimary }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
+            <Download sx={{ fontSize: { xs: 20, sm: 22 }, color: COLORS.textPrimary }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
 
       {/* --- Consolidated Overview Card --- */}
-      {loading ? (
+      {loading && isInitialLoad ? (
         <OverviewSkeleton />
       ) : (
         <Card sx={{
@@ -592,7 +593,11 @@ export default function AdminRecordsPage({
                 { label: 'SECURITY LOGS', value: logs.filter(l => l.category === 'security' || l.severity === 'high').length },
                 { label: 'ADMIN ACTIVITY', value: logs.filter(l => l.category === 'admin' || l.category === 'user_management').length },
                 { label: 'CRITICAL EVENTS', value: logs.filter(l => l.severity === 'critical').length },
-                { label: 'SYSTEM HEALTH', value: '100%', color: COLORS.darkTeal }
+                { 
+                  label: 'SYSTEM HEALTH', 
+                  value: Math.max(0, 100 - (logs.filter(l => l.severity === 'critical').length * 5)) + '%',
+                  color: logs.filter(l => l.severity === 'critical').length > 0 ? '#ef4444' : '#1E293B'
+                }
               ].map((stat, idx, arr) => (
                 <Box
                   key={stat.label}
@@ -639,7 +644,11 @@ export default function AdminRecordsPage({
               {[
                 { label: 'START DATE', value: logs.length > 0 ? new Date(logs[logs.length - 1].createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
                 { label: 'LAST UPDATED', value: logs[0] ? formatDate(logs[0].createdAt) + ', Today' : '—' },
-                { label: 'MONITORING', value: 'ACTIVE', color: COLORS.darkTeal },
+                { 
+                  label: 'MONITORING', 
+                  value: loading ? 'SYNCING' : (error ? 'OFFLINE' : 'ACTIVE'),
+                  color: error ? '#ef4444' : (loading ? '#f59e0b' : '#1E293B')
+                },
                 { label: 'DATABASE', value: 'MONGODB' },
                 { label: 'ADMINISTRATOR', value: 'SYSTEM ADMIN' }
               ].map((item) => (
@@ -658,7 +667,7 @@ export default function AdminRecordsPage({
       )}
 
       {/* --- Search & Sort/Filter Bar --- */}
-      {loading ? (
+      {loading && isInitialLoad ? (
         <FilterBarSkeleton />
       ) : (
         <Box sx={{
@@ -803,7 +812,7 @@ export default function AdminRecordsPage({
       )}
 
       <Box sx={{ mb: 4 }}>
-        {loading ? (
+        {loading && isInitialLoad ? (
           [1, 2, 3, 4, 5].map((i) => <LogRowSkeleton key={i} />)
         ) : filteredLogs.length > 0 ? (
           (() => {
@@ -837,7 +846,7 @@ export default function AdminRecordsPage({
 
       {/* --- Pagination --- */}
       <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-        {loading ? (
+        {loading && isInitialLoad ? (
           <Skeleton variant="rectangular" width={240} height={44} sx={{ borderRadius: '40px' }} />
         ) : (
           <Box sx={{
@@ -918,26 +927,31 @@ export default function AdminRecordsPage({
         onClose={() => setDetailsOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: COLORS.cardRadius } }}
+        PaperProps={{ sx: { borderRadius: '12px' } }}
       >
-        <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Log Details</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Log Details</DialogTitle>
         <DialogContent>
           {selectedLog && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
               <Box>
-                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Action Context</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, p: 2, borderRadius: '12px', border: '1px solid ' + COLORS.border, backgroundColor: '#F8FAFC' }}>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Action Context</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, p: 2, borderRadius: '8px', border: '1px solid ' + COLORS.border, backgroundColor: '#F8FAFC' }}>
                   {getActionIcon(selectedLog.action)}
                   <Box>
-                    <Typography sx={{ fontWeight: 800, fontSize: 16 }}>{selectedLog.action}</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: 16 }}>{selectedLog.action}</Typography>
                     <Typography sx={{ fontSize: 13, color: COLORS.textSecondary }}>{selectedLog.resource}</Typography>
                   </Box>
                   <Box sx={{ ml: 'auto' }}>
                     <Chip
                       label={selectedLog.severity.toUpperCase()}
                       size="small"
-                      color={getSeverityColor(selectedLog.severity) as any}
-                      sx={{ fontWeight: 800, fontSize: 10 }}
+                      sx={{ 
+                        fontWeight: 700, 
+                        fontSize: 10,
+                        bgcolor: selectedLog.severity === 'low' ? '#FEF9C3' : selectedLog.severity === 'medium' ? '#FCD34D' : undefined,
+                        color: selectedLog.severity === 'low' ? '#854D0E' : selectedLog.severity === 'medium' ? '#92400E' : undefined,
+                      }}
+                      color={selectedLog.severity !== 'low' && selectedLog.severity !== 'medium' ? getSeverityColor(selectedLog.severity) as any : undefined}
                     />
                   </Box>
                 </Box>
@@ -945,12 +959,12 @@ export default function AdminRecordsPage({
 
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Initiator</Typography>
+                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Initiator</Typography>
                   <Typography sx={{ fontWeight: 600 }}>{selectedLog.userName}</Typography>
                   <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>{selectedLog.userEmail}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Network</Typography>
+                  <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Network</Typography>
                   <Typography sx={{ fontWeight: 600, fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', fontSize: 13 }}>{selectedLog.ipAddress}</Typography>
                   <Typography sx={{ fontSize: 12, color: COLORS.textSecondary }}>Source IP</Typography>
                 </Grid>
@@ -959,19 +973,24 @@ export default function AdminRecordsPage({
               <Divider />
 
               <Box>
-                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>Activity Payload</Typography>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>Activity Payload</Typography>
                 <Box sx={{
-                  mt: 1, p: 2, borderRadius: '12px', backgroundColor: '#F1F5F9',
+                  mt: 1.5, p: 3, borderRadius: '12px', backgroundColor: '#F1F5F9',
                   fontFamily: '"Google Sans", "Product Sans", Roboto, sans-serif', fontSize: 12, overflowX: 'auto',
-                  border: '1px solid ' + COLORS.border
+                  border: '1px solid ' + COLORS.border,
+                  minHeight: 60,
+                  display: 'flex',
+                  alignItems: 'center'
                 }}>
-                  {selectedLog.details}
+                  {selectedLog.details || <Typography sx={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>No additional payload data available.</Typography>}
                 </Box>
               </Box>
 
-              <Box>
-                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 700 }}>User Agent</Typography>
-                <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, mt: 0.5 }}>{selectedLog.userAgent}</Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="overline" sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>User Agent</Typography>
+                <Typography sx={{ fontSize: 11, color: COLORS.textSecondary, mt: 1, lineHeight: 1.5 }}>
+                  {selectedLog.userAgent}
+                </Typography>
               </Box>
             </Box>
           )}
@@ -981,7 +1000,7 @@ export default function AdminRecordsPage({
             fullWidth
             variant="contained"
             onClick={() => setDetailsOpen(false)}
-            sx={{ backgroundColor: COLORS.black, color: '#fff', borderRadius: '12px', py: 1.5, fontWeight: 700, '&:hover': { backgroundColor: '#222' } }}
+            sx={{ backgroundColor: COLORS.black, color: '#fff', borderRadius: '8px', py: 1.5, fontWeight: 600, '&:hover': { backgroundColor: '#222' } }}
           >
             Close Details
           </Button>

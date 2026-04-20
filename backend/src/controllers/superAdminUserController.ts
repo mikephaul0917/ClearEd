@@ -3,6 +3,7 @@ import User from '../models/User';
 import Institution from '../models/Institution';
 import AuditLog from '../models/AuditLog';
 import { InstitutionRequest } from '../models/InstitutionRequest';
+import { sendSuspensionNotification, sendPermanentDeletionNotification, sendReactivationNotification } from '../utils/emailService';
 
 // Get users with filtering and pagination
 export const getUsers = async (req: Request, res: Response) => {
@@ -382,6 +383,18 @@ export const revokeInstitution = async (req: Request, res: Response) => {
       category: 'institution_management'
     });
 
+    // Send suspension notification email to institutional admin
+    try {
+      await sendSuspensionNotification(
+        institution.email,
+        institution.name,
+        revocationReason
+      );
+    } catch (emailError) {
+      console.error('Failed to send suspension email:', emailError);
+      // Continue without failing the request
+    }
+
     res.json({ success: true, message: 'Institution access revoked successfully' });
   } catch (error: any) {
     console.error('Error revoking institution:', error);
@@ -415,6 +428,17 @@ export const reactivateInstitution = async (req: Request, res: Response) => {
       severity: 'high',
       category: 'institution_management'
     });
+
+    // Send reactivation notification email to institutional admin
+    try {
+      await sendReactivationNotification(
+        institution.email,
+        institution.name
+      );
+    } catch (emailError) {
+      console.error('Failed to send reactivation email:', emailError);
+      // Continue without failing the request
+    }
 
     res.json({ success: true, message: 'Institution access reactivated successfully' });
   } catch (error: any) {
@@ -469,6 +493,15 @@ export const permanentDeleteInstitution = async (req: Request, res: Response) =>
     }
 
     const institutionName = institution.name;
+    const administratorEmail = institution.email;
+
+    // Send final notification email before deletion
+    try {
+      await sendPermanentDeletionNotification(administratorEmail, institutionName);
+    } catch (emailError) {
+      console.error('Failed to send permanent deletion email:', emailError);
+      // Continue with deletion even if email fails
+    }
 
     // Delete all users associated with this institution
     await User.deleteMany({ institutionId: institution._id });

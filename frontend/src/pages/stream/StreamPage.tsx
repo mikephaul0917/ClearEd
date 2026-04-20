@@ -697,6 +697,9 @@ const StreamPage: React.FC = () => {
                     onCreated={fetchData}
                     isEdit={isEditMode}
                     editData={editData}
+                    joinCode={org?.joinCode}
+                    institutionId={org?.institutionId?._id || org?.institutionId}
+                    termId={org?.termId?._id || org?.termId}
                 />
 
                 <CreateFormModal
@@ -712,6 +715,9 @@ const StreamPage: React.FC = () => {
                     onCreated={fetchData}
                     isEdit={isEditMode}
                     editData={editData}
+                    joinCode={org?.joinCode}
+                    institutionId={org?.institutionId?._id || org?.institutionId}
+                    termId={org?.termId?._id || org?.termId}
                 />
 
                 <CreatePollModal
@@ -727,6 +733,9 @@ const StreamPage: React.FC = () => {
                     onCreated={fetchData}
                     isEdit={isEditMode}
                     editData={editData}
+                    joinCode={org?.joinCode}
+                    institutionId={org?.institutionId?._id || org?.institutionId}
+                    termId={org?.termId?._id || org?.termId}
                 />
 
                 <CreateMaterialModal
@@ -742,6 +751,9 @@ const StreamPage: React.FC = () => {
                     onCreated={fetchData}
                     isEdit={isEditMode}
                     editData={editData}
+                    joinCode={org?.joinCode}
+                    institutionId={org?.institutionId?._id || org?.institutionId}
+                    termId={org?.termId?._id || org?.termId}
                 />
 
                 <CustomiseAppearanceModal

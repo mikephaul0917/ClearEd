@@ -8,8 +8,8 @@ export interface AuthContextProps {
     user: AuthUser | null;
     token: string | null;
     loading: boolean;
-    login: (email: string, password: string, isSuperAdmin?: boolean, isRegister?: boolean) => Promise<boolean>;
-    loginWithToken: (jwt: string, returnedUser: any) => boolean;
+    login: (email: string, password: string, isSuperAdmin?: boolean, isRegister?: boolean, rememberMe?: boolean) => Promise<boolean>;
+    loginWithToken: (jwt: string, returnedUser: any, rememberMe?: boolean) => boolean;
     logout: () => void;
     mockLogin: (userData: any, mockToken: string) => void;
     updateUser: (data: Partial<AuthUser>) => void;
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [performLogout]);
 
-    const login = async (email: string, password: string, isSuperAdmin = false, isRegister = false): Promise<boolean> => {
+    const login = async (email: string, password: string, isSuperAdmin = false, isRegister = false, rememberMe = false): Promise<boolean> => {
         try {
             const data = await authService.login(email, password, isSuperAdmin, isRegister);
             const { token: jwt, user: returnedUser } = data;
@@ -156,6 +156,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem("email", userData.email || "");
             localStorage.setItem("username", userData.fullName || "");
 
+            // Handle Remember Me
+            if (rememberMe) {
+                localStorage.setItem("rememberedEmail", email);
+                localStorage.setItem("rememberMe", "true");
+            } else {
+                localStorage.removeItem("rememberedEmail");
+                localStorage.removeItem("rememberMe");
+            }
+
             return true;
         } catch (error: any) {
             console.error('Login failed:', error);
@@ -164,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Login with an existing JWT token (for Google OAuth)
-    const loginWithToken = (jwt: string, returnedUser: any): boolean => {
+    const loginWithToken = (jwt: string, returnedUser: any, rememberMe = false): boolean => {
         try {
             const payload = decodeToken(jwt);
             if (!payload) throw new Error('Invalid token');
@@ -192,6 +201,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.setItem("institutionId", returnedUser.institutionId);
             }
             localStorage.setItem("username", returnedUser.fullName || "");
+
+            // Handle Remember Me
+            if (rememberMe) {
+                localStorage.setItem("rememberedEmail", userData.email || "");
+                localStorage.setItem("rememberMe", "true");
+            } else {
+                localStorage.removeItem("rememberedEmail");
+                localStorage.removeItem("rememberMe");
+            }
 
             return true;
         } catch (error) {

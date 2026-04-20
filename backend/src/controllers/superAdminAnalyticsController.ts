@@ -96,14 +96,24 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
       })
     ]);
 
-    // Get institution completion rates
+    // Calculate previous period for trends
+    const rangeMs = now.getTime() - startDate.getTime();
+    const previousStartDate = new Date(startDate.getTime() - rangeMs);
+    const previousEndDate = startDate;
+
     const institutions = await Institution.find({ status: 'approved' })
       .select('_id name')
       .lean();
 
     const clearanceCompletionRates = await Promise.all(
       institutions.map(async (institution) => {
-        const [totalRequests, completedRequests] = await Promise.all([
+        const [
+          totalRequests, 
+          completedRequests,
+          prevTotal,
+          prevCompleted
+        ] = await Promise.all([
+          // Current Period
           ClearanceRequest.countDocuments({
             institutionId: institution._id,
             createdAt: { $gte: startDate }
@@ -112,11 +122,25 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
             institutionId: institution._id,
             status: { $in: ['completed', 'approved'] },
             createdAt: { $gte: startDate }
+          }),
+          // Previous Period
+          ClearanceRequest.countDocuments({
+            institutionId: institution._id,
+            createdAt: { $gte: previousStartDate, $lt: previousEndDate }
+          }),
+          ClearanceRequest.countDocuments({
+            institutionId: institution._id,
+            status: { $in: ['completed', 'approved'] },
+            createdAt: { $gte: previousStartDate, $lt: previousEndDate }
           })
         ]);
 
         const completionRate = totalRequests > 0
           ? (completedRequests / totalRequests) * 100
+          : 0;
+
+        const previousRate = prevTotal > 0
+          ? (prevCompleted / prevTotal) * 100
           : 0;
 
         return {
@@ -125,6 +149,7 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
           totalRequests,
           completedRequests,
           completionRate,
+          trend: completionRate - previousRate,
           status: 'active'
         };
       })
@@ -132,6 +157,36 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
 
     // Sort by completion rate (highest first)
     clearanceCompletionRates.sort((a, b) => b.completionRate - a.completionRate);
+
+    // Get daily activity trends for the whole system
+    const rawTimelineData = await AuditLog.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: startDate },
+          action: { 
+            $in: [
+              'CLEARANCE_SUBMISSION_UPDATED',
+              'CLEARANCE_SUBMISSION_APPROVED',
+              'CLEARANCE_SUBMISSION_REJECTED'
+            ] 
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$timestamp' }
+          },
+          processed: {
+            $sum: { $cond: [{ $in: ['$action', ['CLEARANCE_SUBMISSION_APPROVED', 'CLEARANCE_SUBMISSION_REJECTED']] }, 1, 0] }
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_SUBMISSION_UPDATED'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
 
     const analytics = {
       totalInstitutions,
@@ -153,7 +208,8 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
         weekly: weeklyLogins,
         monthly: monthlyLogins
       },
-      clearanceCompletionRates
+      clearanceCompletionRates,
+      timelineData: rawTimelineData
     };
 
     res.json({
@@ -244,11 +300,13 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
     const dailyActivity = await AuditLog.aggregate([
       {
         $match: {
+          institutionId: institution._id,
           timestamp: { $gte: startDate },
           $or: [
             { action: { $regex: /LOGIN/i } },
-            { action: 'CLEARANCE_SUBMITTED' },
-            { action: 'CLEARANCE_APPROVED' }
+            { action: 'CLEARANCE_SUBMISSION_UPDATED' },
+            { action: 'CLEARANCE_SUBMISSION_APPROVED' },
+            { action: 'CLEARANCE_SUBMISSION_REJECTED' }
           ]
         }
       },
@@ -261,10 +319,10 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
             $sum: { $cond: [{ $regexMatch: { input: '$action', regex: /LOGIN/i } }, 1, 0] }
           },
           submissions: {
-            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_SUBMITTED'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_SUBMISSION_UPDATED'] }, 1, 0] }
           },
           approvals: {
-            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_APPROVED'] }, 1, 0] }
+            $sum: { $cond: [{ $in: ['$action', ['CLEARANCE_SUBMISSION_APPROVED', 'CLEARANCE_SUBMISSION_REJECTED']] }, 1, 0] }
           }
         }
       },

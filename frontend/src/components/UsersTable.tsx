@@ -1206,23 +1206,25 @@ export default function UsersTable({
               exit={{ y: 100, opacity: 0 }}
               sx={{
                 pointerEvents: 'auto',
-                width: { xs: '100%', sm: 'auto' },
+                width: { xs: 'calc(100% - 24px)', sm: 'auto' },
                 maxWidth: { xs: '100%', sm: 'calc(100% - 64px)' },
                 bgcolor: '#3c4043',
                 color: '#FFF',
-                py: { xs: 1.5, sm: 2 },
-                px: { xs: 3.5, sm: 3 },
-                borderRadius: 2, // Matches Dialog radius
+                py: { xs: 1.25, sm: 2 },
+                px: { xs: 2.25, sm: 3 },
+                borderRadius: { xs: 100, sm: 4 },
                 display: 'flex',
-                alignItems: 'center', // Row layout by default
-                gap: { xs: 2, sm: 4 },
+                alignItems: 'center',
+                gap: { xs: 1, sm: 4 },
                 boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
                 border: '1px solid rgba(255,255,255,0.1)'
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
-                <Typography sx={{ fontWeight: 800, fontSize: { xs: 13, sm: 14 }, whiteSpace: 'nowrap' }}>
-                  {selectedUserIds.length} {isSmallMobile ? 'Sel.' : 'users selected'}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1.5 } }}>
+                <Typography sx={{ fontWeight: 800, fontSize: { xs: 11, sm: 14 }, whiteSpace: 'nowrap' }}>
+                  {isSmallMobile
+                    ? `(${selectedUserIds.length}) user selected`
+                    : `(${selectedUserIds.length}) users selected`}
                 </Typography>
                 <Tooltip title={isSmallMobile ? "Clear Selection" : ""}>
                   <Button
@@ -1549,7 +1551,13 @@ export default function UsersTable({
               <Select
                 value={role}
                 label="Role"
-                onChange={(e) => setRole(e.target.value as string)}
+                onChange={(e) => {
+                  const newRole = e.target.value as string;
+                  setRole(newRole);
+                  if (!manageUser?._id) {
+                    setIsStudentMode(newRole === 'student');
+                  }
+                }}
                 sx={{ borderRadius: '12px' }}
               >
                 <MenuItem value="student">Student</MenuItem>
@@ -1678,7 +1686,7 @@ export default function UsersTable({
               </Box>
             )}
 
-            {manageUser?._id && (role === 'student' || role === 'officer') && (
+            {(role === 'student' || role === 'officer') && (
               <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', mt: 1 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                   <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, textTransform: 'uppercase' }}>
@@ -1696,8 +1704,11 @@ export default function UsersTable({
                 {isStudentMode ? (
                   <Box display="flex" gap={1.5}>
                     <TextField
-                      size="small" label="Course (e.g. BSCS)"
-                      value={studentCourse} onChange={e => setStudentCourse(e.target.value)}
+                      size="small"
+                      label="Course (e.g. BSCS)"
+                      placeholder="Course (e.g. BSCS)"
+                      value={studentCourse}
+                      onChange={e => setStudentCourse(e.target.value)}
                       sx={{ flex: 2, bgcolor: '#FFF', '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                     />
                     <FormControl size="small" sx={{ flex: 1.5, bgcolor: '#FFF' }}>
@@ -1715,55 +1726,39 @@ export default function UsersTable({
                   <Typography fontSize={13} color="#64748B" fontStyle="italic">This officer is not tracking any student clearance.</Typography>
                 )}
 
-                <Box mt={2} display="flex" justifyContent="flex-end">
-                  <Button
-                    size="small" variant="contained" disableElevation
-                    disabled={isStudentMode && (!studentCourse.trim() || !studentYear)}
-                    onClick={async () => {
-                      try {
-                        await adminService.updateStudentProfile(manageUser._id, { isStudent: isStudentMode, course: studentCourse.trim(), yearLevel: studentYear });
-                        setSuccessTitle("Profile Updated");
-                        setSuccessMsg("The student profile has been updated successfully.");
-                        setShowSuccessModal(true);
-                      } catch (e: any) {
-                        Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Update failed' });
-                      }
-                    }}
-                    sx={{
-                      borderRadius: 1.5,
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      bgcolor: '#3c4043',
-                      padding: '12px 16px',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                      '&:hover': { bgcolor: '#202124', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
-                    }}
-                  >
-                    Save Profile
-                  </Button>
-                </Box>
+                {manageUser?._id && (
+                  <Box mt={2} display="flex" justifyContent="flex-end">
+                    <Button
+                      size="small" variant="contained" disableElevation
+                      disabled={isStudentMode && (!studentCourse.trim() || !studentYear)}
+                      onClick={async () => {
+                        try {
+                          await adminService.updateStudentProfile(manageUser._id, { isStudent: isStudentMode, course: studentCourse.trim(), yearLevel: studentYear });
+                          setSuccessTitle("Profile Updated");
+                          setSuccessMsg("The student profile has been updated successfully.");
+                          setShowSuccessModal(true);
+                        } catch (e: any) {
+                          Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Update failed' });
+                        }
+                      }}
+                      sx={{
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        bgcolor: '#3c4043',
+                        padding: '12px 16px',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                        '&:hover': { bgcolor: '#202124', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
+                      }}
+                    >
+                      Save Profile
+                    </Button>
+                  </Box>
+                )}
               </Box>
             )}
 
-            {(!manageUser?._id && (role === 'student' || role === 'officer')) && (
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: { xs: 1.5, sm: 2 },
-                p: { xs: 1.25, sm: 1.5 },
-                borderRadius: '14px',
-                bgcolor: '#ECFEFF',
-                border: '1px solid #0E749020',
-                mt: 0.5
-              }}>
-                <Box sx={{ color: '#0E7490', display: 'flex' }}>
-                  <Security sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                </Box>
-                <Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, color: '#0E7490', fontWeight: 600, lineHeight: 1.3 }}>
-                  You can assign the specific course for this user after creating their account.
-                </Typography>
-              </Box>
-            )}
+
 
             {manageUser?._id && (
               <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#F8FAFC', border: '1px dashed #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1813,7 +1808,8 @@ export default function UsersTable({
                     password: createPassword,
                     isAdmin: role === "admin",
                     role,
-                    ...(selectedOrgIds.length > 0 ? { organizationIds: selectedOrgIds } : {})
+                    ...(selectedOrgIds.length > 0 ? { organizationIds: selectedOrgIds } : {}),
+                    ...(isStudentMode ? { course: studentCourse.trim(), yearLevel: studentYear } : {})
                   });
                   setSuccessTitle("User Created");
                   setSuccessMsg("The new user account has been successfully created.");

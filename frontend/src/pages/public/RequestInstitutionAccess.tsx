@@ -476,8 +476,8 @@ export default function RequestInstitutionAccess() {
       <SuccessActionModal
         open={isSuccessOpen}
         onClose={() => navigate('/')}
-        title="Email Confirmation"
-        description={`We have sent an email to ${formData.administratorEmail} to confirm the validity of your administrative request. Please follow the link provided in that mail to complete your registration.`}
+        title="Request Submitted"
+        description={`Thank you! Your request for institutional access has been successfully submitted. We have sent a confirmation email to ${formData.administratorEmail}. Your request is now pending review by our system administrators.`}
       />
     </>
   );

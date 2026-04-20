@@ -48,7 +48,7 @@ const AddLinkModal: React.FC<AddLinkModalProps> = ({
             onClose={onClose}
             PaperProps={{
                 sx: {
-                    borderRadius: "24px",
+                    borderRadius: "8px",
                     width: "100%",
                     maxWidth: "500px",
                     p: 2
@@ -89,7 +89,7 @@ const AddLinkModal: React.FC<AddLinkModalProps> = ({
                                 </InputAdornment>
                             ),
                             sx: {
-                                borderRadius: "12px",
+                                borderRadius: "4px",
                                 bgcolor: "#fff",
                                 '& .MuiOutlinedInput-notchedOutline': {
                                     borderColor: "#dadce0",
@@ -115,7 +115,7 @@ const AddLinkModal: React.FC<AddLinkModalProps> = ({
                         bgcolor: "#3c4043",
                         color: "white",
                         py: 2,
-                        borderRadius: "100px",
+                        borderRadius: "4px",
                         textTransform: "none",
                         fontSize: "1rem",
                         fontWeight: 600,

@@ -327,6 +327,7 @@ export default function DeanPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [filterStatus, setFilterStatus] = useState<"pending" | "approved">("pending");
   const [isShuffling, setIsShuffling] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selected, setSelected] = useState<any>(null);
   const [detailsTab, setDetailsTab] = useState<'info' | 'progress'>('info');
   const [zoomedSignature, setZoomedSignature] = useState<string | null>(null);
@@ -373,6 +374,7 @@ export default function DeanPage() {
 
   const theme = useTheme();
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleDeleteAvatar = async () => {
     setIsDeletingAvatar(true);
@@ -453,7 +455,6 @@ export default function DeanPage() {
 
   const loadData = async () => {
     setIsShuffling(true);
-    const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
     try {
       try {
         const res = await api.get("/dean/courses");
@@ -512,9 +513,10 @@ export default function DeanPage() {
           { id: "D-2", name: "Ana Reyes", studentId: "S-00022", course: "BSIT", year: "2nd Year", dateSubmitted: new Date().toISOString().slice(0, 10), status: "Pending", reqCompleted: 1, reqTotal: 3 }
         ]);
       }
-      await minDelay;
+      // await minDelay;
     } finally {
       setIsShuffling(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -619,7 +621,8 @@ export default function DeanPage() {
       setPasswordModalOpen(false);
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to update password";
-      setNotice({ message: msg, variant: "error" });
+      setPasswordModalOpen(false);
+      showGlobalModal("Incorrect Current Password", msg, "error");
     } finally {
       setPasswordUpdateLoading(false);
     }
@@ -861,22 +864,29 @@ export default function DeanPage() {
                   setPage(0);
                 }}
                 textColor="primary"
-                variant={isSmallMobile ? "fullWidth" : "standard"}
+                variant="scrollable"
+                scrollButtons="auto"
                 TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                 sx={{
                   px: { xs: 0, md: 0 },
                   minHeight: "auto",
+                  mb: "-1px",
+                  "& .MuiTabs-indicator": {
+                    bottom: 0,
+                  },
                   "& .MuiTab-root": {
                     textTransform: "none",
                     fontWeight: 600,
-                    fontSize: "0.875rem",
-                    minWidth: { xs: 'auto', md: 110 },
+                    fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                    minWidth: { xs: 80, sm: 120 },
+                    px: { xs: 1.5, sm: 3 },
                     py: 2,
                     color: "#5f6368",
                     opacity: 1,
                     transition: 'all 0.2s ease',
                     '&.Mui-selected': {
                       color: "#0D9488 !important",
+                      fontWeight: 800
                     }
                   }
                 }}
@@ -887,7 +897,7 @@ export default function DeanPage() {
             </Box>
           </Box>
 
-          {isShuffling ? (
+          {isShuffling && isInitialLoad ? (
             <DeanDashboardSkeleton />
           ) : (
             <>
@@ -917,7 +927,7 @@ export default function DeanPage() {
                     <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                       <Box>
                         <Typography sx={{ color: '#111827', fontSize: '1rem', fontWeight: 700, mb: 0.5 }}>
-                          {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : "Active Students") : (card.isPendingFinal ? <Box component="span">Tasks this week <Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : card.label)}
+                          {card.efficiency ? (filterCourse ? getCourseLabel(filterCourse) : (isMobile ? "Active" : "Active Students")) : (card.isPendingFinal ? <Box component="span">{isMobile ? "" : "Tasks this week "}<Box component="span" sx={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.875rem' }}>/ Approvals</Box></Box> : (isMobile ? card.label.replace("Total ", "") : card.label))}
                         </Typography>
                         {card.efficiency && (
                           <Box display="flex" alignItems="center" gap={0.75} sx={{ color: '#6B7280' }}>

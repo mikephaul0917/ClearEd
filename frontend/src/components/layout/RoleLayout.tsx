@@ -15,7 +15,7 @@ interface RoleLayoutProps {
 const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
     const { user, logout, loading } = useAuth();
     const location = useLocation();
-    const isFullPageDocument = ["/slip", "/certificate", "/progress"].some(p => location.pathname.includes(p));
+    const isFullPageDocument = ["/slip", "/certificate", "/progress", "/todo", "/to-review"].some(p => location.pathname.includes(p));
 
     if (loading) {
         return (
