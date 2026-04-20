@@ -417,7 +417,7 @@ export default function LandingPage() {
             src="/mobile.png"
             alt="Mobile Mockup"
             initial={{ y: 200, opacity: 0, rotate: -5, x: "-50%" }}
-            whileInView={{ y: isMobile ? 60 : -60, opacity: 1, rotate: -5, x: "-50%" }}
+            whileInView={{ y: isMobile ? 80 : -30, opacity: 1, rotate: -5, x: "-50%" }}
             viewport={{ once: true }}
             transition={{
               type: "spring",
@@ -429,8 +429,8 @@ export default function LandingPage() {
             sx={{
               position: "absolute",
               left: "50%",
-              width: { xs: "170%", sm: "90%", md: "1100px" },
-              maxWidth: { xs: "none", sm: "600px", md: "none" },
+              width: { xs: "50%", sm: "40%", md: "320px" },
+              maxWidth: { xs: "180px", sm: "300px", md: "320px" },
               height: "auto",
               filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
               zIndex: 2,
