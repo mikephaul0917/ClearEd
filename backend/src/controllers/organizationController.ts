@@ -696,8 +696,14 @@ export const getMyOrganizations = catchAsync(async (req: Request, res: Response)
         Term.findOne({ institutionId, isActive: true })
     ]);
 
-    // CRITICAL FIX: Filter out memberships for organizations that have been deleted.
-    const validMemberships = memberships.filter(m => m.organizationId !== null);
+    const { includeArchived } = req.query;
+
+    // CRITICAL FIX: Filter out memberships for organizations that have been deleted or archived.
+    const validMemberships = memberships.filter(m => {
+        if (m.organizationId === null) return false;
+        if (includeArchived === 'true') return true;
+        return (m.organizationId as any).status !== 'archived';
+    });
 
     const organizations = validMemberships.map(m => {
         const org: any = m.organizationId;

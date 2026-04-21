@@ -30,6 +30,7 @@ import {
 import { api } from '../../services';
 import { CardGridSkeleton, LoadingSpinner } from '../../components/ui';
 import { formatErrorForDisplay } from '../../utils/errorMessages';
+import GenericConfirmationModal from '../modals/GenericConfirmationModal';
 
 // Custom SVG Icons
 const AddIcon = () => (
@@ -117,6 +118,8 @@ export default function ClearanceManagement() {
   });
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState<NotificationState>({ open: false, message: '', severity: 'info' });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; itemId: string | null }>({ open: false, itemId: null });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchClearanceItems();
@@ -202,16 +205,23 @@ export default function ClearanceManagement() {
     }
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!window.confirm('Are you sure you want to delete this clearance item?')) return;
+  const handleDeleteItem = (itemId: string) => {
+    setDeleteConfirm({ open: true, itemId });
+  };
 
+  const confirmDeleteItem = async () => {
+    if (!deleteConfirm.itemId) return;
+    setDeleting(true);
     try {
-      await api.delete(`/clearance/admin/items/${itemId}`);
+      await api.delete(`/clearance/admin/items/${deleteConfirm.itemId}`);
       showNotification('Clearance item deleted successfully', 'success');
+      setDeleteConfirm({ open: false, itemId: null });
       fetchClearanceItems();
     } catch (error: any) {
       const errorInfo = formatErrorForDisplay(error);
       showNotification(errorInfo.message, 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -488,6 +498,16 @@ export default function ClearanceManagement() {
           {notification.message}
         </Alert>
       </Snackbar>
+
+      <GenericConfirmationModal
+        open={deleteConfirm.open}
+        onClose={() => setDeleteConfirm({ open: false, itemId: null })}
+        onConfirm={confirmDeleteItem}
+        title="Delete Clearance Item?"
+        description="Are you sure you want to delete this clearance item? This action will remove the item from all associated checklists and cannot be undone."
+        confirmText="Yes, Delete"
+        loading={deleting}
+      />
     </Box>
   );
 }

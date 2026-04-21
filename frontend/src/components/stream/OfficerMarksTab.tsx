@@ -12,6 +12,7 @@ import { clearanceService, api } from '../../services';
 import SignatureModal from './SignatureModal';
 import StudentProgress from '../../pages/student/StudentProgress';
 import { getInitials, getAbsoluteUrl } from "../../utils/avatarUtils";
+import GenericConfirmationModal from '../modals/GenericConfirmationModal';
 
 const COLORS = {
     teal: '#0E7490',
@@ -138,6 +139,11 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
         return () => window.removeEventListener('clear-bulk-selections', handleClear);
     }, []);
 
+    const [isRevokeModalOpen, setIsRevokeModalOpen] = useState(false);
+    const [isBulkRevokeModalOpen, setIsBulkRevokeModalOpen] = useState(false);
+    const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+    const [isActionLoading, setIsActionLoading] = useState(false);
+
     const handleOpenSignatureModal = (studentId: string) => {
         setSelectedStudentId(studentId);
         setSignatureModalOpen(true);
@@ -171,30 +177,45 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
         }
     };
 
-    const handleRevokeClearance = async (studentId: string) => {
-        if (window.confirm("Are you sure you want to revoke this student's clearance? This will set their status back to 'In Progress'.")) {
-            try {
-                await clearanceService.revokeOfficerClearance(organizationId, studentId);
-                fetchOverview();
-            } catch (error: any) {
-                console.error('Failed to revoke clearance', error);
-                alert(error.response?.data?.message || 'Failed to revoke clearance');
-            }
+    const handleRevokeClearance = (studentId: string) => {
+        setRevokeTargetId(studentId);
+        setIsRevokeModalOpen(true);
+    };
+
+    const confirmRevoke = async () => {
+        if (!revokeTargetId) return;
+        try {
+            setIsActionLoading(true);
+            await clearanceService.revokeOfficerClearance(organizationId, revokeTargetId);
+            fetchOverview();
+            setIsRevokeModalOpen(false);
+            setRevokeTargetId(null);
+        } catch (error: any) {
+            console.error('Failed to revoke clearance', error);
+            alert(error.response?.data?.message || 'Failed to revoke clearance');
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
-    const handleBulkRevoke = async () => {
+    const handleBulkRevoke = () => {
         if (selectedStudentIds.length === 0) return;
-        if (window.confirm(`Are you sure you want to revoke clearance for ${selectedStudentIds.length} students?`)) {
-            try {
-                const response = await clearanceService.bulkRevokeOfficerClearance(organizationId, selectedStudentIds);
-                alert(response.message);
-                setSelectedStudentIds([]);
-                fetchOverview();
-            } catch (error: any) {
-                console.error('Failed to revoke clearances', error);
-                alert(error.response?.data?.message || 'Failed to revoke clearances');
-            }
+        setIsBulkRevokeModalOpen(true);
+    };
+
+    const confirmBulkRevoke = async () => {
+        try {
+            setIsActionLoading(true);
+            const response = await clearanceService.bulkRevokeOfficerClearance(organizationId, selectedStudentIds);
+            alert(response.message);
+            setSelectedStudentIds([]);
+            fetchOverview();
+            setIsBulkRevokeModalOpen(false);
+        } catch (error: any) {
+            console.error('Failed to revoke clearances', error);
+            alert(error.response?.data?.message || 'Failed to revoke clearances');
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
@@ -585,6 +606,29 @@ const OfficerMarksTab: React.FC<OfficerMarksTabProps> = ({ organizationId }) => 
                     </Box>
                 )}
             </AnimatePresence>
+
+            <GenericConfirmationModal
+                open={isRevokeModalOpen}
+                onClose={() => {
+                    setIsRevokeModalOpen(false);
+                    setRevokeTargetId(null);
+                }}
+                onConfirm={confirmRevoke}
+                title="Revoke Clearance?"
+                description="Are you sure you want to revoke this student's clearance? They will need to fulfill the requirements again."
+                confirmText="Yes, Revoke"
+                loading={isActionLoading}
+            />
+
+            <GenericConfirmationModal
+                open={isBulkRevokeModalOpen}
+                onClose={() => setIsBulkRevokeModalOpen(false)}
+                onConfirm={confirmBulkRevoke}
+                title="Bulk Revoke Clearance?"
+                description={`Are you sure you want to revoke clearance for ${selectedStudentIds.length} selected students?`}
+                confirmText="Yes, Revoke All"
+                loading={isActionLoading}
+            />
         </Box>
     );
 };

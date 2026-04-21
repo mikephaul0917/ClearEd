@@ -1415,8 +1415,8 @@ export default function SuperAdminInstitutionRequests() {
 
             {activeTab === 'suspended' && (
               <>
-                <MenuItem onClick={() => { openReactivateDialog(currentMenuRequest); handleMenuClose(); }} sx={{ color: '#44838b' }}>
-                  <ListItemIcon sx={{ minWidth: 'auto !important' }}><RestoreIcon fontSize="small" sx={{ color: '#44838b' }} /></ListItemIcon>
+                <MenuItem onClick={() => { openReactivateDialog(currentMenuRequest); handleMenuClose(); }} sx={{ color: COLORS.black }}>
+                  <ListItemIcon sx={{ minWidth: 'auto !important' }}><RestoreIcon fontSize="small" sx={{ color: COLORS.black }} /></ListItemIcon>
                   <ListItemText primary="Reactivate" />
                 </MenuItem>
                 <MenuItem onClick={() => openPermanentDeleteDialog(currentMenuRequest)} sx={{ color: '#dc2626' }}>
@@ -1793,8 +1793,8 @@ export default function SuperAdminInstitutionRequests() {
             disabled={actionState !== 'idle'}
             sx={{
               fontFamily: fontStack, fontWeight: 600, textTransform: 'none', borderRadius: COLORS.pillRadius,
-              px: 3, py: 1, backgroundColor: '#B0E0E6', color: '#000000',
-              '&:hover': { backgroundColor: '#9AC0C6' },
+              px: 3, py: 1, backgroundColor: '#3c4043', color: '#FFFFFF',
+              '&:hover': { backgroundColor: '#4d5154' },
             }}
           >
             {actionState === 'loading' ? <CircularProgress size={16} color="inherit" /> : 'Reactivate Now'}
@@ -1891,9 +1891,9 @@ export default function SuperAdminInstitutionRequests() {
             disabled={permanentDeleteConfirmText !== selectedRequest?.institutionName || actionState !== 'idle'}
             sx={{
               fontFamily: fontStack, fontWeight: 600, textTransform: 'none', borderRadius: COLORS.pillRadius,
-              px: 3, py: 1, backgroundColor: '#ef4444', color: '#FFFFFF',
-              '&:hover': { backgroundColor: '#dc2626' },
-              '&.Mui-disabled': { backgroundColor: '#FECACA', color: '#FFFFFF' }
+              px: 3, py: 1, backgroundColor: '#3c4043', color: '#FFFFFF',
+              '&:hover': { backgroundColor: '#4d5154' },
+              '&.Mui-disabled': { backgroundColor: '#E2E8F0', color: '#94A3B8' }
             }}
           >
             {actionState === 'loading' ? <CircularProgress size={16} color="inherit" /> : 'Yes, permanently delete it!'}

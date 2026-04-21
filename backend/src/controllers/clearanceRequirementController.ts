@@ -7,6 +7,7 @@ import AuditLog from "../models/AuditLog";
 import mongoose from "mongoose";
 import { logAudit } from "../utils/auditLogger";
 import { AppError, catchAsync } from "../utils/errors";
+import { NotificationService } from "../services/notificationService";
 
 /**
  * Creates a new clearance requirement within an organization.
@@ -102,6 +103,14 @@ export const createRequirement = async (req: Request, res: Response) => {
             severity: 'medium',
             req
         });
+
+        // 5. Notify all students in the organization
+        // Triggered after response to keep it non-blocking for the officer
+        NotificationService.sendNewRequirementNotifications(
+            organizationId,
+            { _id: newRequirement._id, title: newRequirement.title },
+            institutionId
+        ).catch(e => console.error('Delayed notification error:', e));
 
         res.status(201).json({
             message: "Clearance requirement created successfully.",

@@ -1,8 +1,8 @@
 import { api } from './api';
 
 export const organizationService = {
-    getMyOrganizations: async () => {
-        const response = await api.get('/organizations/my-organizations');
+    getMyOrganizations: async (params?: any) => {
+        const response = await api.get('/organizations/my-organizations', { params });
         return response.data;
     },
 

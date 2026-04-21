@@ -1,5 +1,7 @@
 import Notification from '../models/Notification';
 import User from '../models/User';
+import OrganizationMember from '../models/OrganizationMember';
+import Organization from '../models/Organization';
 import { sendEmail } from '../utils/emailService';
 
 export interface NotificationData {
@@ -390,5 +392,47 @@ export class NotificationService {
       relatedEntityType: 'ClearanceItem',
       relatedEntityId: details.clearanceTitle || details.officerName
     });
+  }
+
+  /**
+   * Send notifications to all active members of an organization about a new requirement
+   */
+  static async sendNewRequirementNotifications(
+    organizationId: string,
+    requirement: { _id: any; title: string },
+    institutionId: string
+  ): Promise<void> {
+    try {
+      // 1. Fetch the organization name
+      const organization = await Organization.findById(organizationId).select('name').lean();
+      const orgName = organization?.name || 'Organization';
+
+      // 2. Fetch all active student members of the organization
+      const members = await OrganizationMember.find({
+        organizationId,
+        role: 'member',
+        status: 'active'
+      }).select('userId').lean();
+
+      if (members.length === 0) return;
+
+      // 3. Prepare bulk notifications
+      const notifications: NotificationData[] = members.map(member => ({
+        userId: member.userId.toString(),
+        institutionId,
+        title: `New Requirement: ${requirement.title}`,
+        message: `A new clearance requirement "${requirement.title}" has been posted in ${orgName}.`,
+        type: 'info',
+        category: 'clearance_workflow',
+        relatedEntityId: requirement._id.toString(),
+        relatedEntityType: 'ClearanceRequirement',
+        actionUrl: `/organization/${organizationId}/requirement/${requirement._id}`
+      }));
+
+      // 4. Create and send notifications
+      await this.createBulkNotifications(notifications);
+    } catch (error) {
+      console.error('Failed to send new requirement notifications:', error);
+    }
   }
 }

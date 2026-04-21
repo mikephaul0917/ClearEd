@@ -382,7 +382,7 @@ export default function LandingPage() {
               letterSpacing: "-0.04em",
               textAlign: "center",
               color: C.black,
-              mb: { xs: 6, md: 10 },
+              mb: { xs: 6, sm: 10, md: 10 },
               px: { xs: 2, md: 0 }
             }}
           >
@@ -398,7 +398,7 @@ export default function LandingPage() {
           transition={{ duration: 1.2, delay: 0.3 }}
           sx={{
             width: "100%",
-            height: { xs: "480px", sm: "400px", md: "550px" },
+            height: { xs: "480px", sm: "500px", md: "550px" },
             backgroundColor: C.blueAccent,
             borderRadius: { xs: "32px", md: "60px" },
             position: "relative",
@@ -417,7 +417,7 @@ export default function LandingPage() {
             src="/mobile.png"
             alt="Mobile Mockup"
             initial={{ y: 200, opacity: 0, rotate: -5, x: "-50%" }}
-            whileInView={{ y: isMobile ? 80 : -30, opacity: 1, rotate: -5, x: "-50%" }}
+            whileInView={{ y: isMobile ? 60 : -30, opacity: 1, rotate: -5, x: "-50%" }}
             viewport={{ once: true }}
             transition={{
               type: "spring",
@@ -429,8 +429,8 @@ export default function LandingPage() {
             sx={{
               position: "absolute",
               left: "50%",
-              width: { xs: "50%", sm: "40%", md: "320px" },
-              maxWidth: { xs: "180px", sm: "300px", md: "320px" },
+              width: { xs: "50%", sm: "30%", md: "320px" },
+              maxWidth: { xs: "180px", sm: "220px", md: "320px" },
               height: "auto",
               filter: "drop-shadow(0 60px 80px rgba(0,0,0,0.45))",
               zIndex: 2,
@@ -444,9 +444,9 @@ export default function LandingPage() {
 
           <Box sx={{
             position: "absolute",
-            top: { xs: 30, md: 'auto' },
-            bottom: { xs: 'auto', md: 60 },
-            left: { xs: 30, md: 60 },
+            top: { xs: 30, sm: 'auto', md: 'auto' },
+            bottom: { xs: 'auto', sm: 40, md: 60 },
+            left: { xs: 20, sm: 30, md: 60 },
             color: "#0d6b63",
             zIndex: 3,
             pr: 4
@@ -461,7 +461,7 @@ export default function LandingPage() {
             </Typography>
             <Typography sx={{
               opacity: 0.9,
-              maxWidth: { xs: "260px", md: "300px" },
+              maxWidth: { xs: "200px", sm: "210px", md: "300px" },
               fontSize: { xs: "13px", md: "14px" },
               fontWeight: 600,
               lineHeight: 1.5
@@ -777,7 +777,7 @@ export default function LandingPage() {
             <Typography sx={{ color: "#94A3B8", fontSize: "11px", fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'center', sm: 'left' } }}>
               © 2026 CLEARED. ALL RIGHTS RESERVED.
             </Typography>
-            <Typography sx={{ color: "#94A3B8", fontSize: "10px", textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'center', sm: 'right' }, maxWidth: { xs: '100%', sm: 400 } }}>
+            <Typography sx={{ color: "#94A3B8", fontSize: "10px", textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', textAlign: { xs: 'center', sm: 'right' }, maxWidth: { xs: '100%', sm: 600 } }}>
               DEVELOPED BY MIKE PHAUL BANDERADA, ERROLLE ARDIENTE, AND BRAD DEL MORO
             </Typography>
           </Box>

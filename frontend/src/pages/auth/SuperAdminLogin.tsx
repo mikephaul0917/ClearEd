@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import AuthenticationOverlay from "../../components/AuthenticationOverlay";
 import { InlineSpinner, spinnerStyles } from "../../components/ui/LoadingSpinner";
 import { formatErrorForDisplay } from "../../utils/errorMessages";
 import { ERROR_MESSAGES } from "../../utils/errorMessages";
@@ -31,13 +30,7 @@ export default function SuperAdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [focusField, setFocusField] = useState<string | null>(null);
-
-  const handleAuthOverlayComplete = () => {
-    setShowAuthOverlay(false);
-    nav("/super-admin/dashboard");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +48,7 @@ export default function SuperAdminLoginPage() {
     setIsLoading(true);
     try {
       await login(email.toLowerCase(), password, true);
-      setShowAuthOverlay(true);
+      nav("/super-admin/dashboard");
     } catch (error: any) {
       const errorInfo = formatErrorForDisplay(error);
       window.dispatchEvent(new CustomEvent('app:show-modal', {
@@ -271,15 +264,6 @@ export default function SuperAdminLoginPage() {
         }
       `}</style>
 
-      <AuthenticationOverlay
-        isOpen={showAuthOverlay}
-        message="Super Admin Login Successful"
-        userName="Super Admin"
-        userRole="System Administrator"
-        institutionName="E-Clearance System"
-        duration={2500}
-        onComplete={handleAuthOverlayComplete}
-      />
     </>
   );
 }

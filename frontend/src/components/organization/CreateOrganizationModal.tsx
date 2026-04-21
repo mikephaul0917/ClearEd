@@ -14,7 +14,6 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
-import Switch from "@mui/material/Switch";
 import { organizationService } from "../../services";
 
 interface CreateOrganizationModalProps {
@@ -27,7 +26,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [signatoryName, setSignatoryName] = useState("");
-    const [isFinal, setIsFinal] = useState(false);
     const [termId, setTermId] = useState("");
     const [terms, setTerms] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -72,10 +70,10 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                 name,
                 description,
                 signatoryName,
-                isFinal,
                 termId
             });
             onCreated();
+            window.dispatchEvent(new CustomEvent('refresh-sidebar'));
             handleClose();
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to create organization.");
@@ -88,7 +86,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
         setName("");
         setDescription("");
         setSignatoryName("");
-        setIsFinal(false);
         setTermId("");
         setError(null);
         onClose();
@@ -245,39 +242,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                         </FormControl>
                     </Box>
 
-                    <Box
-                        sx={{
-                            p: 2.5,
-                            borderRadius: 2,
-                            border: "1px solid #e2e8f0",
-                            bgcolor: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
-                        }}
-                    >
-                        <Box>
-                            <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1rem" }}>
-                                Final Milestone
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
-                                Mark this as the final required signatory in the sequence.
-                            </Typography>
-                        </Box>
-                        <Switch
-                            checked={isFinal}
-                            onChange={(e) => setIsFinal(e.target.checked)}
-                            sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                    color: '#334155',
-                                    '& + .MuiSwitch-track': {
-                                        backgroundColor: '#334155',
-                                    },
-                                },
-                            }}
-                        />
-                    </Box>
                 </Box>
             </DialogContent>
 
@@ -299,7 +263,7 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({ open,
                     variant="contained"
                     disabled={loading || terms.length === 0}
                     sx={{
-                        bgcolor: "#334155",
+                        bgcolor: "#3c4043",
                         color: "#ffffff",
                         fontWeight: 700,
                         borderRadius: "8px",

@@ -49,6 +49,7 @@ const JoinOrganizationModal: React.FC<JoinOrganizationModalProps> = ({
                 setSuccess(false);
                 setJoinCode("");
                 onJoined?.();
+                window.dispatchEvent(new CustomEvent('refresh-sidebar'));
                 onClose();
             }, 2000);
         } catch (err: any) {

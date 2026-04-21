@@ -19,6 +19,7 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { organizationService } from "../../services";
 import { getAbsoluteUrl, getInitials } from "../../utils/avatarUtils";
 import { useAuth } from "../../contexts/AuthContext";
+import GenericConfirmationModal from "../modals/GenericConfirmationModal";
 
 interface MembersListProps {
     organizationId: string;
@@ -32,6 +33,7 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
     const [removingId, setRemovingId] = useState<string | null>(null);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [menuTargetId, setMenuTargetId] = useState<string | null>(null);
+    const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, userId: string) => {
         setAnchorEl(event.currentTarget);
@@ -69,13 +71,21 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
         fetchMembers();
     }, [organizationId]);
 
-    const handleRemoveMember = async (userId: string) => {
-        if (!window.confirm("Are you sure you want to remove this member?")) return;
+    const handleRemoveMember = (userId: string) => {
+        setMemberToRemoveId(userId);
+        setIsRemoveModalOpen(true);
+    };
 
+    const [memberToRemoveId, setMemberToRemoveId] = useState<string | null>(null);
+
+    const confirmRemoveMember = async () => {
+        if (!memberToRemoveId) return;
         try {
-            setRemovingId(userId);
-            await organizationService.removeMember(organizationId, userId);
-            setMembers(prev => prev.filter(m => m.userId._id !== userId));
+            setRemovingId(memberToRemoveId);
+            await organizationService.removeMember(organizationId, memberToRemoveId);
+            setMembers(prev => prev.filter(m => m.userId._id !== memberToRemoveId));
+            setIsRemoveModalOpen(false);
+            setMemberToRemoveId(null);
         } catch (error) {
             console.error("Failed to remove member:", error);
             alert("Failed to remove member. You might not have permission.");
@@ -160,16 +170,6 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                                             </Typography>
                                         }
                                     />
-                                    {canManage && memberUser?.role !== 'admin' && memberUser?.role !== 'super_admin' && (
-                                        <IconButton
-                                            edge="end"
-                                            onClick={(e) => handleMenuOpen(e, memberUser?._id)}
-                                            size="small"
-                                            sx={{ color: "#64748B" }}
-                                        >
-                                            <MoreVertIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
                                 </ListItem>
                                 {index < officers.length - 1 && <Divider />}
                             </React.Fragment>
@@ -284,6 +284,19 @@ const MembersList: React.FC<MembersListProps> = ({ organizationId, isOfficer, is
                     Remove member
                 </MenuItem>
             </Menu>
+
+            <GenericConfirmationModal
+                open={isRemoveModalOpen}
+                onClose={() => {
+                    setIsRemoveModalOpen(false);
+                    setMemberToRemoveId(null);
+                }}
+                onConfirm={confirmRemoveMember}
+                title="Remove Member?"
+                description="Are you sure you want to remove this member from the organization? They will no longer have access to requirements and submissions."
+                confirmText="Yes, Remove"
+                loading={!!removingId}
+            />
         </Box>
     );
 };

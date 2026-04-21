@@ -94,6 +94,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
         try {
             await organizationService.archiveOrganization(id);
             onRefresh?.();
+            window.dispatchEvent(new CustomEvent('refresh-sidebar'));
         } catch (error) {
             console.error("Failed to archive organization:", error);
         } finally {
@@ -107,6 +108,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
         try {
             await organizationService.unarchiveOrganization(id);
             onRefresh?.();
+            window.dispatchEvent(new CustomEvent('refresh-sidebar'));
         } catch (error) {
             console.error("Failed to unarchive organization:", error);
         } finally {
@@ -120,6 +122,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
         try {
             await organizationService.leaveOrganization(id);
             onRefresh?.();
+            window.dispatchEvent(new CustomEvent('refresh-sidebar'));
         } catch (error) {
             console.error("Failed to leave organization:", error);
         } finally {
@@ -248,7 +251,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         right: -6,
                         bgcolor: "#FFFFFF",
                         p: "18px 24px",
-                        minHeight: 124,
+                        minHeight: { xs: 154, sm: 124 },
                         borderRadius: "24px",
                         boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
                         transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -256,7 +259,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                         flexDirection: "column",
                         zIndex: 3,
                         "&:hover": {
-                            transform: "translateY(-4px)",
+                            transform: { xs: 'none', sm: "translateY(-4px)" },
                             "& .card-description": {
                                 maxHeight: "60px",
                                 opacity: 1,
@@ -326,8 +329,9 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
                     <Box
                         className="card-description"
                         sx={{
-                            maxHeight: 0,
-                            opacity: 0,
+                            maxHeight: { xs: "60px", sm: 0 },
+                            opacity: { xs: 1, sm: 0 },
+                            mt: { xs: 1, sm: 0 },
                             transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                             overflow: "hidden"
                         }}

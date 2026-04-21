@@ -544,7 +544,7 @@ const RequirementDetailsPage: React.FC = () => {
                             value={tabValue}
                             onChange={(_, v) => setTabValue(v)}
                             textColor="inherit"
-                            variant={isMobile ? "fullWidth" : "standard"}
+                            variant="standard"
                             TabIndicatorProps={{ sx: { bgcolor: "#0D9488", height: 3, borderTopLeftRadius: 3, borderTopRightRadius: 3 } }}
                             sx={{
                                 px: { xs: 0, md: 0 },
@@ -621,8 +621,6 @@ const RequirementDetailsPage: React.FC = () => {
                                                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                                             >
-                                                {isOfficer && <MenuItem onClick={handleEditClick}>Edit</MenuItem>}
-                                                {isOfficer && <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>}
                                                 <MenuItem onClick={handleCopyLink}>Copy link</MenuItem>
                                             </Menu>
                                             <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} message="Link copied" />

@@ -95,6 +95,8 @@ const StreamPage: React.FC = () => {
     const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
     const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
     const [isUnarchiveModalOpen, setIsUnarchiveModalOpen] = useState(false);
+    const [isDeleteReqModalOpen, setIsDeleteReqModalOpen] = useState(false);
+    const [reqToDeleteId, setReqToDeleteId] = useState<string | null>(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [tabValue, setTabValue] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -170,15 +172,25 @@ const StreamPage: React.FC = () => {
         navigate(`/organization/${orgId}/requirement/${id}`);
     };
 
-    const handleDeleteRequirement = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this?")) return;
+    const handleDeleteRequirement = (id: string) => {
+        setReqToDeleteId(id);
+        setIsDeleteReqModalOpen(true);
+    };
+
+    const confirmDeleteRequirement = async () => {
+        if (!reqToDeleteId) return;
         try {
-            await clearanceService.deleteRequirement(id);
+            setIsActionLoading(true);
+            await clearanceService.deleteRequirement(reqToDeleteId);
             setSnackbarMessage("Item deleted successfully");
             fetchData();
+            setIsDeleteReqModalOpen(false);
+            setReqToDeleteId(null);
         } catch (error) {
             console.error("Failed to delete item:", error);
             setSnackbarMessage("Failed to delete item");
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
@@ -781,6 +793,19 @@ const StreamPage: React.FC = () => {
                     title="Are You Sure Want To Unarchive?"
                     description="You are about to unarchive this organization. It will become active and visible to students again."
                     confirmText="Yes, Unarchive"
+                    loading={isActionLoading}
+                />
+
+                <GenericConfirmationModal
+                    open={isDeleteReqModalOpen}
+                    onClose={() => {
+                        setIsDeleteReqModalOpen(false);
+                        setReqToDeleteId(null);
+                    }}
+                    onConfirm={confirmDeleteRequirement}
+                    title="Delete Requirement?"
+                    description="Are you sure you want to delete this requirement? This action cannot be undone and all associated submissions will be lost."
+                    confirmText="Yes, Delete"
                     loading={isActionLoading}
                 />
 

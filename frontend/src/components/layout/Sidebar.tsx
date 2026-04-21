@@ -184,11 +184,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [memberOrgs, setMemberOrgs] = useState<any[]>([]);
     const [isStudentOpen, setIsStudentOpen] = useState(true);
 
-    React.useEffect(() => {
+    const fetchSidebarOrgs = React.useCallback(() => {
         // Super Admins don't have personal organizations
         if (role === 'super_admin') return;
 
-        // Fetch orgs where user is officer
         organizationService.getMyOrganizations().then(res => {
             if (res && res.organizations) {
                 const officers = res.organizations.filter((org: any) => org.membership?.role === 'officer');
@@ -198,6 +197,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             }
         }).catch(err => console.error("Failed to fetch officer orgs for Nav", err));
     }, [role]);
+
+    React.useEffect(() => {
+        fetchSidebarOrgs();
+
+        // Listen for refresh events from other components (archive, leave, join)
+        window.addEventListener('refresh-sidebar', fetchSidebarOrgs);
+        return () => window.removeEventListener('refresh-sidebar', fetchSidebarOrgs);
+    }, [fetchSidebarOrgs]);
 
     const { activeIndex } = useMemo(() => {
         let index = -1;

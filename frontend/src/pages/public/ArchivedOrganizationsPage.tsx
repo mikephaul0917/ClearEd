@@ -21,7 +21,7 @@ const ArchivedOrganizationsPage: React.FC = () => {
     const fetchOrgs = async () => {
         try {
             setLoading(true);
-            const data = await organizationService.getMyOrganizations();
+            const data = await organizationService.getMyOrganizations({ includeArchived: true });
             const archivedOrgs = data.organizations
                 .filter((org: any) => org.status === 'archived')
                 .map((org: any) => ({

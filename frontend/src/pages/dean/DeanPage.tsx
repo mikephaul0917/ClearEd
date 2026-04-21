@@ -351,6 +351,7 @@ export default function DeanPage() {
   const [popupSearch, setPopupSearch] = useState("");
   const [courseMenuAnchor, setCourseMenuAnchor] = useState<null | HTMLElement>(null);
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [isBulkRevokeModalOpen, setIsBulkRevokeModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [studentToRevoke, setStudentToRevoke] = useState<any>(null);
   const [revokeLoading, setRevokeLoading] = useState(false);
@@ -743,9 +744,13 @@ export default function DeanPage() {
     return () => window.removeEventListener('clear-bulk-selections', handleClear);
   }, []);
 
-  const handleBulkRevoke = async () => {
+  const handleBulkRevoke = () => {
     if (selectedIds.length === 0) return;
-    if (window.confirm(`Are you sure you want to revoke final approval for ${selectedIds.length} students?`)) {
+    setIsBulkRevokeModalOpen(true);
+  };
+
+  const confirmBulkRevoke = async () => {
+    setIsBulkRevokeModalOpen(false);
       try {
         setActionState('loading');
         const currentSelected = [...selectedIds];
@@ -777,7 +782,6 @@ export default function DeanPage() {
         const msg = err.response?.data?.message || "Failed to process bulk revocation";
         setNotice({ message: msg, variant: "error" });
       }
-    }
   };
 
   const filteredReady = (() => {
@@ -2194,6 +2198,16 @@ export default function DeanPage() {
         open={signatureModalOpen}
         onClose={() => setSignatureModalOpen(false)}
         onConfirm={finalize}
+      />
+
+      <GenericConfirmationModal
+        open={isBulkRevokeModalOpen}
+        onClose={() => setIsBulkRevokeModalOpen(false)}
+        onConfirm={confirmBulkRevoke}
+        title="Revoke Approvals?"
+        description={`Are you sure you want to revoke final approval for ${selectedIds.length} selected students? This will return their registration to the pending state.`}
+        confirmText="Yes, Revoke"
+        loading={actionState === 'loading'}
       />
       <StudentListPopup
         open={studentListOpen}

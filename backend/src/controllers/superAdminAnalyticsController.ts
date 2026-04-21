@@ -167,7 +167,14 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
             $in: [
               'CLEARANCE_SUBMISSION_UPDATED',
               'CLEARANCE_SUBMISSION_APPROVED',
-              'CLEARANCE_SUBMISSION_REJECTED'
+              'CLEARANCE_SUBMISSION_REJECTED',
+              'clearance_approved',
+              'clearance_rejected',
+              'clearance_approved_bulk',
+              'clearance_rejected_bulk',
+              'officer_marked_cleared',
+              'clearance_final_approval_dean',
+              'CLEARANCE_REQUEST_FINALIZED'
             ] 
           }
         }
@@ -178,10 +185,40 @@ export const getSystemAnalytics = async (req: Request, res: Response) => {
             $dateToString: { format: '%Y-%m-%d', date: '$timestamp' }
           },
           processed: {
-            $sum: { $cond: [{ $in: ['$action', ['CLEARANCE_SUBMISSION_APPROVED', 'CLEARANCE_SUBMISSION_REJECTED']] }, 1, 0] }
+            $sum: { 
+              $cond: [
+                { 
+                  $in: ['$action', [
+                    'CLEARANCE_SUBMISSION_APPROVED', 
+                    'CLEARANCE_SUBMISSION_REJECTED',
+                    'clearance_approved',
+                    'clearance_rejected',
+                    'clearance_approved_bulk',
+                    'clearance_rejected_bulk',
+                    'officer_marked_cleared',
+                    'clearance_final_approval_dean',
+                    'CLEARANCE_REQUEST_FINALIZED'
+                  ]] 
+                }, 
+                1, 
+                0
+              ] 
+            }
           },
           pending: {
-            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_SUBMISSION_UPDATED'] }, 1, 0] }
+            $sum: { 
+              $cond: [
+                { 
+                  $in: ['$action', [
+                    'CLEARANCE_SUBMISSION_UPDATED',
+                    'officer_revoked_clearance',
+                    'clearance_final_revoke_dean'
+                  ]] 
+                }, 
+                1, 
+                0
+              ] 
+            }
           }
         }
       },
@@ -306,7 +343,14 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
             { action: { $regex: /LOGIN/i } },
             { action: 'CLEARANCE_SUBMISSION_UPDATED' },
             { action: 'CLEARANCE_SUBMISSION_APPROVED' },
-            { action: 'CLEARANCE_SUBMISSION_REJECTED' }
+            { action: 'CLEARANCE_SUBMISSION_REJECTED' },
+            { action: 'clearance_approved' },
+            { action: 'clearance_rejected' },
+            { action: 'clearance_approved_bulk' },
+            { action: 'clearance_rejected_bulk' },
+            { action: 'officer_marked_cleared' },
+            { action: 'clearance_final_approval_dean' },
+            { action: 'CLEARANCE_REQUEST_FINALIZED' }
           ]
         }
       },
@@ -319,10 +363,40 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
             $sum: { $cond: [{ $regexMatch: { input: '$action', regex: /LOGIN/i } }, 1, 0] }
           },
           submissions: {
-            $sum: { $cond: [{ $eq: ['$action', 'CLEARANCE_SUBMISSION_UPDATED'] }, 1, 0] }
+            $sum: { 
+              $cond: [
+                { 
+                  $in: ['$action', [
+                    'CLEARANCE_SUBMISSION_UPDATED',
+                    'officer_revoked_clearance',
+                    'clearance_final_revoke_dean'
+                  ]] 
+                }, 
+                1, 
+                0
+              ] 
+            }
           },
           approvals: {
-            $sum: { $cond: [{ $in: ['$action', ['CLEARANCE_SUBMISSION_APPROVED', 'CLEARANCE_SUBMISSION_REJECTED']] }, 1, 0] }
+            $sum: { 
+              $cond: [
+                { 
+                  $in: ['$action', [
+                    'CLEARANCE_SUBMISSION_APPROVED', 
+                    'CLEARANCE_SUBMISSION_REJECTED',
+                    'clearance_approved',
+                    'clearance_rejected',
+                    'clearance_approved_bulk',
+                    'clearance_rejected_bulk',
+                    'officer_marked_cleared',
+                    'clearance_final_approval_dean',
+                    'CLEARANCE_REQUEST_FINALIZED'
+                  ]] 
+                }, 
+                1, 
+                0
+              ] 
+            }
           }
         }
       },
