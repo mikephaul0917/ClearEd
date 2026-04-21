@@ -830,25 +830,25 @@ export default function AdminOrganizationsPage({
         PaperProps={{
           sx: {
             borderRadius: 2, 
-            p: { xs: 0, sm: 1 }, 
+            p: 0, 
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
             border: `1px solid ${COLORS.border}`,
             margin: { xs: 2, sm: 'auto' }
           }
         }}
       >
-        <DialogTitle sx={{ p: { xs: 3, sm: 4 }, pb: { xs: 1, sm: 1 } }}>
+        <DialogTitle sx={{ p: { xs: 2.5, sm: 3 }, pb: 0 }}>
           <Typography sx={{ fontFamily: fontStack, fontWeight: 700, fontSize: { xs: 18, sm: 22 }, color: COLORS.textPrimary, letterSpacing: '-0.5px' }}>
             {manageOrg?._id ? "Organization Settings" : "New Organization"}
           </Typography>
-          <Typography sx={{ fontFamily: fontStack, fontSize: { xs: 12, sm: 13 }, color: COLORS.textSecondary, fontWeight: 400, mt: 0.5 }}>
+          <Typography sx={{ fontFamily: fontStack, fontSize: { xs: 12, sm: 13 }, color: COLORS.textSecondary, fontWeight: 400, mt: 0.25 }}>
             {manageOrg?._id ? "Update department details and signatory configurations." : "Establish a new institutional office for the clearance workflow."}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: { xs: 3, sm: 4 } }}>
-          <Box display="flex" flexDirection="column" gap={{ xs: 2, sm: 3.5 }}>
+        <DialogContent sx={{ p: { xs: 2.5, sm: 3 }, pt: 0, mt: 1 }}>
+          <Box display="flex" flexDirection="column" gap={1.5}>
             <Box>
-              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: 0.25, display: 'block' }}>
                 Full Name
               </FormLabel>
               <TextField
@@ -861,7 +861,7 @@ export default function AdminOrganizationsPage({
               />
             </Box>
             <Box>
-              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
+              <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: 0.5, display: 'block' }}>
                 Internal Description
               </FormLabel>
               <TextField
@@ -875,9 +875,9 @@ export default function AdminOrganizationsPage({
                 sx={{ '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #E2E8F0' } }}
               />
             </Box>
-            <Grid container spacing={{ xs: 2, sm: 3 }}>
+            <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: 0.5, display: 'block' }}>
                   System Signatory
                 </FormLabel>
                 <TextField
@@ -890,7 +890,7 @@ export default function AdminOrganizationsPage({
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: { xs: 0.75, sm: 1.5 }, display: 'block' }}>
+                <FormLabel sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, color: COLORS.textPrimary, mb: 0.5, display: 'block' }}>
                   Access Code
                 </FormLabel>
                 <TextField
@@ -906,34 +906,14 @@ export default function AdminOrganizationsPage({
                 />
               </Grid>
             </Grid>
-            <Box sx={{
-              display: 'flex', alignItems: 'center', gap: 2, p: { xs: 1.5, sm: 2.5 }, borderRadius: 2,
-              bgcolor: isFinal ? '#F0FDFA' : '#F8FAFC', border: `1px solid ${isFinal ? '#CCFBF1' : '#E2E8F0'}`,
-              transition: '0.3s'
-            }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontFamily: fontStack, fontWeight: 600, fontSize: { xs: 13, sm: 14 }, color: COLORS.textPrimary }}>Final Milestone</Typography>
-                <Typography sx={{ fontFamily: fontStack, fontSize: 11, color: COLORS.textSecondary, fontWeight: 400 }}>
-                  Mark this as the final required signatory.
-                </Typography>
-              </Box>
-              <Switch
-                checked={isFinal}
-                onChange={() => setIsFinal(!isFinal)}
-                size={isSmallMobile ? "small" : "medium"}
-                sx={{
-                  '& .MuiSwitch-switchBase.Mui-checked': { color: '#0D9488' },
-                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#0D9488' },
-                }}
-              />
-            </Box>
+            {/* Final Milestone section removed */}
           </Box>
         </DialogContent>
         <DialogActions sx={{ 
-          p: { xs: 3, sm: 4 }, 
-          pt: { xs: 1, sm: 1 }, 
+          p: { xs: 2.5, sm: 3 }, 
+          pt: 0, 
           flexDirection: { xs: 'column-reverse', sm: 'row' },
-          gap: { xs: 1.5, sm: 1.5 } 
+          gap: 1.5 
         }}>
           <Button
             onClick={() => setManageOrg(null)}

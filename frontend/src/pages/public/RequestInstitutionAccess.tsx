@@ -401,32 +401,27 @@ export default function RequestInstitutionAccess() {
             <Box sx={{
               display: "flex",
               flexDirection: { xs: "column-reverse", sm: "row" },
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               alignItems: "center",
               mt: 3,
-              gap: 2
+              gap: 1
             }}>
               <Button
-                variant="outlined"
+                variant="text"
                 onClick={() => navigate('/')}
                 disabled={isLoading}
                 sx={{
-                  color: "#0F172A",
-                  borderColor: "#E2E8F0",
-                  borderRadius: '999px',
+                  color: "#64748b",
                   textTransform: 'none',
-                  px: 5,
+                  px: 2,
                   py: 1.5,
                   fontWeight: 700,
                   width: { xs: "100%", sm: "auto" },
-                  boxShadow: '0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)',
-                  backgroundColor: '#FFF',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  minWidth: 'auto',
+                  transition: 'all 0.2s ease',
                   "&:hover": {
-                    borderColor: "#D1D5DB",
-                    backgroundColor: "#f8fafc",
-                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)',
-                    transform: 'translateY(-3px)'
+                    backgroundColor: "rgba(0,0,0,0.04)",
+                    color: "#0F172A"
                   }
                 }}
               >
@@ -443,7 +438,7 @@ export default function RequestInstitutionAccess() {
                   color: "#FFFFFF",
                   px: 5,
                   py: 1.5,
-                  borderRadius: '999px',
+                  borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 700,
                   width: { xs: "100%", sm: "auto" },

@@ -818,17 +818,24 @@ export default function AdminPage() {
         )
       ) : active === "settings" ? (
         loadingSettings ? (
-          <Box sx={{ p: 4, maxWidth: '800px', mx: 'auto' }}>
+          <SettingsContainer>
             {/* Header Skeleton */}
-            <Box sx={{ mb: 6 }}>
+            <Box sx={{ mb: 4 }}>
               <Skeleton variant="text" width={180} height={40} sx={{ mb: 1, borderRadius: '4px' }} />
               <Skeleton variant="text" width={320} height={20} sx={{ borderRadius: '4px' }} />
             </Box>
 
             {/* Profile Picture Section Skeleton */}
-            <Box sx={{ mb: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Box sx={{ 
+              mb: 6, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              alignItems: 'center', 
+              gap: { xs: 2.5, sm: 4 },
+              textAlign: { xs: 'center', sm: 'left' }
+            }}>
               <Skeleton variant="circular" width={100} height={100} />
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: { xs: 'center', sm: 'flex-start' } }}>
                 <Skeleton variant="text" width={150} height={24} sx={{ mb: 1 }} />
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: '8px' }} />
@@ -840,7 +847,7 @@ export default function AdminPage() {
             {/* Form Fields Skeletons */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {/* Row 1: Names */}
-              <Box sx={{ display: 'flex', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
                 <Box sx={{ flex: 1 }}>
                   <Skeleton variant="text" width={80} height={20} sx={{ mb: 1 }} />
                   <Skeleton variant="rectangular" height={45} sx={{ borderRadius: '8px' }} />
@@ -858,7 +865,7 @@ export default function AdminPage() {
               </Box>
 
               {/* Row 3: Passwords */}
-              <Box sx={{ display: 'flex', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
                 <Box sx={{ flex: 1 }}>
                   <Skeleton variant="text" width={100} height={20} sx={{ mb: 1 }} />
                   <Skeleton variant="rectangular" height={45} sx={{ borderRadius: '8px' }} />
@@ -871,11 +878,11 @@ export default function AdminPage() {
             </Box>
 
             {/* Footer Buttons */}
-            <Box sx={{ display: 'flex', gap: 2, mt: 6 }}>
-              <Skeleton variant="rectangular" width={140} height={45} sx={{ borderRadius: '8px' }} />
-              <Skeleton variant="rectangular" width={160} height={45} sx={{ borderRadius: '8px' }} />
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 6 }}>
+              <Skeleton variant="rectangular" height={45} sx={{ borderRadius: '8px', width: { xs: '100%', sm: 140 } }} />
+              <Skeleton variant="rectangular" height={45} sx={{ borderRadius: '8px', width: { xs: '100%', sm: 160 } }} />
             </Box>
-          </Box>
+          </SettingsContainer>
         ) : (
           <SettingsContainer>
             <SettingsHeader
@@ -982,7 +989,7 @@ export default function AdminPage() {
               </SettingsRow>
             </SettingsSection>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 4 }}>
               <Button
                 variant="contained"
                 onClick={(e) => { e.preventDefault(); updateProfile(); }}
@@ -991,6 +998,7 @@ export default function AdminPage() {
                   color: '#FFF',
                   padding: '12px 16px',
                   borderRadius: '8px',
+                  width: { xs: '100%', sm: 'auto' },
                   textTransform: 'none',
                   fontWeight: 700,
                   fontSize: '1rem',
@@ -1014,6 +1022,7 @@ export default function AdminPage() {
                   borderWidth: '1.2px',
                   padding: '12px 16px',
                   borderRadius: '8px',
+                  width: { xs: '100%', sm: 'auto' },
                   textTransform: 'none',
                   fontWeight: 700,
                   fontSize: '1rem',

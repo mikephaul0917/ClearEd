@@ -40,8 +40,8 @@ const GlassButton: React.FC<GlassButtonProps> = ({
         }
     };
 
-    const baseShadow = "0 15px 35px rgba(0,0,0,0.12)";
-    const hoverShadow = "0 20px 45px rgba(0,0,0,0.18)";
+    const baseShadow = "0 20px 30px -10px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05)";
+    const hoverShadow = "0 30px 45px -12px rgba(0,0,0,0.15), 0 15px 20px -8px rgba(0,0,0,0.08)";
 
     return (
         <motion.button

@@ -472,47 +472,47 @@ export default function SuperAdminPage() {
         return (
           <SettingsContainer>
             <SettingsHeader
-              title={<Skeleton variant="text" width={180} height={40} />}
-              subtitle={<Skeleton variant="text" width={320} height={20} />}
+              title={<Skeleton variant="text" width={180} height={40} sx={{ bgcolor: 'rgba(0,0,0,0.06)', borderRadius: '4px' }} />}
+              subtitle={<Skeleton variant="text" width={320} height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', borderRadius: '4px' }} />}
             />
 
             <SettingsSection>
-              <Box sx={{ mb: 4 }}>
-                <Skeleton variant="circular" width={80} height={80} />
+              <Box sx={{ mb: 6, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                <Skeleton variant="circular" width={80} height={80} sx={{ bgcolor: 'rgba(0,0,0,0.05)' }} />
               </Box>
             </SettingsSection>
 
             <SettingsSection>
               <SettingsRow>
-                <SettingsField label={<Skeleton variant="text" width={80} />}>
-                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                <SettingsField label={<Skeleton variant="text" width={80} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '12px', bgcolor: 'rgba(0,0,0,0.03)' }} />
                 </SettingsField>
-                <SettingsField label={<Skeleton variant="text" width={80} />}>
-                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                <SettingsField label={<Skeleton variant="text" width={80} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '12px', bgcolor: 'rgba(0,0,0,0.03)' }} />
                 </SettingsField>
               </SettingsRow>
             </SettingsSection>
 
             <SettingsSection>
-              <SettingsField label={<Skeleton variant="text" width={40} />}>
-                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+              <SettingsField label={<Skeleton variant="text" width={40} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '12px', bgcolor: 'rgba(0,0,0,0.03)' }} />
               </SettingsField>
             </SettingsSection>
 
             <SettingsSection>
               <SettingsRow>
-                <SettingsField label={<Skeleton variant="text" width={100} />}>
-                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                <SettingsField label={<Skeleton variant="text" width={100} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '12px', bgcolor: 'rgba(0,0,0,0.03)' }} />
                 </SettingsField>
-                <SettingsField label={<Skeleton variant="text" width={120} />}>
-                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px' }} />
+                <SettingsField label={<Skeleton variant="text" width={120} sx={{ bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '12px', bgcolor: 'rgba(0,0,0,0.03)' }} />
                 </SettingsField>
               </SettingsRow>
             </SettingsSection>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-              <Skeleton variant="rectangular" width={140} height={48} sx={{ borderRadius: '8px' }} />
-              <Skeleton variant="rectangular" width={160} height={48} sx={{ borderRadius: '8px' }} />
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 6, pt: 4, borderTop: '1px solid #F1F5F9' }}>
+              <Skeleton variant="rectangular" height={48} sx={{ borderRadius: '8px', bgcolor: 'rgba(0,0,0,0.05)', width: { xs: '100%', sm: 140 } }} />
+              <Skeleton variant="rectangular" height={48} sx={{ borderRadius: '8px', bgcolor: 'rgba(0,0,0,0.05)', width: { xs: '100%', sm: 160 } }} />
             </Box>
           </SettingsContainer>
         );
@@ -624,7 +624,14 @@ export default function SuperAdminPage() {
             </SettingsRow>
           </SettingsSection>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' }, 
+            gap: 2, 
+            mt: 6, 
+            pt: 4, 
+            borderTop: '1px solid #F1F5F9' 
+          }}>
             <Button
               variant="contained"
               onClick={(e) => { e.preventDefault(); updateProfile(); }}
@@ -633,6 +640,7 @@ export default function SuperAdminPage() {
                 color: '#FFF',
                 padding: '12px 16px',
                 borderRadius: '8px',
+                width: { xs: '100%', sm: 'auto' },
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '1rem',
@@ -656,6 +664,7 @@ export default function SuperAdminPage() {
                 borderWidth: '1.2px',
                 padding: '12px 16px',
                 borderRadius: '8px',
+                width: { xs: '100%', sm: 'auto' },
                 textTransform: 'none',
                 fontWeight: 700,
                 fontSize: '1rem',

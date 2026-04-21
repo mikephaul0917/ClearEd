@@ -270,14 +270,14 @@ export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ m
     return (
         <SettingsContainer>
             {/* Header Skeleton */}
-            <Box sx={{ mb: 4, px: 1 }}>
-                <Skeleton variant="text" width="40%" height={40} sx={{ bgcolor: '#eaebec', mb: 0.5 }} />
-                <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: '#eaebec' }} />
+            <Box sx={{ mb: 4, px: { xs: 0, sm: 1 } }}>
+                <Skeleton variant="text" width="40%" height={40} sx={{ bgcolor: 'rgba(0,0,0,0.06)', mb: 0.5, borderRadius: '4px' }} />
+                <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: 'rgba(0,0,0,0.04)', borderRadius: '4px' }} />
             </Box>
 
             {/* Profile Section Skeleton */}
-            <Box sx={{ mb: 4, px: 1 }}>
-                <Skeleton variant="circular" width={80} height={80} sx={{ bgcolor: '#eaebec' }} />
+            <Box sx={{ mb: 6, px: 1, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                <Skeleton variant="circular" width={80} height={80} sx={{ bgcolor: 'rgba(0,0,0,0.05)' }} />
             </Box>
 
             {/* Specialized Field Skeletons */}
@@ -288,32 +288,32 @@ export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ m
                         <Grid container spacing={{ xs: 3, md: 4 }}>
                             {[1, 2].map((i) => (
                                 <Grid item xs={12} md={6} key={i}>
-                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                                 </Grid>
                             ))}
                         </Grid>
                     </Box>
                     {/* Email Section */}
                     <Box sx={{ mb: 4 }}>
-                        <Skeleton variant="text" width="15%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                        <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                        <Skeleton variant="text" width="15%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                        <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                     </Box>
                     {/* Academic Info Section */}
                     <Box sx={{ mb: 4 }}>
                         <Grid container spacing={{ xs: 3, md: 4 }} sx={{ mb: 3 }}>
                             {[1, 2].map((i) => (
                                 <Grid item xs={12} md={6} key={i}>
-                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                                 </Grid>
                             ))}
                         </Grid>
                         <Grid container spacing={{ xs: 3, md: 4 }}>
                             {[1, 2].map((i) => (
                                 <Grid item xs={12} md={6} key={i}>
-                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                                 </Grid>
                             ))}
                         </Grid>
@@ -323,8 +323,8 @@ export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ m
                         <Grid container spacing={{ xs: 3, md: 4 }}>
                             {[1, 2].map((i) => (
                                 <Grid item xs={12} md={6} key={i}>
-                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                                    <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                                    <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                                 </Grid>
                             ))}
                         </Grid>
@@ -339,8 +339,8 @@ export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ m
                                 {[1, 2].map((field) => (
                                     <Grid item xs={12} md={6} key={field}>
                                         <Box>
-                                            <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: '#eaebec', mb: 1 }} />
-                                            <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: '#eaebec', borderRadius: '12px' }} />
+                                            <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(0,0,0,0.04)', mb: 1 }} />
+                                            <Skeleton variant="rectangular" width="100%" height={56} sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px' }} />
                                         </Box>
                                     </Grid>
                                 ))}
@@ -360,8 +360,8 @@ export const SettingsSkeleton: React.FC<{ mode?: 'student' | 'officer' }> = ({ m
                 borderTop: mode === 'officer' ? '1px solid #F1F5F9' : 'none',
                 px: 1 
             }}>
-                <Skeleton variant="rectangular" width={140} height={48} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
-                <Skeleton variant="rectangular" width={160} height={48} sx={{ bgcolor: '#eaebec', borderRadius: '8px' }} />
+                <Skeleton variant="rectangular" height={48} sx={{ bgcolor: 'rgba(0,0,0,0.05)', borderRadius: '8px', width: { xs: '100%', sm: 140 } }} />
+                <Skeleton variant="rectangular" height={48} sx={{ bgcolor: 'rgba(0,0,0,0.05)', borderRadius: '8px', width: { xs: '100%', sm: 160 } }} />
             </Box>
         </SettingsContainer>
     );

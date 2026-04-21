@@ -445,7 +445,7 @@ const RegisterPage = () => {
                                 whileHover={!isLoading ? {
                                     y: -2,
                                     scale: 1.01,
-                                    boxShadow: '0 20px 45px rgba(0,0,0,0.18)'
+                                    boxShadow: '0 30px 45px -12px rgba(0,0,0,0.45), 0 15px 20px -8px rgba(0,0,0,0.25)'
                                 } : {}}
                                 whileTap={!isLoading ? { scale: 0.98 } : {}}
                                 style={{
@@ -458,7 +458,7 @@ const RegisterPage = () => {
                                     fontSize: "15px",
                                     fontWeight: 500,
                                     cursor: isLoading ? "not-allowed" : "pointer",
-                                    boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
+                                    boxShadow: "0 20px 30px -10px rgba(0,0,0,0.35), 0 10px 15px -5px rgba(0,0,0,0.15)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
@@ -535,7 +535,7 @@ const RegisterPage = () => {
                         size="md"
                         onClick={() => googleLogin()}
                         disabled={googleLoading}
-                        style={{ padding: "12px 16px", boxShadow: "0 4px 10px rgba(0,0,0,0.15)" }}
+                        style={{ padding: "12px 16px" }}
                     >
                         {googleLoading ? (
                             <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
