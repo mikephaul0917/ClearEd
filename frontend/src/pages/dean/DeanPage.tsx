@@ -1738,7 +1738,7 @@ export default function DeanPage() {
 
             <SettingsSection>
               <ProfilePictureSection
-                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
+                avatarUrl={getAbsoluteUrl(avatarUrl)}
                 initials={getInitials(draftFullName)}
                 onFileSelect={async (file) => {
                   try {

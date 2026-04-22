@@ -44,7 +44,8 @@ export default function ContactPage() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/contact/submit', formData);
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await axios.post(`${baseUrl}/contact/submit`, formData);
 
       if (response.data.success) {
         setIsSuccessOpen(true);

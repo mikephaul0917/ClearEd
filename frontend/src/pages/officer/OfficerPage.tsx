@@ -28,7 +28,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, authService } from '../../services';
-import { getInitials, formatNameFromEmail } from "../../utils/avatarUtils";
+import { getInitials, formatNameFromEmail, getAbsoluteUrl } from "../../utils/avatarUtils";
 import GenericConfirmationModal from "../../components/modals/GenericConfirmationModal";
 import SuccessMessage from "../../components/SuccessMessage";
 import { showGlobalModal } from "../../components/GlobalModal";
@@ -506,7 +506,7 @@ export default function OfficerPage() {
 
             <SettingsSection>
               <ProfilePictureSection
-                avatarUrl={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:5000${avatarUrl}`) : undefined}
+                avatarUrl={getAbsoluteUrl(avatarUrl)}
                 initials={getInitials(draftFullName)}
                 onFileSelect={async (file) => {
                   try {
