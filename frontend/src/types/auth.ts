@@ -6,6 +6,7 @@ export interface AuthPayload {
     username?: string; // or full name
     fullName?: string;
     avatarUrl?: string;
+    isStudent?: boolean;
     exp: number; // JWT expiry (seconds since epoch)
     iat: number; // issued‑at
 }
@@ -19,4 +20,5 @@ export interface AuthUser {
     username?: string;
     fullName?: string;
     avatarUrl?: string;
+    isStudent?: boolean;
 }

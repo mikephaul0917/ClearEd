@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     role: decoded.role,
                     institutionId: decoded.institutionId,
                     email: decoded.email,
+                    isStudent: decoded.isStudent,
                     exp: decoded.exp,
                     iat: decoded.iat
                 };
@@ -76,7 +77,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     id: payload.id,
                     role: payload.role,
                     institutionId: payload.institutionId,
-                    email: payload.email
+                    email: payload.email,
+                    isStudent: payload.isStudent
                 });
                 setAuthHeader(stored);
             } else {
@@ -106,7 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             id: payload.id,
                             role: payload.role,
                             institutionId: payload.institutionId,
-                            email: payload.email
+                            email: payload.email,
+                            isStudent: payload.isStudent
                         });
                         setAuthHeader(newToken);
                     } else {
@@ -142,7 +145,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email: payload.email,
                 avatarUrl: returnedUser.avatarUrl,
                 fullName: returnedUser.fullName,
-                username: returnedUser.username
+                username: returnedUser.username,
+                isStudent: returnedUser.isStudent || payload.isStudent
             };
 
             persistToken(jwt);
@@ -185,7 +189,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email: payload.email,
                 avatarUrl: returnedUser.avatarUrl,
                 fullName: returnedUser.fullName,
-                username: returnedUser.username
+                username: returnedUser.username,
+                isStudent: returnedUser.isStudent || payload.isStudent
             };
 
             persistToken(jwt);
@@ -240,7 +245,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             id: payload.id,
             role: payload.role,
             institutionId: payload.institutionId,
-            email: payload.email
+            email: payload.email,
+            isStudent: payload.isStudent
         });
 
         // Then set localStorage for legacy compatibility

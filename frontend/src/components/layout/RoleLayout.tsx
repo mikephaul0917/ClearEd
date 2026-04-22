@@ -37,7 +37,10 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
 
     if (!user) return null;
 
-    const navItems = NAV_CONFIG[user.role] || [];
+    let navItems = NAV_CONFIG[user.role] || [];
+    if (user.role === 'officer' && !user.isStudent) {
+        navItems = navItems.filter(item => item.key !== 'todo' && item.key !== 'leaderboard');
+    }
 
     // Extract initials from fullName or email
     const storedUser = localStorage.getItem('user');
@@ -55,6 +58,7 @@ const RoleLayout: React.FC<RoleLayoutProps> = ({ children, bgcolor }) => {
                 avatarUrl={avatarUrl}
                 email={user.email || ""}
                 role={user.role}
+                isStudent={user.isStudent}
                 logout={logout}
                 navItems={navItems}
             />

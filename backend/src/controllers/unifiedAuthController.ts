@@ -6,6 +6,7 @@ import Institution from "../models/Institution";
 import OrganizationMember from "../models/OrganizationMember";
 import AccessRequest from "../models/AccessRequest";
 import Notification from "../models/Notification";
+import StudentProfile from "../models/StudentProfile";
 import { logAudit } from "../utils/auditLogger";
 import crypto from "crypto";
 
@@ -44,7 +45,8 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           id: existingUser._id,
           role: existingUser.role,
           email: existingUser.email,
-          isAdmin: true
+          isAdmin: true,
+          isStudent: false // Super admins are never students
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '24h' }
@@ -117,7 +119,8 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           role: existingUser.role,
           email: existingUser.email,
           institutionId: existingUser.institutionId,
-          isAdmin: existingUser.role === 'admin'
+          isAdmin: existingUser.role === 'admin',
+          isStudent: existingUser.role === 'student' || (await StudentProfile.exists({ userId: existingUser._id }))
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '24h' }
@@ -147,6 +150,7 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           avatarUrl: existingUser.avatarUrl,
           role: existingUser.role,
           institutionId: existingUser.institutionId,
+          isStudent: existingUser.role === 'student' || (await StudentProfile.exists({ userId: existingUser._id })),
           isNewUser: false
         }
       });
@@ -188,7 +192,8 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           role: newUser.role,
           email: newUser.email,
           institutionId: newUser.institutionId,
-          isAdmin: false
+          isAdmin: false,
+          isStudent: true
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '24h' }
@@ -213,6 +218,7 @@ export const unifiedLogin = async (req: Request, res: Response) => {
           fullName: newUser.fullName,
           role: newUser.role,
           institutionId: newUser.institutionId,
+          isStudent: true, // New self-registered users are always students
           isNewUser: true
         }
       });
@@ -359,7 +365,8 @@ export const googleAuth = async (req: Request, res: Response) => {
           role: user.role,
           institutionId: user.institutionId,
           email: user.email,
-          isAdmin: user.role === 'admin'
+          isAdmin: user.role === 'admin',
+          isStudent: user.role === 'student' || (await StudentProfile.exists({ userId: user._id }))
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '24h' }
@@ -375,6 +382,7 @@ export const googleAuth = async (req: Request, res: Response) => {
           role: user.role,
           institutionId: user.institutionId,
           lastLoginAt: user.lastLoginAt,
+          isStudent: user.role === 'student' || (await StudentProfile.exists({ userId: user._id })),
           isNewUser: false,
           requiresPasswordSetup: user.requiresPasswordSetup || false
         }
@@ -674,7 +682,8 @@ export const superAdminLogin = async (req: Request, res: Response) => {
         id: superAdmin._id,
         role: superAdmin.role,
         email: superAdmin.email,
-        isAdmin: true
+        isAdmin: true,
+        isStudent: false
       },
       process.env.JWT_SECRET as string,
       { expiresIn: '24h' }
@@ -728,6 +737,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       username: user.username,
       avatarUrl: user.avatarUrl,
       role: user.role,
+      isStudent: user.role === 'student' || (await StudentProfile.exists({ userId: user._id })),
       signatureUrl: user.signatureUrl
     });
   } catch (error: any) {

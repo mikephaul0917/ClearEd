@@ -129,6 +129,7 @@ interface SidebarProps {
     avatarUrl?: string;
     email?: string;
     role: string;
+    isStudent?: boolean;
     logout: () => void;
     isLoading?: boolean;
     navItems: NavItem[];
@@ -165,6 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     avatarUrl,
     email,
     role,
+    isStudent,
     logout,
     isLoading = false,
     navItems,
@@ -319,6 +321,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         initials={initials}
                         avatarUrl={avatarUrl}
                         role={role}
+                        isStudent={isStudent}
                         logout={logout}
                         navItems={navItems}
                         activeIndex={activeIndex}
@@ -663,7 +666,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                             )}
 
                                             {/* "As a student" Section */}
-                                            {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard')) && (
+                                            {((role === 'officer' ? isStudent : true) && (memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard'))) && (
                                                 <Box mt={1} mb={0.5}>
                                                     <Box
                                                         display="flex"
@@ -788,7 +791,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                 );
                                                             })()}
 
-                                                            {role === 'officer' && (
+                                                            {role === 'officer' && isStudent && (
                                                                 <>
                                                                     <Button
                                                                         onClick={() => handleNavClick('/student/progress')}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Swal from 'sweetalert2';
+import { useAuth } from "../hooks/useAuth";
 import { adminService } from "../services";
 import {
   Box, Typography, Card, CardContent, Table, TableBody, TableCell,
@@ -88,6 +89,7 @@ export default function UsersTable({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user: currentUser, updateUser } = useAuth();
 
   const [rows, setRows] = useState<UserRow[]>([]);
   const [institution, setInstitution] = useState<any>(null);
@@ -1734,6 +1736,11 @@ export default function UsersTable({
                       onClick={async () => {
                         try {
                           await adminService.updateStudentProfile(manageUser._id, { isStudent: isStudentMode, course: studentCourse.trim(), yearLevel: studentYear });
+                          
+                          if (currentUser?.id === manageUser._id) {
+                            updateUser({ isStudent: isStudentMode });
+                          }
+
                           setSuccessTitle("Profile Updated");
                           setSuccessMsg("The student profile has been updated successfully.");
                           setShowSuccessModal(true);
@@ -1788,6 +1795,15 @@ export default function UsersTable({
                 try {
                   await adminService.updateUserRole(manageUser._id, role, selectedOrgIds);
                   await adminService.updateUserProfile(manageUser._id, { fullName: manageUser.fullName, username: manageUser.username });
+                  
+                  if (currentUser?.id === manageUser._id) {
+                    updateUser({ 
+                      role: role as any,
+                      fullName: manageUser.fullName,
+                      username: manageUser.username
+                    });
+                  }
+
                   setSuccessTitle("User Updated");
                   setSuccessMsg("The user details and permissions have been updated.");
                   setShowSuccessModal(true);

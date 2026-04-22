@@ -35,6 +35,7 @@ interface MobileSidebarContentProps {
     fullName: string;
     initials: string;
     role: string;
+    isStudent?: boolean;
     logout: () => void;
     navItems: NavItem[];
     activeIndex: number;
@@ -53,6 +54,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
     fullName,
     initials,
     role,
+    isStudent,
     logout,
     navItems,
     activeIndex,
@@ -269,7 +271,7 @@ const MobileSidebarContent: React.FC<MobileSidebarContentProps> = ({
                                         )}
 
                                         {/* "As a student" Section */}
-                                        {(memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard')) && (
+                                        {((role === 'officer' ? isStudent : true) && (memberOrgs.length > 0 || navItems.some(i => i.key === 'todo' || i.key === 'leaderboard'))) && (
                                             <Box mt={1} mb={0.5}>
                                                 <Box
                                                     display="flex"
