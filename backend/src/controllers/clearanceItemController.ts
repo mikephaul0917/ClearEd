@@ -171,19 +171,19 @@ export const submitRequirement = async (req: Request, res: Response) => {
     }
 
     // 2. Find or verify the parent ClearanceRequest
+    const activeTerm = await Term.findOne({ institutionId, isActive: true });
+    if (!activeTerm) {
+      return res.status(400).json({ success: false, message: "No active academic term found. Contact admin." });
+    }
+
     let clearanceRequest = await ClearanceRequest.findOne({
       userId: new mongoose.Types.ObjectId(userId as string),
       organizationId: new mongoose.Types.ObjectId(organizationId as string),
       institutionId: new mongoose.Types.ObjectId(institutionId as string),
+      termId: activeTerm._id
     });
 
     if (!clearanceRequest) {
-      // Create it on the fly if an active term exists
-      const activeTerm = await Term.findOne({ institutionId, isActive: true });
-      if (!activeTerm) {
-        return res.status(400).json({ success: false, message: "No active academic term found. Contact admin." });
-      }
-
       clearanceRequest = await ClearanceRequest.create({
         userId,
         organizationId,
