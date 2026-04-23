@@ -368,9 +368,15 @@ const RequirementDetailsPage: React.FC = () => {
             setSubmissions(subData);
 
             // Default selection: Select all students with "pending" (Turned in) status on first load
-            const pendingIds = subData.filter((s: any) => s.status === 'pending').map((s: any) => s._id);
+            const pendingSubmissions = subData.filter((s: any) => s.status === 'pending');
+            const pendingIds = pendingSubmissions.map((s: any) => s._id);
             if (pendingIds.length > 0) {
                 setSelectedSubIds(pendingIds);
+                
+                // If there's exactly one pending submission, select it for detail view automatically
+                if (pendingIds.length === 1) {
+                    setSelectedSub(pendingSubmissions[0]);
+                }
             }
         } catch (err) {
             console.error("Failed to fetch submissions", err);
@@ -433,11 +439,24 @@ const RequirementDetailsPage: React.FC = () => {
     };
 
     const handleSubSelection = (subId: string) => {
-        setSelectedSubIds(prev =>
-            prev.includes(subId)
+        setSelectedSubIds(prev => {
+            const newSelection = prev.includes(subId)
                 ? prev.filter(id => id !== subId)
-                : [...prev, subId]
-        );
+                : [...prev, subId];
+            
+            // If the new selection has exactly one item, and no selectedSub is set,
+            // or if the currently selectedSub was just deselected, update selectedSub
+            if (newSelection.length === 1) {
+                const sub = submissions.find(s => s._id === newSelection[0]);
+                if (sub) setSelectedSub(sub);
+            } else if (newSelection.length === 0 || (selectedSub && !newSelection.includes(selectedSub._id))) {
+                // If everything is deselected, or the focused sub is no longer in selection,
+                // we might want to keep selectedSub if it was manually clicked, 
+                // but for consistency with bulk view, we'll keep it as is unless it's a conflict.
+            }
+            
+            return newSelection;
+        });
     };
 
     const handleSelectAll = () => {
@@ -1401,7 +1420,14 @@ const RequirementDetailsPage: React.FC = () => {
                                                                     </Avatar>
                                                                 </ListItemAvatar>
                                                                 <ListItemText
-                                                                    primary={subUser?.fullName || "Student"}
+                                                                    primary={
+                                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                                            {subUser?.fullName || "Student"}
+                                                                            {(sub.files || []).length > 0 && (
+                                                                                <AttachmentIcon sx={{ fontSize: 16, color: '#0E7490' }} titleAccess="Has attachment" />
+                                                                            )}
+                                                                        </Box>
+                                                                    }
                                                                     secondary={
                                                                         <Box sx={{ mt: 0.5 }}>
                                                                             <StatusPill status={sub.status} dueDate={requirement?.dueDate} />
@@ -1421,7 +1447,7 @@ const RequirementDetailsPage: React.FC = () => {
 
                                 {/* Right Panel: Submission Details / Overview / Bulk View */}
                                 <Box sx={{ flex: 1, overflowY: "auto", bgcolor: "#fff", p: (selectedSub || selectedSubIds.length > 0) ? 4 : 0 }}>
-                                    {selectedSubIds.length > 0 ? (
+                                    {selectedSubIds.length > 1 && !selectedSub ? (
                                         <Box>
                                             <Box sx={{ mb: 4 }}>
                                                 <Typography variant="h5" sx={{ color: "#3c4043", fontWeight: 700, mb: 1 }}>
@@ -1516,19 +1542,29 @@ const RequirementDetailsPage: React.FC = () => {
                                                 </Box>
                                             </Box>
                                         </Box>
-                                    ) : selectedSub ? (
-                                        <Box>
+                                    ) : (selectedSub || (selectedSubIds.length === 1 && (selectedSub || submissions.find(s => s._id === selectedSubIds[0])))) ? (() => {
+                                        const subToShow = selectedSub || submissions.find(s => s._id === selectedSubIds[0]);
+                                        if (!subToShow) return null;
+                                        
+                                        return (
+                                            <>
+                                                <Box>
                                             <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
                                                 <Box>
-                                                    <Typography variant="h6" fontWeight={700} color="#3c4043">
-                                                        {selectedSub.userId?.fullName}
-                                                    </Typography>
+                                                    <Box display="flex" alignItems="center" gap={1.5}>
+                                                        <Typography variant="h6" fontWeight={700} color="#3c4043">
+                                                            {subToShow.userId?.fullName}
+                                                        </Typography>
+                                                        {selectedSubIds.length > 1 && (
+                                                            <Chip label="Selected" size="small" variant="outlined" sx={{ height: 24, fontSize: '0.625rem', color: '#0E7490', borderColor: '#0E7490' }} />
+                                                        )}
+                                                    </Box>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        Student ID: {selectedSub.userId?.studentId || "N/A"}
+                                                        Student ID: {subToShow.userId?.studentId || "N/A"}
                                                     </Typography>
                                                 </Box>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    Submitted {new Date(selectedSub.submittedAt).toLocaleString()}
+                                                    Submitted {new Date(subToShow.submittedAt).toLocaleString()}
                                                 </Typography>
                                             </Box>
 
@@ -1538,34 +1574,42 @@ const RequirementDetailsPage: React.FC = () => {
                                                 <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Student Notes</Typography>
                                                 <Paper variant="outlined" sx={{ p: 2, bgcolor: "#F8FAFC", borderRadius: 2 }}>
                                                     <Typography variant="body2" color="#3c4043">
-                                                        {selectedSub.studentNotes || "No notes provided."}
+                                                        {subToShow.studentNotes || "No notes provided."}
                                                     </Typography>
                                                 </Paper>
                                             </Box>
 
                                             <Box sx={{ mb: 4 }}>
-                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">Attachments</Typography>
-                                                <Box display="flex" flexWrap="wrap" gap={1.5}>
-                                                    {selectedSub.files.map((file: any, idx: number) => (
-                                                        <Paper
-                                                            key={idx}
-                                                            variant="outlined"
-                                                            sx={{
-                                                                p: 1.5,
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                gap: 1.5,
-                                                                cursor: "pointer",
-                                                                borderRadius: 2,
-                                                                "&:hover": { bgcolor: "#F1F5F9" }
-                                                            }}
-                                                            onClick={() => downloadFile(file.filename, file.originalName)}
-                                                        >
-                                                            <FileOpenIcon color="primary" fontSize="small" />
-                                                            <Typography variant="body2" fontWeight={500} color="#3c4043">{file.originalName}</Typography>
-                                                        </Paper>
-                                                    ))}
-                                                </Box>
+                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom color="#3c4043">
+                                                    Attachments {(subToShow.files || []).length > 0 ? `(${(subToShow.files || []).length})` : ""}
+                                                </Typography>
+                                                {(subToShow.files || []).length > 0 ? (
+                                                    <Box display="flex" flexWrap="wrap" gap={1.5}>
+                                                        {subToShow.files.map((file: any, idx: number) => (
+                                                            <Paper
+                                                                key={idx}
+                                                                variant="outlined"
+                                                                sx={{
+                                                                    p: 1.5,
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: 1.5,
+                                                                    cursor: "pointer",
+                                                                    borderRadius: 2,
+                                                                    "&:hover": { bgcolor: "#F1F5F9" }
+                                                                }}
+                                                                onClick={() => downloadFile(file.filename, file.originalName)}
+                                                            >
+                                                                <FileOpenIcon color="primary" fontSize="small" />
+                                                                <Typography variant="body2" fontWeight={500} color="#3c4043">{file.originalName}</Typography>
+                                                            </Paper>
+                                                        ))}
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                        No files attached to this submission.
+                                                    </Typography>
+                                                )}
                                             </Box>
 
                                             <Divider sx={{ my: 4 }} />
@@ -1585,32 +1629,32 @@ const RequirementDetailsPage: React.FC = () => {
                                                 <Box display="flex" gap={2}>
                                                     <Button
                                                         fullWidth
-                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? (selectedSub.status === 'approved' ? <ClearIcon /> : <CheckIcon />) : undefined}
-                                                        onClick={() => selectedSub.status === 'approved' ? handleReview("pending") : handleReview("approved")}
+                                                        startIcon={subActionState !== "loading" && subActionState !== "success" ? (subToShow.status === 'approved' ? <ClearIcon /> : <CheckIcon />) : undefined}
+                                                        onClick={() => subToShow.status === 'approved' ? handleReview("pending") : handleReview("approved")}
                                                         disabled={subActionState !== "idle"}
                                                         sx={{
                                                             borderRadius: "8px",
                                                             textTransform: "none",
                                                             py: 1,
                                                             fontWeight: 600,
-                                                            backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#3c4043',
-                                                            color: subActionState === 'success' || selectedSub.status === 'approved' ? '#3c4043' : '#fff',
-                                                            border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #3c4043' : 'none',
-                                                            '&:hover': { backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#f8f9fa' : '#202124' },
+                                                            backgroundColor: subActionState === 'success' || subToShow.status === 'approved' ? '#fff' : '#3c4043',
+                                                            color: subActionState === 'success' || subToShow.status === 'approved' ? '#3c4043' : '#fff',
+                                                            border: subActionState === 'success' || subToShow.status === 'approved' ? '1px solid #3c4043' : 'none',
+                                                            '&:hover': { backgroundColor: subActionState === 'success' || subToShow.status === 'approved' ? '#f8f9fa' : '#202124' },
                                                             '&.Mui-disabled': {
-                                                                backgroundColor: subActionState === 'success' || selectedSub.status === 'approved' ? '#fff' : '#E2E8F0',
-                                                                color: subActionState === 'success' || selectedSub.status === 'approved' ? '#3c4043' : '#94A3B8',
-                                                                border: subActionState === 'success' || selectedSub.status === 'approved' ? '1px solid #3c4043' : 'none',
+                                                                backgroundColor: subActionState === 'success' || subToShow.status === 'approved' ? '#fff' : '#E2E8F0',
+                                                                color: subActionState === 'success' || subToShow.status === 'approved' ? '#3c4043' : '#94A3B8',
+                                                                border: subActionState === 'success' || subToShow.status === 'approved' ? '1px solid #3c4043' : 'none',
                                                             }
                                                         }}
                                                     >
-                                                        {subActionState === 'loading' ? 'Processing...' : subActionState === 'success' ? 'Finished' : selectedSub.status === 'approved' ? 'Revoke Approval' : 'Approve'}
+                                                        {subActionState === 'loading' ? 'Processing...' : subActionState === 'success' ? 'Finished' : subToShow.status === 'approved' ? 'Revoke Approval' : 'Approve'}
                                                     </Button>
                                                     <Button
                                                         fullWidth
                                                         startIcon={subActionState !== "loading" && subActionState !== "success" ? <ClearIcon /> : undefined}
                                                         onClick={() => handleReview("rejected")}
-                                                        disabled={subActionState !== "idle" || selectedSub.status === 'approved' || !subRemarks.trim()}
+                                                        disabled={subActionState !== "idle" || subToShow.status === 'approved' || !subRemarks.trim()}
                                                         sx={{
                                                             borderRadius: "8px",
                                                             textTransform: "none",
@@ -1627,13 +1671,11 @@ const RequirementDetailsPage: React.FC = () => {
                                                     </Button>
                                                 </Box>
                                             </Box>
-                                            {selectedSub.status === 'approved' && (
+                                            {subToShow.status === 'approved' && (
                                                 <Typography variant="caption" color="success.main" display="block" sx={{ mt: 2, textAlign: "center", fontWeight: 600 }}>
                                                     This submission has been approved.
                                                 </Typography>
                                             )}
-
-                                            <Divider sx={{ my: 4 }} />
 
                                             {/* Private Comments for Officer */}
                                             <Box>
@@ -1725,14 +1767,14 @@ const RequirementDetailsPage: React.FC = () => {
                                                                         fullWidth
                                                                         multiline={isPrivateCommentFocused}
                                                                         minRows={isPrivateCommentFocused ? 2 : 1}
-                                                                        placeholder={`Add private comment to ${selectedSub.userId?.firstName || selectedSub.userId?.fullName || "student"}...`}
+                                                                        placeholder={`Add private comment to ${subToShow.userId?.firstName || subToShow.userId?.fullName || "student"}...`}
                                                                         value={newPrivateComment}
                                                                         onChange={(e) => setNewPrivateComment(e.target.value)}
                                                                         onFocus={() => setIsPrivateCommentFocused(true)}
                                                                         onKeyDown={(e) => {
                                                                             if (e.key === 'Enter' && !e.shiftKey) {
                                                                                 e.preventDefault();
-                                                                                handleAddPrivateComment(selectedSub.userId._id || selectedSub.userId.id);
+                                                                                handleAddPrivateComment(subToShow.userId._id || subToShow.userId.id);
                                                                                 setIsPrivateCommentFocused(false);
                                                                             }
                                                                         }}
@@ -1757,7 +1799,7 @@ const RequirementDetailsPage: React.FC = () => {
 
                                                                 <IconButton
                                                                     onClick={() => {
-                                                                        handleAddPrivateComment(selectedSub.userId._id || selectedSub.userId.id);
+                                                                        handleAddPrivateComment(subToShow.userId._id || subToShow.userId.id);
                                                                         setIsPrivateCommentFocused(false);
                                                                     }}
                                                                     disabled={!newPrivateComment.trim() || isSubmittingPrivateComment}
@@ -1775,8 +1817,10 @@ const RequirementDetailsPage: React.FC = () => {
                                                     </ClickAwayListener>
                                                 </Box>
                                             </Box>
-                                        </Box>
-                                    ) : (
+                                            </Box>
+                                        </>
+                                        );
+                                    })() : (
                                         <Box sx={{ p: 4, pt: 5 }}>
                                             <Typography variant="h5" sx={{ color: "#3c4043", mb: 4, fontWeight: 400 }}>{requirement.title}</Typography>
 
@@ -1844,8 +1888,6 @@ const RequirementDetailsPage: React.FC = () => {
                         </Box>
                     )}
                 </Box>
-            </Container>
-
             <ConfirmationModal
                 open={confirmModalState.isOpen}
                 onClose={() => setConfirmModalState(prev => ({ ...prev, isOpen: false }))}
@@ -1854,6 +1896,7 @@ const RequirementDetailsPage: React.FC = () => {
                 description={confirmModalState.description}
                 loading={subActionState === 'loading'}
             />
+            </Container>
 
         </>
     );
